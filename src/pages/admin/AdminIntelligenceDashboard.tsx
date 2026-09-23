@@ -14,53 +14,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useAdminIntelligence, type AccountHealth } from '@/hooks/useAdminIntelligence';
 import { AlertTriangle, Users, DollarSign, Target, Mail, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface AccountHealth {
-  company_id: string;
-  company_name: string;
-  score: number;
-  trend: 'up' | 'down' | 'stable';
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
-  last_login_days: number;
-  active_projects: number;
-  total_projects: number;
-  trial_expires_in_days?: number;
-  subscription_status: string;
-}
-
-interface RevenueMetrics {
-  mrr: number;
-  arr: number;
-  new_revenue: number;
-  expansion_revenue: number;
-  contraction_revenue: number;
-  churned_revenue: number;
-  net_revenue_retention: number;
-  total_customers: number;
-  new_customers: number;
-  churned_customers: number;
-}
-
-interface TrialStats {
-  total_trials: number;
-  expires_this_week: number;
-  high_engagement: number;
-  medium_engagement: number;
-  low_engagement: number;
-  conversion_rate: number;
-}
 
 const AdminIntelligenceDashboard = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [atRiskAccounts, setAtRiskAccounts] = useState<AccountHealth[]>([]);
-  const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetrics | null>(null);
-  const [trialStats, setTrialStats] = useState<TrialStats | null>(null);
-  const [loadingData, setLoadingData] = useState(true);
+  const intelligence = useAdminIntelligence();
+  const atRiskAccounts = intelligence.data?.atRiskAccounts ?? [];
+  const revenueMetrics = intelligence.data?.revenueMetrics ?? null;
+  const trialStats = intelligence.data?.trialStats ?? null;
+  const loadingData = intelligence.isLoading;
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -75,244 +42,23 @@ const AdminIntelligenceDashboard = () => {
         title: 'Access Denied',
         description: 'Only root administrators can access this page.',
       });
-      return;
-    }
-
-    if (userProfile?.role === 'root_admin') {
-      loadDashboardData();
     }
   }, [user, userProfile, loading, navigate]);
 
-  const loadDashboardData = async () => {
-    try {
-      setLoadingData(true);
-
-      // Load all data in parallel
-      await Promise.all([
-        loadAtRiskAccounts(),
-        loadRevenueMetrics(),
-        loadTrialStats(),
-      ]);
-    } catch (error: any) {
-      console.error('Error loading dashboard data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load dashboard data',
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const loadAtRiskAccounts = async () => {
-    // Get companies with low health scores
-    const { data: healthScores, error } = await supabase
-      .from('account_health_scores')
-      .select(`
-        *,
-        companies!inner (
-          id,
-          name,
-          subscription_status,
-          trial_end_date
-        )
-      `)
-      .or('risk_level.eq.high,risk_level.eq.critical')
-      .order('score', { ascending: true })
-      .limit(10);
-
-    if (error) throw error;
-
-    // Get additional context for each account
-    const accountsWithContext = await Promise.all(
-      (healthScores || []).map(async (score) => {
-        const company = score.companies as any;
-
-        // Get last login for primary user
-        const { data: users } = await supabase
-          .from('user_profiles')
-          .select('last_login')
-          .eq('company_id', company.id)
-          .eq('role', 'admin')
-          .order('last_login', { ascending: false })
-          .limit(1)
-          .single();
-
-        // Get project stats
-        const { count: totalProjects } = await supabase
-          .from('projects')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', company.id);
-
-        const { count: activeProjects } = await supabase
-          .from('projects')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', company.id)
-          .in('status', ['active', 'in_progress']);
-
-        const lastLogin = users?.last_login
-          ? Math.floor((new Date().getTime() - new Date(users.last_login).getTime()) / (1000 * 60 * 60 * 24))
-          : 999;
-
-        const trialExpiresIn = company.trial_end_date
-          ? Math.floor((new Date(company.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-          : undefined;
-
-        return {
-          company_id: company.id,
-          company_name: company.name,
-          score: score.score,
-          trend: score.trend,
-          risk_level: score.risk_level,
-          last_login_days: lastLogin,
-          active_projects: activeProjects || 0,
-          total_projects: totalProjects || 0,
-          trial_expires_in_days: trialExpiresIn,
-          subscription_status: company.subscription_status,
-        } as AccountHealth;
-      })
-    );
-
-    setAtRiskAccounts(accountsWithContext);
-  };
-
-  const loadRevenueMetrics = async () => {
-    // Get latest revenue metrics
-    const { data, error } = await supabase
-      .from('revenue_metrics')
-      .select('*')
-      .order('period_start', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error) {
-      // If no metrics exist, calculate them
-      const calculated = await calculateCurrentRevenue();
-      setRevenueMetrics(calculated);
-    } else {
-      setRevenueMetrics(data);
-    }
-  };
-
-  const calculateCurrentRevenue = async (): Promise<RevenueMetrics> => {
-    // Root admin can see all companies
-    const { data: companies } = await supabase
-      .from('companies')
-      .select('*');
-
-    const pricingMap: Record<string, number> = {
-      starter: 149,
-      professional: 299,
-      enterprise: 599,
-    };
-
-    let mrr = 0;
-    let activeCustomers = 0;
-
-    (companies || []).forEach((company) => {
-      if (company.subscription_status === 'active') {
-        mrr += pricingMap[company.subscription_tier] || 0;
-        activeCustomers++;
-      }
-    });
-
-    return {
-      mrr,
-      arr: mrr * 12,
-      new_revenue: 0,
-      expansion_revenue: 0,
-      contraction_revenue: 0,
-      churned_revenue: 0,
-      net_revenue_retention: 100,
-      total_customers: activeCustomers,
-      new_customers: 0,
-      churned_customers: 0,
-    };
-  };
-
-  const loadTrialStats = async () => {
-    const { data: companies } = await supabase
-      .from('companies')
-      .select('id, trial_end_date')
-      .eq('subscription_status', 'trial');
-
-    if (!companies) {
-      setTrialStats({
-        total_trials: 0,
-        expires_this_week: 0,
-        high_engagement: 0,
-        medium_engagement: 0,
-        low_engagement: 0,
-        conversion_rate: 0,
-      });
-      return;
-    }
-
-    const now = new Date();
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    let expiresThisWeek = 0;
-    let highEngagement = 0;
-    let mediumEngagement = 0;
-    let lowEngagement = 0;
-
-    for (const company of companies) {
-      if (company.trial_end_date) {
-        const trialEnd = new Date(company.trial_end_date);
-        if (trialEnd <= oneWeekFromNow && trialEnd >= now) {
-          expiresThisWeek++;
-        }
-      }
-
-      // Get health score
-      const { data: health } = await supabase
-        .from('account_health_scores')
-        .select('score')
-        .eq('company_id', company.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (health) {
-        if (health.score >= 70) highEngagement++;
-        else if (health.score >= 40) mediumEngagement++;
-        else lowEngagement++;
-      }
-    }
-
-    setTrialStats({
-      total_trials: companies.length,
-      expires_this_week: expiresThisWeek,
-      high_engagement: highEngagement,
-      medium_engagement: mediumEngagement,
-      low_engagement: lowEngagement,
-      conversion_rate: 34, // Would calculate from historical data
-    });
-  };
+  const loadDashboardData = () => { void intelligence.refetch(); };
 
   const handleAutoIntervene = async (account: AccountHealth) => {
     try {
-      const interventionType = account.score < 40 ? 'low_engagement_email' : 'onboarding_help';
-      const { error } = await supabase.from('admin_interventions').insert({
-        company_id: account.company_id,
-        intervention_type: interventionType,
-        trigger_reason: `Low health score: ${account.score}`,
-        status: 'scheduled',
-        scheduled_for: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
+      await intelligence.scheduleIntervention(account);
       toast({
         title: 'Success',
         description: `Automated intervention scheduled for ${account.company_name}`,
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to schedule intervention',
+        description: `Failed to schedule intervention: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
   };
@@ -343,6 +89,21 @@ const AdminIntelligenceDashboard = () => {
             </div>
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
+      </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+
+  if (intelligence.error) {
+    return (
+      <AccessiblePageWrapper pageTitle="Admin Intelligence">
+      <DashboardLayout hasAccessibleWrapper title="Admin Intelligence" showTrialBanner={false}>
+        <ErrorState
+          title="Dashboard data could not be loaded"
+          error={intelligence.error}
+          onRetry={loadDashboardData}
+        />
       </DashboardLayout>
       </AccessiblePageWrapper>
     );
@@ -445,7 +206,7 @@ const AdminIntelligenceDashboard = () => {
                           </div>
                           <div className="text-sm text-muted-foreground">
                             <p>Health Score: {account.score}/100</p>
-                            <p>Last login: {account.last_login_days} days ago</p>
+                            <p>Last login: {account.last_login_days === null ? 'never' : `${account.last_login_days} days ago`}</p>
                             <p>
                               Projects: {account.active_projects}/{account.total_projects} active
                             </p>

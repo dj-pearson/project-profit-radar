@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { confirmAction } from '@/components/ui/confirm-dialog';
+import { useKeywordResearch } from '@/hooks/useKeywordResearch';
 import { Upload, Target, TrendingUp, Search, Download, RefreshCw, Eye, AlertTriangle, BarChart3, Lightbulb, Trash2, Plus } from 'lucide-react';
-import { logger } from '@/lib/logger';
 
 import {
   generateKeywordBlogTopics,
@@ -22,17 +22,36 @@ import {
 } from './keyword-manager/keywordData';
 import { KeywordsTab } from './keyword-manager/KeywordsTab';
 
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
 const KeywordManager = () => {
-  const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const research = useKeywordResearch();
+  const loading = research.isFetching || research.isWriting;
   const [uploading, setUploading] = useState(false);
-  const [keywordStats, setKeywordStats] = useState<ParsedKeywordStats | null>(null);
-  const [selectedKeywords, setSelectedKeywords] = useState<KeywordData[]>([]);
-  const [generatedTopics, setGeneratedTopics] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('priority');
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
-  const [selectedForBlog, setSelectedForBlog] = useState<Set<string>>(new Set());
+
+  // Everything below is derived from the saved rows, so after a write the
+  // screen shows what the database holds rather than what was intended.
+  const keywordStats: ParsedKeywordStats | null = useMemo(() => {
+    const keywords = research.data?.keywords ?? [];
+    if (keywords.length === 0) return null;
+    return {
+      keywords,
+      totalKeywords: keywords.length,
+      highPriorityKeywords: keywords.filter(k => k.priority === 'high'),
+      categories: [...new Set(keywords.map(k => k.category).filter(Boolean))] as string[],
+    };
+  }, [research.data]);
+  const selectedKeywords: KeywordData[] = useMemo(() => research.data?.selected ?? [], [research.data]);
+  const selectedForBlog = useMemo(() => new Set(selectedKeywords.map(k => k.keyword)), [selectedKeywords]);
+  const generatedTopics = useMemo(
+    () => (selectedKeywords.length > 0 ? generateKeywordBlogTopics(selectedKeywords) : []),
+    [selectedKeywords]
+  );
+
+  const loadKeywordData = () => { void research.refetch(); };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, append: boolean = false) => {
     const file = event.target.files?.[0];
@@ -49,14 +68,8 @@ const KeywordManager = () => {
 
     try {
       setUploading(true);
-      
       const parsedData = await parseKeywordStatsCSV(file);
-      
-      // Save to database with append option
-      await saveKeywordData(parsedData.keywords, append);
-      
-      // Reload all data to get the complete picture
-      await loadKeywordData();
+      await research.importKeywords(parsedData.keywords, append);
 
       toast({
         title: "Success",
@@ -64,150 +77,19 @@ const KeywordManager = () => {
           ? `Added ${parsedData.totalKeywords} new keywords successfully`
           : `Imported ${parsedData.totalKeywords} keywords successfully`
       });
-
-    } catch (error: any) {
-      console.error('File upload error:', error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: error.message || "Failed to parse CSV file"
+        description: message(error) || "Failed to parse CSV file"
       });
     } finally {
       setUploading(false);
     }
   };
 
-  const saveKeywordData = async (keywords: KeywordData[], append: boolean = false) => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      // Only clear existing data if not appending
-      if (!append) {
-        const { error: deleteError } = await supabase
-          .from('keyword_research_data')
-          .delete()
-          .eq('company_id', userProfile.company_id);
-
-        if (deleteError) logger.warn('Delete warning:', deleteError);
-      }
-
-      // Insert new keyword data in batches
-      const batchSize = 100;
-      for (let i = 0; i < keywords.length; i += batchSize) {
-        const batch = keywords.slice(i, i + batchSize);
-        const records = batch.map(keyword => ({
-          company_id: userProfile.company_id,
-          keyword: keyword.keyword,
-          search_volume: keyword.searchVolume,
-          difficulty: keyword.difficulty,
-          cpc: keyword.cpc || null,
-          search_intent: keyword.intent,
-          category: keyword.category || 'general',
-          priority: keyword.priority,
-          current_rank: keyword.currentRank || null,
-          target_rank: keyword.targetRank || null
-        }));
-
-        // If appending, use upsert to avoid duplicates
-        if (append) {
-          const { error } = await supabase
-            .from('keyword_research_data')
-            .upsert(records, { 
-              onConflict: 'company_id,keyword',
-              ignoreDuplicates: true 
-            });
-          
-          if (error) {
-            console.error('Upsert error for batch:', i, error);
-            throw error;
-          }
-        } else {
-          const { error } = await supabase
-            .from('keyword_research_data')
-            .insert(records);
-          
-          if (error) {
-            console.error('Insert error for batch:', i, error);
-            throw error;
-          }
-        }
-      }
-
-    } catch (error) {
-      console.error('Error saving keyword data:', error);
-      throw error;
-    }
-  };
-
-  const loadKeywordData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      setLoading(true);
-      
-      // Get keyword data using direct table access
-      const { data, error } = await supabase
-        .from('keyword_research_data')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('search_volume', { ascending: false });
-
-      if (error) throw error;
-
-      if (data && Array.isArray(data) && data.length > 0) {
-        const keywords: KeywordData[] = data.map((row: any) => ({
-          keyword: row.keyword,
-          searchVolume: row.search_volume,
-          difficulty: row.difficulty,
-          cpc: row.cpc,
-          intent: row.search_intent as KeywordData['intent'],
-          category: row.category,
-          priority: row.priority as KeywordData['priority'],
-          currentRank: row.current_rank,
-          targetRank: row.target_rank,
-          usedCount: row.used_count || 0
-        }));
-
-        const categories = [...new Set(keywords.map(k => k.category).filter(Boolean))];
-        const highPriorityKeywords = keywords.filter(k => k.priority === 'high');
-
-        setKeywordStats({
-          keywords,
-          totalKeywords: keywords.length,
-          highPriorityKeywords,
-          categories
-        });
-
-        // Load the current selections for blog generation
-        const selectedKeywords = keywords.filter(k => {
-          const dbRow = data.find(d => d.keyword === k.keyword);
-          return dbRow?.selected_for_blog_generation === true;
-        });
-        
-        const selectedKeywordSet = new Set(selectedKeywords.map(k => k.keyword));
-        setSelectedForBlog(selectedKeywordSet);
-        setSelectedKeywords(selectedKeywords);
-        
-        if (selectedKeywords.length > 0) {
-          const topics = generateKeywordBlogTopics(selectedKeywords);
-          setGeneratedTopics(topics);
-        }
-      }
-
-    } catch (error) {
-      console.error('Error loading keyword data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load keyword data"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const selectOptimalKeywords = async () => {
-    if (!keywordStats || !userProfile?.company_id) return;
+    if (!keywordStats) return;
 
     const optimal = selectKeywordsForBlogGeneration(keywordStats.keywords, {
       maxKeywords: 5,
@@ -217,119 +99,48 @@ const KeywordManager = () => {
     });
 
     try {
-      // First, clear all existing selections
-      const { error: updateKeywordResearchDataError } = await supabase
-        .from('keyword_research_data')
-        .update({ 
-          selected_for_blog_generation: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('company_id', userProfile.company_id);
-      if (updateKeywordResearchDataError) {
-        throw new Error(`Failed to update keyword_research_data: ${updateKeywordResearchDataError.message}`);
-      }
-
-      // Then, select the optimal keywords
-      const optimalKeywords = optimal.map(k => k.keyword);
-      
-      if (optimalKeywords.length > 0) {
-        const { error } = await supabase
-          .from('keyword_research_data')
-          .update({ 
-            selected_for_blog_generation: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('company_id', userProfile.company_id)
-          .in('keyword', optimalKeywords);
-
-        if (error) {
-          console.error('Error selecting optimal keywords:', error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to select optimal keywords"
-          });
-          return;
-        }
-      }
-
-      setSelectedKeywords(optimal);
-      const topics = generateKeywordBlogTopics(optimal);
-      setGeneratedTopics(topics);
-      
-      // Also update the blog selection UI
-      const optimalKeywordSet = new Set(optimalKeywords);
-      setSelectedForBlog(optimalKeywordSet);
-
+      await research.setBlogSelection(optimal.map(k => k.keyword));
       toast({
         title: "Keywords Selected",
         description: `Selected ${optimal.length} optimal keywords for blog generation`
       });
-
-    } catch (error: any) {
-      console.error('Error selecting optimal keywords:', error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to select optimal keywords"
+        description: `Failed to select optimal keywords: ${message(error)}`
       });
     }
   };
 
   const toggleKeywordForBlog = async (keyword: string) => {
-    if (!userProfile?.company_id) return;
-    
-    const newSelected = new Set(selectedForBlog);
-    const isCurrentlySelected = newSelected.has(keyword);
-    
-    if (isCurrentlySelected) {
-      newSelected.delete(keyword);
-    } else {
-      newSelected.add(keyword);
-    }
-    
-    setSelectedForBlog(newSelected);
-    
+    const isCurrentlySelected = selectedForBlog.has(keyword);
     try {
-      // Update the database to mark keywords as selected for blog generation
-      const { error } = await supabase
-        .from('keyword_research_data')
-        .update({ 
-          selected_for_blog_generation: !isCurrentlySelected,
-          updated_at: new Date().toISOString()
-        })
-        .eq('company_id', userProfile.company_id)
-        .eq('keyword', keyword);
-
-      if (error) {
-        console.error('Error updating keyword selection:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to update keyword selection"
-        });
-        return;
-      }
-      
-      // Update selectedKeywords based on selection
-      if (keywordStats) {
-        const keywords = keywordStats.keywords.filter(k => newSelected.has(k.keyword));
-        setSelectedKeywords(keywords);
-        const topics = generateKeywordBlogTopics(keywords);
-        setGeneratedTopics(topics);
-      }
-
+      await research.setKeywordSelected(keyword, !isCurrentlySelected);
       toast({
         title: isCurrentlySelected ? "Keyword Deselected" : "Keyword Selected",
         description: `"${keyword}" ${isCurrentlySelected ? 'removed from' : 'added to'} blog generation queue`
       });
-
-    } catch (error: any) {
-      console.error('Error updating keyword selection:', error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update keyword selection"
+        description: `Failed to update keyword selection: ${message(error)}`
+      });
+    }
+  };
+
+  const setAllSelected = async (selected: boolean) => {
+    try {
+      const changed = await research.setAllSelected(selected);
+      toast(selected
+        ? { title: "All Keywords Selected", description: `Selected all ${changed} keywords for blog generation` }
+        : { title: "Selection Cleared", description: "Cleared all keyword selections" });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to ${selected ? 'select all keywords' : 'clear selections'}: ${message(error)}`
       });
     }
   };
@@ -384,88 +195,61 @@ const KeywordManager = () => {
   }, [keywordStats, activeFilter, sortBy]);
 
   const clearAllKeywords = async () => {
-    if (!userProfile?.company_id) return;
-    
-    if (!confirm('Are you sure you want to delete ALL keywords? This action cannot be undone.')) {
+    if (!(await confirmAction({
+      title: 'Delete ALL keywords?',
+      description: 'This action cannot be undone.',
+      confirmLabel: 'Delete all',
+      destructive: true,
+    }))) {
       return;
     }
 
     try {
-      setLoading(true);
-      
-      const { error } = await supabase
-        .from('keyword_research_data')
-        .delete()
-        .eq('company_id', userProfile.company_id);
-
-      if (error) throw error;
-
-      setKeywordStats(null);
-      setSelectedKeywords([]);
-      setGeneratedTopics([]);
+      await research.deleteKeywords();
       setSelectedForDeletion(new Set());
-
       toast({
         title: "Success",
         description: "All keywords have been cleared"
       });
-
-    } catch (error: any) {
-      console.error('Error clearing keywords:', error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to clear keywords"
+        description: `Failed to clear keywords: ${message(error)}`
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const deleteSelectedKeywords = async () => {
-    if (!userProfile?.company_id || selectedForDeletion.size === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete ${selectedForDeletion.size} selected keywords?`)) {
+    if (selectedForDeletion.size === 0) return;
+
+    if (!(await confirmAction({
+      title: `Delete ${selectedForDeletion.size} selected keywords?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    }))) {
       return;
     }
 
     try {
-      setLoading(true);
-      
       const keywordsToDelete = Array.from(selectedForDeletion);
-      
-      const { error } = await supabase
-        .from('keyword_research_data')
-        .delete()
-        .eq('company_id', userProfile.company_id)
-        .in('keyword', keywordsToDelete);
-
-      if (error) throw error;
-
-      // Refresh the data
-      await loadKeywordData();
+      await research.deleteKeywords(keywordsToDelete);
       setSelectedForDeletion(new Set());
-
       toast({
         title: "Success",
         description: `Deleted ${keywordsToDelete.length} keywords`
       });
-
-    } catch (error: any) {
-      console.error('Error deleting keywords:', error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete selected keywords"
+        description: `Failed to delete selected keywords: ${message(error)}`
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const cancelUpload = () => {
     setUploading(false);
-    setKeywordStats(null);
     
     // Reset file input
     const fileInput = document.getElementById('csv-upload') as HTMLInputElement;
@@ -499,9 +283,6 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
     URL.revokeObjectURL(url);
   };
 
-  useEffect(() => {
-    loadKeywordData();
-  }, [userProfile?.company_id]);
 
   // Memoized helper functions
   const getPriorityColor = useCallback((priority: string) => {
@@ -521,6 +302,16 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
       default: return <Eye className="h-3 w-3" />;
     }
   }, []);
+
+  if (research.error) {
+    return (
+      <ErrorState
+        title="Keywords could not be loaded"
+        error={research.error}
+        onRetry={loadKeywordData}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -742,7 +533,6 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
           {/* Keywords Tab */}
           <TabsContent value="keywords" className="space-y-4">
             <KeywordsTab
-              userProfile={userProfile}
               keywordStats={keywordStats}
               filteredKeywords={filteredKeywords}
               activeFilter={activeFilter}
@@ -750,10 +540,9 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
               sortBy={sortBy}
               setSortBy={setSortBy}
               selectedForBlog={selectedForBlog}
-              setSelectedForBlog={setSelectedForBlog}
               selectedForDeletion={selectedForDeletion}
-              setSelectedKeywords={setSelectedKeywords}
-              setGeneratedTopics={setGeneratedTopics}
+              selectAll={() => { void setAllSelected(true); }}
+              clearSelection={() => { void setAllSelected(false); }}
               selectOptimalKeywords={selectOptimalKeywords}
               toggleKeywordForBlog={toggleKeywordForBlog}
               toggleKeywordForDeletion={toggleKeywordForDeletion}

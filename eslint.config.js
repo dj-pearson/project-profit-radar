@@ -149,6 +149,38 @@ export default tseslint.config(
     },
   },
   {
+    // US-266: data access goes through TanStack Query hooks in src/hooks (key
+    // includes company_id, error surfaced, cache invalidated on write), not
+    // supabase.from() inside a component or page. "warn" because ~650 call
+    // sites predate it; scripts/check-raw-supabase-in-components.mjs holds that
+    // count at an exact baseline so new ones fail the hook and CI.
+    // no-restricted-syntax is replaced, not merged, per matching config, so the
+    // US-377 formatting selectors are repeated here.
+    files: ["src/components/**/*.{ts,tsx}", "src/pages/**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**", "**/__tests__/**", "**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "MemberExpression[property.name='toLocaleDateString']",
+          message: "Use formatDate() from @/lib/format instead of toLocaleDateString.",
+        },
+        {
+          selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
+          message: "Use formatNumber() or formatCurrency() from @/lib/format instead of new Intl.NumberFormat.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='from'][callee.object.name='supabase']",
+          message: "Query through a TanStack Query hook in src/hooks, not supabase.from() in a component or page (US-266).",
+        },
+        {
+          selector: "CallExpression[callee.property.name='from'][callee.object.type='TSAsExpression'][callee.object.expression.name='supabase']",
+          message: "Query through a TanStack Query hook in src/hooks, not supabase.from() in a component or page (US-266).",
+        },
+      ],
+    },
+  },
+  {
     // US-377: the one sanctioned home for direct date/number formatting.
     files: ["src/lib/format.ts"],
     rules: {
@@ -158,7 +190,7 @@ export default tseslint.config(
   {
     // US-374 allowlist (owned by the SEO/blog workstream, not yet converted).
     // Mirrors ALLOWLIST in src/components/ui/__tests__/no-window-confirm.test.ts.
-    files: ["src/components/admin/KeywordManager.tsx", "src/pages/BlogManager.tsx"],
+    files: ["src/pages/BlogManager.tsx"],
     rules: {
       "no-restricted-globals": "off",
       "no-restricted-properties": "off",

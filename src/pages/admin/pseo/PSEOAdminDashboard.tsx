@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { ErrorState } from '@/components/common/ErrorState';
 import { PSEOStatsCards } from '@/components/pseo-admin/PSEOStatsCards';
 import { DimensionManager } from '@/components/pseo-admin/DimensionManager';
 import { GenerationQueueManager } from '@/components/pseo-admin/GenerationQueueManager';
@@ -9,6 +9,7 @@ import { PageManager } from '@/components/pseo-admin/PageManager';
 import { CombinationMatrixGenerator } from '@/components/pseo-admin/CombinationMatrixGenerator';
 import { PSEOPageEditor } from './PSEOPageEditor';
 import { publishBlockers, type PseoPageRow } from '@/lib/pseo/pageAuthoring';
+import { usePSEOAdmin, type PSEODimensionItem as DimensionItem } from '@/hooks/usePSEOAdmin';
 import {
   CONTRACTOR_TYPES,
   PAIN_POINTS,
@@ -17,47 +18,27 @@ import {
   COMPETITORS,
 } from '@/data/pseo-taxonomy';
 import type {
-  PSEOPage,
-  PSEOGenerationQueueItem,
   PSEODashboardStats,
   DimensionType,
   PageType,
 } from '@/types/pseo';
 
-type DimensionItem = {
-  id: string;
-  display_name: string;
-  url_slug: string;
-  is_active: boolean;
-  context_object?: Record<string, unknown>;
-  competitor_profile?: Record<string, unknown>;
-  geo_level?: string;
-  created_at: string;
+const EMPTY_DIMENSIONS: Record<DimensionType, DimensionItem[]> = {
+  contractor_types: [],
+  pain_points: [],
+  geographies: [],
+  business_sizes: [],
+  competitors: [],
 };
 
-const DIMENSION_TABLES: Record<DimensionType, string> = {
-  contractor_types: 'pseo_contractor_types',
-  pain_points: 'pseo_pain_points',
-  geographies: 'pseo_geographies',
-  business_sizes: 'pseo_business_sizes',
-  competitors: 'pseo_competitors',
-};
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export default function PSEOAdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeDimension, setActiveDimension] = useState<DimensionType>('contractor_types');
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Data state
-  const [pages, setPages] = useState<PSEOPage[]>([]);
-  const [queueItems, setQueueItems] = useState<PSEOGenerationQueueItem[]>([]);
-  const [dimensions, setDimensions] = useState<Record<DimensionType, DimensionItem[]>>({
-    contractor_types: [],
-    pain_points: [],
-    geographies: [],
-    business_sizes: [],
-    competitors: [],
-  });
+  const pseo = usePSEOAdmin();
+  const { pages, queue: queueItems, isLoading } = pseo;
+  const dimensions = pseo.dimensions ?? EMPTY_DIMENSIONS;
 
   // Compute stats
   const stats: PSEODashboardStats = useMemo(() => {
@@ -85,153 +66,80 @@ export default function PSEOAdminDashboard() {
     };
   }, [pages, queueItems]);
 
-  // Fetch all data
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([fetchPages(), fetchQueue(), fetchAllDimensions()]);
-    } catch (error) {
-      console.error('Failed to fetch pSEO data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchPages = async () => {
-    const { data, error } = await supabase
-      .from('pseo_pages' as any)
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) setPages(data as unknown as PSEOPage[]);
-  };
-
-  const fetchQueue = async () => {
-    const { data, error } = await supabase
-      .from('pseo_generation_queue' as any)
-      .select('*')
-      .order('tier', { ascending: true });
-    if (!error && data) setQueueItems(data as unknown as PSEOGenerationQueueItem[]);
-  };
-
-  const fetchAllDimensions = async () => {
-    const results: Record<DimensionType, DimensionItem[]> = {
-      contractor_types: [],
-      pain_points: [],
-      geographies: [],
-      business_sizes: [],
-      competitors: [],
-    };
-
-    for (const [key, table] of Object.entries(DIMENSION_TABLES)) {
-      const { data, error } = await supabase
-        .from(table as any)
-        .select('*')
-        .order('display_name');
-      if (!error && data) {
-        results[key as DimensionType] = data as unknown as DimensionItem[];
-      }
-    }
-
-    setDimensions(results);
-  };
-
   // Dimension CRUD handlers
   const handleAddDimension = async (item: Partial<DimensionItem>) => {
-    const table = DIMENSION_TABLES[activeDimension];
-    const { error } = await supabase.from(table as any).insert(item as any);
-    if (error) {
-      toast.error(`Failed to add: ${error.message}`);
-    } else {
+    try {
+      await pseo.insertDimension(activeDimension, item);
       toast.success('Dimension added');
-      fetchAllDimensions();
+    } catch (error) {
+      toast.error(`Failed to add: ${message(error)}`);
     }
   };
 
   const handleUpdateDimension = async (id: string, updates: Partial<DimensionItem>) => {
-    const table = DIMENSION_TABLES[activeDimension];
-    const { error } = await supabase.from(table as any).update(updates as any).eq('id', id);
-    if (error) {
-      toast.error(`Failed to update: ${error.message}`);
-    } else {
+    try {
+      await pseo.updateDimension(activeDimension, id, updates);
       toast.success('Dimension updated');
-      fetchAllDimensions();
+    } catch (error) {
+      toast.error(`Failed to update: ${message(error)}`);
     }
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    const table = DIMENSION_TABLES[activeDimension];
-    const { error } = await supabase.from(table as any).update({ is_active: isActive } as any).eq('id', id);
-    if (error) {
-      toast.error(`Failed to toggle: ${error.message}`);
-    } else {
+    try {
+      await pseo.updateDimension(activeDimension, id, { is_active: isActive });
       toast.success(isActive ? 'Activated' : 'Deactivated');
-      fetchAllDimensions();
+    } catch (error) {
+      toast.error(`Failed to toggle: ${message(error)}`);
     }
   };
 
-  // Seed dimensions from static data
+  // Seed dimensions from static data. Each table's upsert error is read; the
+  // first failure stops the run and names the table.
   const handleSeedDimensions = async () => {
-    try {
-      // Seed contractor types
-      const ctRows = Object.entries(CONTRACTOR_TYPES).map(([id, ct]) => ({
+    const rows: Record<DimensionType, Record<string, unknown>[]> = {
+      contractor_types: Object.entries(CONTRACTOR_TYPES).map(([id, ct]) => ({
         id,
         display_name: ct.display_name,
         url_slug: ct.url_slug,
         context_object: ct.context,
         is_active: true,
-      }));
-      await supabase.from('pseo_contractor_types' as any).upsert(ctRows as any, { onConflict: 'id' });
-
-      // Seed pain points
-      const ppRows = Object.entries(PAIN_POINTS).map(([id, pp]) => ({
+      })),
+      pain_points: Object.entries(PAIN_POINTS).map(([id, pp]) => ({
         id,
         display_name: pp.display_name,
         url_slug: pp.url_slug,
         context_object: pp.context,
         is_active: true,
-      }));
-      await supabase.from('pseo_pain_points' as any).upsert(ppRows as any, { onConflict: 'id' });
-
-      // Seed geographies
-      const geoRows = Object.entries(GEOGRAPHIES).map(([id, geo]) => ({
+      })),
+      geographies: Object.entries(GEOGRAPHIES).map(([id, geo]) => ({
         id,
         display_name: geo.display_name,
         url_slug: geo.url_slug,
         geo_level: geo.geo_level,
         context_object: geo.context,
         is_active: true,
-      }));
-      await supabase.from('pseo_geographies' as any).upsert(geoRows as any, { onConflict: 'id' });
-
-      // Seed business sizes
-      const bsRows = Object.entries(BUSINESS_SIZES).map(([id, bs]) => ({
+      })),
+      business_sizes: Object.entries(BUSINESS_SIZES).map(([id, bs]) => ({
         id,
         display_name: bs.display_name,
         url_slug: bs.url_slug,
         context_object: bs.context,
         is_active: true,
-      }));
-      await supabase.from('pseo_business_sizes' as any).upsert(bsRows as any, { onConflict: 'id' });
-
-      // Seed competitors
-      const compRows = Object.entries(COMPETITORS).map(([id, comp]) => ({
+      })),
+      competitors: Object.entries(COMPETITORS).map(([id, comp]) => ({
         id,
         display_name: comp.display_name,
         url_slug: comp.url_slug,
         competitor_profile: comp.profile,
         is_active: true,
-      }));
-      await supabase.from('pseo_competitors' as any).upsert(compRows as any, { onConflict: 'id' });
-
+      })),
+    };
+    try {
+      await pseo.seedDimensions(rows);
       toast.success('All dimensions seeded from taxonomy data');
-      fetchAllDimensions();
     } catch (error) {
-      toast.error('Failed to seed dimensions');
-      console.error(error);
+      toast.error(`Failed to seed dimensions: ${message(error)}`);
     }
   };
 
@@ -242,25 +150,20 @@ export default function PSEOAdminDashboard() {
   };
 
   const handleRetryQueue = async (id: string) => {
-    const { error } = await supabase
-      .from('pseo_generation_queue' as any)
-      .update({ status: 'pending', failure_reason: null } as any)
-      .eq('id', id);
-    if (error) {
-      toast.error(`Failed to retry: ${error.message}`);
-    } else {
+    try {
+      await pseo.updateQueueItem(id, { status: 'pending', failure_reason: null });
       toast.success('Queued for retry');
-      fetchQueue();
+    } catch (error) {
+      toast.error(`Failed to retry: ${message(error)}`);
     }
   };
 
   const handleRemoveQueue = async (id: string) => {
-    const { error } = await supabase.from('pseo_generation_queue' as any).delete().eq('id', id);
-    if (error) {
-      toast.error(`Failed to remove: ${error.message}`);
-    } else {
+    try {
+      await pseo.deleteQueueItem(id);
       toast.success('Removed from queue');
-      fetchQueue();
+    } catch (error) {
+      toast.error(`Failed to remove: ${message(error)}`);
     }
   };
 
@@ -272,15 +175,13 @@ export default function PSEOAdminDashboard() {
 
   // Authoring (US-386): the editor validates, this persists an unpublished draft.
   const handleSaveDraft = async (row: PseoPageRow): Promise<boolean> => {
-    const { error } = await supabase
-      .from('pseo_pages' as any)
-      .upsert(row as any, { onConflict: 'combination_key' });
-    if (error) {
-      toast.error(`Failed to save draft: ${error.message}`);
+    try {
+      await pseo.savePageDraft(row as unknown as Record<string, unknown>);
+    } catch (error) {
+      toast.error(`Failed to save draft: ${message(error)}`);
       return false;
     }
     toast.success(`Draft saved: ${row.canonical_url}`);
-    fetchPages();
     return true;
   };
 
@@ -293,41 +194,29 @@ export default function PSEOAdminDashboard() {
       toast.error(`Cannot publish: ${blockers[0]}${blockers.length > 1 ? ` (+${blockers.length - 1} more)` : ''}`);
       return;
     }
-    const { error } = await supabase
-      .from('pseo_pages' as any)
-      .update({ is_published: true, generation_status: 'published', published_at: new Date().toISOString() } as any)
-      .eq('id', id);
-    if (error) {
-      toast.error(`Failed to publish: ${error.message}`);
-    } else {
+    try {
+      await pseo.updatePages([id], { is_published: true, generation_status: 'published', published_at: new Date().toISOString() });
       toast.success('Page published');
-      fetchPages();
+    } catch (error) {
+      toast.error(`Failed to publish: ${message(error)}`);
     }
   };
 
   const handleUnpublish = async (id: string) => {
-    const { error } = await supabase
-      .from('pseo_pages' as any)
-      .update({ is_published: false, generation_status: 'generated' } as any)
-      .eq('id', id);
-    if (error) {
-      toast.error(`Failed to unpublish: ${error.message}`);
-    } else {
+    try {
+      await pseo.updatePages([id], { is_published: false, generation_status: 'generated' });
       toast.success('Page unpublished');
-      fetchPages();
+    } catch (error) {
+      toast.error(`Failed to unpublish: ${message(error)}`);
     }
   };
 
   const handleRegenerate = async (id: string) => {
-    const { error } = await supabase
-      .from('pseo_pages' as any)
-      .update({ generation_status: 'pending' } as any)
-      .eq('id', id);
-    if (error) {
-      toast.error(`Failed to queue for regeneration: ${error.message}`);
-    } else {
+    try {
+      await pseo.updatePages([id], { generation_status: 'pending' });
       toast.success('Queued for regeneration');
-      fetchPages();
+    } catch (error) {
+      toast.error(`Failed to queue for regeneration: ${message(error)}`);
     }
   };
 
@@ -341,15 +230,11 @@ export default function PSEOAdminDashboard() {
       toast.error(`None of the ${ids.length} selected pages pass validation`);
       return;
     }
-    const { error } = await supabase
-      .from('pseo_pages' as any)
-      .update({ is_published: true, generation_status: 'published', published_at: new Date().toISOString() } as any)
-      .in('id', publishable);
-    if (error) {
-      toast.error(`Failed to bulk publish: ${error.message}`);
-    } else {
+    try {
+      await pseo.updatePages(publishable, { is_published: true, generation_status: 'published', published_at: new Date().toISOString() });
       toast.success(`Published ${publishable.length} pages${skipped ? `; ${skipped} failed validation and stayed unpublished` : ''}`);
-      fetchPages();
+    } catch (error) {
+      toast.error(`Failed to bulk publish: ${message(error)}`);
     }
   };
 
@@ -374,15 +259,12 @@ export default function PSEOAdminDashboard() {
       status: 'pending',
     }));
 
-    const { error } = await supabase
-      .from('pseo_generation_queue' as any)
-      .upsert(rows as any, { onConflict: 'combination_key', ignoreDuplicates: true });
-
-    if (error) {
-      toast.error(`Failed to add to queue: ${error.message}`);
-    } else {
-      toast.success(`Added ${rows.length} combinations to queue`);
-      fetchQueue();
+    try {
+      const added = await pseo.addToQueue(rows);
+      const skipped = rows.length - added;
+      toast.success(`Added ${added} combinations to queue${skipped ? `; ${skipped} were already queued` : ''}`);
+    } catch (error) {
+      toast.error(`Failed to add to queue: ${message(error)}`);
     }
   };
 
@@ -390,6 +272,18 @@ export default function PSEOAdminDashboard() {
     () => new Set([...queueItems.map((q) => q.combination_key), ...pages.map((p) => p.combination_key)]),
     [queueItems, pages]
   );
+
+  if (pseo.error) {
+    return (
+      <div className="container mx-auto py-6">
+        <ErrorState
+          title="pSEO data could not be loaded"
+          error={pseo.error}
+          onRetry={() => { void pseo.refetch(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,60 +9,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertTriangle, Eye, FileText, Database, Settings, Download, Plus, CheckCircle, XCircle, Calendar, Edit } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { format, addDays } from 'date-fns';
+import { ErrorState } from '@/components/common/ErrorState';
+import {
+  useGDPRCompliance,
+  type ConsentRecord,
+  type DataSubjectRequest,
+  type GDPRStats,
+} from '@/hooks/useGDPRCompliance';
+import { format } from 'date-fns';
 import { MobilePageWrapper, MobileStatsGrid, mobileCardClasses, mobileButtonClasses, mobileTextClasses, mobileFilterClasses } from "@/utils/mobileHelpers";
 
-interface GDPRStats {
-  activeRequests: number;
-  overdueSoon: number;
-  consentRecords: number;
-  retentionPolicies: number;
-  processingActivities: number;
-}
+const EMPTY_STATS: GDPRStats = {
+  activeRequests: 0,
+  overdueSoon: 0,
+  consentRecords: 0,
+  retentionPolicies: 0,
+  processingActivities: 0
+};
 
-interface DataSubjectRequest {
-  id: string;
-  request_type: string;
-  requester_email: string;
-  requester_name: string | null;
-  status: string;
-  priority: string;
-  verification_status: string;
-  due_date: string | null;
-  created_at: string;
-  assigned_to: string | null;
-  user_profiles?: {
-    first_name: string;
-    last_name: string;
-  } | null;
-}
-
-interface ConsentRecord {
-  id: string;
-  user_id: string | null;
-  email: string | null;
-  consent_type: string;
-  purpose: string;
-  consent_given: boolean;
-  lawful_basis: string;
-  created_at: string;
-  withdrawal_date: string | null;
-}
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 const GDPRCompliance = () => {
-  const [stats, setStats] = useState<GDPRStats>({
-    activeRequests: 0,
-    overdueSoon: 0,
-    consentRecords: 0,
-    retentionPolicies: 0,
-    processingActivities: 0
-  });
-  const [requests, setRequests] = useState<DataSubjectRequest[]>([]);
-  const [consents, setConsents] = useState<ConsentRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const gdpr = useGDPRCompliance();
+  const stats = gdpr.data?.stats ?? EMPTY_STATS;
+  const requests = gdpr.data?.requests ?? [];
+  const consents = gdpr.data?.consents ?? [];
+  const loading = gdpr.isLoading;
   const [showNewRequestForm, setShowNewRequestForm] = useState(false);
   const [newRequest, setNewRequest] = useState({
     request_type: '',
@@ -77,106 +50,7 @@ const GDPRCompliance = () => {
   const [editRequestDialogOpen, setEditRequestDialogOpen] = useState(false);
   const [editConsentDialogOpen, setEditConsentDialogOpen] = useState(false);
   
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      fetchGDPRData();
-    }
-  }, [user]);
-
-  const fetchGDPRData = async () => {
-    try {
-      // Fetch statistics
-      const [requestsResult, overdueResult, consentsResult, policiesResult, activitiesResult] = await Promise.all([
-        // Active data subject requests
-        supabase
-          .from('data_subject_requests')
-          .select('id')
-          .not('status', 'in', '(completed,rejected,cancelled)'),
-        
-        // Requests due soon (within 7 days)
-        supabase
-          .from('data_subject_requests')
-          .select('id')
-          .not('status', 'in', '(completed,rejected,cancelled)')
-          .gte('due_date', new Date().toISOString().split('T')[0])
-          .lte('due_date', addDays(new Date(), 7).toISOString().split('T')[0]),
-        
-        // Total consent records
-        supabase
-          .from('consent_records')
-          .select('id'),
-        
-        // Active retention policies
-        supabase
-          .from('data_retention_policies')
-          .select('id')
-          .eq('is_active', true),
-        
-        // Processing activities
-        supabase
-          .from('processing_activities')
-          .select('id')
-          .eq('is_active', true)
-      ]);
-
-      // Fetch recent data subject requests
-      const { data: recentRequests } = await supabase
-        .from('data_subject_requests')
-        .select(`
-          *,
-          user_profiles:assigned_to (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      // Fetch recent consent records
-      const { data: recentConsents } = await supabase
-        .from('consent_records')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      setStats({
-        activeRequests: requestsResult.data?.length || 0,
-        overdueSoon: overdueResult.data?.length || 0,
-        consentRecords: consentsResult.data?.length || 0,
-        retentionPolicies: policiesResult.data?.length || 0,
-        processingActivities: activitiesResult.data?.length || 0
-      });
-
-      const processedRequests = (recentRequests || []).map(request => ({
-        id: request.id,
-        request_type: request.request_type,
-        requester_email: request.requester_email,
-        requester_name: request.requester_name,
-        status: request.status,
-        priority: request.priority,
-        verification_status: request.verification_status,
-        due_date: request.due_date,
-        created_at: request.created_at,
-        assigned_to: request.assigned_to,
-        user_profiles: request.user_profiles && !('error' in request.user_profiles) ? request.user_profiles : null
-      }));
-      
-      setRequests(processedRequests);
-      setConsents(recentConsents || []);
-    } catch (error) {
-      console.error('Error fetching GDPR data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load GDPR data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateRequest = async () => {
     if (!newRequest.request_type || !newRequest.requester_email) {
@@ -189,28 +63,7 @@ const GDPRCompliance = () => {
     }
 
     try {
-      // Get user's company ID
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        throw new Error('Company not found');
-      }
-
-      const { error } = await supabase
-        .from('data_subject_requests')
-        .insert([{
-          company_id: userProfile.company_id,
-          request_type: newRequest.request_type,
-          requester_email: newRequest.requester_email,
-          requester_name: newRequest.requester_name || null,
-          request_details: newRequest.request_details ? { details: newRequest.request_details } : null
-        }]);
-
-      if (error) throw error;
+      await gdpr.createRequest(newRequest);
 
       toast({
         title: "Request Created",
@@ -224,13 +77,10 @@ const GDPRCompliance = () => {
         requester_name: '',
         request_details: ''
       });
-      
-      await fetchGDPRData();
     } catch (error) {
-      console.error('Error creating request:', error);
       toast({
         title: "Error",
-        description: "Failed to create data subject request",
+        description: `Failed to create data subject request: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -240,19 +90,7 @@ const GDPRCompliance = () => {
     if (!editingRequest) return;
 
     try {
-      const { error } = await supabase
-        .from('data_subject_requests')
-        .update({
-          request_type: editingRequest.request_type,
-          requester_email: editingRequest.requester_email,
-          requester_name: editingRequest.requester_name,
-          status: editingRequest.status,
-          priority: editingRequest.priority,
-          verification_status: editingRequest.verification_status
-        })
-        .eq('id', editingRequest.id);
-
-      if (error) throw error;
+      await gdpr.updateRequest(editingRequest);
 
       toast({
         title: "Request Updated",
@@ -261,12 +99,10 @@ const GDPRCompliance = () => {
 
       setEditRequestDialogOpen(false);
       setEditingRequest(null);
-      await fetchGDPRData();
     } catch (error) {
-      console.error('Error updating request:', error);
       toast({
         title: "Error",
-        description: "Failed to update data subject request",
+        description: `Failed to update data subject request: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -276,17 +112,7 @@ const GDPRCompliance = () => {
     if (!editingConsent) return;
 
     try {
-      const { error } = await supabase
-        .from('consent_records')
-        .update({
-          consent_type: editingConsent.consent_type,
-          purpose: editingConsent.purpose,
-          consent_given: editingConsent.consent_given,
-          lawful_basis: editingConsent.lawful_basis
-        })
-        .eq('id', editingConsent.id);
-
-      if (error) throw error;
+      await gdpr.updateConsent(editingConsent);
 
       toast({
         title: "Consent Updated",
@@ -295,12 +121,10 @@ const GDPRCompliance = () => {
 
       setEditConsentDialogOpen(false);
       setEditingConsent(null);
-      await fetchGDPRData();
     } catch (error) {
-      console.error('Error updating consent:', error);
       toast({
         title: "Error",
-        description: "Failed to update consent record",
+        description: `Failed to update consent record: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -363,6 +187,18 @@ const GDPRCompliance = () => {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (gdpr.error) {
+    return (
+      <MobilePageWrapper title="GDPR Compliance">
+        <ErrorState
+          title="GDPR data could not be loaded"
+          error={gdpr.error}
+          onRetry={() => { void gdpr.refetch(); }}
+        />
+      </MobilePageWrapper>
     );
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,17 +15,18 @@ import { AlertTriangle, Bot, Plus, RefreshCw, Save, Zap, Server, CheckCircle2, X
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useAIModelManager } from '@/hooks/useAIModelManager';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-import type { AIEnvConfig, AIModel, TestResult } from './ai-model-manager/types';
+import type { AIModel, TestResult } from './ai-model-manager/types';
 import { EnvironmentTab } from './ai-model-manager/EnvironmentTab';
 import { ModelsList } from './ai-model-manager/ModelsList';
 
 const AIModelManager = () => {
   const { userProfile } = useAuth();
-  const [models, setModels] = useState<AIModel[]>([]);
-  const [envConfigs, setEnvConfigs] = useState<AIEnvConfig[]>([]);
-  const [, setLoading] = useState(true);
+  const aiModels = useAIModelManager();
+  const models = aiModels.models;
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [isNewModel, setIsNewModel] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
@@ -58,56 +59,6 @@ const AIModelManager = () => {
     task_type: 'standard' as 'standard' | 'lightweight',
     usage_category: 'general'
   });
-
-  useEffect(() => {
-    if (userProfile?.role === 'root_admin') {
-      loadModels();
-      loadEnvConfigs();
-    }
-  }, [userProfile]);
-
-  const loadModels = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('ai_model_configurations')
-        .select('*')
-        .order('priority_order', { ascending: false });
-
-      if (error) throw error;
-      setModels((data || []).map(model => ({
-        ...model,
-        auth_method: model.auth_method as 'bearer' | 'x-api-key' | 'basic'
-      })));
-    } catch (error) {
-      logger.error('Error loading models:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load AI models"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadEnvConfigs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('ai_environment_config')
-        .select('*')
-        .order('is_required', { ascending: false });
-
-      if (error) {
-        // Table might not exist yet
-        logger.debug('Environment config table not yet created');
-        return;
-      }
-      setEnvConfigs(data || []);
-    } catch (error) {
-      logger.debug('Error loading env configs:', error);
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -174,53 +125,26 @@ const AIModelManager = () => {
     setIsNewModel(true);
   };
 
+  const failed = (what: string, error: unknown) => {
+    logger.error(`Error: ${what}`, error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: `Failed to ${what}: ${error instanceof Error ? error.message : String(error)}`
+    });
+  };
+
   const saveModel = async () => {
+    if (!isNewModel && !editingModel) return;
     try {
-      // If setting as default, remove default from others of same task_type
-      if (formData.is_default) {
-        // Clearing the previous default has to succeed before the new one is
-        // written, or two models are default at once. The error was dropped and
-        // supabase-js returns it rather than throwing, so the save reported
-        // Success either way (US-300).
-        const { error: clearError } = await supabase
-          .from('ai_model_configurations')
-          .update({ is_default: false })
-          .eq('provider', formData.provider)
-          .eq('task_type', formData.task_type);
-
-        if (clearError) throw clearError;
-      }
-
-      if (isNewModel) {
-        const { error } = await supabase
-          .from('ai_model_configurations')
-          .insert([formData]);
-        if (error) throw error;
-        toast({
-          title: "Success",
-          description: "AI model added successfully"
-        });
-      } else if (editingModel) {
-        const { error } = await supabase
-          .from('ai_model_configurations')
-          .update(formData)
-          .eq('id', editingModel.id);
-        if (error) throw error;
-        toast({
-          title: "Success",
-          description: "AI model updated successfully"
-        });
-      }
-
-      resetForm();
-      loadModels();
-    } catch (error) {
-      logger.error('Error saving model:', error);
+      await aiModels.save(formData, isNewModel ? undefined : editingModel?.id);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save AI model"
+        title: "Success",
+        description: isNewModel ? "AI model added successfully" : "AI model updated successfully"
       });
+      resetForm();
+    } catch (error) {
+      failed('save AI model', error);
     }
   };
 
@@ -228,77 +152,27 @@ const AIModelManager = () => {
     if (!(await confirmAction({ title: `Are you sure you want to delete ${model.model_display_name}?`, destructive: true }))) return;
 
     try {
-      const { error } = await supabase
-        .from('ai_model_configurations')
-        .delete()
-        .eq('id', model.id);
-
-      if (error) throw error;
-
+      await aiModels.remove(model.id);
       toast({
         title: "Success",
         description: "AI model deleted successfully"
       });
-      loadModels();
     } catch (error) {
-      logger.error('Error deleting model:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete AI model"
-      });
+      failed('delete AI model', error);
     }
   };
 
   const updateAliases = async () => {
     try {
-      const { data: aliases, error: aliasError } = await supabase
-        .from('ai_model_configurations')
-        .select('*')
-        .eq('is_alias', true)
-        .eq('auto_update_alias', true);
-
-      if (aliasError) throw aliasError;
-
-      for (const alias of aliases || []) {
-        const { data: latestModel } = await supabase
-          .from('ai_model_configurations')
-          .select('model_name')
-          .eq('model_family', alias.model_family)
-          .eq('is_alias', false)
-          .eq('is_active', true)
-          .is('deprecated_date', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (latestModel && latestModel.model_name !== alias.points_to_model) {
-          // "Model aliases updated successfully" fired whether or not any alias
-          // moved, because this error was dropped (US-300).
-          const { error: aliasError } = await supabase
-            .from('ai_model_configurations')
-            .update({
-              points_to_model: latestModel.model_name,
-              last_updated: new Date().toISOString()
-            })
-            .eq('id', alias.id);
-
-          if (aliasError) throw aliasError;
-        }
-      }
-
+      const moved = await aiModels.refreshAliases();
       toast({
         title: "Success",
-        description: "Model aliases updated successfully"
+        description: moved === 0
+          ? "Every auto-updating alias already points at its newest model"
+          : `${moved} model alias${moved === 1 ? '' : 'es'} updated`
       });
-      loadModels();
     } catch (error) {
-      logger.error('Error updating aliases:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update aliases"
-      });
+      failed('update aliases', error);
     }
   };
 
@@ -765,6 +639,15 @@ const AIModelManager = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {aiModels.error && (
+        <ErrorState
+          inline
+          title="AI models could not be loaded"
+          error={aiModels.error}
+          onRetry={() => { void aiModels.refetch(); }}
+        />
       )}
 
       {/* Main Tabs */}

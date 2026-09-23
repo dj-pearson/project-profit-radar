@@ -289,9 +289,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       
       {/* DNS Prefetch for Performance */}
-      <link rel="dns-prefetch" href="//fonts.googleapis.com" />
       <link rel="dns-prefetch" href="//www.google-analytics.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       
       {/* Structured Data */}
       {combinedStructuredData.map((schema, index) => (

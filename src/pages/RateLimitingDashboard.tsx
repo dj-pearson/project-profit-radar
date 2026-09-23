@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,69 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, AlertTriangle, Globe, Ban, TrendingUp, RefreshCw, Plus, Settings, CheckCircle, XCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useRateLimiting, type RateLimitStats } from '@/hooks/useRateLimiting';
 import { format } from 'date-fns';
 
-interface RateLimitStats {
-  totalRules: number;
-  activeBlocks: number;
-  violationsToday: number;
-  ddosAttacks: number;
-  topBlockedIps: number;
-}
+const EMPTY_STATS: RateLimitStats = {
+  totalRules: 0,
+  activeBlocks: 0,
+  violationsToday: 0,
+  ddosAttacks: 0,
+  topBlockedIps: 0
+};
 
-interface RateLimitRule {
-  id: string;
-  rule_name: string;
-  endpoint_pattern: string;
-  method: string;
-  max_requests: number;
-  time_window_seconds: number;
-  block_duration_seconds: number;
-  rule_type: string;
-  is_active: boolean;
-  priority: number;
-  created_at: string;
-}
-
-interface RateLimitViolation {
-  id: string;
-  identifier: string;
-  identifier_type: string;
-  ip_address: string | null;
-  endpoint: string;
-  method: string;
-  requests_made: number;
-  limit_exceeded_by: number;
-  action_taken: string;
-  created_at: string;
-}
-
-interface IPAccessControl {
-  id: string;
-  ip_address: string;
-  access_type: string;
-  reason: string | null;
-  auto_generated: boolean;
-  expires_at: string | null;
-  is_active: boolean;
-  created_at: string;
-}
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 const RateLimitingDashboard = () => {
-  const [stats, setStats] = useState<RateLimitStats>({
-    totalRules: 0,
-    activeBlocks: 0,
-    violationsToday: 0,
-    ddosAttacks: 0,
-    topBlockedIps: 0
-  });
-  const [rules, setRules] = useState<RateLimitRule[]>([]);
-  const [violations, setViolations] = useState<RateLimitViolation[]>([]);
-  const [ipControls, setIpControls] = useState<IPAccessControl[]>([]);
-  const [loading, setLoading] = useState(true);
+  const rateLimiting = useRateLimiting();
+  const stats = rateLimiting.data?.stats ?? EMPTY_STATS;
+  const rules = rateLimiting.data?.rules ?? [];
+  const violations = rateLimiting.data?.violations ?? [];
+  const ipControls = rateLimiting.data?.ipControls ?? [];
+  const loading = rateLimiting.isLoading;
   const [refreshing, setRefreshing] = useState(false);
   const [showNewRuleForm, setShowNewRuleForm] = useState(false);
   const [showNewIPForm, setShowNewIPForm] = useState(false);
@@ -88,107 +47,7 @@ const RateLimitingDashboard = () => {
     access_type: 'blacklist',
     reason: ''
   });
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      fetchRateLimitData();
-    }
-  }, [user]);
-
-  const fetchRateLimitData = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Fetch statistics
-      const [rulesResult, blocksResult, violationsResult, ddosResult, ipResult] = await Promise.all([
-        // Total rules
-        supabase
-          .from('rate_limit_rules')
-          .select('id')
-          .eq('is_active', true),
-        
-        // Active blocks
-        supabase
-          .from('rate_limit_state')
-          .select('id')
-          .eq('is_blocked', true)
-          .gt('blocked_until', new Date().toISOString()),
-        
-        // Today's violations
-        supabase
-          .from('rate_limit_violations')
-          .select('id')
-          .gte('created_at', `${today}T00:00:00.000Z`)
-          .lt('created_at', `${today}T23:59:59.999Z`),
-        
-        // DDoS attacks (last 24h)
-        supabase
-          .from('ddos_detection_logs')
-          .select('id')
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-        
-        // IP controls
-        supabase
-          .from('ip_access_control')
-          .select('id')
-          .eq('is_active', true)
-      ]);
-
-      // Fetch rate limit rules
-      const { data: rulesData } = await supabase
-        .from('rate_limit_rules')
-        .select('*')
-        .order('priority', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      // Fetch recent violations
-      const { data: violationsData } = await supabase
-        .from('rate_limit_violations')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      // Fetch IP access controls
-      const { data: ipData } = await supabase
-        .from('ip_access_control')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      setStats({
-        totalRules: rulesResult.data?.length || 0,
-        activeBlocks: blocksResult.data?.length || 0,
-        violationsToday: violationsResult.data?.length || 0,
-        ddosAttacks: ddosResult.data?.length || 0,
-        topBlockedIps: ipResult.data?.length || 0
-      });
-
-      setRules(rulesData || []);
-      const processedViolations = (violationsData || []).map(v => ({
-        ...v,
-        ip_address: v.ip_address ? String(v.ip_address) : null
-      }));
-      
-      const processedIpControls = (ipData || []).map(ip => ({
-        ...ip,
-        ip_address: String(ip.ip_address)
-      }));
-      
-      setViolations(processedViolations);
-      setIpControls(processedIpControls);
-    } catch (error) {
-      console.error('Error fetching rate limit data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load rate limiting data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateRule = async () => {
     if (!newRule.rule_name || !newRule.endpoint_pattern) {
@@ -201,20 +60,7 @@ const RateLimitingDashboard = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('rate_limit_rules')
-        .insert([{
-          rule_name: newRule.rule_name,
-          endpoint_pattern: newRule.endpoint_pattern,
-          method: newRule.method,
-          max_requests: newRule.max_requests,
-          time_window_seconds: newRule.time_window_seconds,
-          block_duration_seconds: newRule.block_duration_seconds,
-          rule_type: newRule.rule_type,
-          priority: newRule.priority
-        }]);
-
-      if (error) throw error;
+      await rateLimiting.createRule(newRule);
 
       toast({
         title: "Rule Created",
@@ -232,13 +78,10 @@ const RateLimitingDashboard = () => {
         rule_type: 'standard',
         priority: 1
       });
-      
-      await fetchRateLimitData();
     } catch (error) {
-      console.error('Error creating rule:', error);
       toast({
         title: "Error",
-        description: "Failed to create rate limiting rule",
+        description: `Failed to create rate limiting rule: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -255,16 +98,7 @@ const RateLimitingDashboard = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('ip_access_control')
-        .insert([{
-          ip_address: newIP.ip_address,
-          access_type: newIP.access_type,
-          reason: newIP.reason || null,
-          created_by: user?.id
-        }]);
-
-      if (error) throw error;
+      await rateLimiting.createIPControl(newIP);
 
       toast({
         title: "IP Control Added",
@@ -277,13 +111,10 @@ const RateLimitingDashboard = () => {
         access_type: 'blacklist',
         reason: ''
       });
-      
-      await fetchRateLimitData();
     } catch (error) {
-      console.error('Error creating IP control:', error);
       toast({
         title: "Error",
-        description: "Failed to add IP control",
+        description: `Failed to add IP control: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -291,8 +122,16 @@ const RateLimitingDashboard = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchRateLimitData();
+    const result = await rateLimiting.refetch();
     setRefreshing(false);
+    if (result.error) {
+      toast({
+        title: "Refresh failed",
+        description: message(result.error),
+        variant: "destructive"
+      });
+      return;
+    }
     toast({
       title: "Refreshed",
       description: "Rate limiting data has been updated",
@@ -301,24 +140,16 @@ const RateLimitingDashboard = () => {
 
   const toggleRuleStatus = async (ruleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('rate_limit_rules')
-        .update({ is_active: !currentStatus })
-        .eq('id', ruleId);
-
-      if (error) throw error;
+      await rateLimiting.setRuleActive(ruleId, !currentStatus);
 
       toast({
         title: "Rule Updated",
         description: `Rule has been ${!currentStatus ? 'enabled' : 'disabled'}`,
       });
-      
-      await fetchRateLimitData();
     } catch (error) {
-      console.error('Error updating rule:', error);
       toast({
         title: "Error",
-        description: "Failed to update rule status",
+        description: `Failed to update rule status: ${message(error)}`,
         variant: "destructive"
       });
     }
@@ -361,6 +192,18 @@ const RateLimitingDashboard = () => {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (rateLimiting.error) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Rate limiting data could not be loaded"
+          error={rateLimiting.error}
+          onRetry={() => { void rateLimiting.refetch(); }}
+        />
       </div>
     );
   }

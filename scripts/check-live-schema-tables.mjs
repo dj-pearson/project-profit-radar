@@ -61,7 +61,7 @@ const EDGE_BASELINE = new Set([
 ]);
 
 const BASELINE = new Set([
-  'ai_environment_config', 'api_key_rate_limits', 'consent_ledger',
+  'api_key_rate_limits', 'consent_ledger',
   'disposable_email_domains', 'estimate_templates', 'financial_records',
   'generated_content', 'image_processing_queue', 'line_item_library',
   'processed_images', 'project_videos',

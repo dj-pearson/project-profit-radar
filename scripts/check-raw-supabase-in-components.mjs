@@ -41,8 +41,12 @@ const SRC = join(root, 'src');
  * progress/retainage/T&M billing tabs, both change-order screens, the four CRM
  * pages and pipeline settings, time reports, the time-tracking dashboard,
  * quick entry, the mobile time tracker and the equipment assignment form).
+ * A fourth moved 128 more (twelve files: pSEO admin, safety automation, risk
+ * prediction, GDPR, rate limiting, RFIs/submittals, AI models, keyword
+ * research, admin intelligence, auto scheduling, workflow automation and error
+ * logs). ESLint now warns on supabase.from() in components and pages too.
  */
-const BASELINE = 785;
+const BASELINE = 657;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

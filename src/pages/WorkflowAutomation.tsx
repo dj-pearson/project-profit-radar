@@ -1,161 +1,53 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Workflow, Play, Pause, Plus, Trash2, Edit, Copy, CheckCircle, Clock, Zap, Target, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useWorkflowAutomation, type WorkflowData } from '@/hooks/useWorkflowAutomation';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface WorkflowData {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  is_active: boolean;
-  is_template: boolean;
-  execution_count: number;
-  success_count: number;
-  failure_count: number;
-  last_executed_at: string;
-  created_at: string;
-}
-
-interface WorkflowStats {
-  total_workflows: number;
-  active_workflows: number;
-  total_executions: number;
-  success_rate: number;
-}
-
 export const WorkflowAutomation = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const automation = useWorkflowAutomation();
+  const loading = automation.isLoading;
+  const workflows = automation.data?.workflows ?? [];
+  const templates = automation.data?.templates ?? [];
+  const stats = automation.data?.stats ?? null;
+  const loadWorkflowData = () => { void automation.refetch(); };
 
-  const [loading, setLoading] = useState(true);
-  const [workflows, setWorkflows] = useState<WorkflowData[]>([]);
-  const [templates, setTemplates] = useState<WorkflowData[]>([]);
-  const [stats, setStats] = useState<WorkflowStats | null>(null);
-
-  useEffect(() => {
-    loadWorkflowData();
-  }, []);
-
-  const loadWorkflowData = async () => {
-    setLoading(true);
-    try {
-      // Load user workflows
-      const { data: workflowsData, error: workflowsError } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_template', false)
-        .order('created_at', { ascending: false });
-
-      if (workflowsError) throw workflowsError;
-      setWorkflows(workflowsData || []);
-
-      // Load templates
-      const { data: templatesData, error: templatesError } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('is_template', true)
-        .order('name');
-
-      if (templatesError) throw templatesError;
-      setTemplates(templatesData || []);
-
-      // Calculate stats
-      const totalWorkflows = workflowsData?.length || 0;
-      const activeWorkflows = workflowsData?.filter(w => w.is_active).length || 0;
-      const totalExecutions = workflowsData?.reduce((sum, w) => sum + (w.execution_count || 0), 0) || 0;
-      const totalSuccess = workflowsData?.reduce((sum, w) => sum + (w.success_count || 0), 0) || 0;
-      const successRate = totalExecutions > 0 ? (totalSuccess / totalExecutions) * 100 : 0;
-
-      setStats({
-        total_workflows: totalWorkflows,
-        active_workflows: activeWorkflows,
-        total_executions: totalExecutions,
-        success_rate: successRate,
-      });
-    } catch (error) {
-      console.error('Failed to load workflow data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load workflow data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const failed = (what: string, error: unknown) =>
+    toast({
+      title: 'Error',
+      description: `Failed to ${what}: ${error instanceof Error ? error.message : String(error)}`,
+      variant: 'destructive',
+    });
 
   const toggleWorkflowStatus = async (workflowId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('workflows')
-        .update({ is_active: !currentStatus })
-        .eq('id', workflowId);
-
-      if (error) throw error;
-
+      await automation.setActive(workflowId, !currentStatus);
       toast({
         title: currentStatus ? 'Workflow Paused' : 'Workflow Activated',
         description: currentStatus ? 'Workflow has been paused.' : 'Workflow is now active.',
       });
-
-      loadWorkflowData();
     } catch (error) {
-      console.error('Failed to toggle workflow status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update workflow status.',
-        variant: 'destructive',
-      });
+      failed('update workflow status', error);
     }
   };
 
   const duplicateWorkflow = async (workflowId: string, name: string) => {
     try {
-      // Get workflow data
-      const { data: workflow, error: workflowError } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('id', workflowId)
-        .single();
-
-      if (workflowError) throw workflowError;
-
-      // Create duplicate
-      const { error: insertError } = await supabase.from('workflows').insert({
-        user_id: user?.id,
-        name: `${name} (Copy)`,
-        description: workflow.description,
-        category: workflow.category,
-        is_active: false,
-        execution_order: workflow.execution_order,
-      });
-
-      if (insertError) throw insertError;
-
+      await automation.duplicate(workflowId, name);
       toast({
         title: 'Workflow Duplicated',
         description: 'A copy of the workflow has been created.',
       });
-
-      loadWorkflowData();
     } catch (error) {
-      console.error('Failed to duplicate workflow:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to duplicate workflow.',
-        variant: 'destructive',
-      });
+      failed('duplicate workflow', error);
     }
   };
 
@@ -163,62 +55,25 @@ export const WorkflowAutomation = () => {
     if (!(await confirmAction({ title: `Are you sure you want to delete "${name}"?`, destructive: true }))) return;
 
     try {
-      const { error } = await supabase
-        .from('workflows')
-        .delete()
-        .eq('id', workflowId);
-
-      if (error) throw error;
-
+      await automation.remove(workflowId);
       toast({
         title: 'Workflow Deleted',
         description: 'The workflow has been deleted.',
       });
-
-      loadWorkflowData();
     } catch (error) {
-      console.error('Failed to delete workflow:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete workflow.',
-        variant: 'destructive',
-      });
+      failed('delete workflow', error);
     }
   };
 
   const applyTemplate = async (templateId: string, templateName: string) => {
     try {
-      const { data: template, error: templateError } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('id', templateId)
-        .single();
-
-      if (templateError) throw templateError;
-
-      const { error: insertError } = await supabase.from('workflows').insert({
-        user_id: user?.id,
-        name: templateName,
-        description: template.description,
-        category: template.category,
-        is_active: false,
-      });
-
-      if (insertError) throw insertError;
-
+      await automation.applyTemplate(templateId, templateName);
       toast({
         title: 'Template Added',
         description: 'Workflow template has been added to your workflows.',
       });
-
-      loadWorkflowData();
     } catch (error) {
-      console.error('Failed to use template:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add template.',
-        variant: 'destructive',
-      });
+      failed('add template', error);
     }
   };
 
@@ -244,6 +99,20 @@ export const WorkflowAutomation = () => {
       <AccessiblePageWrapper pageTitle="Workflow Automation">
       <DashboardLayout hasAccessibleWrapper title="Workflow Automation">
         <DataTablePageSkeleton label="Loading workflows" />
+      </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+  if (automation.error) {
+    return (
+      <AccessiblePageWrapper pageTitle="Workflow Automation">
+      <DashboardLayout hasAccessibleWrapper title="Workflow Automation">
+        <ErrorState
+          title="Workflows could not be loaded"
+          error={automation.error}
+          onRetry={loadWorkflowData}
+        />
       </DashboardLayout>
       </AccessiblePageWrapper>
     );

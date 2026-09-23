@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
@@ -15,61 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertTriangle, Copy, Check, Download, RefreshCw, Search, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useErrorLogs, ERROR_LOG_PAGE_SIZE as PAGE_SIZE, type ErrorLog, type ErrorLogFilters } from '@/hooks/useErrorLogs';
 import { useToast } from '@/hooks/use-toast';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface ErrorLog {
-  id: string;
-  error_type: string;
-  error_message: string;
-  error_code: string | null;
-  stack_trace: string | null;
-  component: string | null;
-  component_stack: string | null;
-  severity: string | null;
-  url: string | null;
-  page_route: string | null;
-  user_id: string | null;
-  user_email: string | null;
-  user_role: string | null;
-  user_action: string | null;
-  company_id: string | null;
-  browser: string | null;
-  os: string | null;
-  device_type: string | null;
-  screen_resolution: string | null;
-  viewport_size: string | null;
-  user_agent: string | null;
-  browser_info: Record<string, unknown> | null;
-  session_id: string | null;
-  metadata: Record<string, unknown> | null;
-  environment: string | null;
-  resolved: boolean | null;
-  resolved_at: string | null;
-  resolved_by: string | null;
-  timestamp: string | null;
-  created_at: string | null;
-}
-
-interface Stats {
-  total24h: number;
-  critical24h: number;
-  unique24h: number;
-  mostAffectedPage: string | null;
-}
-
-const PAGE_SIZE = 25;
-
 export const ErrorLogs: React.FC = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [errors, setErrors] = useState<ErrorLog[]>([]);
-  const [stats, setStats] = useState<Stats>({ total24h: 0, critical24h: 0, unique24h: 0, mostAffectedPage: null });
-  const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -82,165 +35,37 @@ export const ErrorLogs: React.FC = () => {
   const [userEmailFilter, setUserEmailFilter] = useState('');
   const [resolvedFilter, setResolvedFilter] = useState('all');
 
-  const getDateThreshold = useCallback(() => {
-    const now = new Date();
-    switch (dateRange) {
-      case '24h': return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      case '7d': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      case '30d': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      default: return null;
-    }
-  }, [dateRange]);
+  const filters: ErrorLogFilters = useMemo(() => ({
+    dateRange,
+    searchTerm,
+    errorType: errorTypeFilter,
+    severity: severityFilter,
+    userEmail: userEmailFilter,
+    resolved: resolvedFilter,
+  }), [dateRange, searchTerm, errorTypeFilter, severityFilter, userEmailFilter, resolvedFilter]);
 
-  const loadStats = useCallback(async () => {
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    try {
-      // Total errors in 24h
-      const { count: total24h } = await supabase
-        .from('error_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo);
-
-      // Critical errors in 24h
-      const { count: critical24h } = await supabase
-        .from('error_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .eq('severity', 'critical');
-
-      // Unique errors (approximate via fetching distinct messages)
-      const { data: uniqueData } = await supabase
-        .from('error_logs')
-        .select('error_message')
-        .gte('created_at', twentyFourHoursAgo);
-      const uniqueMessages = new Set(uniqueData?.map(d => d.error_message) || []);
-
-      // Most affected page
-      const { data: pageData } = await supabase
-        .from('error_logs')
-        .select('page_route')
-        .gte('created_at', twentyFourHoursAgo)
-        .not('page_route', 'is', null);
-
-      let mostAffectedPage: string | null = null;
-      if (pageData && pageData.length > 0) {
-        const routeCounts: Record<string, number> = {};
-        for (const item of pageData) {
-          if (item.page_route) {
-            routeCounts[item.page_route] = (routeCounts[item.page_route] || 0) + 1;
-          }
-        }
-        const sorted = Object.entries(routeCounts).sort((a, b) => b[1] - a[1]);
-        mostAffectedPage = sorted[0]?.[0] || null;
-      }
-
-      setStats({
-        total24h: total24h || 0,
-        critical24h: critical24h || 0,
-        unique24h: uniqueMessages.size,
-        mostAffectedPage,
-      });
-    } catch (error) {
-      console.error('Failed to load error stats:', error);
-    }
-  }, []);
-
-  const loadErrors = useCallback(async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('error_logs')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      const dateThreshold = getDateThreshold();
-      if (dateThreshold) {
-        query = query.gte('created_at', dateThreshold);
-      }
-
-      if (searchTerm.trim()) {
-        query = query.ilike('error_message', `%${searchTerm.trim()}%`);
-      }
-
-      if (errorTypeFilter !== 'all') {
-        query = query.eq('error_type', errorTypeFilter);
-      }
-
-      if (severityFilter !== 'all') {
-        query = query.eq('severity', severityFilter);
-      }
-
-      if (userEmailFilter.trim()) {
-        query = query.ilike('user_email', `%${userEmailFilter.trim()}%`);
-      }
-
-      if (resolvedFilter === 'resolved') {
-        query = query.eq('resolved', true);
-      } else if (resolvedFilter === 'unresolved') {
-        query = query.eq('resolved', false);
-      }
-
-      // Pagination
-      const from = page * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      query = query.range(from, to);
-
-      const { data, count, error } = await query;
-
-      if (error) {
-        toast({ title: 'Error loading logs', description: error.message, variant: 'destructive' });
-        return;
-      }
-
-      setErrors((data as unknown as ErrorLog[]) || []);
-      setTotalCount(count || 0);
-    } catch (error) {
-      console.error('Failed to load error logs:', error);
-      toast({ title: 'Error', description: 'Failed to load error logs', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, searchTerm, dateRange, errorTypeFilter, severityFilter, userEmailFilter, resolvedFilter, getDateThreshold, toast]);
-
-  useEffect(() => {
-    loadErrors();
-    loadStats();
-  }, [loadErrors, loadStats]);
+  const logs = useErrorLogs(filters, page);
+  const errors = logs.rows;
+  const totalCount = logs.total;
+  const loading = logs.isFetching;
+  const stats = logs.stats ?? { total24h: 0, critical24h: 0, unique24h: 0, mostAffectedPage: null };
 
   const handleRefresh = () => {
     setPage(0);
-    loadErrors();
-    loadStats();
+    void logs.refetch();
   };
 
   const toggleResolved = async (errorLog: ErrorLog) => {
     const newResolved = !errorLog.resolved;
     try {
-      const { error } = await supabase
-        .from('error_logs')
-        .update({
-          resolved: newResolved,
-          resolved_at: newResolved ? new Date().toISOString() : null,
-          resolved_by: newResolved ? user?.id || null : null,
-        } as any)
-        .eq('id', errorLog.id);
-
-      if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-        return;
-      }
-
-      setErrors(prev =>
-        prev.map(e => e.id === errorLog.id
-          ? { ...e, resolved: newResolved, resolved_at: newResolved ? new Date().toISOString() : null, resolved_by: newResolved ? user?.id || null : null }
-          : e
-        )
-      );
+      await logs.setResolved(errorLog.id, newResolved);
       toast({ title: newResolved ? 'Marked as resolved' : 'Marked as unresolved' });
-    } catch {
-      toast({ title: 'Error', description: 'Failed to update error status', variant: 'destructive' });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update error status',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -281,26 +106,11 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
 
   const exportCSV = async () => {
     try {
-      let query = supabase
-        .from('error_logs')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      const dateThreshold = getDateThreshold();
-      if (dateThreshold) query = query.gte('created_at', dateThreshold);
-      if (searchTerm.trim()) query = query.ilike('error_message', `%${searchTerm.trim()}%`);
-      if (errorTypeFilter !== 'all') query = query.eq('error_type', errorTypeFilter);
-      if (severityFilter !== 'all') query = query.eq('severity', severityFilter);
-      if (userEmailFilter.trim()) query = query.ilike('user_email', `%${userEmailFilter.trim()}%`);
-      if (resolvedFilter === 'resolved') query = query.eq('resolved', true);
-      else if (resolvedFilter === 'unresolved') query = query.eq('resolved', false);
-
-      // Limit export to 1000 rows
-      query = query.limit(1000);
-
-      const { data, error } = await query;
-      if (error) {
-        toast({ title: 'Export failed', description: error.message, variant: 'destructive' });
+      let data: ErrorLog[];
+      try {
+        data = await logs.exportRows();
+      } catch (error) {
+        toast({ title: 'Export failed', description: error instanceof Error ? error.message : String(error), variant: 'destructive' });
         return;
       }
 
@@ -323,7 +133,7 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
         return str;
       };
 
-      const rows = (data as unknown as ErrorLog[]).map(e => [
+      const rows = data.map(e => [
         e.id,
         e.created_at || e.timestamp,
         e.error_type,
@@ -397,7 +207,7 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (loading && errors.length === 0) {
+  if (logs.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Error Logs">
       <DashboardLayout hasAccessibleWrapper title="Error Logs">
@@ -426,6 +236,14 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
       }
     >
       <div className="space-y-6">
+        {logs.statsError && (
+          <ErrorState
+            inline
+            title="Error totals could not be loaded"
+            error={logs.statsError}
+            onRetry={() => { void logs.refetch(); }}
+          />
+        )}
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -641,6 +459,17 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
               ),
             },
           ];
+
+          if (logs.error) {
+            return (
+              <ErrorState
+                inline
+                title="Error logs could not be loaded"
+                error={logs.error}
+                onRetry={() => { void logs.refetch(); }}
+              />
+            );
+          }
 
           return (
             <AccessibleTable<ErrorLog>

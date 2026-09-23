@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useSafetyAutomation, type NewIncident } from '@/hooks/useSafetyAutomation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,301 +12,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Shield, CheckCircle2, FileText, Users, TrendingDown, Award, HardHat } from 'lucide-react';
 
-interface OSHA300Log {
-  id: string;
-  employee_name: string;
-  job_title: string;
-  incident_date: string;
-  incident_description: string;
-  severity: string;
-  days_away_from_work: number;
-  status: string;
-}
-
-interface SafetyInspection {
-  id: string;
-  inspection_date: string;
-  inspection_type: string;
-  pass_fail_status: string;
-  overall_score: number;
-  hazards_identified: number;
-  violations_found: number;
-}
-
-interface ToolboxTalk {
-  id: string;
-  talk_date: string;
-  topic: string;
-  attendee_count: number;
-}
-
-interface SafetyTraining {
-  id: string;
-  training_name: string;
-  training_type: string;
-  training_date: string;
-  expiry_date: string;
-  status: string;
-  user_id: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-}
+const BLANK_INCIDENT: NewIncident = {
+  employee_name: '',
+  job_title: '',
+  incident_date: '',
+  incident_description: '',
+  severity: 'first_aid'
+};
 
 export function SafetyAutomation() {
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
+  const safety = useSafetyAutomation(selectedProject);
+  const projects = safety.overview?.projects ?? [];
+  const trainingRecords = safety.overview?.trainingRecords ?? [];
+  const expiringTraining = safety.overview?.expiringTraining ?? [];
+  const oshaLogs = safety.projectData?.oshaLogs ?? [];
+  const inspections = safety.projectData?.inspections ?? [];
+  const toolboxTalks = safety.projectData?.toolboxTalks ?? [];
+  const stats = safety.overview?.stats ?? {
+    total_incidents: 0,
+    days_since_incident: null,
+    inspections_this_month: 0,
+    expiring_certifications: 0
+  };
 
   // OSHA 300 Log
-  const [oshaLogs, setOshaLogs] = useState<OSHA300Log[]>([]);
   const [showAddIncident, setShowAddIncident] = useState(false);
-  const [newIncident, setNewIncident] = useState({
-    employee_name: '',
-    job_title: '',
-    incident_date: '',
-    incident_description: '',
-    severity: 'first_aid'
-  });
-
-  // Safety Inspections
-  const [inspections, setInspections] = useState<SafetyInspection[]>([]);
-
-  // Toolbox Talks
-  const [toolboxTalks, setToolboxTalks] = useState<ToolboxTalk[]>([]);
-
-  // Safety Training
-  const [trainingRecords, setTrainingRecords] = useState<SafetyTraining[]>([]);
-  const [expiringTraining, setExpiringTraining] = useState<SafetyTraining[]>([]);
-
-  // Stats
-  const [stats, setStats] = useState({
-    total_incidents: 0,
-    days_since_incident: 0,
-    inspections_this_month: 0,
-    compliance_rate: 95,
-    expiring_certifications: 0
-  });
+  const [newIncident, setNewIncident] = useState<NewIncident>(BLANK_INCIDENT);
 
   useEffect(() => {
-    loadProjects();
-    loadStats();
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedProject) {
-      loadOshaLogs();
-      loadInspections();
-      loadToolboxTalks();
-    }
-    loadTrainingRecords();
-  }, [selectedProject]);
-
-  const loadProjects = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('tenant_id', userProfile.tenant_id)
-        .in('status', ['planning', 'active'])
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-      if (data && data.length > 0 && !selectedProject) {
-        setSelectedProject(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      // Get total incidents
-      const { count: incidentCount } = await supabase
-        .from('osha_300_log')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', userProfile.tenant_id);
-
-      // Get recent incident for days since calculation
-      const { data: recentIncident } = await supabase
-        .from('osha_300_log')
-        .select('incident_date')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('incident_date', { ascending: false })
-        .limit(1)
-        .single();
-
-      let daysSinceIncident = 0;
-      if (recentIncident) {
-        const lastIncidentDate = new Date(recentIncident.incident_date);
-        const today = new Date();
-        daysSinceIncident = Math.floor((today.getTime() - lastIncidentDate.getTime()) / (1000 * 60 * 60 * 24));
-      }
-
-      // Get inspections this month
-      const firstOfMonth = new Date();
-      firstOfMonth.setDate(1);
-      const { count: inspectionCount } = await supabase
-        .from('safety_inspections')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', userProfile.tenant_id)
-        .gte('inspection_date', firstOfMonth.toISOString().split('T')[0]);
-
-      // Get expiring training
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      const { data: expiringCerts } = await supabase
-        .from('safety_training')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .eq('status', 'active')
-        .lte('expiry_date', thirtyDaysFromNow.toISOString().split('T')[0]);
-
-      setExpiringTraining(expiringCerts || []);
-
-      setStats({
-        total_incidents: incidentCount || 0,
-        days_since_incident: daysSinceIncident,
-        inspections_this_month: inspectionCount || 0,
-        compliance_rate: 95, // Would calculate based on violations
-        expiring_certifications: expiringCerts?.length || 0
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
-  const loadOshaLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('osha_300_log')
-        .select('*')
-        .eq('project_id', selectedProject)
-        .order('incident_date', { ascending: false });
-
-      if (error) throw error;
-      setOshaLogs((data as any) || []);
-    } catch (error) {
-      console.error('Error loading OSHA logs:', error);
-    }
-  };
-
-  const loadInspections = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('safety_inspections')
-        .select('*')
-        .eq('project_id', selectedProject)
-        .order('inspection_date', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setInspections(data || []);
-    } catch (error) {
-      console.error('Error loading inspections:', error);
-    }
-  };
-
-  const loadToolboxTalks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('toolbox_talks')
-        .select('*')
-        .eq('project_id', selectedProject)
-        .order('talk_date', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setToolboxTalks(data || []);
-    } catch (error) {
-      console.error('Error loading toolbox talks:', error);
-    }
-  };
-
-  const loadTrainingRecords = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('safety_training')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('training_date', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setTrainingRecords(data || []);
-    } catch (error) {
-      console.error('Error loading training records:', error);
-    }
-  };
+    if (!selectedProject && projects.length > 0) setSelectedProject(projects[0].id);
+  }, [projects, selectedProject]);
 
   const addIncident = async () => {
     try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { error } = await supabase
-        .from('osha_300_log')
-        .insert({
-          tenant_id: userProfile.tenant_id,
-          project_id: selectedProject,
-          employee_name: newIncident.employee_name,
-          job_title: newIncident.job_title,
-          incident_date: newIncident.incident_date,
-          incident_description: newIncident.incident_description,
-          incident_location: 'Project Site',
-          injury_type: 'injury',
-          severity: newIncident.severity
-        });
-
-      if (error) throw error;
-
-      // Reset form and reload
-      setNewIncident({
-        employee_name: '',
-        job_title: '',
-        incident_date: '',
-        incident_description: '',
-        severity: 'first_aid'
-      });
+      await safety.addIncident(newIncident);
+      setNewIncident(BLANK_INCIDENT);
       setShowAddIncident(false);
-      loadOshaLogs();
-      loadStats();
+      toast.success('Incident recorded in the OSHA 300 log');
     } catch (error) {
-      console.error('Error adding incident:', error);
-      alert('Failed to add incident');
+      toast.error(`Failed to add incident: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -328,6 +74,18 @@ export function SafetyAutomation() {
       default: return 'text-gray-600 bg-gray-50';
     }
   };
+
+  if (safety.error) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Safety records could not be loaded"
+          error={safety.error}
+          onRetry={() => { void safety.refetch(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -355,7 +113,7 @@ export function SafetyAutomation() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {stats.days_since_incident}
+              {stats.days_since_incident ?? '--'}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.total_incidents} total incidents
@@ -388,11 +146,10 @@ export function SafetyAutomation() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {stats.compliance_rate}%
-            </div>
+            {/* This was a hardcoded 95%. Nothing computes a rate from violations yet. */}
+            <div className="text-3xl font-bold">--</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Target: 95%
+              Not calculated yet
             </p>
           </CardContent>
         </Card>
@@ -422,9 +179,10 @@ export function SafetyAutomation() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">100%</div>
+            {/* This was a hardcoded 100%. Nothing checks documentation yet. */}
+            <div className="text-3xl font-bold">--</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Up to date
+              Not tracked yet
             </p>
           </CardContent>
         </Card>

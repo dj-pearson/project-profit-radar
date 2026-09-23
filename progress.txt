@@ -7209,3 +7209,11 @@ backdrop. BookingPageManager's slug followed only the first typed
 character; it now follows the title until edited, and the booking_pages
 insert no longer sends an availability column that doesn't exist (the
 rules already went to availability_rules).
+
+## US-266 pass 4
+Twelve more admin and safety screens on query hooks (raw calls 785 -> 657),
+and the eslint rule the story asked for now warns on raw supabase.from in
+components and pages (695 warnings, baseline 4689). Removed invented
+numbers: the safety dashboard's fixed 95% compliance and 100%
+documentation, and a "999 days ago" last login. Editing an RFI no longer
+renumbers it. TS 1112 -> 1067.

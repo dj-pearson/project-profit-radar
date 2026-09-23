@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useAutoScheduling, type Assignment, type AutoSchedule } from '@/hooks/useAutoScheduling';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,42 +17,9 @@ import { CalendarIcon, Users, Briefcase, Zap, CheckCircle2, TrendingUp, MapPin, 
 import { format } from 'date-fns';
 import { activateOnKey } from '@/lib/accessibility';
 
-interface AutoSchedule {
-  id: string;
-  schedule_name: string;
-  schedule_date: string;
-  optimization_score: number;
-  computation_time_ms: number;
-  status: 'draft' | 'published' | 'active' | 'completed';
-  minimize_travel: boolean;
-  balance_workload: boolean;
-  respect_skills: boolean;
-  iterations_count: number;
-  created_at: string;
-}
-
-interface Assignment {
-  user_id: string;
-  project_id: string;
-  date: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-}
-
-interface CrewMember {
-  id: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-}
-
 export function AutoScheduling() {
-  const { user } = useAuth();
-  const [generating, setGenerating] = useState(false);
+  const scheduling = useAutoScheduling();
+  const { projects, crewMembers, schedules, generating } = scheduling;
 
   // Form state
   const [scheduleName, setScheduleName] = useState('');
@@ -62,90 +30,8 @@ export function AutoScheduling() {
   const [respectSkills, setRespectSkills] = useState(true);
   const [iterations, setIterations] = useState(100);
 
-  // Data state
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
-  const [schedules, setSchedules] = useState<AutoSchedule[]>([]);
   const [currentSchedule, setCurrentSchedule] = useState<AutoSchedule | null>(null);
   const [currentAssignments, setCurrentAssignments] = useState<Assignment[]>([]);
-
-  useEffect(() => {
-    loadProjects();
-    loadCrewMembers();
-    loadSchedules();
-  }, [user]);
-
-  const loadProjects = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, status')
-        .eq('tenant_id', userProfile.tenant_id)
-        .in('status', ['planning', 'active', 'on_hold'])
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
-
-  const loadCrewMembers = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, role')
-        .eq('tenant_id', userProfile.tenant_id)
-        .in('role', ['field_supervisor', 'foreman'])
-        .order('first_name');
-
-      if (error) throw error;
-      setCrewMembers(data || []);
-    } catch (error) {
-      console.error('Error loading crew members:', error);
-    }
-  };
-
-  const loadSchedules = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('auto_schedules')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false })
-        .limit(20) as any;
-
-      if (error) throw error;
-      setSchedules(data as any || []);
-    } catch (error) {
-      console.error('Error loading schedules:', error);
-    }
-  };
 
   const toggleProject = (projectId: string) => {
     setSelectedProjects(prev =>
@@ -155,93 +41,45 @@ export function AutoScheduling() {
     );
   };
 
+  const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
   const generateSchedule = async () => {
     if (!scheduleName || !scheduleDate || selectedProjects.length === 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    setGenerating(true);
     try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const response = await fetch(
-        getEdgeFunctionUrl('auto-scheduling'),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            tenant_id: userProfile.tenant_id,
-            schedule_name: scheduleName,
-            schedule_date: format(scheduleDate, 'yyyy-MM-dd'),
-            project_ids: selectedProjects,
-            user_id: user?.id,
-            minimize_travel: minimizeTravel,
-            balance_workload: balanceWorkload,
-            respect_skills: respectSkills,
-            iterations
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to generate schedule');
-      }
-
-      const result = await response.json();
+      const result = await scheduling.generate({
+        schedule_name: scheduleName,
+        schedule_date: format(scheduleDate, 'yyyy-MM-dd'),
+        project_ids: selectedProjects,
+        minimize_travel: minimizeTravel,
+        balance_workload: balanceWorkload,
+        respect_skills: respectSkills,
+        iterations
+      });
 
       setCurrentSchedule(result.schedule);
       setCurrentAssignments(result.assignments);
-
-      // Reload schedules list
-      await loadSchedules();
 
       // Reset form
       setScheduleName('');
       setScheduleDate(undefined);
       setSelectedProjects([]);
-
     } catch (error) {
-      console.error('Error generating schedule:', error);
-      alert('Failed to generate schedule. Please try again.');
-    } finally {
-      setGenerating(false);
+      toast.error(`Failed to generate schedule: ${message(error)}`);
     }
   };
 
   const publishSchedule = async (scheduleId: string) => {
     try {
-      const { error } = await supabase
-        .from('auto_schedules')
-        .update({
-          status: 'published',
-          published_at: new Date().toISOString()
-        })
-        .eq('id', scheduleId);
-
-      if (error) throw error;
-
-      // Reload schedules
-      await loadSchedules();
-
+      await scheduling.publish(scheduleId);
       if (currentSchedule?.id === scheduleId) {
         setCurrentSchedule({ ...currentSchedule, status: 'published' });
       }
     } catch (error) {
-      console.error('Error publishing schedule:', error);
-      alert('Failed to publish schedule');
+      toast.error(`Failed to publish schedule: ${message(error)}`);
     }
   };
 
@@ -263,6 +101,18 @@ export function AutoScheduling() {
       default: return 'bg-yellow-100 text-yellow-800';
     }
   };
+
+  if (scheduling.error) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Scheduling data could not be loaded"
+          error={scheduling.error}
+          onRetry={() => { void scheduling.refetch(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">

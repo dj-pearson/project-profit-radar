@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,51 +18,24 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { ErrorState } from '@/components/common/ErrorState';
+import {
+  useRFISubmittalManagement,
+  type RFI,
+  type Submittal,
+} from '@/hooks/useRFISubmittalManagement';
 import { Edit, CheckCircle, XCircle, Clock, MessageSquare, Send, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-interface RFI {
-  id: string;
-  rfi_number: string;
-  project_id: string;
-  subject: string;
-  description?: string;
-  priority: string;
-  status: string;
-  created_by?: string;
-  submitted_to?: string;
-  due_date?: string;
-  response_date?: string;
-  created_at: string;
-  projects?: { name: string };
-}
-
-interface Submittal {
-  id: string;
-  submittal_number: string;
-  project_id: string;
-  title: string;
-  description?: string;
-  spec_section?: string;
-  priority: string;
-  status: string;
-  created_by?: string;
-  due_date?: string;
-  approved_date?: string;
-  created_at: string;
-  projects?: { name: string };
-}
-
 export const RFISubmittalManagement: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [rfis, setRfis] = useState<RFI[]>([]);
-  const [submittals, setSubmittals] = useState<Submittal[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const workflow = useRFISubmittalManagement();
+  const rfis = workflow.data?.rfis ?? [];
+  const submittals = workflow.data?.submittals ?? [];
+  const projects = workflow.data?.projects ?? [];
+  const loading = workflow.isLoading;
   const [rfiDialogOpen, setRfiDialogOpen] = useState(false);
   const [submittalDialogOpen, setSubmittalDialogOpen] = useState(false);
   const [editingRfi, setEditingRfi] = useState<RFI | null>(null);
@@ -87,236 +60,68 @@ export const RFISubmittalManagement: React.FC = () => {
     due_date: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, [userProfile?.company_id]);
-
-  const loadData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      // Load RFIs
-      const { data: rfisData, error: rfisError } = await supabase
-        .from('rfis')
-        .select(`
-          *,
-          projects:project_id(name)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (rfisError) throw rfisError;
-
-      // Load Submittals
-      const { data: submittalsData, error: submittalsError } = await supabase
-        .from('submittals')
-        .select(`
-          *,
-          projects:project_id(name)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (submittalsError) throw submittalsError;
-
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-
-      // Load team members
-      const { data: teamData, error: teamError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name')
-        .eq('company_id', userProfile.company_id);
-
-      if (teamError) throw teamError;
-
-      setRfis(rfisData || []);
-      setSubmittals(submittalsData || []);
-      setProjects(projectsData || []);
-      setTeamMembers(teamData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load RFI and submittal data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const failed = (what: string, error: unknown) =>
+    toast({
+      title: "Error",
+      description: `Failed to ${what}: ${error instanceof Error ? error.message : String(error)}`,
+      variant: "destructive"
+    });
 
   const handleRfiSubmit = async () => {
-    if (!userProfile?.company_id || !rfiForm.project_id || !rfiForm.subject) return;
+    if (!rfiForm.project_id || !rfiForm.subject) return;
 
     try {
-      const rfiData = {
-        ...rfiForm,
-        company_id: userProfile.company_id,
-        rfi_number: `RFI-${Date.now().toString().slice(-8)}`,
-        created_by: userProfile.id,
-        status: 'open'
-      };
-
-      if (editingRfi) {
-        const { error } = await supabase
-          .from('rfis')
-          .update(rfiData)
-          .eq('id', editingRfi.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "RFI updated successfully"
-        });
-      } else {
-        const { error } = await supabase
-          .from('rfis')
-          .insert([rfiData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "RFI created successfully"
-        });
-      }
-
+      await workflow.saveRFI(rfiForm, editingRfi?.id);
+      toast({
+        title: "Success",
+        description: editingRfi ? "RFI updated successfully" : "RFI created successfully"
+      });
       setRfiDialogOpen(false);
       setEditingRfi(null);
       resetRfiForm();
-      loadData();
     } catch (error) {
-      console.error('Error saving RFI:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save RFI",
-        variant: "destructive"
-      });
+      failed('save RFI', error);
     }
   };
 
   const handleSubmittalSubmit = async () => {
-    if (!userProfile?.company_id || !submittalForm.project_id || !submittalForm.title) return;
+    if (!submittalForm.project_id || !submittalForm.title) return;
 
     try {
-      const submittalData = {
-        ...submittalForm,
-        company_id: userProfile.company_id,
-        submittal_number: `SUB-${Date.now().toString().slice(-8)}`,
-        created_by: userProfile.id,
-        status: 'not_submitted'
-      };
-
-      if (editingSubmittal) {
-        const { error } = await supabase
-          .from('submittals')
-          .update(submittalData)
-          .eq('id', editingSubmittal.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Submittal updated successfully"
-        });
-      } else {
-        const { error } = await supabase
-          .from('submittals')
-          .insert([submittalData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Submittal created successfully"
-        });
-      }
-
+      await workflow.saveSubmittal(submittalForm, editingSubmittal?.id);
+      toast({
+        title: "Success",
+        description: editingSubmittal ? "Submittal updated successfully" : "Submittal created successfully"
+      });
       setSubmittalDialogOpen(false);
       setEditingSubmittal(null);
       resetSubmittalForm();
-      loadData();
     } catch (error) {
-      console.error('Error saving submittal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save submittal",
-        variant: "destructive"
-      });
+      failed('save submittal', error);
     }
   };
 
   const updateRfiStatus = async (rfiId: string, newStatus: string, response?: string) => {
     try {
-      const updateData: any = { status: newStatus };
-      
-      if (newStatus === 'closed') {
-        updateData.response_date = new Date().toISOString();
-        if (response) updateData.response = response;
-      }
-
-      const { error } = await supabase
-        .from('rfis')
-        .update(updateData)
-        .eq('id', rfiId);
-
-      if (error) throw error;
-
+      await workflow.setRFIStatus(rfiId, newStatus, response);
       toast({
         title: "Success",
         description: `RFI ${newStatus} successfully`
       });
-      
-      loadData();
     } catch (error) {
-      console.error('Error updating RFI:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update RFI",
-        variant: "destructive"
-      });
+      failed('update RFI', error);
     }
   };
 
-  const updateSubmittalStatus = async (submittalId: string, newStatus: string, comments?: string) => {
+  const updateSubmittalStatus = async (submittalId: string, newStatus: string) => {
     try {
-      const updateData: any = { status: newStatus };
-      const now = new Date().toISOString();
-      
-      if (newStatus === 'submitted') {
-        updateData.submitted_date = now;
-      } else if (newStatus === 'approved') {
-        updateData.approved_date = now;
-      }
-
-      const { error } = await supabase
-        .from('submittals')
-        .update(updateData)
-        .eq('id', submittalId);
-
-      if (error) throw error;
-
+      await workflow.setSubmittalStatus(submittalId, newStatus);
       toast({
         title: "Success",
         description: `Submittal ${newStatus.replace('_', ' ')} successfully`
       });
-      
-      loadData();
     } catch (error) {
-      console.error('Error updating submittal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update submittal",
-        variant: "destructive"
-      });
+      failed('update submittal', error);
     }
   };
 
@@ -369,6 +174,16 @@ export const RFISubmittalManagement: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="md" />
       </div>
+    );
+  }
+
+  if (workflow.error) {
+    return (
+      <ErrorState
+        title="RFIs and submittals could not be loaded"
+        error={workflow.error}
+        onRetry={() => { void workflow.refetch(); }}
+      />
     );
   }
 

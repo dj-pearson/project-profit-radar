@@ -13,7 +13,6 @@ import { join } from 'node:path';
  * fails if an entry goes stale.
  */
 const ALLOWLIST = new Set([
-  'src/components/admin/KeywordManager.tsx',
   'src/pages/BlogManager.tsx',
 ]);
 

@@ -3,15 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Target, Filter, CheckCircle2, Plus, Minus } from 'lucide-react';
 import React from 'react';
-import type { useAuth } from '@/contexts/AuthContext';
-import { generateKeywordBlogTopics, type KeywordData, type ParsedKeywordStats } from './keywordData';
+import type { KeywordData, ParsedKeywordStats } from './keywordData';
 
 interface KeywordsTabProps {
-  userProfile: ReturnType<typeof useAuth>['userProfile'];
   keywordStats: ParsedKeywordStats;
   filteredKeywords: KeywordData[];
   activeFilter: string;
@@ -19,10 +15,11 @@ interface KeywordsTabProps {
   sortBy: string;
   setSortBy: React.Dispatch<React.SetStateAction<string>>;
   selectedForBlog: Set<string>;
-  setSelectedForBlog: React.Dispatch<React.SetStateAction<Set<string>>>;
   selectedForDeletion: Set<string>;
-  setSelectedKeywords: React.Dispatch<React.SetStateAction<KeywordData[]>>;
-  setGeneratedTopics: React.Dispatch<React.SetStateAction<string[]>>;
+  /** Saves every keyword as selected for blog generation. */
+  selectAll: () => void;
+  /** Saves every keyword as not selected. */
+  clearSelection: () => void;
   selectOptimalKeywords: () => void;
   toggleKeywordForBlog: (keyword: string) => void;
   toggleKeywordForDeletion: (keyword: string) => void;
@@ -31,7 +28,7 @@ interface KeywordsTabProps {
 }
 
 /** The Keywords tab: filter/sort controls and the selectable keyword list. */
-export function KeywordsTab({ userProfile, keywordStats, filteredKeywords, activeFilter, setActiveFilter, sortBy, setSortBy, selectedForBlog, setSelectedForBlog, selectedForDeletion, setSelectedKeywords, setGeneratedTopics, selectOptimalKeywords, toggleKeywordForBlog, toggleKeywordForDeletion, getPriorityColor, getIntentIcon }: KeywordsTabProps) {
+export function KeywordsTab({ keywordStats, filteredKeywords, activeFilter, setActiveFilter, sortBy, setSortBy, selectedForBlog, selectedForDeletion, selectAll, clearSelection, selectOptimalKeywords, toggleKeywordForBlog, toggleKeywordForDeletion, getPriorityColor, getIntentIcon }: KeywordsTabProps) {
   return (
     <Card>
       <CardHeader>
@@ -47,97 +44,11 @@ export function KeywordsTab({ userProfile, keywordStats, filteredKeywords, activ
               <Target className="h-4 w-4 mr-2" />
               Auto-Select Optimal
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={async () => {
-                if (!keywordStats || !userProfile?.company_id) return;
-
-                try {
-                  // Mark all keywords as selected for blog generation
-                  const { error } = await supabase
-                    .from('keyword_research_data')
-                    .update({ 
-                      selected_for_blog_generation: true,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('company_id', userProfile.company_id);
-
-                  if (error) {
-                    console.error('Error selecting all keywords:', error);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to select all keywords"
-                    });
-                    return;
-                  }
-
-                  const allKeywords = new Set(keywordStats.keywords.map(k => k.keyword));
-                  setSelectedForBlog(allKeywords);
-                  setSelectedKeywords(keywordStats.keywords);
-                  const topics = generateKeywordBlogTopics(keywordStats.keywords);
-                  setGeneratedTopics(topics);
-
-                  toast({
-                    title: "All Keywords Selected",
-                    description: `Selected all ${keywordStats.keywords.length} keywords for blog generation`
-                  });
-                } catch (error: any) {
-                  console.error('Error selecting all keywords:', error);
-                  toast({
-                    variant: "destructive",
-                    title: "Error",  
-                    description: "Failed to select all keywords"
-                  });
-                }
-              }}
-            >
+            <Button variant="outline" onClick={selectAll}>
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Select All
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={async () => {
-                if (!userProfile?.company_id) return;
-
-                try {
-                  // Clear all selections in the database
-                  const { error } = await supabase
-                    .from('keyword_research_data')
-                    .update({ 
-                      selected_for_blog_generation: false,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('company_id', userProfile.company_id);
-
-                  if (error) {
-                    console.error('Error clearing selections:', error);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to clear selections"
-                    });
-                    return;
-                  }
-
-                  setSelectedForBlog(new Set());
-                  setSelectedKeywords([]);
-                  setGeneratedTopics([]);
-
-                  toast({
-                    title: "Selection Cleared",
-                    description: "Cleared all keyword selections"
-                  });
-                } catch (error: any) {
-                  console.error('Error clearing selections:', error);
-                  toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Failed to clear selections"
-                  });
-                }
-              }}
-            >
+            <Button variant="outline" onClick={clearSelection}>
               Clear Selection
             </Button>
           </div>

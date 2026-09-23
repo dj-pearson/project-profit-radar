@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useRiskPrediction, type RiskRecommendation } from '@/hooks/useRiskPrediction';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,264 +12,45 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, TrendingUp, Shield, DollarSign, Clock, CheckCircle2, XCircle, Brain, Target, ArrowRight, AlertTriangle } from 'lucide-react';
 import { ListSkeleton } from '@/components/ui/skeletons';
 
-interface RiskPrediction {
-  id: string;
-  project_id: string;
-  overall_risk_score: number;
-  delay_risk_score: number;
-  budget_risk_score: number;
-  safety_risk_score: number;
-  quality_risk_score: number;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
-  predicted_delay_days: number;
-  predicted_cost_overrun: number;
-  predicted_completion_date: string;
-  confidence_score: number;
-  prediction_date: string;
-  created_at: string;
-}
-
-interface RiskFactor {
-  id: string;
-  factor_type: string;
-  factor_name: string;
-  description: string;
-  impact_score: number;
-  likelihood: number;
-  mitigation_strategy: string;
-  is_mitigated: boolean;
-}
-
-interface RiskRecommendation {
-  id: string;
-  recommendation_type: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  title: string;
-  description: string;
-  expected_cost_savings: number;
-  expected_time_savings: number;
-  success_probability: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'declined';
-}
-
-interface RiskAlert {
-  id: string;
-  alert_type: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  message: string;
-  status: 'active' | 'acknowledged' | 'resolved' | 'dismissed';
-  created_at: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-}
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export function RiskPrediction() {
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [prediction, setPrediction] = useState<RiskPrediction | null>(null);
-  const [factors, setFactors] = useState<RiskFactor[]>([]);
-  const [recommendations, setRecommendations] = useState<RiskRecommendation[]>([]);
-  const [alerts, setAlerts] = useState<RiskAlert[]>([]);
-  const [history, setHistory] = useState<RiskPrediction[]>([]);
+  const risk = useRiskPrediction(selectedProjectId);
+  const { projects, generating } = risk;
+  const loading = risk.isLoading;
+  const prediction = risk.data?.prediction ?? null;
+  const factors = risk.data?.factors ?? [];
+  const recommendations = risk.data?.recommendations ?? [];
+  const alerts = risk.data?.alerts ?? [];
+  const history = risk.data?.history ?? [];
 
-  // Load projects on mount
   useEffect(() => {
-    loadProjects();
-  }, [user]);
-
-  // Load prediction when project changes
-  useEffect(() => {
-    if (selectedProjectId) {
-      loadLatestPrediction(selectedProjectId);
-    }
-  }, [selectedProjectId]);
-
-  const loadProjects = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, status')
-        .eq('tenant_id', userProfile.tenant_id)
-        .in('status', ['planning', 'active', 'on_hold'])
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-
-      if (data && data.length > 0 && !selectedProjectId) {
-        setSelectedProjectId(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
-
-  const loadLatestPrediction = async (projectId: string) => {
-    setLoading(true);
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      // Get latest prediction
-      const { data: predictionData, error: predError } = await supabase
-        .from('risk_predictions')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (predError && predError.code !== 'PGRST116') {
-        throw predError;
-      }
-
-      if (predictionData) {
-        setPrediction(predictionData as unknown as RiskPrediction);
-
-        // Load risk factors
-        const { data: factorsData } = await supabase
-          .from('risk_factors')
-          .select('*')
-          .eq('risk_prediction_id', predictionData.id);
-        setFactors(factorsData || []);
-
-        // Load recommendations
-        const { data: recsData } = await supabase
-          .from('risk_recommendations')
-          .select('*')
-          .eq('risk_prediction_id', predictionData.id)
-          .order('priority', { ascending: false });
-        setRecommendations((recsData as unknown as RiskRecommendation[]) || []);
-
-        // Load active alerts
-        const { data: alertsData } = await supabase
-          .from('risk_alerts')
-          .select('*')
-          .eq('project_id', projectId)
-          .eq('status', 'active')
-          .order('severity', { ascending: false });
-        setAlerts((alertsData as unknown as RiskAlert[]) || []);
-      } else {
-        setPrediction(null);
-        setFactors([]);
-        setRecommendations([]);
-        setAlerts([]);
-      }
-
-      // Load prediction history
-      const { data: historyData } = await supabase
-        .from('risk_predictions')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      setHistory((historyData as unknown as RiskPrediction[]) || []);
-
-    } catch (error) {
-      console.error('Error loading prediction:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (!selectedProjectId && projects.length > 0) setSelectedProjectId(projects[0].id);
+  }, [projects, selectedProjectId]);
 
   const generatePrediction = async () => {
     if (!selectedProjectId) return;
-
-    setGenerating(true);
     try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const { error: invokeError } = await supabase.functions.invoke(
-        'risk-prediction',
-        {
-          body: {
-            tenant_id: userProfile.tenant_id,
-            project_id: selectedProjectId,
-            user_id: user?.id
-          }
-        }
-      );
-      
-      if (invokeError) throw invokeError;
-
-      // Reload data to show the new prediction
-      await loadLatestPrediction(selectedProjectId);
-
+      await risk.generate();
     } catch (error) {
-      console.error('Error generating prediction:', error);
-      alert('Failed to generate risk prediction. Please try again.');
-    } finally {
-      setGenerating(false);
+      toast.error(`Failed to generate risk prediction: ${message(error)}`);
     }
   };
 
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      const { error } = await supabase
-        .from('risk_alerts')
-        .update({
-          status: 'acknowledged',
-          acknowledged_by: user?.id,
-          acknowledged_at: new Date().toISOString()
-        })
-        .eq('id', alertId);
-
-      if (error) throw error;
-
-      // Refresh alerts
-      setAlerts(alerts.filter(a => a.id !== alertId));
+      await risk.acknowledgeAlert(alertId);
     } catch (error) {
-      console.error('Error acknowledging alert:', error);
+      toast.error(`Could not acknowledge the alert: ${message(error)}`);
     }
   };
 
   const updateRecommendationStatus = async (recId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('risk_recommendations')
-        .update({ status: newStatus })
-        .eq('id', recId);
-
-      if (error) throw error;
-
-      // Update local state
-      setRecommendations(recommendations.map(r =>
-        r.id === recId ? { ...r, status: newStatus as RiskRecommendation['status'] } : r
-      ));
+      await risk.updateRecommendation(recId, newStatus as RiskRecommendation['status']);
     } catch (error) {
-      console.error('Error updating recommendation:', error);
+      toast.error(`Could not update the recommendation: ${message(error)}`);
     }
   };
 
@@ -391,6 +173,13 @@ export function RiskPrediction() {
             <ListSkeleton label="Loading risk data" />
           </CardContent>
         </Card>
+      ) : risk.error ? (
+        <ErrorState
+          inline
+          title="Risk data could not be loaded"
+          error={risk.error}
+          onRetry={() => { void risk.refetch(); }}
+        />
       ) : !prediction ? (
         <Card>
           <CardContent className="flex items-center justify-center py-12">
