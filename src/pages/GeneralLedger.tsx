@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Printer, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
@@ -425,20 +426,24 @@ export default function GeneralLedger() {
                 ))
               ) : (
                 // All transactions
-                <Table aria-label="All transactions">
-                  <TableHeader>
-                    <TableRow>
+                <VirtualizedTable
+                  aria-label="All transactions"
+                  rows={transactionsWithBalance}
+                  getRowKey={(tx: TransactionWithBalance) => tx.id}
+                  columnCount={6}
+                  estimateRowHeight={53}
+                  header={
+                    <>
                       <TableHead scope="col">Date</TableHead>
                       <TableHead scope="col">Entry #</TableHead>
                       <TableHead scope="col">Description</TableHead>
                       <TableHead scope="col" className="text-right">Debit</TableHead>
                       <TableHead scope="col" className="text-right">Credit</TableHead>
                       <TableHead scope="col" className="text-right">Balance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactionsWithBalance.map((tx: TransactionWithBalance) => (
-                      <TableRow key={tx.id}>
+                    </>
+                  }
+                  renderCells={(tx: TransactionWithBalance) => (
+                      <>
                         <TableCell>
                           {new Date(tx.journal_entry?.entry_date).toLocaleDateString()}
                         </TableCell>
@@ -462,11 +467,12 @@ export default function GeneralLedger() {
                         <TableCell className="text-right font-mono font-semibold">
                           {formatCurrency(tx.runningBalance)}
                         </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Totals Row */}
-                    <TableRow className="bg-muted/50 font-bold">
+                      </>
+                  )}
+                  footerRowCount={1}
+                  footer={
+                    // Totals stay outside the virtual window so they are always in the DOM.
+                    <TableRow className="bg-muted/50 font-bold" aria-rowindex={transactionsWithBalance.length + 2}>
                       <TableCell colSpan={3} className="text-right">
                         TOTALS
                       </TableCell>
@@ -480,8 +486,8 @@ export default function GeneralLedger() {
                         {formatCurrency(endingBalance)}
                       </TableCell>
                     </TableRow>
-                  </TableBody>
-                </Table>
+                  }
+                />
               )}
             </div>
           ) : (

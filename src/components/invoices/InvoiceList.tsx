@@ -1,9 +1,7 @@
-import React, { useState, useRef, useMemo } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -14,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import {
   Eye, Edit, Send, DollarSign, Download, MoreHorizontal,
-  ChevronUp, ChevronDown, ChevronsUpDown, Trash2, CheckCircle2, X,
+  Trash2, CheckCircle2, X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -59,49 +57,16 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
-  };
-
-  // Filter (status + date range) then sort. Applies to BOTH render paths.
+  // Filter (status + date range) then sort.
   const displayInvoices = useMemo(
     () => filterAndSortInvoices(invoices, { statusFilter, dateField, dateFrom, dateTo, sortField, sortDir }),
     [invoices, statusFilter, dateField, dateFrom, dateTo, sortField, sortDir]
   );
 
-  // These two must stay above the `if (loading)` early return below. They used
-  // to sit next to the virtualized table body, which meant the first render
-  // (loading true) ran fewer hooks than the second (loading false), and React
-  // threw "Rendered more hooks than during the previous render" the moment the
-  // invoices arrived - so the list crashed on every load.
-  const VIRTUALIZE_THRESHOLD = 50;
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: displayInvoices.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 56,
-    overscan: 10,
-    enabled: displayInvoices.length > VIRTUALIZE_THRESHOLD,
-  });
+  // Long lists are virtualized inside AccessibleTable (US-270). This file used
+  // to run its own useVirtualizer with <div> rows inside one <td>, which lost
+  // table semantics and had to be hoisted above the loading return (US-363).
 
-  const allVisibleSelected =
-    displayInvoices.length > 0 && displayInvoices.every((inv) => selectedIds.has(inv.id));
-  const toggleSelectAll = () => {
-    setSelectedIds(allVisibleSelected ? new Set() : new Set(displayInvoices.map((i) => i.id)));
-  };
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
   const clearSelection = () => setSelectedIds(new Set());
 
   const runBulkStatus = async (status: 'sent' | 'paid') => {
@@ -420,114 +385,6 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
       </Button>
     </div>
   );
-
-  const renderSortableHeader = (col: TableColumn<any>) => {
-    if (!col.sortable) {
-      return typeof col.headerRender === 'function' ? col.headerRender() : col.header;
-    }
-    const active = sortField === col.key;
-    return (
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 hover:text-foreground"
-        onClick={() => handleSort(String(col.key))}
-        aria-label={`Sort by ${col.header}`}
-      >
-        {col.header}
-        {active ? (
-          sortDir === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronsUpDown className="h-3.5 w-3.5 opacity-40" />
-        )}
-      </button>
-    );
-  };
-
-  // For large lists, use virtualized rendering
-  if (displayInvoices.length > VIRTUALIZE_THRESHOLD) {
-    return (
-      <>
-        {filterBar}
-        {bulkToolbar}
-        <div ref={parentRef} style={{ maxHeight: '70vh', overflow: 'auto' }}>
-          <table className="w-full caption-bottom text-sm">
-            <thead className="sticky top-0 bg-background z-10 [&_tr]:border-b">
-              <tr>
-                <th className="h-12 w-12 px-4 text-left align-middle">
-                  <Checkbox
-                    checked={allVisibleSelected}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all invoices"
-                  />
-                </th>
-                {invoiceColumns.map((col) => (
-                  <th key={String(col.key)} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    {renderSortableHeader(col)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ height: `${virtualizer.getTotalSize()}px` }}>
-                <td colSpan={invoiceColumns.length + 1} style={{ padding: 0, position: 'relative' }}>
-                  {virtualizer.getVirtualItems().map((virtualRow) => {
-                    const invoice = displayInvoices[virtualRow.index];
-                    return (
-                      <div
-                        key={virtualRow.key}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start}px)`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          borderBottom: '1px solid hsl(var(--border))',
-                        }}
-                      >
-                        <div className="px-4 w-12 shrink-0">
-                          <Checkbox
-                            checked={selectedIds.has(invoice.id)}
-                            onCheckedChange={() => toggleSelect(invoice.id)}
-                            aria-label={`Select invoice ${invoice.invoice_number}`}
-                          />
-                        </div>
-                        {invoiceColumns.map((col) => {
-                          const value = invoice[col.key as keyof typeof invoice];
-                          return (
-                            <div key={String(col.key)} className="px-4 flex-1" style={{ textAlign: col.align || 'left' }}>
-                              {col.render ? col.render(value, invoice) : String(value ?? '')}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Payment Dialog */}
-        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Process Payment</DialogTitle>
-            </DialogHeader>
-            {selectedInvoice && (
-              <PaymentProcessor
-                invoice={selectedInvoice}
-                onPaymentProcessed={handlePaymentProcessed}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
 
   return (
     <>

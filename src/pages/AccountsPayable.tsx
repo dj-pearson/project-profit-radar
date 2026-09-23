@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
@@ -536,9 +537,14 @@ export default function AccountsPayable() {
             {isLoading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : bills && bills.length > 0 ? (
-              <Table aria-label="Vendor bills">
-                <TableHeader>
-                  <TableRow>
+              <VirtualizedTable
+                aria-label="Vendor bills"
+                rows={bills}
+                getRowKey={(bill: Bill) => bill.id}
+                columnCount={7}
+                estimateRowHeight={53}
+                header={
+                  <>
                     <TableHead scope="col">Bill Number</TableHead>
                     <TableHead scope="col">Vendor</TableHead>
                     <TableHead scope="col">Date</TableHead>
@@ -546,11 +552,10 @@ export default function AccountsPayable() {
                     <TableHead scope="col" className="text-right">Amount</TableHead>
                     <TableHead scope="col" className="text-right">Amount Due</TableHead>
                     <TableHead scope="col">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bills.map((bill: Bill) => (
-                    <TableRow key={bill.id}>
+                  </>
+                }
+                renderCells={(bill: Bill) => (
+                    <>
                       <TableCell className="font-mono">{bill.bill_number}</TableCell>
                       <TableCell>{bill.vendor?.name || 'Unknown'}</TableCell>
                       <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
@@ -568,10 +573,9 @@ export default function AccountsPayable() {
                           {bill.status}
                         </Badge>
                       </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    </>
+                )}
+              />
             ) : (
               <div className="text-center py-8 text-muted-foreground" role="status">
                 No bills found. Create your first bill to get started.

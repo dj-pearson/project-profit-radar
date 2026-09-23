@@ -6,14 +6,8 @@ import { TimesheetApprovalQueue } from '@/components/timesheets/TimesheetApprova
 import { TimesheetDetailModal } from '@/components/timesheets/TimesheetDetailModal';
 import { useTimesheetApproval } from '@/hooks/useTimesheetApproval';
 import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableCell, TableHead } from '@/components/ui/table';
+import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
@@ -188,9 +182,14 @@ export default function Timesheets() {
                 </div>
               ) : approvedTimesheets && approvedTimesheets.length > 0 ? (
                 <div className="border rounded-lg overflow-hidden">
-                  <Table aria-label="Approved timesheets">
-                    <TableHeader>
-                      <TableRow>
+                  <VirtualizedTable
+                    aria-label="Approved timesheets"
+                    rows={approvedTimesheets}
+                    getRowKey={(timesheet: any) => timesheet.id}
+                    columnCount={7}
+                    estimateRowHeight={65}
+                    header={
+                      <>
                         <TableHead scope="col">Worker</TableHead>
                         <TableHead scope="col">Project</TableHead>
                         <TableHead scope="col">Date</TableHead>
@@ -198,11 +197,10 @@ export default function Timesheets() {
                         <TableHead scope="col">Approved By</TableHead>
                         <TableHead scope="col">Approved At</TableHead>
                         <TableHead scope="col" className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {approvedTimesheets.map((timesheet: any) => (
-                        <TableRow key={timesheet.id}>
+                      </>
+                    }
+                    renderCells={(timesheet: any) => (
+                        <>
                           <TableCell>
                             <div>
                               <p className="font-medium text-sm">{timesheet.worker_name || 'Unknown'}</p>
@@ -250,10 +248,9 @@ export default function Timesheets() {
                               View
                             </button>
                           </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                        </>
+                    )}
+                  />
                 </div>
               ) : (
                 <div className="py-12 text-center text-muted-foreground">

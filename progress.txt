@@ -7080,3 +7080,11 @@ notification and the GA/GSC functions accept only an internal caller or a
 root_admin (new requireInternalCallerOrRootAdmin, no fail-open). Envelope
 baseline 689 -> 685. Still open: GA/GSC have no 'sync' action, so
 sync-analytics-data does nothing yet.
+
+## US-270 - virtualized tables
+One hook (use-virtual-rows) and two components (VirtualizedTable,
+VirtualizedList) virtualize anything over 100 rows and leave short lists
+alone. AccessibleTable uses them, which covers most list pages; the ledger,
+journal, AP, timesheets and CRM lead cards were converted directly.
+Table semantics stay intact (the old InvoiceList path put divs inside one
+td). Modules baseline 98 -> 97, TS 1450 -> 1449.

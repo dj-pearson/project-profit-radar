@@ -25,6 +25,7 @@ import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFiel
 import { Users, Search, Plus, Phone, Mail, Building2, DollarSign, Edit } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
 import { CSVImportButton } from '@/components/smart-import';
+import { VirtualizedList } from '@/components/ui/virtual-table';
 
 interface Lead {
   id: string;
@@ -762,10 +763,13 @@ const CRMLeads = () => {
                       }}
                     />
                   ) : (
-                    <div className="space-y-4">
-                      {filteredLeads.map((lead) => (
+                    <VirtualizedList
+                      aria-label="Leads"
+                      items={filteredLeads}
+                      getItemKey={(lead) => lead.id}
+                      estimateItemHeight={170}
+                      renderItem={(lead) => (
                         <div
-                          key={lead.id}
                           className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                           onClick={() => setSelectedLead(lead.id)}
                           onKeyDown={(e) => {
@@ -875,8 +879,8 @@ const CRMLeads = () => {
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    />
                   )}
                 </ErrorBoundary>
               </CardContent>

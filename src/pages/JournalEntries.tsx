@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Calculator, CheckCircle } from 'lucide-react';
 import { formatCurrency, validateJournalEntry } from '@/utils/accountingUtils';
@@ -484,26 +485,30 @@ export default function JournalEntries() {
             {isLoading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : journalEntries && journalEntries.length > 0 ? (
-              <Table aria-label="Journal entries">
-                <TableHeader>
-                  <TableRow>
+              <VirtualizedTable
+                aria-label="Journal entries"
+                rows={journalEntries}
+                getRowKey={(entry: any) => entry.id}
+                columnCount={6}
+                estimateRowHeight={53}
+                header={
+                  <>
                     <TableHead scope="col">Entry Number</TableHead>
                     <TableHead scope="col">Date</TableHead>
                     <TableHead scope="col">Description</TableHead>
                     <TableHead scope="col" className="text-right">Amount</TableHead>
                     <TableHead scope="col">Status</TableHead>
                     <TableHead scope="col" className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {journalEntries.map((entry: any) => {
+                  </>
+                }
+                renderCells={(entry: any) => {
                     const totalDebits = entry.lines?.reduce(
                       (sum: number, line: any) => sum + Number(line.debit_amount || 0),
                       0
                     ) || 0;
 
                     return (
-                      <TableRow key={entry.id}>
+                      <>
                         <TableCell className="font-mono">{entry.entry_number}</TableCell>
                         <TableCell>
                           {new Date(entry.entry_date).toLocaleDateString()}
@@ -531,11 +536,10 @@ export default function JournalEntries() {
                             </Button>
                           )}
                         </TableCell>
-                      </TableRow>
+                      </>
                     );
-                  })}
-                </TableBody>
-              </Table>
+                }}
+              />
             ) : (
               <div className="text-center py-8 text-muted-foreground" role="status">
                 No journal entries found. Create your first entry to get started.

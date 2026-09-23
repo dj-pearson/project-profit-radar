@@ -11,6 +11,9 @@
  * - Screen reader announcements for state changes
  * - Caption and summary support
  * - Responsive design with horizontal scroll indication
+ * - Row virtualization above `virtualizeThreshold` rows (US-270): only the
+ *   rows in view are in the DOM, aria-rowcount / aria-rowindex still report
+ *   the full count, and arrow-key navigation scrolls off-screen rows into view
  *
  * Usage:
  * <AccessibleTable
@@ -35,6 +38,8 @@ import { cn } from '@/lib/utils';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { LoadingRegion } from '@/components/ui/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VirtualSpacerRow } from '@/components/ui/virtual-table';
+import { useVirtualRows, VIRTUALIZE_THRESHOLD } from '@/components/ui/use-virtual-rows';
 
 export type SortDirection = 'ascending' | 'descending' | 'none';
 
@@ -96,6 +101,12 @@ export interface AccessibleTableProps<T extends { id: string | number }> {
   enableKeyboardNavigation?: boolean;
   /** Aria describedby ID for additional description */
   ariaDescribedBy?: string;
+  /** Virtualize the body when there are more rows than this (default 100). */
+  virtualizeThreshold?: number;
+  /** Estimated row height in px while virtualized. */
+  estimateRowHeight?: number;
+  /** Height of the scroll viewport while virtualized. */
+  virtualMaxHeight?: string;
 }
 
 function AccessibleTableInner<T extends { id: string | number }>(
@@ -121,11 +132,24 @@ function AccessibleTableInner<T extends { id: string | number }>(
     className,
     enableKeyboardNavigation = true,
     ariaDescribedBy,
+    virtualizeThreshold = VIRTUALIZE_THRESHOLD,
+    estimateRowHeight = 49,
+    virtualMaxHeight = '70vh',
   } = props;
 
   const tableRef = useRef<HTMLTableElement>(null);
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
   const [announcement, setAnnouncement] = useState<string>('');
+
+  const bodyRowCount = loading ? 0 : data.length;
+  const virtual = useVirtualRows({
+    count: bodyRowCount,
+    estimateRowHeight,
+    threshold: virtualizeThreshold,
+    getItemKey: (i) => data[i].id,
+  });
+  const firstRendered = virtual.rows[0]?.index ?? -1;
+  const lastRendered = virtual.rows[virtual.rows.length - 1]?.index ?? -1;
 
   // Announce changes to screen readers
   const announce = useCallback((message: string) => {
@@ -255,7 +279,10 @@ function AccessibleTableInner<T extends { id: string | number }>(
     setFocusedCell({ row: newRow, col: newCol });
   }, [enableKeyboardNavigation, data, columns.length, selectable, handleRowSelect, onRowClick]);
 
-  // Focus management
+  // Focus management. Under virtualization the target row may not be in the
+  // DOM yet: scroll it into the window, and this effect runs again once the
+  // rendered range changes and the cell exists.
+  const { scrollToIndex } = virtual;
   useEffect(() => {
     if (focusedCell && tableRef.current) {
       const cell = tableRef.current.querySelector(
@@ -263,9 +290,11 @@ function AccessibleTableInner<T extends { id: string | number }>(
       ) as HTMLElement;
       if (cell) {
         cell.focus();
+      } else {
+        scrollToIndex(focusedCell.row);
       }
     }
-  }, [focusedCell]);
+  }, [focusedCell, firstRendered, lastRendered, scrollToIndex]);
 
   // Get sort icon
   const getSortIcon = (column: string) => {
@@ -309,7 +338,9 @@ function AccessibleTableInner<T extends { id: string | number }>(
 
       {/* Table wrapper for horizontal scroll */}
       <div
-        className="overflow-x-auto"
+        ref={virtual.scrollRef}
+        className={cn('overflow-x-auto', virtual.enabled && 'overflow-y-auto')}
+        style={virtual.enabled ? { maxHeight: virtualMaxHeight } : undefined}
         role="region"
         aria-label={`${caption} table`}
         tabIndex={0}
@@ -329,8 +360,8 @@ function AccessibleTableInner<T extends { id: string | number }>(
             {loading && <span className="sr-only"> (loading)</span>}
           </caption>
 
-          <thead>
-            <tr>
+          <thead className={cn(virtual.enabled && 'sticky top-0 z-10 bg-background')}>
+            <tr aria-rowindex={1}>
               {/* Selection header */}
               {selectable && multiSelect && (
                 <th
@@ -421,11 +452,15 @@ function AccessibleTableInner<T extends { id: string | number }>(
                 </td>
               </tr>
             ) : (
-              data.map((row, rowIndex) => {
+              <>
+              <VirtualSpacerRow height={virtual.paddingTop} colSpan={columns.length + (selectable ? 1 : 0)} />
+              {virtual.rows.map(({ index: rowIndex }) => {
+                const row = data[rowIndex];
                 const isSelected = selectedRows.includes(row.id);
                 return (
                   <tr
                     key={row.id}
+                    {...virtual.getRowProps(rowIndex)}
                     className={cn(
                       'border-b transition-colors',
                       isSelected && 'bg-primary/10',
@@ -490,7 +525,9 @@ function AccessibleTableInner<T extends { id: string | number }>(
                     })}
                   </tr>
                 );
-              })
+              })}
+              <VirtualSpacerRow height={virtual.paddingBottom} colSpan={columns.length + (selectable ? 1 : 0)} />
+              </>
             )}
           </tbody>
         </table>

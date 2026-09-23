@@ -4301,8 +4301,8 @@
         "A benchmark asserts stable render time at 5k rows"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Frontend audit."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Frontend audit. || Shared primitive: src/components/ui/use-virtual-rows.ts (threshold 100; short lists render normally) and virtual-table.tsx (VirtualizedTable keeps real tr/tbody with aria-rowcount/rowindex and sticky header; VirtualizedList with aria-setsize/posinset). AccessibleTable virtualizes above the threshold, so TimeEntriesList, InvoiceList, CRMContacts, DocumentManagement, AuditLogs, ExpenseTracker, EstimatesTable, admin ErrorLogs/Users get it; keyboard nav scrolls off-screen targets into view; select-all still selects every row. Converted directly: GeneralLedger (all transactions), JournalEntries, AccountsPayable, Timesheets, CRMLeads cards. InvoiceList lost its div-in-td virtual path. 1000 rows render under 50 in the DOM; axe clean."
     },
     {
       "id": "US-271",
