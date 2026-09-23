@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ContactPicker } from '@/components/customers/ContactPicker';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,14 @@ import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap } fr
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  CREATE_PROJECT_DEFAULTS,
+  createProjectFormSchema,
+  type CreateProjectFormValues,
+} from '@/lib/validations/projects';
 
 
 
@@ -35,24 +43,19 @@ const CreateProject = () => {
   const [quickMode, setQuickMode] = useState(true);
   const [recentProjectTypes, setRecentProjectTypes] = useState<string[]>([]);
 
-  // Project basic info
-  const [projectName, setProjectName] = useState('');
+  // Typed fields (name, type, status, description, site, dates, budget,
+  // hours) live in the form and are checked by createProjectFormSchema.
+  const form = useForm<CreateProjectFormValues>({
+    resolver: zodResolver(createProjectFormSchema),
+    defaultValues: CREATE_PROJECT_DEFAULTS,
+  });
+  const projectName = form.watch('projectName');
   const [opportunityId, setOpportunityId] = useState<string | null>(null);
-  const [description, setDescription] = useState('');
-  const [projectType, setProjectType] = useState('');
-  const [status, setStatus] = useState('planning');
 
   // Client info
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [siteAddress, setSiteAddress] = useState('');
-
-  // Timeline and budget
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [budget, setBudget] = useState('');
-  const [estimatedHours, setEstimatedHours] = useState('');
 
   // Permits
   const [permitNumbers, setPermitNumbers] = useState<string[]>([]);
@@ -78,15 +81,15 @@ const CreateProject = () => {
 
   // Auto-populate dates in quick mode
   useEffect(() => {
-    if (quickMode && !startDate && !endDate) {
+    if (quickMode && !form.getValues('startDate') && !form.getValues('endDate')) {
       const today = new Date();
-      setStartDate(today.toISOString().split('T')[0]);
+      form.setValue('startDate', today.toISOString().split('T')[0]);
 
       const defaultEndDate = new Date(today);
       defaultEndDate.setDate(defaultEndDate.getDate() + 30); // Default 30 days
-      setEndDate(defaultEndDate.toISOString().split('T')[0]);
+      form.setValue('endDate', defaultEndDate.toISOString().split('T')[0]);
     }
-  }, [quickMode]);
+  }, [quickMode, form]);
 
   const loadRecentData = async () => {
     try {
@@ -124,24 +127,24 @@ const CreateProject = () => {
     const type = urlParams.get('type');
     
     if (opportunityIdParam && name) {
-      setProjectName(name);
+      form.setValue('projectName', name);
       // The id goes in projects.opportunity_id below, not into prose. It used
       // to be written only into the description, so the FK stayed null and no
       // report could join a won opportunity to the job it became (US-318).
       setOpportunityId(opportunityIdParam);
-      setDescription('');
+      form.setValue('description', '');
       
       if (budgetParam) {
-        setBudget(budgetParam);
+        form.setValue('budget', budgetParam);
       }
       
       if (type) {
-        setProjectType(type);
+        form.setValue('projectType', type);
       }
       
-      setStatus('active'); // Set to active since this is from a won opportunity
+      form.setValue('status', 'active'); // Set to active since this is from a won opportunity
     }
-  }, [location.search]);
+  }, [location.search, form]);
 
   if (loading) {
     return (
@@ -174,19 +177,19 @@ const CreateProject = () => {
 
   const handleTemplateSelect = (template: any) => {
     // Auto-fill form from template
-    setProjectType(template.project_type || '');
-    setDescription(template.description || '');
-    setBudget(template.default_budget?.toString() || '');
+    form.setValue('projectType', template.project_type || '');
+    form.setValue('description', template.description || '');
+    form.setValue('budget', template.default_budget?.toString() || '');
     setAppliedTemplate(template.name);
 
     // Calculate dates from duration
     if (template.default_duration_days) {
       const today = new Date();
-      setStartDate(today.toISOString().split('T')[0]);
+      form.setValue('startDate', today.toISOString().split('T')[0]);
 
       const endDateCalc = new Date(today);
       endDateCalc.setDate(endDateCalc.getDate() + template.default_duration_days);
-      setEndDate(endDateCalc.toISOString().split('T')[0]);
+      form.setValue('endDate', endDateCalc.toISOString().split('T')[0]);
     }
 
     // Add permits from template
@@ -200,8 +203,10 @@ const CreateProject = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async ({
+    projectName, description, projectType, status, siteAddress,
+    startDate, endDate, budget, estimatedHours,
+  }: CreateProjectFormValues) => {
     setCreateLoading(true);
 
     try {
@@ -310,7 +315,8 @@ const CreateProject = () => {
           </CardContent>
         </Card>
 
-        <form onSubmit={handleSubmit} className="space-y-8" aria-label="Create new project form">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-8" aria-label="Create new project form">
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -324,24 +330,37 @@ const CreateProject = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
-                <div className="space-y-2">
-                  <Label htmlFor="projectName">Project Name * <FormFieldHelp content="The name clients and your team will see. Use something recognizable like the address or client + job type." /></Label>
-                  <Input
-                    id="projectName"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    placeholder="Kitchen Renovation - Smith Residence"
-                    required
-                    aria-required="true"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="projectName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Name * <FormFieldHelp content="The name clients and your team will see. Use something recognizable like the address or client + job type." /></FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Kitchen Renovation - Smith Residence"
+                          required
+                          aria-required="true"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 {!quickMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="projectType">Project Type <FormFieldHelp content="Categorizes the job (e.g. Residential, Commercial) for reporting and templates." /></Label>
-                    <Select value={projectType} onValueChange={setProjectType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select project type" />
-                      </SelectTrigger>
+                  <FormField
+                    control={form.control}
+                    name="projectType"
+                    render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Type <FormFieldHelp content="Categorizes the job (e.g. Residential, Commercial) for reporting and templates." /></FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select project type" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="residential_new">Residential - New Construction</SelectItem>
                         <SelectItem value="residential_renovation">Residential - Renovation</SelectItem>
@@ -352,36 +371,55 @@ const CreateProject = () => {
                         <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                    <FormMessage />
+                  </FormItem>
+                    )}
+                  />
                 )}
               </div>
 
               {!quickMode && (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Project Description <FormFieldHelp content="Optional scope summary of what the project covers. Visible to the team and on reports." /></Label>
-                    <Textarea
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe the scope of work, key objectives, and any special requirements..."
-                      rows={3}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Description <FormFieldHelp content="Optional scope summary of what the project covers. Visible to the team and on reports." /></FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Describe the scope of work, key objectives, and any special requirements..."
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Initial Status <FormFieldHelp content="Where the project starts in its lifecycle. You can change this any time as work progresses." /></Label>
-                    <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Initial Status <FormFieldHelp content="Where the project starts in its lifecycle. You can change this any time as work progresses." /></FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="planning">Planning</SelectItem>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="on_hold">On Hold</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                    <FormMessage />
+                  </FormItem>
+                    )}
+                  />
                 </>
               )}
             </CardContent>
@@ -435,18 +473,22 @@ const CreateProject = () => {
               </div>
 
               {!quickMode && (
-                <div className="space-y-2">
-                  <Label htmlFor="siteAddress">
-                    <MapPin className="h-4 w-4 inline mr-1" aria-hidden="true" />
-                    Project Site Address
-                  </Label>
-                  <Input
-                    id="siteAddress"
-                    value={siteAddress}
-                    onChange={(e) => setSiteAddress(e.target.value)}
-                    placeholder="123 Main Street, City, State, ZIP"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="siteAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <MapPin className="h-4 w-4 inline mr-1" aria-hidden="true" />
+                        Project Site Address
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="123 Main Street, City, State, ZIP" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
             </CardContent>
           </Card>
@@ -464,57 +506,68 @@ const CreateProject = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className={mobileFilterClasses.container}>
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">Target End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Target End Date</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
-                <div className="space-y-2">
-                  <Label htmlFor="budget">
-                    <DollarSign className="h-4 w-4 inline mr-1" aria-hidden="true" />
-                    Total Budget
-                  </Label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    placeholder="50000.00"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="budget"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <DollarSign className="h-4 w-4 inline mr-1" aria-hidden="true" />
+                        Total Budget
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" step="0.01" min="0" placeholder="50000.00" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 {!quickMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="estimatedHours">
-                      <Clock className="h-4 w-4 inline mr-1" aria-hidden="true" />
-                      Estimated Hours
-                    </Label>
-                    <Input
-                      id="estimatedHours"
-                      type="number"
-                      min="0"
-                      value={estimatedHours}
-                      onChange={(e) => setEstimatedHours(e.target.value)}
-                      placeholder="200"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="estimatedHours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          <Clock className="h-4 w-4 inline mr-1" aria-hidden="true" />
+                          Estimated Hours
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min="0" placeholder="200" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
               </div>
             </CardContent>
@@ -583,6 +636,7 @@ const CreateProject = () => {
             </Button>
           </div>
         </form>
+        </Form>
 
         {/* Project Templates Library Modal */}
         <ProjectTemplatesLibrary

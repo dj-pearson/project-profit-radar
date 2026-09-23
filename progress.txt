@@ -7172,3 +7172,10 @@ Thirteen more project tabs and panels load through query hooks (raw calls
 with react-hook-form + Zod and show inline errors; payloads are unchanged
 and pinned by tests. check-form-validation.mjs holds unvalidated forms at
 35. TS 1161 -> 1145, eslint warnings 3963 -> 3944.
+
+## US-268 pass 2 - auth and public forms
+Sign-in, sign-up, password reset, the public lead and booking forms, the
+newsletter box, CreateProject, fiscal periods, chart of accounts and
+promotions validate with react-hook-form + Zod. Auth still runs through
+the page's handlers, so CSRF, rate limiting, the MFA gate, Turnstile and
+the terms checkbox are unchanged. Unvalidated forms 35 -> 24.

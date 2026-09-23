@@ -140,3 +140,40 @@ export function buildProjectEditUpdates(v: ProjectEditFormValues) {
     description: v.description,
   };
 }
+
+/**
+ * The Create Project page (US-268). Strings as the inputs hold them; the page
+ * builds the same insert it always did (parseFloat budget, parseInt hours,
+ * blanks as undefined). Dates stay optional, but an end before the start is
+ * caught here instead of landing in the schedule.
+ */
+export const createProjectFormSchema = z
+  .object({
+    projectName: requiredText('Project name is required', 200),
+    description: z.string(),
+    projectType: z.string(),
+    status: z.string(),
+    siteAddress: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    budget: optionalNumericString({ min: 0, message: 'Enter a budget of 0 or more' }),
+    estimatedHours: optionalNumericString({ min: 0, integer: true, message: 'Enter a whole number of hours, 0 or more' }),
+  })
+  .refine((d) => !d.startDate || !d.endDate || d.endDate >= d.startDate, {
+    message: 'End date must be on or after the start date',
+    path: ['endDate'],
+  });
+
+export type CreateProjectFormValues = z.infer<typeof createProjectFormSchema>;
+
+export const CREATE_PROJECT_DEFAULTS: CreateProjectFormValues = {
+  projectName: '',
+  description: '',
+  projectType: '',
+  status: 'planning',
+  siteAddress: '',
+  startDate: '',
+  endDate: '',
+  budget: '',
+  estimatedHours: '',
+};

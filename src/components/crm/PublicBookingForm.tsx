@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { publicBookingSchema, type PublicBookingValues } from "@/lib/validations/leads";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -40,11 +44,9 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    notes: "",
+  const form = useForm<PublicBookingValues>({
+    resolver: zodResolver(publicBookingSchema),
+    defaultValues: { name: "", email: "", phone: "", notes: "" },
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -101,7 +103,7 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
   });
 
   const createBookingMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (formData: PublicBookingValues) => {
       if (!bookingPage || !selectedTime) throw new Error("Missing required data");
 
       const endTime = addMinutes(selectedTime, bookingPage.duration_minutes);
@@ -186,9 +188,8 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
     return slots;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createBookingMutation.mutate();
+  const handleSubmit = (values: PublicBookingValues) => {
+    createBookingMutation.mutate(values);
   };
 
   const getLocationIcon = () => {
@@ -230,7 +231,7 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
                 Your meeting is scheduled for {selectedTime && format(selectedTime, "MMMM d, yyyy 'at' h:mm a")}
               </p>
               <p className="text-sm text-muted-foreground mt-4">
-                A confirmation email has been sent to {formData.email}
+                A confirmation email has been sent to {createBookingMutation.variables?.email}
               </p>
             </div>
           </CardContent>
@@ -261,7 +262,8 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Book a meeting">
             {!selectedDate ? (
               <div className="space-y-4">
                 <Label>Select a Date</Label>
@@ -328,49 +330,64 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name *</FormLabel>
+                        <FormControl>
+                          <Input autoComplete="name" aria-required="true" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" autoComplete="email" aria-required="true" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {bookingPage.collect_phone && (
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" autoComplete="tel" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
 
                   {bookingPage.collect_notes && (
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Additional Notes</Label>
-                      <Textarea
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Anything we should know?"
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Additional Notes</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Anything we should know?" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
                 </div>
 
@@ -380,6 +397,7 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
               </>
             )}
           </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

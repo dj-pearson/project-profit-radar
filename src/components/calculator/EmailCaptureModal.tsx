@@ -3,11 +3,14 @@
  * Appears after calculation to capture lead information
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { emailCaptureSchema, type EmailCaptureValues } from '@/lib/validations/leads';
 import { Download, TrendingUp, Users } from 'lucide-react';
 
 interface EmailCaptureModalProps {
@@ -23,23 +26,16 @@ export function EmailCaptureModal({
   onSubmit,
   calculationCount
 }: EmailCaptureModalProps) {
-  const [email, setEmail] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [phone, setPhone] = useState('');
+  const form = useForm<EmailCaptureValues>({
+    resolver: zodResolver(emailCaptureSchema),
+    defaultValues: { email: '', companyName: '', phone: '' },
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // The email format is checked inline by emailCaptureSchema before this runs.
+  const handleSubmit = async ({ email, companyName, phone }: EmailCaptureValues) => {
     setError('');
-
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -50,11 +46,9 @@ export function EmailCaptureModal({
       });
 
       // Reset form
-      setEmail('');
-      setCompanyName('');
-      setPhone('');
+      form.reset();
       onClose();
-    } catch (err) {
+    } catch {
       setError('Failed to save your information. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -76,7 +70,8 @@ export function EmailCaptureModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-4 mt-4" aria-label="Report email form">
           {/* Value propositions */}
           <div className="bg-blue-50 rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
@@ -101,48 +96,49 @@ export function EmailCaptureModal({
 
           {/* Form fields */}
           <div className="space-y-3">
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email Address <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1"
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-sm font-medium">
+                    Email Address <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="your@email.com" autoComplete="email" aria-required="true" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div>
-              <Label htmlFor="companyName" className="text-sm font-medium">
-                Company Name (Optional)
-              </Label>
-              <Input
-                id="companyName"
-                type="text"
-                placeholder="Your Company"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1"
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-sm font-medium">Company Name (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="Your Company" autoComplete="organization" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div>
-              <Label htmlFor="phone" className="text-sm font-medium">
-                Phone (Optional - Get tips via text)
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1"
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-sm font-medium">Phone (Optional - Get tips via text)</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="(555) 123-4567" autoComplete="tel" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {error && (
@@ -181,6 +177,7 @@ export function EmailCaptureModal({
             We respect your privacy. Unsubscribe anytime.
           </p>
         </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

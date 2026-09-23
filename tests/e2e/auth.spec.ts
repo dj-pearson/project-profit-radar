@@ -20,9 +20,11 @@ test.describe('Authentication', () => {
     const { email, submit } = signInForm(page);
     await submit.click();
 
-    // The inputs are `required`, so the browser refuses the submit before any
-    // request is made. Assert that directly rather than waiting and hoping.
+    // The form validates with react-hook-form + Zod (US-268): the submit is
+    // stopped before any request and the error is shown inline. The inputs
+    // keep `required`, so their validity state still says why.
     expect(await email.evaluate((el: HTMLInputElement) => el.validity.valueMissing)).toBe(true);
+    await expect(page.getByText('Email is required')).toBeVisible();
     await expect(page).toHaveURL(/\/auth$/);
   });
 

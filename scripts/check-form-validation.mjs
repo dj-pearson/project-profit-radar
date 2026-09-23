@@ -27,12 +27,13 @@ const SRC = join(root, 'src');
 /**
  * Lower this as forms move to useForm + zodResolver. It never goes up.
  * Started at 38 (US-268). The first pass converted the Team invite dialog,
- * the Projects edit dialog and the Daily Reports create dialog. Next up: the
- * auth forms (SignInForm, SignUpForm, PasswordResetFlow), the public lead
- * forms (ContactSalesModal, EmailCaptureModal, PublicBookingForm) and
- * CreateProject.
+ * the Projects edit dialog and the Daily Reports create dialog (35). The
+ * second converted the /auth forms (SignInForm, SignUpForm,
+ * PasswordResetFlow), the public lead forms (ContactSalesModal,
+ * EmailCaptureModal, PublicBookingForm, the Footer newsletter box),
+ * CreateProject, FiscalPeriods, ChartOfAccounts and admin Promotions (24).
  */
-const BASELINE = 35;
+const BASELINE = 24;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

@@ -35,6 +35,14 @@ import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/a
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CHART_ACCOUNT_DEFAULTS,
+  chartAccountFormSchema,
+  type ChartAccountFormValues,
+} from '@/lib/validations/accounting';
 
 interface ChartAccount {
   id: string;
@@ -69,15 +77,11 @@ export default function ChartOfAccounts() {
   const updateAccount = useUpdateAccount();
 
   // Form state
-  const [formData, setFormData] = useState({
-    accountNumber: '',
-    accountName: '',
-    accountType: 'asset',
-    accountSubtype: 'bank',
-    description: '',
-    isActive: true,
-    allowManualEntries: true,
+  const form = useForm<ChartAccountFormValues>({
+    resolver: zodResolver(chartAccountFormSchema),
+    defaultValues: CHART_ACCOUNT_DEFAULTS,
   });
+  const accountType = form.watch('accountType');
 
   // Filter accounts
   const filteredAccounts = accounts?.filter((account: ChartAccount) => {
@@ -100,8 +104,7 @@ export default function ChartOfAccounts() {
     return acc;
   }, {});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: ChartAccountFormValues) => {
 
     const accountData = {
       company_id: companyId,
@@ -129,22 +132,14 @@ export default function ChartOfAccounts() {
     }
 
     // Reset form
-    setFormData({
-      accountNumber: '',
-      accountName: '',
-      accountType: 'asset',
-      accountSubtype: 'bank',
-      description: '',
-      isActive: true,
-      allowManualEntries: true,
-    });
+    form.reset(CHART_ACCOUNT_DEFAULTS);
     setEditingAccount(null);
     setIsDialogOpen(false);
   };
 
   const handleEdit = (account: ChartAccount) => {
     setEditingAccount(account);
-    setFormData({
+    form.reset({
       accountNumber: account.account_number,
       accountName: account.account_name,
       accountType: account.account_type,
@@ -190,15 +185,7 @@ export default function ChartOfAccounts() {
               aria-label="Create new account"
               onClick={() => {
                 setEditingAccount(null);
-                setFormData({
-                  accountNumber: '',
-                  accountName: '',
-                  accountType: 'asset',
-                  accountSubtype: 'bank',
-                  description: '',
-                  isActive: true,
-                  allowManualEntries: true,
-                });
+                form.reset(CHART_ACCOUNT_DEFAULTS);
               }}
             >
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -206,7 +193,8 @@ export default function ChartOfAccounts() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl" aria-describedby="account-dialog-description">
-            <form onSubmit={handleSubmit} aria-label={editingAccount ? 'Edit account form' : 'Create account form'}>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate aria-label={editingAccount ? 'Edit account form' : 'Create account form'}>
               <DialogHeader>
                 <DialogTitle>
                   {editingAccount ? 'Edit Account' : 'Create New Account'}
@@ -220,43 +208,41 @@ export default function ChartOfAccounts() {
 
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="accountNumber">Account Number *</Label>
-                    <Input
-                      id="accountNumber"
-                      value={formData.accountNumber}
-                      onChange={(e) =>
-                        setFormData({ ...formData, accountNumber: e.target.value })
-                      }
-                      placeholder="1000"
-                      required
-                      aria-required="true"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Number *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="1000" required aria-required="true" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="accountName">Account Name *</Label>
-                    <Input
-                      id="accountName"
-                      value={formData.accountName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, accountName: e.target.value })
-                      }
-                      placeholder="Cash"
-                      required
-                      aria-required="true"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="accountName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Name *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Cash" required aria-required="true" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="accountType">Account Type *</Label>
                     <Select
-                      value={formData.accountType}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, accountType: value })
-                      }
+                      value={accountType}
+                      onValueChange={(value) => form.setValue('accountType', value)}
                     >
                       <SelectTrigger aria-label="Select account type">
                         <SelectValue />
@@ -279,16 +265,14 @@ export default function ChartOfAccounts() {
                   <div className="space-y-2">
                     <Label htmlFor="accountSubtype">Subtype</Label>
                     <Select
-                      value={formData.accountSubtype}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, accountSubtype: value })
-                      }
+                      value={form.watch('accountSubtype')}
+                      onValueChange={(value) => form.setValue('accountSubtype', value)}
                     >
                       <SelectTrigger aria-label="Select account subtype">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {formData.accountType === 'asset' && (
+                        {accountType === 'asset' && (
                           <>
                             <SelectItem value="cash">Cash</SelectItem>
                             <SelectItem value="bank">Bank</SelectItem>
@@ -302,7 +286,7 @@ export default function ChartOfAccounts() {
                             <SelectItem value="other_asset">Other Asset</SelectItem>
                           </>
                         )}
-                        {formData.accountType === 'liability' && (
+                        {accountType === 'liability' && (
                           <>
                             <SelectItem value="accounts_payable">
                               Accounts Payable
@@ -316,7 +300,7 @@ export default function ChartOfAccounts() {
                             </SelectItem>
                           </>
                         )}
-                        {formData.accountType === 'expense' && (
+                        {accountType === 'expense' && (
                           <>
                             <SelectItem value="operating_expense">
                               Operating Expense
@@ -339,10 +323,7 @@ export default function ChartOfAccounts() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    {...form.register('description')}
                     placeholder="Optional account description"
                     rows={3}
                   />
@@ -352,10 +333,8 @@ export default function ChartOfAccounts() {
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="isActive"
-                      checked={formData.isActive}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, isActive: checked })
-                      }
+                      checked={form.watch('isActive') ?? false}
+                      onCheckedChange={(checked) => form.setValue('isActive', checked)}
                     />
                     <Label htmlFor="isActive">Active</Label>
                   </div>
@@ -363,10 +342,8 @@ export default function ChartOfAccounts() {
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="allowManualEntries"
-                      checked={formData.allowManualEntries}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, allowManualEntries: checked })
-                      }
+                      checked={form.watch('allowManualEntries') ?? false}
+                      onCheckedChange={(checked) => form.setValue('allowManualEntries', checked)}
                     />
                     <Label htmlFor="allowManualEntries">
                       Allow Manual Entries
@@ -388,6 +365,7 @@ export default function ChartOfAccounts() {
                 </Button>
               </DialogFooter>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </header>

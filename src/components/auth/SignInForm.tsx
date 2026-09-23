@@ -4,6 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signInSchema, type SignInValues } from "@/lib/validations/auth";
+import { AuthFieldError } from "./AuthFieldError";
+import { describedBy, useSyncedFormValues } from "./authFormHelpers";
 
 interface SignInFormProps {
   email: string;
@@ -14,6 +19,7 @@ interface SignInFormProps {
   setShowPassword: (v: boolean) => void;
   loading: boolean;
   inputClassName: string;
+  /** Called with the submit event once the fields pass signInSchema. */
   onSubmit: (e: FormEvent) => void;
   onSwitchToSignUp: () => void;
   onSwitchToForgot: () => void;
@@ -25,6 +31,15 @@ const SignInForm: React.FC<SignInFormProps> = ({
   showPassword, setShowPassword, loading, inputClassName,
   onSubmit, onSwitchToSignUp, onSwitchToForgot, renderOAuthButtons,
 }) => {
+  const form = useForm<SignInValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email, password },
+  });
+  useSyncedFormValues(form, { email, password });
+  const { errors } = form.formState;
+  const emailField = form.register("email");
+  const passwordField = form.register("password");
+
   return (
     <div className="space-y-6">
       <div>
@@ -34,22 +49,30 @@ const SignInForm: React.FC<SignInFormProps> = ({
 
       {renderOAuthButtons()}
 
-      <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form">
+      <form
+        onSubmit={form.handleSubmit((_values, e) => onSubmit(e as FormEvent))}
+        noValidate
+        className="space-y-4"
+        aria-label="Sign in form"
+      >
         <CsrfTokenField />
         <div className="space-y-2">
           <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
           <Input
             id="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            {...emailField}
+            onChange={(e) => { void emailField.onChange(e); setEmail(e.target.value); }}
             required
             maxLength={255}
             autoComplete="username"
             aria-required="true"
+            aria-invalid={!!errors.email}
+            aria-describedby={describedBy(errors.email && "signin-email-error")}
             placeholder="you@company.com"
             className={inputClassName}
           />
+          <AuthFieldError id="signin-email-error" message={errors.email?.message} />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -66,12 +89,14 @@ const SignInForm: React.FC<SignInFormProps> = ({
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...passwordField}
+              onChange={(e) => { void passwordField.onChange(e); setPassword(e.target.value); }}
               required
               maxLength={128}
               autoComplete="current-password"
               aria-required="true"
+              aria-invalid={!!errors.password}
+              aria-describedby={describedBy(errors.password && "signin-password-error")}
               placeholder="Enter your password"
               className={`${inputClassName} pr-10`}
             />
@@ -84,6 +109,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          <AuthFieldError id="signin-password-error" message={errors.password?.message} />
         </div>
         <Button
           type="submit"

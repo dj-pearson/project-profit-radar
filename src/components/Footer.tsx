@@ -1,4 +1,7 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { newsletterSchema, type NewsletterValues } from "@/lib/validations/leads";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, MapPin, Linkedin, Twitter, Facebook } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,7 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Turnstile, useTurnstileToken } from "@/components/security/Turnstile";
 
 const Footer = () => {
-  const [email, setEmail] = useState("");
+  const form = useForm<NewsletterValues>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: { email: "" },
+  });
+  const email = form.watch("email");
+  const emailError = form.formState.errors.email?.message;
   const [subscribing, setSubscribing] = useState(false);
   const human = useTurnstileToken();
 
@@ -20,9 +28,8 @@ const Footer = () => {
    * the capture-lead edge function, and thanks the
    * visitor only when that function reports success.
    */
-  const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const address = email.trim();
+  const handleNewsletterSubmit = async (values: NewsletterValues) => {
+    const address = values.email.trim();
     if (!address || subscribing) return;
     setSubscribing(true);
     try {
@@ -39,7 +46,7 @@ const Footer = () => {
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "The signup was not recorded.");
       toast.success("Thanks for subscribing!");
-      setEmail("");
+      form.reset();
       // Turnstile tokens are single-use; the widget remounts on the next entry.
       human.setToken(null);
     } catch (err) {
@@ -176,13 +183,20 @@ const Footer = () => {
               </div>
 
               {/* Newsletter Signup */}
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 mt-4">
+              <form
+                onSubmit={form.handleSubmit(handleNewsletterSubmit)}
+                noValidate
+                className="flex flex-wrap gap-2 mt-4"
+                aria-label="Newsletter signup"
+              >
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-label="Email address"
+                  {...form.register("email")}
                   required
+                  aria-invalid={!!emailError}
+                  aria-describedby={emailError ? "footer-newsletter-error" : undefined}
                   className="flex-1 text-sm px-3 py-1.5 rounded bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-construction-orange"
                 />
                 {/* Mounted once the visitor starts typing, so the challenge script is not
@@ -198,6 +212,11 @@ const Footer = () => {
                   Subscribe
                   <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
+                {emailError && (
+                  <p id="footer-newsletter-error" role="alert" className="basis-full text-xs text-red-300">
+                    {emailError}
+                  </p>
+                )}
               </form>
             </div>
 

@@ -11,6 +11,11 @@ import {
 import { AlertCircle, CheckCircle, RefreshCw, KeyRound, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
 import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema, type SignUpValues } from "@/lib/validations/auth";
+import { AuthFieldError } from "./AuthFieldError";
+import { describedBy, useSyncedFormValues } from "./authFormHelpers";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 
@@ -39,6 +44,7 @@ interface SignUpFormProps {
   termsAccepted: boolean;
   setTermsAccepted: (v: boolean) => void;
   showPasswordRequirements: boolean;
+  /** Called with the submit event once the fields pass signUpSchema. */
   onSubmit: (e: FormEvent) => void;
   onVerifyOTP: () => void;
   onResendOTP: () => void;
@@ -60,6 +66,18 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   onResetOTPFlow, onPasswordChange, onSwitchToSignIn,
   renderOAuthButtons, renderPasswordRequirements,
 }) => {
+  const form = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { firstName, lastName, email, password, termsAccepted },
+  });
+  useSyncedFormValues(form, { firstName, lastName, email, password, termsAccepted });
+  const { errors } = form.formState;
+  const firstNameField = form.register("firstName");
+  const lastNameField = form.register("lastName");
+  const emailField = form.register("email");
+  const passwordField = form.register("password");
+  const termsField = form.register("termsAccepted");
+
   return (
     <div className="space-y-6">
       {emailSent && emailSentType === 'signup' ? (
@@ -166,36 +184,47 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
 
           {renderOAuthButtons()}
 
-          <form onSubmit={onSubmit} className="space-y-4" aria-label="Create account form">
+          <form
+            onSubmit={form.handleSubmit((_values, e) => onSubmit(e as FormEvent))}
+            noValidate
+            className="space-y-4"
+            aria-label="Create account form"
+          >
             <CsrfTokenField />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-slate-300 text-sm">First name</Label>
                 <Input
                   id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  {...firstNameField}
+                  onChange={(e) => { void firstNameField.onChange(e); setFirstName(e.target.value); }}
                   required
                   maxLength={50}
                   autoComplete="given-name"
                   aria-required="true"
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={describedBy(errors.firstName && "signup-first-name-error")}
                   placeholder="John"
                   className={inputClassName}
                 />
+                <AuthFieldError id="signup-first-name-error" message={errors.firstName?.message} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-slate-300 text-sm">Last name</Label>
                 <Input
                   id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  {...lastNameField}
+                  onChange={(e) => { void lastNameField.onChange(e); setLastName(e.target.value); }}
                   required
                   maxLength={50}
                   autoComplete="family-name"
                   aria-required="true"
+                  aria-invalid={!!errors.lastName}
+                  aria-describedby={describedBy(errors.lastName && "signup-last-name-error")}
                   placeholder="Doe"
                   className={inputClassName}
                 />
+                <AuthFieldError id="signup-last-name-error" message={errors.lastName?.message} />
               </div>
             </div>
 
@@ -204,15 +233,18 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
               <Input
                 id="signupEmail"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...emailField}
+                onChange={(e) => { void emailField.onChange(e); setEmail(e.target.value); }}
                 required
                 maxLength={255}
                 autoComplete="username"
                 aria-required="true"
+                aria-invalid={!!errors.email}
+                aria-describedby={describedBy(errors.email && "signup-email-error")}
                 placeholder="you@company.com"
                 className={inputClassName}
               />
+              <AuthFieldError id="signup-email-error" message={errors.email?.message} />
             </div>
 
             <div className="space-y-2">
@@ -221,8 +253,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                 <Input
                   id="signupPassword"
                   type={showPassword ? "text" : "password"}
-                  value={password}
+                  {...passwordField}
                   onChange={(e) => {
+                    void passwordField.onChange(e);
                     setPassword(e.target.value);
                     onPasswordChange(e.target.value);
                   }}
@@ -231,8 +264,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                   maxLength={128}
                   autoComplete="new-password"
                   aria-required="true"
-                  aria-describedby={showPasswordRequirements ? "signup-password-requirements" : undefined}
-                  aria-invalid={!passwordValidation.isValid && password.length > 0}
+                  aria-describedby={describedBy(
+                    showPasswordRequirements && "signup-password-requirements",
+                    errors.password && "signup-password-error",
+                  )}
+                  aria-invalid={!!errors.password || (!passwordValidation.isValid && password.length > 0)}
                   placeholder="Create a strong password"
                   className={`${inputClassName} pr-10`}
                 />
@@ -246,14 +282,17 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                 </button>
               </div>
               {showPasswordRequirements && renderPasswordRequirements(password, "signup-password")}
+              <AuthFieldError id="signup-password-error" message={errors.password?.message} />
             </div>
 
             <div className="flex items-start gap-3">
               <input
                 id="signup-terms"
                 type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
+                {...termsField}
+                onChange={(e) => { void termsField.onChange(e); setTermsAccepted(e.target.checked); }}
+                aria-invalid={!!errors.termsAccepted}
+                aria-describedby={describedBy(errors.termsAccepted && "signup-terms-error")}
                 className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-500 accent-blue-600"
                 required
               />
@@ -268,6 +307,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                 </Link>
               </label>
             </div>
+            <AuthFieldError id="signup-terms-error" message={errors.termsAccepted?.message} />
 
             <Button
               type="submit"

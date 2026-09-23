@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PROMOTION_DEFAULTS, promotionFormSchema, type PromotionFormValues } from '@/lib/validations/promotions';
 
 interface Promotion {
   id: string;
@@ -37,16 +41,12 @@ const Promotions = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    discount_percentage: '',
-    start_date: '',
-    end_date: '',
-    is_active: true,
-    applies_to: ['starter', 'professional', 'enterprise'],
-    display_on: ['homepage', 'upgrade']
+  const form = useForm<PromotionFormValues>({
+    resolver: zodResolver(promotionFormSchema),
+    defaultValues: PROMOTION_DEFAULTS,
   });
+  const appliesTo = form.watch('applies_to');
+  const displayOn = form.watch('display_on');
 
   useEffect(() => {
     loadPromotions();
@@ -73,9 +73,7 @@ const Promotions = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (formData: PromotionFormValues) => {
     try {
       const promotionData = {
         name: formData.name,
@@ -150,22 +148,13 @@ const Promotions = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      discount_percentage: '',
-      start_date: '',
-      end_date: '',
-      is_active: true,
-      applies_to: ['starter', 'professional', 'enterprise'],
-      display_on: ['homepage', 'upgrade']
-    });
+    form.reset(PROMOTION_DEFAULTS);
     setEditingPromotion(null);
   };
 
   const openEditDialog = (promotion: Promotion) => {
     setEditingPromotion(promotion);
-    setFormData({
+    form.reset({
       name: promotion.name,
       description: promotion.description || '',
       discount_percentage: promotion.discount_percentage.toString(),
@@ -192,31 +181,13 @@ const Promotions = () => {
   };
 
   const handleTierChange = (tier: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({
-        ...prev,
-        applies_to: [...prev.applies_to, tier]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        applies_to: prev.applies_to.filter(t => t !== tier)
-      }));
-    }
+    const prev = form.getValues('applies_to');
+    form.setValue('applies_to', checked ? [...prev, tier] : prev.filter(t => t !== tier));
   };
 
   const handleDisplayChange = (location: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({
-        ...prev,
-        display_on: [...prev.display_on, location]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        display_on: prev.display_on.filter(l => l !== location)
-      }));
-    }
+    const prev = form.getValues('display_on');
+    form.setValue('display_on', checked ? [...prev, location] : prev.filter(l => l !== location));
   };
 
   return (
@@ -262,66 +233,78 @@ const Promotions = () => {
                     Set up a promotional discount campaign for your pricing plans.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-6" aria-label="Promotion form">
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Promotion form">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Campaign Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="e.g., 4th of July Sale"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="discount">Discount Percentage *</Label>
-                      <Input
-                        id="discount"
-                        type="number"
-                        min="1"
-                        max="100"
-                        step="0.01"
-                        value={formData.discount_percentage}
-                        onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
-                        placeholder="25"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Optional promotional message"
-                      rows={2}
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Campaign Name *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g., 4th of July Sale" required aria-required="true" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="discount_percentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount Percentage *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" min="1" max="100" step="0.01" placeholder="25" required aria-required="true" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
 
+                  <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Optional promotional message" rows={2} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="start_date">Start Date & Time *</Label>
-                      <Input
-                        id="start_date"
-                        type="datetime-local"
-                        value={formData.start_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="end_date">End Date & Time *</Label>
-                      <Input
-                        id="end_date"
-                        type="datetime-local"
-                        value={formData.end_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                        required
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="start_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date & Time *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="datetime-local" required aria-required="true" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="end_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date & Time *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="datetime-local" required aria-required="true" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   <div className="space-y-4">
@@ -332,7 +315,7 @@ const Promotions = () => {
                           <div key={tier} className="flex items-center space-x-2">
                             <Checkbox
                               id={tier}
-                              checked={formData.applies_to.includes(tier)}
+                              checked={appliesTo.includes(tier)}
                               onCheckedChange={(checked) => handleTierChange(tier, checked as boolean)}
                             />
                             <Label htmlFor={tier} className="capitalize">{tier}</Label>
@@ -351,7 +334,7 @@ const Promotions = () => {
                           <div key={location.key} className="flex items-center space-x-2">
                             <Checkbox
                               id={location.key}
-                              checked={formData.display_on.includes(location.key)}
+                              checked={displayOn.includes(location.key)}
                               onCheckedChange={(checked) => handleDisplayChange(location.key, checked as boolean)}
                             />
                             <Label htmlFor={location.key}>{location.label}</Label>
@@ -363,8 +346,8 @@ const Promotions = () => {
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                        checked={form.watch('is_active')}
+                        onCheckedChange={(checked) => form.setValue('is_active', checked)}
                       />
                       <Label htmlFor="is_active">Active</Label>
                     </div>
@@ -379,6 +362,7 @@ const Promotions = () => {
                     </Button>
                   </div>
                 </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>

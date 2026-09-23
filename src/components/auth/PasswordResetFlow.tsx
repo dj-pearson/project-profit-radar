@@ -11,12 +11,21 @@ import {
 import {
   AlertCircle,
   CheckCircle,
-  XCircle,
   RefreshCw,
   KeyRound,
   ArrowLeft,
   Clock,
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  newPasswordSchema,
+  passwordResetRequestSchema,
+  type NewPasswordValues,
+  type PasswordResetRequestValues,
+} from "@/lib/validations/auth";
+import { AuthFieldError } from "./AuthFieldError";
+import { describedBy, useSyncedFormValues } from "./authFormHelpers";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 
@@ -38,8 +47,10 @@ interface PasswordResetFlowProps {
   confirmPassword: string;
   setConfirmPassword: (v: string) => void;
   newPasswordValidation: { isValid: boolean; errors: string[] };
+  /** Called with the submit event once the email passes passwordResetRequestSchema. */
   onSubmitReset: (e: FormEvent) => void;
   onVerifyResetOTP: () => void;
+  /** Called with the submit event once the passwords pass newPasswordSchema. */
   onSetNewPassword: (e: FormEvent) => void;
   onResendResetOTP: () => void;
   onResetFlow: () => void;
@@ -57,6 +68,27 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
   onSetNewPassword, onResendResetOTP, onResetFlow, onSwitchToSignIn,
   onNewPasswordChange, renderPasswordRequirements,
 }) => {
+  const requestForm = useForm<PasswordResetRequestValues>({
+    resolver: zodResolver(passwordResetRequestSchema),
+    defaultValues: { email: resetEmail },
+  });
+  useSyncedFormValues(requestForm, { email: resetEmail });
+  const requestErrors = requestForm.formState.errors;
+  const resetEmailField = requestForm.register("email");
+
+  const passwordForm = useForm<NewPasswordValues>({
+    resolver: zodResolver(newPasswordSchema),
+    defaultValues: { newPassword, confirmPassword },
+  });
+  useSyncedFormValues(passwordForm, { newPassword, confirmPassword });
+  const passwordErrors = passwordForm.formState.errors;
+  const newPasswordField = passwordForm.register("newPassword");
+  const confirmPasswordField = passwordForm.register("confirmPassword");
+  const mismatchMessage =
+    confirmPassword.length > 0 && newPassword !== confirmPassword
+      ? "Passwords don't match"
+      : passwordErrors.confirmPassword?.message;
+
   return (
     <div className="space-y-6">
       {emailSent && emailSentType === 'reset' ? (
@@ -94,24 +126,37 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
                 <p className="text-sm text-emerald-400/80">Code verified successfully</p>
               </div>
 
-              <form onSubmit={onSetNewPassword} className="space-y-4" aria-label="Set new password form">
+              <form
+                onSubmit={passwordForm.handleSubmit((_values, e) => onSetNewPassword(e as FormEvent))}
+                noValidate
+                className="space-y-4"
+                aria-label="Set new password form"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="newPassword" className="text-slate-300 text-sm">New password</Label>
                   <Input
                     id="newPassword"
                     type="password"
-                    value={newPassword}
-                    onChange={(e) => { setNewPassword(e.target.value); onNewPasswordChange(e.target.value); }}
+                    {...newPasswordField}
+                    onChange={(e) => {
+                      void newPasswordField.onChange(e);
+                      setNewPassword(e.target.value);
+                      onNewPasswordChange(e.target.value);
+                    }}
                     required
                     minLength={8}
                     autoComplete="new-password"
                     aria-required="true"
-                    aria-describedby={newPassword.length > 0 ? "new-password-requirements" : undefined}
-                    aria-invalid={!newPasswordValidation.isValid && newPassword.length > 0}
+                    aria-describedby={describedBy(
+                      newPassword.length > 0 && "new-password-requirements",
+                      passwordErrors.newPassword && "new-password-error",
+                    )}
+                    aria-invalid={!!passwordErrors.newPassword || (!newPasswordValidation.isValid && newPassword.length > 0)}
                     placeholder="Create a strong password"
                     className={inputClassName}
                   />
                   {newPassword.length > 0 && renderPasswordRequirements(newPassword, "new-password")}
+                  <AuthFieldError id="new-password-error" message={passwordErrors.newPassword?.message} />
                 </div>
 
                 <div className="space-y-2">
@@ -119,23 +164,18 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
                   <Input
                     id="confirmPassword"
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    {...confirmPasswordField}
+                    onChange={(e) => { void confirmPasswordField.onChange(e); setConfirmPassword(e.target.value); }}
                     required
                     minLength={8}
                     autoComplete="new-password"
                     aria-required="true"
-                    aria-invalid={confirmPassword.length > 0 && newPassword !== confirmPassword}
-                    aria-describedby={confirmPassword.length > 0 && newPassword !== confirmPassword ? "password-match-error" : undefined}
+                    aria-invalid={!!mismatchMessage}
+                    aria-describedby={describedBy(mismatchMessage && "password-match-error")}
                     placeholder="Confirm your password"
                     className={inputClassName}
                   />
-                  {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-                    <p id="password-match-error" className="text-xs text-red-400 flex items-center gap-1" role="alert">
-                      <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                      Passwords don't match
-                    </p>
-                  )}
+                  <AuthFieldError id="password-match-error" message={mismatchMessage} />
                 </div>
 
                 <Button
@@ -244,7 +284,12 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
             <p className="text-slate-400 mt-1 text-sm">We'll send you a 6-digit code to verify your identity</p>
           </div>
 
-          <form onSubmit={onSubmitReset} className="space-y-4" aria-label="Reset password form">
+          <form
+            onSubmit={requestForm.handleSubmit((_values, e) => onSubmitReset(e as FormEvent))}
+            noValidate
+            className="space-y-4"
+            aria-label="Reset password form"
+          >
             <div className="p-3 rounded-lg bg-slate-800/50 border border-white/5" role="note">
               <p className="text-xs text-slate-400 flex items-start gap-2">
                 <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" aria-hidden="true" />
@@ -257,14 +302,17 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
               <Input
                 id="resetEmail"
                 type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
+                {...resetEmailField}
+                onChange={(e) => { void resetEmailField.onChange(e); setResetEmail(e.target.value); }}
                 required
                 autoComplete="email"
                 aria-required="true"
+                aria-invalid={!!requestErrors.email}
+                aria-describedby={describedBy(requestErrors.email && "reset-email-error")}
                 placeholder="you@company.com"
                 className={inputClassName}
               />
+              <AuthFieldError id="reset-email-error" message={requestErrors.email?.message} />
             </div>
 
             <Button

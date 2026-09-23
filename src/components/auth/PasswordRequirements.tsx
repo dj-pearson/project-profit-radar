@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { PASSWORD_SPECIAL_CHAR } from '@/lib/validations/auth';
 
 interface PasswordRequirementsProps {
   password: string;
@@ -12,7 +13,9 @@ const getStatus = (requirement: string, pwd: string): boolean => {
     case 'lowercase': return /[a-z]/.test(pwd);
     case 'uppercase': return /[A-Z]/.test(pwd);
     case 'number': return /\d/.test(pwd);
-    case 'special': return /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    // Same set the signup and reset schemas enforce; this list used to be
+    // narrower, so "-" or "_" met the rule but showed as unmet here.
+    case 'special': return PASSWORD_SPECIAL_CHAR.test(pwd);
     default: return false;
   }
 };

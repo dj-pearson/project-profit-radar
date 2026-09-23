@@ -2,13 +2,86 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Building2, Phone, Mail, MessageSquare, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Turnstile, useTurnstileToken } from '@/components/security/Turnstile';
 import { useToast } from '@/hooks/use-toast';
+import { useForm, useFormContext } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CONTACT_SALES_DEFAULTS, contactSalesSchema, type ContactSalesValues } from '@/lib/validations/leads';
+
+type Option = { value: string; label: string };
+
+const COMPANY_SIZES: Option[] = [
+  { value: '1-10', label: '1-10 employees' },
+  { value: '11-50', label: '11-50 employees' },
+  { value: '51-200', label: '51-200 employees' },
+  { value: '201-500', label: '201-500 employees' },
+  { value: '500+', label: '500+ employees' },
+];
+const INDUSTRIES: Option[] = [
+  { value: 'residential', label: 'Residential' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'industrial', label: 'Industrial' },
+  { value: 'specialty_trades', label: 'Specialty Trades' },
+];
+const INQUIRY_TYPES: Option[] = [
+  { value: 'general', label: 'General Inquiry' },
+  { value: 'pricing', label: 'Pricing Information' },
+  { value: 'enterprise', label: 'Enterprise Solutions' },
+  { value: 'partnership', label: 'Partnership Opportunities' },
+];
+const BUDGETS: Option[] = [
+  { value: '<5k', label: 'Less than $5,000/year' },
+  { value: '5k-15k', label: '$5,000 - $15,000/year' },
+  { value: '15k-50k', label: '$15,000 - $50,000/year' },
+  { value: '50k+', label: '$50,000+/year' },
+];
+const TIMELINES: Option[] = [
+  { value: 'immediate', label: 'Immediate (< 1 month)' },
+  { value: '1-3_months', label: '1-3 months' },
+  { value: '3-6_months', label: '3-6 months' },
+  { value: '6-12_months', label: '6-12 months' },
+  { value: 'planning', label: 'Just Planning' },
+];
+
+type SelectName = 'companySize' | 'industry' | 'inquiryType' | 'estimatedBudget' | 'timeline';
+
+function SelectField({ name, label, placeholder, options }: {
+  name: SelectName;
+  label: string;
+  placeholder?: string;
+  options: Option[];
+}) {
+  const { control } = useFormContext<ContactSalesValues>();
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <Select value={field.value} onValueChange={field.onChange}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 interface ContactSalesModalProps {
   isOpen: boolean;
@@ -21,22 +94,12 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
   const { toast } = useToast();
   const human = useTurnstileToken();
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    companyName: '',
-    companySize: '',
-    industry: '',
-    inquiryType: 'general',
-    message: '',
-    estimatedBudget: '',
-    timeline: ''
+  const form = useForm<ContactSalesValues>({
+    resolver: zodResolver(contactSalesSchema),
+    defaultValues: CONTACT_SALES_DEFAULTS,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: ContactSalesValues) => {
     setIsLoading(true);
 
     try {
@@ -67,19 +130,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
 
         // Reset form and close after delay
         setTimeout(() => {
-          setFormData({
-            firstName: '',
-            lastName: '',
-            email: '',
-            phone: '',
-            companyName: '',
-            companySize: '',
-            industry: '',
-            inquiryType: 'general',
-            message: '',
-            estimatedBudget: '',
-            timeline: ''
-          });
+          form.reset(CONTACT_SALES_DEFAULTS);
           setIsSuccess(false);
           onClose();
         }, 3000);
@@ -120,195 +171,123 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-4" aria-label="Contact sales form">
               {/* Contact Information */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="firstName"
-                      placeholder="John"
-                      className="pl-10"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name *</FormLabel>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input placeholder="John" className="pl-10" autoComplete="given-name" aria-required="true" {...field} />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    placeholder="Smith"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    required
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Smith" autoComplete="family-name" aria-required="true" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Work Email *</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@company.com"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Work Email *</FormLabel>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="email" placeholder="john@company.com" className="pl-10" autoComplete="email" aria-required="true" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    className="pl-10"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="tel" placeholder="(555) 123-4567" className="pl-10" autoComplete="tel" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Company Information */}
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name *</Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="companyName"
-                    placeholder="Your Construction Company"
-                    className="pl-10"
-                    value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name *</FormLabel>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input placeholder="Your Construction Company" className="pl-10" autoComplete="organization" aria-required="true" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companySize">Company Size</Label>
-                  <Select
-                    value={formData.companySize}
-                    onValueChange={(value) => setFormData({ ...formData, companySize: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-10">1-10 employees</SelectItem>
-                      <SelectItem value="11-50">11-50 employees</SelectItem>
-                      <SelectItem value="51-200">51-200 employees</SelectItem>
-                      <SelectItem value="201-500">201-500 employees</SelectItem>
-                      <SelectItem value="500+">500+ employees</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="industry">Industry Type</Label>
-                  <Select
-                    value={formData.industry}
-                    onValueChange={(value) => setFormData({ ...formData, industry: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="residential">Residential</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="industrial">Industrial</SelectItem>
-                      <SelectItem value="specialty_trades">Specialty Trades</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField name="companySize" label="Company Size" placeholder="Select size" options={COMPANY_SIZES} />
+                <SelectField name="industry" label="Industry Type" placeholder="Select industry" options={INDUSTRIES} />
               </div>
 
               {/* Inquiry Details */}
-              <div className="space-y-2">
-                <Label htmlFor="inquiryType">What are you interested in?</Label>
-                <Select
-                  value={formData.inquiryType}
-                  onValueChange={(value) => setFormData({ ...formData, inquiryType: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General Inquiry</SelectItem>
-                    <SelectItem value="pricing">Pricing Information</SelectItem>
-                    <SelectItem value="enterprise">Enterprise Solutions</SelectItem>
-                    <SelectItem value="partnership">Partnership Opportunities</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <SelectField name="inquiryType" label="What are you interested in?" options={INQUIRY_TYPES} />
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedBudget">Estimated Budget (Optional)</Label>
-                  <Select
-                    value={formData.estimatedBudget}
-                    onValueChange={(value) => setFormData({ ...formData, estimatedBudget: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select budget" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="<5k">Less than $5,000/year</SelectItem>
-                      <SelectItem value="5k-15k">$5,000 - $15,000/year</SelectItem>
-                      <SelectItem value="15k-50k">$15,000 - $50,000/year</SelectItem>
-                      <SelectItem value="50k+">$50,000+/year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="timeline">Timeline (Optional)</Label>
-                  <Select
-                    value={formData.timeline}
-                    onValueChange={(value) => setFormData({ ...formData, timeline: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timeline" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="immediate">Immediate (&lt; 1 month)</SelectItem>
-                      <SelectItem value="1-3_months">1-3 months</SelectItem>
-                      <SelectItem value="3-6_months">3-6 months</SelectItem>
-                      <SelectItem value="6-12_months">6-12 months</SelectItem>
-                      <SelectItem value="planning">Just Planning</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField name="estimatedBudget" label="Estimated Budget (Optional)" placeholder="Select budget" options={BUDGETS} />
+                <SelectField name="timeline" label="Timeline (Optional)" placeholder="Select timeline" options={TIMELINES} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">Message *</Label>
-                <div className="relative">
-                  <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Textarea
-                    id="message"
-                    placeholder="Tell us about your needs..."
-                    className="pl-10 pt-3"
-                    rows={4}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="message"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Message *</FormLabel>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Textarea placeholder="Tell us about your needs..." className="pl-10 pt-3" rows={4} aria-required="true" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Turnstile onToken={human.setToken} />
 
@@ -343,6 +322,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
                 By submitting this form, you agree to be contacted by our team.
               </p>
             </form>
+            </Form>
           </>
         )}
       </DialogContent>

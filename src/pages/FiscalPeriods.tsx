@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { fiscalYearDefaults, fiscalYearFormSchema, type FiscalYearFormValues } from '@/lib/validations/accounting';
 import {
   Dialog,
   DialogContent,
@@ -108,10 +111,9 @@ export default function FiscalPeriods() {
   });
 
   // Form state for new fiscal year
-  const [newYearData, setNewYearData] = useState({
-    yearNumber: new Date().getFullYear(),
-    startDate: `${new Date().getFullYear()}-01-01`,
-    endDate: `${new Date().getFullYear()}-12-31`,
+  const yearForm = useForm<FiscalYearFormValues>({
+    resolver: zodResolver(fiscalYearFormSchema),
+    defaultValues: fiscalYearDefaults(new Date().getFullYear()),
   });
 
   // Create fiscal year mutation
@@ -160,11 +162,7 @@ export default function FiscalPeriods() {
       queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
       toast.success('Fiscal year created successfully');
       setIsCreateYearDialogOpen(false);
-      setNewYearData({
-        yearNumber: new Date().getFullYear() + 1,
-        startDate: `${new Date().getFullYear() + 1}-01-01`,
-        endDate: `${new Date().getFullYear() + 1}-12-31`,
-      });
+      yearForm.reset(fiscalYearDefaults(new Date().getFullYear() + 1));
     },
     onError: (error: unknown) => {
       toast.error(`Failed to create fiscal year: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -217,9 +215,12 @@ export default function FiscalPeriods() {
     },
   });
 
-  const handleCreateYear = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await createFiscalYear.mutateAsync(newYearData);
+  const handleCreateYear = async (values: FiscalYearFormValues) => {
+    await createFiscalYear.mutateAsync({
+      yearNumber: Number(values.yearNumber),
+      startDate: values.startDate,
+      endDate: values.endDate,
+    });
   };
 
   const handleClosePeriod = async (periodId: string) => {
@@ -268,7 +269,8 @@ export default function FiscalPeriods() {
             </Button>
           </DialogTrigger>
           <DialogContent aria-describedby="create-year-description">
-            <form onSubmit={handleCreateYear} aria-label="Create fiscal year form">
+            <Form {...yearForm}>
+            <form onSubmit={yearForm.handleSubmit(handleCreateYear)} noValidate aria-label="Create fiscal year form">
               <DialogHeader>
                 <DialogTitle>Create Fiscal Year</DialogTitle>
                 <DialogDescription id="create-year-description">
@@ -277,51 +279,48 @@ export default function FiscalPeriods() {
               </DialogHeader>
 
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="yearNumber">Year</Label>
-                  <Input
-                    id="yearNumber"
-                    type="number"
-                    value={newYearData.yearNumber}
-                    onChange={(e) =>
-                      setNewYearData({
-                        ...newYearData,
-                        yearNumber: Number(e.target.value),
-                      })
-                    }
-                    required
-                    aria-required="true"
-                  />
-                </div>
+                <FormField
+                  control={yearForm.control}
+                  name="yearNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Year</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" required aria-required="true" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={newYearData.startDate}
-                      onChange={(e) =>
-                        setNewYearData({ ...newYearData, startDate: e.target.value })
-                      }
-                      required
-                      aria-required="true"
-                    />
-                  </div>
+                  <FormField
+                    control={yearForm.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="date" required aria-required="true" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">End Date</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={newYearData.endDate}
-                      onChange={(e) =>
-                        setNewYearData({ ...newYearData, endDate: e.target.value })
-                      }
-                      required
-                      aria-required="true"
-                    />
-                  </div>
+                  <FormField
+                    control={yearForm.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="date" required aria-required="true" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <Alert role="note">
@@ -343,6 +342,7 @@ export default function FiscalPeriods() {
                 <Button type="submit">Create Fiscal Year</Button>
               </DialogFooter>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </header>

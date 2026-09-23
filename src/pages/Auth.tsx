@@ -19,6 +19,7 @@ import { validateCsrfToken, getCsrfToken } from "@/lib/security/csrfProtection";
 import { createEndpointLimiter } from "@/lib/security/rateLimiter";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/lib/logger';
+import { passwordRuleErrors } from '@/lib/validations/auth';
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 type AuthView = 'signin' | 'signup' | 'forgot';
@@ -139,27 +140,20 @@ const Auth = () => {
 
   // --- Password validation ---
   const validatePasswordInput = useCallback((pwd: string) => {
-    const errors: string[] = [];
-    if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
-    if (!/[A-Z]/.test(pwd)) errors.push('Must contain uppercase letter');
-    if (!/[a-z]/.test(pwd)) errors.push('Must contain lowercase letter');
-    if (!/\d/.test(pwd)) errors.push('Must contain a number');
-    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Must contain special character');
+    const errors = passwordRuleErrors(pwd);
     setPasswordValidation({ isValid: errors.length === 0, errors });
     setShowPasswordRequirements(pwd.length > 0);
   }, []);
 
   const validateNewPassword = useCallback((pwd: string) => {
-    const errors: string[] = [];
-    if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
-    if (!/[A-Z]/.test(pwd)) errors.push('Must contain uppercase letter');
-    if (!/[a-z]/.test(pwd)) errors.push('Must contain lowercase letter');
-    if (!/\d/.test(pwd)) errors.push('Must contain a number');
-    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Must contain special character');
+    const errors = passwordRuleErrors(pwd);
     setNewPasswordValidation({ isValid: errors.length === 0, errors });
   }, []);
 
   // --- Form handlers ---
+  // The forms validate their fields against src/lib/validations/auth.ts
+  // (email shape, required names, password rules) and only call these once
+  // those pass, so the handlers no longer re-check the email format.
   // SECURITY: Validate CSRF token from form submission
   const verifyCsrf = useCallback((e: FormEvent): boolean => {
     const form = e.target as HTMLFormElement;
@@ -182,9 +176,6 @@ const Auth = () => {
       toast({ variant: "destructive", title: "Too Many Attempts", description: `Please wait ${rlResult.retryAfter} seconds before trying again.` });
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
-    }
     setLoading(true);
     const { error, mfaRequired } = await signIn(email, password);
     if (error) toast({ variant: "destructive", title: "Sign in failed", description: error });
@@ -195,9 +186,6 @@ const Auth = () => {
   const handleSignUp = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     if (!verifyCsrf(e)) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
-    }
     if (!passwordValidation.isValid) {
       toast({ variant: "destructive", title: "Password Requirements Not Met", description: passwordValidation.errors[0] }); return;
     }
@@ -249,9 +237,6 @@ const Auth = () => {
 
   const handleForgotPassword = useCallback(async (e: FormEvent) => {
     e.preventDefault();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
-      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
-    }
     setLoading(true); setOtpFlowState('sending');
     const result = await authResetPassword(resetEmail);
     if (result.error) { toast({ variant: "destructive", title: "Reset Failed", description: result.error }); setOtpFlowState('idle'); }
