@@ -27,6 +27,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { Shield, Server, Globe, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SAML_AVAILABLE, SAML_UNAVAILABLE_NOTICE } from '@/lib/sso/samlAvailability';
 
 // SAML Configuration Schema
 const samlConfigSchema = z.object({
@@ -190,7 +192,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
             },
             allowed_domains: data.allowed_domains?.split(',').map(d => d.trim()).filter(Boolean),
             default_role: data.default_role,
-            is_enabled: data.is_enabled,
+            is_enabled: SAML_AVAILABLE ? data.is_enabled : false,
             is_default: data.is_default,
           }),
         }
@@ -435,6 +437,12 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
           <TabsContent value="saml">
             <Form {...samlForm}>
               <form onSubmit={samlForm.handleSubmit(handleSAMLSubmit)} className="space-y-4">
+                {!SAML_AVAILABLE && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                    <AlertDescription>{SAML_UNAVAILABLE_NOTICE}</AlertDescription>
+                  </Alert>
+                )}
                 <FormField
                   control={samlForm.control}
                   name="display_name"
@@ -599,10 +607,16 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
                       <FormItem className="flex items-center justify-between rounded-lg border p-3">
                         <div className="space-y-0.5">
                           <FormLabel>Enable Connection</FormLabel>
-                          <FormDescription>Allow users to sign in with this SSO</FormDescription>
+                          <FormDescription>
+                            {SAML_AVAILABLE ? 'Allow users to sign in with this SSO' : 'Unavailable until SAML signature verification ships'}
+                          </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch
+                            checked={SAML_AVAILABLE ? field.value : false}
+                            onCheckedChange={field.onChange}
+                            disabled={!SAML_AVAILABLE}
+                          />
                         </FormControl>
                       </FormItem>
                     )}

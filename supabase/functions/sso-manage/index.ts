@@ -17,6 +17,7 @@ import {
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { wouldEnableSaml, SAML_UNAVAILABLE_MESSAGE } from '../_shared/saml-availability.ts';
 
 // SAML Configuration Schema
 const SAMLConfigSchema = z.object({
@@ -159,6 +160,12 @@ serve(async (req) => {
           return createErrorResponse(400, validation.error, corsHeaders);
         }
 
+        // SAML stays disabled until the callback verifies signatures (US-340).
+        // Saving a SAML connection is fine; enabling one is not.
+        if (wouldEnableSaml(validation.data.provider, validation.data.is_enabled)) {
+          return createErrorResponse(409, SAML_UNAVAILABLE_MESSAGE, corsHeaders);
+        }
+
         // Validate provider-specific config
         let configValidation;
         switch (validation.data.provider) {
@@ -244,6 +251,23 @@ serve(async (req) => {
         }
 
         const { id, ...updateData } = validation.data;
+
+        // The enable toggle sends only { id, is_enabled }, so the provider has
+        // to come from the stored row (US-340).
+        if (updateData.is_enabled === true) {
+          let provider = updateData.provider;
+          if (!provider) {
+            const { data: existing } = await supabase
+              .from("sso_connections")
+              .select("provider")
+              .eq("id", id)
+              .maybeSingle();
+            provider = existing?.provider;
+          }
+          if (wouldEnableSaml(provider, true)) {
+            return createErrorResponse(409, SAML_UNAVAILABLE_MESSAGE, corsHeaders);
+          }
+        }
 
         // Validate provider-specific config if provided
         if (updateData.config && updateData.provider) {

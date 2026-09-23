@@ -6284,3 +6284,19 @@ job) starts a throwaway Postgres, loads a small set of Supabase shims, and runs
 migration, then 18 assertions after it. I broke the migration two ways to check
 the test fails: leaving the suppliers policy fails "A reads zero B suppliers",
 and dropping without the replacement fails the field supervisor insert.
+
+## US-340, first part: SAML is off until the signature is checked
+
+The SAML callback accepted any XML with the right element names, signed or
+not, then picked the connection by the Issuer in that same document and signed
+in whoever the email named. No SAML connection is enabled in production, so
+this was a latent hole. It now stays latent: both SAML endpoints answer 503
+before touching the database, `sso-manage` refuses to enable a SAML connection
+(409, including the id-only toggle the admin page sends), and the admin UI says
+so instead of offering a switch that the server would reject.
+
+The real fix, XML-DSig verification against the configured certificate plus
+the InResponseTo, time, Audience and Destination checks, is still open. It
+needs a Deno-compatible canonicalization library and an IdP to test against.
+The flag lives in `_shared/saml-availability.ts`, with a web mirror a test
+keeps in step.

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Shield, Key, CheckCircle, XCircle, Plus, Edit, Trash2, Smartphone, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
+import { SAML_AVAILABLE, SAML_UNAVAILABLE_NOTICE } from '@/lib/sso/samlAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -495,13 +496,19 @@ export const SSOManagement = () => {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={connection.is_enabled ? 'outline' : 'default'}
-                          onClick={() => toggleSSOConnection(connection.id, connection.is_enabled)}
-                        >
-                          {connection.is_enabled ? 'Disable' : 'Enable'}
-                        </Button>
+                        {connection.provider === 'saml' && !SAML_AVAILABLE && !connection.is_enabled ? (
+                          <Button size="sm" variant="outline" disabled title={SAML_UNAVAILABLE_NOTICE}>
+                            SAML unavailable
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant={connection.is_enabled ? 'outline' : 'default'}
+                            onClick={() => toggleSSOConnection(connection.id, connection.is_enabled)}
+                          >
+                            {connection.is_enabled ? 'Disable' : 'Enable'}
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"

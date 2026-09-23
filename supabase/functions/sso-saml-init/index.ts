@@ -12,6 +12,7 @@ import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/
 import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { compress } from "https://deno.land/x/compress@v0.4.5/zlib/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { samlUnavailableResponse } from '../_shared/saml-availability.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // Input validation schema
@@ -54,6 +55,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Off until the signature is actually verified (US-340). See
+  // _shared/saml-availability.ts for what has to ship before this goes.
+  const samlOff = samlUnavailableResponse(corsHeaders);
+  if (samlOff) return samlOff;
 
   try {
     const supabaseClient = createClient(

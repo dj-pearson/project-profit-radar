@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { decode as base64Decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { samlUnavailableResponse } from '../_shared/saml-availability.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 
 interface SAMLAssertion {
@@ -136,6 +137,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Off until the signature is actually verified (US-340). See
+  // _shared/saml-availability.ts for what has to ship before this goes.
+  const samlOff = samlUnavailableResponse(corsHeaders);
+  if (samlOff) return samlOff;
 
   // SAML responses come as POST with form data
   if (req.method !== "POST") {
