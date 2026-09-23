@@ -11,7 +11,6 @@ Low-level utilities, services, and helpers used across the entire application. T
 - **sentry.ts** - Sentry error tracking initialization.
 - **pdfGenerator.ts** - jsPDF-based PDF generation.
 - **safeStorage.ts** - localStorage wrapper with error handling.
-- **secureLogger.ts** - Structured security event logging.
 - **profitabilityCalculations.ts** - Financial math used by dashboards.
 
 ## Subdirectories

@@ -26,8 +26,8 @@
  * deliberately generous - the point is to catch a module with NO inbound edge
  * at all, not to police how it is reached.
  *
- * Historical entries are listed and grandfathered against BASELINE; only newly
- * added files fail. As they are triaged, delete them from the baseline list.
+ * BASELINE grandfathered the modules that predated this guard. It is now empty
+ * (all triaged, see below), so any unreferenced security-named module fails.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -51,13 +51,12 @@ const NEVER_FLAG = [
 ];
 
 /**
- * Known-unreferenced security-named modules that predate this guard. Each one
- * still needs the delete / wire-up / fail-closed decision US-302 AC3 asks for;
- * this list is the worklist, and it must only ever shrink.
- */
-/**
- * Triaged 2026-08-27 (US-302 AC3). Verdicts, so the next reader does not repeat
- * the work:
+ * Known-unreferenced security-named modules that predate this guard. The
+ * worklist is empty: every entry has had its delete / wire-up / fail-closed
+ * decision (US-302 AC3), recorded below. Keep it empty. A new entry needs a
+ * comment saying why the module has no callers yet.
+ *
+ * Triaged 2026-08-27:
  *
  *   DELETED  services/SecurityService.ts   entirely mock - updateSecuritySettings
  *                                          and resolveSecurityAlert showed a
@@ -76,34 +75,56 @@ const NEVER_FLAG = [
  *                                          hardcoding role: 'admin' and a real
  *                                          production company UUID.
  *
- *   KEEP     lib/secureLogger.ts, lib/sessionFingerprint.ts,
- *            utils/dosProtection.ts, mobile/utils/permissions.ts,
- *            hooks/useActiveSessions.ts, hooks/useMFASetup.ts,
- *            components/mfa/index.ts
- *            Real implementations, currently unreferenced. dosProtection's
- *            `allowed: true` returns are branches of a real analysis
- *            (whitelist, disabled, low risk), not blanket permissiveness.
+ * Triaged 2026-09-23. The 08-27 pass kept seven of these as "real but
+ * unreferenced". Rechecked against what is live, each one has a live
+ * equivalent, so all thirteen were deleted rather than wired in:
  *
- *   REVIEW   the remaining dashboards and panels are unrouted UI, not logic.
+ *   routes/routeSecurity.tsx            already deleted in US-350.
+ *   hooks/useSecurity.ts                enable2FA upserted two_factor_enabled
+ *                                       without verifying the TOTP code
+ *                                       ("would need a backend validation").
+ *                                       Live MFA is components/security/
+ *                                       MFASetup.tsx + mfa/TOTPSetupScreen.
+ *   hooks/useMFASetup.ts                hardcoded userHasMFA = false ("mock for
+ *                                       now"), so it would prompt everyone.
+ *                                       Its only consumer, MFASetupDialog, went
+ *                                       in US-296.
+ *   components/mfa/index.ts             barrel; Auth.tsx and SSOManagement.tsx
+ *                                       import both members directly.
+ *   hooks/useActiveSessions.ts          same user_sessions query as the live
+ *                                       useDeviceTrust, which drives
+ *                                       ActiveSessionsManagement.
+ *   lib/sessionFingerprint.ts           a second device fingerprint; the live
+ *                                       one is useDeviceTrust's
+ *                                       generateDeviceFingerprint. Client-side,
+ *                                       so it never bound a stolen token anyway.
+ *   lib/secureLogger.ts                 info/debug/log were empty bodies, so
+ *                                       adopting it silently dropped logs. Live
+ *                                       path: lib/logger.ts, Sentry beforeSend
+ *                                       scrubbing, lib/security/errorSanitizer.
+ *   utils/dosProtection.ts              client-side DoS "protection" (the
+ *   components/admin/DosProtection.tsx  attacker does not run our JS) and an
+ *                                       unrouted admin panel. Live admin UI is
+ *                                       pages/RateLimitingDashboard.tsx over the
+ *                                       same ip_access_control table.
+ *   components/security/SecurityAuditPanel.tsx
+ *                                       same calculate_security_metrics RPC and
+ *                                       security_alerts table as the live
+ *                                       SecurityMonitoringDashboard.
+ *   components/audit/ActivityLogger.tsx audit_logs viewer; live ones are
+ *                                       pages/admin/AuditLoggingCompliance.tsx
+ *                                       and pages/ComplianceAudit.tsx.
+ *   components/debug/AuthDebug.tsx      dev-only auth state dump; nothing to
+ *                                       wire it into.
+ *   components/mobile/AndroidPermissionManager.tsx
+ *   mobile/utils/permissions.ts         Capacitor and Expo permission managers.
+ *                                       Neither wrapper is the shipping app
+ *                                       (Brikly-iOS is), and the live Capacitor
+ *                                       permission requests sit in
+ *                                       useCameraCapture / useGeolocation /
+ *                                       useNotifications.
  */
-const BASELINE = new Set([
-  'src/components/admin/DosProtection.tsx',
-  'src/components/audit/ActivityLogger.tsx',
-  'src/components/debug/AuthDebug.tsx',
-  'src/components/mfa/index.ts',
-  'src/components/mobile/AndroidPermissionManager.tsx',
-  'src/components/security/SecurityAuditPanel.tsx',
-  'src/hooks/useActiveSessions.ts',
-  'src/hooks/useMFASetup.ts',
-  // Became unreferenced when US-296 deleted MFASetupDialog and TwoFactorAuth,
-  // which were its only importers - dead code holding dead code up.
-  'src/hooks/useSecurity.ts',
-  'src/lib/secureLogger.ts',
-  'src/lib/sessionFingerprint.ts',
-  'src/mobile/utils/permissions.ts',
-  'src/routes/routeSecurity.tsx',
-  'src/utils/dosProtection.ts',
-]);
+const BASELINE = new Set([]);
 
 const files = [];
 const walk = (d) => {

@@ -138,8 +138,8 @@ export default tseslint.config(
   },
   {
     // Sanctioned logging boundaries — all other code routes through these.
-    // logger.ts is the base logger; secureLogger.ts masks PII before logging.
-    files: ["src/lib/logger.ts", "src/lib/secureLogger.ts"],
+    // logger.ts is the base logger.
+    files: ["src/lib/logger.ts"],
     rules: {
       "no-console": "off",
     },

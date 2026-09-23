@@ -6957,3 +6957,11 @@ on phones; every dialog is capped at 90dvh and scrolls. New
 ResponsiveDialog renders Drawer on phones. Width/padding classes are
 unprefixed so the ~70 call sites passing max-w/p-0 still win. Open: adopt
 ResponsiveDialog in top forms, project id in mobile contextual nav.
+
+## US-302 - unreferenced security code (partial)
+Deleted the 13 grandfathered security-named modules; each duplicated a live
+path (useDeviceTrust, lib/logger, RateLimitingDashboard, MFASetup, ...) and
+nothing imported them. useSecurity.enable2FA turned 2FA on without checking
+the TOTP code. Reasons recorded in the guard header. Baselines: security 14
+-> 0, components 222 -> 217, modules 106 -> 99. TS 1490 -> 1483. Open: route
+role enforcement (AC6) and lazy-import detection (AC2).

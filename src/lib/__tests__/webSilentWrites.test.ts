@@ -99,7 +99,6 @@ describe('the best-effort writes', () => {
     ['src/lib/analytics.ts', 'eventError'],
     ['src/hooks/useActivityTracking.tsx', 'timelineError'],
     ['src/hooks/useBehavioralTriggers.ts', 'eventError'],
-    ['src/utils/dosProtection.ts', 'logError'],
     ['src/components/collaboration/UserPresence.tsx', 'Presence heartbeat failed'],
   ];
 
