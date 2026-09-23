@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
-import { Calendar, Calculator, DollarSign, FileText, Users, ArrowRight, Wrench, Target, CheckCircle } from 'lucide-react';
+import { Calendar, Calculator, DollarSign, ArrowRight, Wrench, Target, CheckCircle } from 'lucide-react';
 
 const Tools = () => {
   const tools = [
@@ -32,24 +32,14 @@ const Tools = () => {
       available: true
     },
     {
-      id: 'bid-estimator',
-      title: 'Construction Bid Estimator',
-      description: 'Generate accurate project estimates with material costs, labor rates, and markup calculations.',
-      icon: FileText,
-      href: '/tools/bid-estimator',
-      features: ['Material Cost Database', 'Labor Rate Calculator', 'Markup Analysis', 'Professional Proposals'],
-      badge: 'Coming Soon',
-      available: false
-    },
-    {
-      id: 'crew-calculator',
-      title: 'Crew Size Calculator',
-      description: 'Determine optimal crew sizes for different project types and phases to maximize efficiency.',
-      icon: Users,
-      href: '/tools/crew-calculator',
-      features: ['Efficiency Analysis', 'Phase-Based Calculations', 'Cost Optimization', 'Resource Planning'],
-      badge: 'Coming Soon',
-      available: false
+      id: 'profitability-calculator',
+      title: 'Construction Profitability Calculator',
+      description: 'Check whether a job is worth bidding before you spend hours on a detailed estimate: labor hours, material cost, crew size and duration in, margin out.',
+      icon: DollarSign,
+      href: '/profitability-calculator',
+      features: ['Profit Analysis', 'Cost Breakdown', 'Industry Benchmark', 'Recommendations'],
+      badge: null,
+      available: true
     }
   ];
 
@@ -75,12 +65,11 @@ const Tools = () => {
     <div className="min-h-screen bg-background">
       <SEOMetaTags
         title="Free Construction Tools | Schedule Builder & Profit Calculator | Brikly"
-        description="Access free construction management tools including project schedule builder, profit calculator, and bid estimator. Professional tools for contractors and project managers."
+        description="Access free construction management tools including project schedule builder, ROI calculator and profitability calculator. Professional tools for contractors and project managers."
         keywords={[
           'free construction tools',
           'construction schedule builder',
           'profit calculator construction',
-          'construction bid estimator',
           'project management tools',
           'construction planning tools',
           'contractor tools',

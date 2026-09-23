@@ -21,7 +21,6 @@ import {
   FolderOpen,
   Lock,
   Tag,
-  Gift,
   Share,
   Zap,
   Smartphone,
@@ -311,7 +310,6 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Billing & Subscriptions",
         items: [
           { title: "Billing", url: "/admin/billing", icon: DollarSign, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "Complimentary Subscriptions", url: "/admin/complimentary", icon: Gift, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Root Admin" }
         ]
       },
@@ -337,8 +335,7 @@ export const dashboardAreas: DashboardArea[] = [
       {
         label: "Support Management",
         items: [
-          { title: "Support Tickets", url: "/admin/support-tickets", icon: HelpCircle, roles: ["admin", "root_admin"] },
-          { title: "Customer Service", url: "/admin/customer-service", icon: MessageSquare, roles: ["admin", "root_admin"] }
+          { title: "Support Tickets", url: "/admin/support-tickets", icon: HelpCircle, roles: ["admin", "root_admin"] }
         ]
       }
     ]

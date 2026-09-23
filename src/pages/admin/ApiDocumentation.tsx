@@ -100,7 +100,7 @@ const endpoints: EndpointDoc[] = [
   },
   {
     method: 'POST',
-    path: '/api-management/validate-key',
+    path: '/validate-key',
     description: 'Validate an API key and return its permissions',
     auth: 'API Key (x-api-key header)',
     rateLimit: '100 requests/minute',
@@ -113,7 +113,7 @@ const endpoints: EndpointDoc[] = [
   },
   {
     method: 'POST',
-    path: '/api-management/create-key',
+    path: '/create-key',
     description: 'Create a new API key (admin only)',
     auth: 'Bearer JWT Token (admin role required)',
     rateLimit: '100 requests/minute',

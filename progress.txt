@@ -6922,3 +6922,11 @@ create action on zero rows; stat cards hide or show "-" instead of fake
 zeros on failure. New NoEstimates/NoDailyReports/NoChangeOrders/NoContacts.
 ErrorState's Contact Support and NoProjects' Learn More pointed at routes
 that don't exist; fixed. Open: CRM campaigns and workflows.
+
+## US-406 - remaining dead links
+check-dead-links baseline 25 -> 0. Each link was repointed at an existing
+page, removed, or (once) routed: /tools/schedule-builder now mounts the
+existing client-only ScheduleBuilder publicly in marketingRoutes. Removed:
+/admin/complimentary, /admin/customer-service, /about, /brikly, the two
+Coming Soon tool cards and three template links. ApiDocumentation endpoint
+paths are relative to the function base and exempt from the guard.

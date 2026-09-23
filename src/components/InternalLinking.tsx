@@ -58,12 +58,6 @@ export const InternalLinking: React.FC<InternalLinkingProps> = ({
           description: 'Explore all Brikly features designed for construction contractors.',
           url: '/features',
           icon: BookOpen
-        },
-        {
-          title: 'Getting Started Guide',
-          description: 'Complete setup guide to get started with Brikly quickly.',
-          url: '/knowledge-base/article/getting-started-complete-setup-guide',
-          icon: BookOpen
         }
       ],
       management: [
@@ -82,7 +76,7 @@ export const InternalLinking: React.FC<InternalLinkingProps> = ({
         {
           title: 'Mobile Field Management',
           description: 'Learn how to use mobile tools for effective field management.',
-          url: '/knowledge-base/article/mobile-app-field-guide',
+          url: '/resources/construction-mobile-app-guide',
           icon: BookOpen
         }
       ],

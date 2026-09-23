@@ -292,16 +292,6 @@ const OSHAComplianceGuide = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button asChild variant="outline" className="w-full">
-                  <Link to="/templates/safety-checklist">
-                    Safety Checklist <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/templates/incident-report">
-                    Incident Report Template <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full">
                   <Link to="/resources/safety-training-guide">
                     Training Guide <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>

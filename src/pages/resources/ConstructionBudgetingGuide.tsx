@@ -217,13 +217,8 @@ const ConstructionBudgetingGuide = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button asChild variant="outline" className="w-full">
-                  <Link to="/tools/budget-calculator">
-                    Budget Calculator <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/templates/budget-template">
-                    Budget Template <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link to="/profitability-calculator">
+                    Profitability Calculator <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full">

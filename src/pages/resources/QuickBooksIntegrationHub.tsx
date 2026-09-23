@@ -356,7 +356,7 @@ const QuickBooksIntegrationHub = () => {
             </div>
             <div className="text-center mt-8">
               <Button asChild size="lg">
-                <Link to="/tools/roi-calculator">
+                <Link to="/roi-calculator">
                   Calculate Your Savings <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

@@ -289,7 +289,7 @@ const Navigation = ({ userRole }: NavigationProps) => {
           title: "Lead Management",
           description: "Track and nurture sales leads",
           icon: Users2,
-          path: "/admin/lead-management",
+          path: "/admin/leads",
           roles: ["admin", "root_admin"],
           badge: "New"
         },
@@ -297,7 +297,7 @@ const Navigation = ({ userRole }: NavigationProps) => {
           title: "Demo Management",
           description: "Schedule and track product demos",
           icon: Calendar,
-          path: "/admin/demo-management",
+          path: "/admin/demos",
           roles: ["admin", "root_admin"],
           badge: "New"
         },
@@ -305,7 +305,7 @@ const Navigation = ({ userRole }: NavigationProps) => {
           title: "SEO Manager",
           description: "Search engine optimization tools",
           icon: Search,
-          path: "/admin/seo-manager",
+          path: "/admin/seo-management",
           roles: ["admin", "root_admin"],
           badge: "New"
         },
@@ -329,7 +329,7 @@ const Navigation = ({ userRole }: NavigationProps) => {
           title: "Funnel Manager",
           description: "Track and optimize conversion funnels",
           icon: Filter,
-          path: "/admin/funnel-manager",
+          path: "/admin/funnels",
           roles: ["admin", "root_admin"],
           badge: "New"
         }

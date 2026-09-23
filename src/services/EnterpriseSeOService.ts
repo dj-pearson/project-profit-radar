@@ -318,8 +318,8 @@ class EnterpriseSeOService {
       
       // Solution pages
       { route: '/job-costing-software', title: 'Construction Job Costing Software', primaryKeyword: 'job costing software construction', searchVolume: 880 },
-      { route: '/construction-scheduling', title: 'Construction Scheduling Software', primaryKeyword: 'construction scheduling software', searchVolume: 720 },
-      { route: '/project-management', title: 'Construction Project Management', primaryKeyword: 'construction project management software', searchVolume: 1600 },
+      { route: '/construction-scheduling-software', title: 'Construction Scheduling Software', primaryKeyword: 'construction scheduling software', searchVolume: 720 },
+      { route: '/construction-project-management-software', title: 'Construction Project Management', primaryKeyword: 'construction project management software', searchVolume: 1600 },
     ];
 
     return pages.map(page => ({

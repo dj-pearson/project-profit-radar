@@ -303,7 +303,7 @@ const SearchTrafficDashboard: React.FC = () => {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => navigate('/admin/search-traffic-dashboard/settings')}
+              onClick={() => setActiveTab('settings')}
             >
               <Settings className="h-4 w-4 mr-2" />
               Settings

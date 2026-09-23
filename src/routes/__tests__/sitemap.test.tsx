@@ -98,7 +98,7 @@ describe('sitemap generator (US-382)', () => {
   it('leaves out sign-in, setup, app pages, return pages and aliases', () => {
     for (const p of NON_INDEXABLE) expect(locs).not.toContain(p);
     for (const p of [
-      '/dashboard', '/knowledge-base', '/support', '/tutorials', '/tools/schedule-builder',
+      '/dashboard', '/knowledge-base', '/support', '/tutorials', '/schedule-builder',
       '/procore-alternative-detailed', '/procore-alternative-simple', '/job-costing-software-simple',
       '/privacy', '/terms', '/security', '/cookies', '/demo-request', '/health-check', '/blog/crew-scheduling-tips',
     ]) {
@@ -108,7 +108,7 @@ describe('sitemap generator (US-382)', () => {
   });
 
   it('includes the public pages the old list missed', () => {
-    for (const p of ['/', '/contact', '/legal/security', '/pricing', '/resources', '/demo']) expect(locs).toContain(p);
+    for (const p of ['/', '/contact', '/legal/security', '/pricing', '/resources', '/demo', '/tools/schedule-builder']) expect(locs).toContain(p);
   });
 
   it('includes published blog posts and pSEO pages at their routed URLs with updated_at as lastmod', () => {

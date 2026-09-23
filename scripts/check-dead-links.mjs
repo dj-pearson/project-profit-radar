@@ -35,46 +35,18 @@ const SRC = join(root, 'src');
  * Paths the UI navigates to that no route answers. Each needs a decision about
  * whether the page should exist, not a different target, so none of them is a
  * repoint someone can just make.
+ *
+ * Empty since US-406, and it stays empty: a new dead link fails this guard
+ * rather than joining a list. The last 25 were each given a build-or-delete
+ * call - admin nav entries repointed at the routes that already serve them
+ * (/admin/leads, /admin/demos, /admin/seo-management, /admin/funnels) or taken
+ * out of the menu, marketing slugs pointed at their real pages, free tools and
+ * templates that were never built stopped being offered, and the one tool that
+ * was built (/tools/schedule-builder) got its public route. Adding an entry
+ * back needs a reason of at least a sentence, and
+ * src/lib/__tests__/deadLinks.test.ts will ask why the list grew.
  */
-const BASELINE = new Map([
-  // /deals, /deals/new, /calls, /meetings and /bookings were all here. Every one
-  // was linked from src/components/crm/CRMDashboard.tsx, an unreachable duplicate
-  // of the routed pages/CRMDashboard, deleted in the US-314 burn-down. Their
-  // baselined reasons deferred to US-276 (deals vs opportunities); that question is
-  // still open, it just no longer has a link pointing at it from dead code.
-  ['/admin/search-traffic-dashboard/settings', 'A settings link on the search-traffic dashboard, with no settings page behind it.'],
-  ['/tools/budget-calculator', 'Linked from the construction budgeting guide. /tools exists as an index; this specific calculator does not.'],
-  ['/tools/roi-calculator', 'Linked from the QuickBooks integration hub. Same as the budget calculator.'],
-  ['/templates/budget-template', 'A downloadable template offered by the budgeting guide. No template delivery route exists.'],
-  ['/templates/incident-report', 'Offered by the OSHA compliance guide. Same as above.'],
-  ['/templates/safety-checklist', 'Offered by the OSHA compliance guide. Same as above.'],
-  ['/topics/cost-and-profit-management', 'A topic hub linked from ConstructionManagementBasics. Two topic hubs exist (/topics/construction-management-basics, /topics/safety-and-osha-compliance); this one was linked before it was written.'],
-  ['/topics/field-tracking-and-management', 'Linked from two topic pages. Same as above.'],
-  // Found 2026-08-29 when this guard learned to read `url:`/`path:` object
-  // literals (US-312). Every one predates that change - they were always dead,
-  // and matching only navigate/to=/href= could not see them. Two clusters stand
-  // out: MobileQuickActionsSheet, where all seven actions point at nothing, and
-  // RoleDashboard, where six of its tiles do. Recorded rather than repointed -
-  // several have two or three plausible destinations and picking one is a
-  // product decision.
-  ['/admin/lead-management', 'Navigation.tsx admin menu. No such route; lead surfaces are under /crm/*.'],
-  ['/admin/demo-management', 'Navigation.tsx admin menu. /admin/demos exists as the internal demo view; this is a different name for it.'],
-  ['/admin/seo-manager', 'Navigation.tsx admin menu. The SEO admin surface is reached elsewhere; no route answers this path.'],
-  ['/admin/funnel-manager', 'Navigation.tsx admin menu. No funnel admin route exists.'],
-  ['/admin/complimentary', 'NavigationConfig and HierarchicalNavigationConfig, so it is offered by the live sidebar config. No route answers it.'],
-  ['/admin/customer-service', 'NavigationConfig and HierarchicalNavigationConfig, offered by the live sidebar config. No route answers it.'],
-  ['/tools/schedule-builder', 'Tools page and ToolsFooter. /tools is an index and /schedule-builder exists at the top level; the nested path does not.'],
-  ['/tools/bid-estimator', 'Tools page. Same shape as the other /tools/* entries - the index exists, the individual tool route does not.'],
-  ['/tools/crew-calculator', 'Tools page. Same as /tools/bid-estimator.'],
-  ['/api-management/create-key', 'ApiDocumentation. This documents an API endpoint rather than an in-app route, and reads as navigation only because it is written as a path literal.'],
-  ['/api-management/validate-key', 'ApiDocumentation. Same as /api-management/create-key - documentation of an endpoint, not a link.'],
-  ['/about', 'seoConfig sitemap entry. No /about route exists; company information lives on the marketing index.'],
-  ['/brikly', 'seoConfig sitemap entry. Not a route - this looks like a brand slug that was never a page.'],
-  ['/construction-scheduling', 'EnterpriseSeOService generated link. A marketing slug with no page behind it.'],
-  ['/project-management', 'EnterpriseSeOService generated link. Same as /construction-scheduling.'],
-  ['/knowledge-base/article/getting-started-complete-setup-guide', 'InternalLinking. The knowledge base routes by a different path shape; these article slugs resolve to nothing.'],
-  ['/knowledge-base/article/mobile-app-field-guide', 'InternalLinking. Same as the getting-started article slug.'],
-]);
+const BASELINE = new Map([]);
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -134,9 +106,12 @@ for (const file of FILES) {
     // destinations rather than navigating to them - and config/pentest.config.ts
     // documents externally reachable endpoints for security testing. Reading
     // either as navigation produces noise, and a guard that cries wolf is one
-    // people learn to skip.
+    // people learn to skip. pages/admin/ApiDocumentation.tsx is the third: its
+    // `path:` values are api-management edge function endpoints, shown relative
+    // to the function's base URL (/validate-key, /api/projects), and no <Route>
+    // will ever answer them. Its navigate/to=/href= sites are still checked.
     const declaresRatherThanLinks =
-      /src[/\\](utils[/\\]lazyRoutes\.tsx|config[/\\]pentest\.config\.ts)$/.test(file);
+      /src[/\\](utils[/\\]lazyRoutes\.tsx|config[/\\]pentest\.config\.ts|pages[/\\]admin[/\\]ApiDocumentation\.tsx)$/.test(file);
     for (const m of declaresRatherThanLinks
       ? []
       : line.matchAll(/\b(?:url|path|href|route|to)\s*:\s*['"`](\/[A-Za-z0-9/_-]*)['"`]/g)) {

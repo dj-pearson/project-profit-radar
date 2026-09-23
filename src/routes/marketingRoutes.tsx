@@ -7,7 +7,7 @@
  */
 
 import { Route } from 'react-router-dom';
-import { createLazyRoute, LazyPSEOPageRenderer, LazyBlogPost } from '@/utils/lazyRoutes';
+import { createLazyRoute, LazyPSEOPageRenderer, LazyBlogPost, LazyScheduleBuilder } from '@/utils/lazyRoutes';
 
 // Marketing pages - Lazy loaded with ErrorBoundary + Suspense
 const PricingPage = createLazyRoute(() => import('@/pages/Pricing'));
@@ -193,6 +193,14 @@ export const marketingRoutes = (
 
     {/* Free Tools */}
     <Route path="/roi-calculator" element={<ROICalculatorLanding />} />
+    {/*
+      The free schedule builder the Tools page advertises (US-406).
+      pages/tools/ScheduleBuilder is client-only (sample data, PDF export, no
+      Supabase) and its canonical is /tools/schedule-builder, but it was only
+      mounted at /schedule-builder behind SecureRoute, so the Tools card 404'd.
+      The guarded /schedule-builder mount in adminRoutes is unchanged.
+    */}
+    <Route path="/tools/schedule-builder" element={<LazyScheduleBuilder />} />
     <Route path="/calculator" element={<ProfitabilityCalculator />} />
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
     <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />

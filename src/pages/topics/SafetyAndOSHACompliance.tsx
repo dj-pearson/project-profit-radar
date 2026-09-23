@@ -308,7 +308,7 @@ const SafetyAndOSHACompliance = () => {
           <div className="grid md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
-                <Link to="/topics/field-tracking-and-management" className="font-medium hover:text-primary">
+                <Link to="/construction-field-management" className="font-medium hover:text-primary">
                   Field Management →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">Mobile safety forms and GPS tracking</p>

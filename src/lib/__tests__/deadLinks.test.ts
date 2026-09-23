@@ -122,9 +122,18 @@ describe('the guard', () => {
     expect(readFileSync('.github/workflows/ci.yml', 'utf8')).toContain('check-dead-links.mjs');
   });
 
+  it('keeps the baseline empty (US-406)', () => {
+    // The last 25 dead links each got a build-or-delete call in US-406. From
+    // here a new one fails the guard instead of joining a list; if this ever
+    // needs to be loosened, the entry goes in with a reason (next test).
+    const src = readFileSync(GUARD, 'utf8');
+    expect(src).toMatch(/^const BASELINE = new Map\(\[\]\);$/m);
+  });
+
   it('gives every baselined path a written reason', () => {
     const src = readFileSync(GUARD, 'utf8');
-    const baseline = src.slice(src.indexOf('const BASELINE = new Map(['), src.indexOf(']);'));
+    const from = src.indexOf('const BASELINE = new Map([');
+    const baseline = src.slice(from, src.indexOf(']);', from) + 3);
     // Every entry, and every entry carrying a reason of real length. Comparing
     // the two is the actual assertion. This used to require at least 16 entries,
     // which inverted it: the baseline is meant to shrink, so deleting the five
@@ -132,7 +141,9 @@ describe('the guard', () => {
     // whose point was that reasons exist, not that dead links do.
     const all = [...baseline.matchAll(/^ {2}\['\/[A-Za-z0-9/_-]*',/gm)];
     const reasoned = [...baseline.matchAll(/^ {2}\['\/[A-Za-z0-9/_-]*',\s*'([^']{40,})/gm)];
-    expect(all.length).toBeGreaterThan(0);
+    // Same inversion again at zero: an empty baseline is the goal, so the only
+    // precondition is that the declaration was found at all.
+    expect(from).toBeGreaterThanOrEqual(0);
     expect(reasoned.length).toBe(all.length);
   });
 

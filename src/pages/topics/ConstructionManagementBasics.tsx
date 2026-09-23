@@ -239,7 +239,7 @@ const ConstructionManagementBasics = () => {
           <div className="grid md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
-                <Link to="/topics/cost-and-profit-management" className="font-medium hover:text-primary">
+                <Link to="/resources/complete-guide-construction-job-costing" className="font-medium hover:text-primary">
                   Cost & Profit Management →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">Advanced financial controls and job costing</p>
@@ -255,7 +255,7 @@ const ConstructionManagementBasics = () => {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <Link to="/topics/field-tracking-and-management" className="font-medium hover:text-primary">
+                <Link to="/construction-field-management" className="font-medium hover:text-primary">
                   Field Management →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">Mobile tools and field operations</p>
