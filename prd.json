@@ -5641,8 +5641,8 @@
         "A test asserts submit is disabled until the box is checked"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. SignUpForm has a required checkbox whose label links /terms and /privacy (new tab); Create account stays disabled until it is ticked, and Auth.handleSignUp refuses without it. Migration 20260923080000 adds nullable user_profiles.terms_accepted_at and terms_version; signup-with-otp writes both on the profile insert when termsAccepted is true. termsVersion is LEGAL_TERMS_VERSION in src/lib/legal/termsVersion.ts (2026-04-13, the effective date on /terms and /privacy; bump it with either document). Server schema takes termsAccepted as OPTIONAL this release so a cached older bundle can still sign up - make it z.literal(true) next release. Existing accounts have NULL, meaning no recorded acceptance. Tests: SignUpForm.terms.test.tsx (3: disabled until ticked, links, server stores time and version)."
     },
     {
       "id": "US-362",

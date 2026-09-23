@@ -42,6 +42,7 @@ const Auth = () => {
   const [otpExpiresIn, setOtpExpiresIn] = useState<number>(15);
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [newPassword, setNewPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [newPasswordValidation, setNewPasswordValidation] = useState({ isValid: true, errors: [] as string[] });
   const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -200,6 +201,9 @@ const Auth = () => {
     if (!passwordValidation.isValid) {
       toast({ variant: "destructive", title: "Password Requirements Not Met", description: passwordValidation.errors[0] }); return;
     }
+    if (!termsAccepted) {
+      toast({ variant: "destructive", title: "Please accept the terms", description: "Tick the box to agree to the Terms of Service and Privacy Policy." }); return;
+    }
     // Pre-check against disposable email blocklist for fast UX feedback.
     // The edge function re-validates server-side regardless of this result.
     try {
@@ -217,11 +221,11 @@ const Auth = () => {
       logger.warn('[Auth] Disposable email pre-check failed:', err);
     }
     setLoading(true); setOtpFlowState('sending');
-    const result = await signUp(email, password, { first_name: firstName, last_name: lastName });
+    const result = await signUp(email, password, { first_name: firstName, last_name: lastName, terms_accepted: true });
     if (result.error) { toast({ variant: "destructive", title: "Sign Up Failed", description: result.error }); setOtpFlowState('idle'); }
     else { setOtpExpiresIn(result.expiresInMinutes || 15); setOtpFlowState('verifying'); setEmailSent(true); setEmailSentType('signup'); startResendCooldown(60); toast({ title: "Verification Code Sent!", description: "Check your email for the 6-digit code." }); }
     setLoading(false);
-  }, [email, password, firstName, lastName, passwordValidation, signUp, verifyCsrf]);
+  }, [email, password, firstName, lastName, passwordValidation, termsAccepted, signUp, verifyCsrf]);
 
   const handleVerifySignupOTP = useCallback(async () => {
     if (otpCode.length !== 6) { toast({ variant: "destructive", title: "Invalid Code", description: "Enter the complete 6-digit code." }); return; }
@@ -376,6 +380,7 @@ const Auth = () => {
               showPassword={showPassword} setShowPassword={setShowPassword}
               loading={loading} inputClassName={inputClassName}
               passwordValidation={passwordValidation}
+              termsAccepted={termsAccepted} setTermsAccepted={setTermsAccepted}
               showPasswordRequirements={showPasswordRequirements}
               emailSent={emailSent} emailSentType={emailSentType}
               otpFlowState={otpFlowState}

@@ -28,6 +28,11 @@ const signupSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
+  // US-361. Optional for one release so a browser still on the previous
+  // bundle can sign up; the form now requires the box. Make it
+  // z.literal(true) in the release after this one.
+  termsAccepted: z.boolean().optional(),
+  termsVersion: z.string().max(40).optional(),
   // No `role` here, deliberately. It used to be
   // `z.string().optional().default('admin')` and went straight into the
   // service-role insert below, so an unauthenticated POST of
@@ -84,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, password, firstName, lastName } = validation.data;
+    const { email, password, firstName, lastName, termsAccepted, termsVersion } = validation.data;
 
     console.log(`[SignupWithOTP] Processing signup for ${email}`);
 
@@ -154,6 +159,9 @@ const handler = async (req: Request): Promise<Response> => {
         // handle_new_user trigger hardcodes for the same case.
         role: SELF_SIGNUP_ROLE,
         is_active: false, // Will be activated after email verification
+        // Evidence of acceptance: when, and which version (US-361).
+        terms_accepted_at: termsAccepted ? new Date().toISOString() : null,
+        terms_version: termsAccepted ? (termsVersion ?? null) : null,
       });
 
     if (profileError) {

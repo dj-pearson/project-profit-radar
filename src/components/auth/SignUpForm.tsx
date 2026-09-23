@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/input-otp";
 import { AlertCircle, CheckCircle, RefreshCw, KeyRound, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
+import { Link } from "react-router-dom";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 
@@ -34,6 +35,9 @@ interface SignUpFormProps {
   otpExpiresIn: number;
   otpResendCooldown: number;
   passwordValidation: { isValid: boolean; errors: string[] };
+  /** US-361: explicit acceptance of the Terms and Privacy Policy. */
+  termsAccepted: boolean;
+  setTermsAccepted: (v: boolean) => void;
   showPasswordRequirements: boolean;
   onSubmit: (e: FormEvent) => void;
   onVerifyOTP: () => void;
@@ -51,6 +55,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   showPassword, setShowPassword, loading, inputClassName,
   emailSent, emailSentType, otpFlowState, otpCode, setOtpCode,
   otpExpiresIn, otpResendCooldown, passwordValidation,
+  termsAccepted, setTermsAccepted,
   showPasswordRequirements, onSubmit, onVerifyOTP, onResendOTP,
   onResetOTPFlow, onPasswordChange, onSwitchToSignIn,
   renderOAuthButtons, renderPasswordRequirements,
@@ -243,17 +248,34 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
               {showPasswordRequirements && renderPasswordRequirements(password, "signup-password")}
             </div>
 
+            <div className="flex items-start gap-3">
+              <input
+                id="signup-terms"
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-500 accent-blue-600"
+                required
+              />
+              <label htmlFor="signup-terms" className="text-sm text-slate-300">
+                I agree to the{' '}
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
-              disabled={loading || !passwordValidation.isValid}
+              disabled={loading || !passwordValidation.isValid || !termsAccepted}
             >
               {loading ? "Creating account..." : "Create account"}
             </Button>
-
-            <p className="text-xs text-slate-400 text-center">
-              By signing up, you agree to our Terms of Service and Privacy Policy
-            </p>
           </form>
 
           <p className="text-center text-sm text-slate-400">

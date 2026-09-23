@@ -19,6 +19,7 @@ import { logger } from "@/lib/logger";
 import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
 import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
 import { checkMfaRequired, markMfaPending, readDeviceId, readMfaPending } from "@/lib/auth/mfaChallenge";
+import { LEGAL_TERMS_VERSION } from "@/lib/legal/termsVersion";
 import {
   checkLoginAttempt,
   recordFailedLogin,
@@ -147,7 +148,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    userData?: { first_name?: string; last_name?: string }
+    userData?: { first_name?: string; last_name?: string; terms_accepted?: boolean }
   ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
@@ -1029,7 +1030,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   // Sign up using our custom edge function (bypasses Supabase's email)
   const signUp = useCallback(
-    async (email: string, password: string, userData?: { first_name?: string; last_name?: string }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
+    async (email: string, password: string, userData?: { first_name?: string; last_name?: string; terms_accepted?: boolean }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
       try {
         logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
@@ -1048,6 +1049,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
               password,
               firstName: userData?.first_name || "",
               lastName: userData?.last_name || "",
+              // US-361: recorded on the profile with the version agreed to.
+              termsAccepted: userData?.terms_accepted === true,
+              termsVersion: LEGAL_TERMS_VERSION,
               // No role: the server fixes it. It used to be forwarded from the
               // caller straight into a service-role insert (US-338).
             }),

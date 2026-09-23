@@ -6458,3 +6458,15 @@ and subprocessor list now say what a replay contains.
 Getting the test to see the SDK call took three tries. `analytics.ts` calls
 `Analytics.init()` on import, so a second `init()` from the test returns early
 and the assertion ran before the dynamic import resolved.
+
+## US-361: signup records that the terms were accepted
+
+The signup form had one line of grey text, "By signing up, you agree", with no
+links and nothing stored. It now has a required checkbox that links the Terms
+and Privacy pages, and "Create account" stays disabled until it's ticked.
+`signup-with-otp` writes `terms_accepted_at` and `terms_version` onto the new
+profile. The version constant is the effective date on the legal pages and
+has to be bumped whenever either document changes.
+
+The server accepts the field as optional this release, so a browser still on
+the old bundle can sign up. Making it required is next release's change.
