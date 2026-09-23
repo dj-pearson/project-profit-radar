@@ -5885,7 +5885,7 @@
       ],
       "priority": 4,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || Primitives done: below 640px buttons/inputs/select/toggle are 44px (sm and up unchanged; Tailwind 3.4 has no pointer-coarse variant, so this is by viewport), DialogContent is a bottom sheet with safe-area padding, all dialogs cap at 90dvh and scroll, sheet bottom capped and rounded; new ResponsiveDialog (Drawer on phones, Dialog above). OPEN: adopt ResponsiveDialog in the ten most-used forms; mobile contextual nav on /projects/* drops the project id; alert-dialog/checkbox/switch/tabs not resized; no real-device check."
     },
     {
       "id": "US-380",

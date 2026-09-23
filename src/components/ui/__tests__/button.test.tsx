@@ -70,14 +70,14 @@ describe('Button', () => {
   });
 
   describe('sizes', () => {
-    it('applies default size', () => {
+    it('applies default size: 44px on phones, 40px from sm up', () => {
       render(<Button size="default">Default</Button>);
-      expect(screen.getByRole('button')).toHaveClass('h-10');
+      expect(screen.getByRole('button')).toHaveClass('h-11', 'sm:h-10');
     });
 
-    it('applies sm size', () => {
+    it('applies sm size: 44px on phones, 36px from sm up', () => {
       render(<Button size="sm">Small</Button>);
-      expect(screen.getByRole('button')).toHaveClass('h-9');
+      expect(screen.getByRole('button')).toHaveClass('h-11', 'sm:h-9');
     });
 
     it('applies lg size', () => {
@@ -90,11 +90,24 @@ describe('Button', () => {
       expect(screen.getByRole('button')).toHaveClass('h-14');
     });
 
-    it('applies icon size', () => {
+    it('applies icon size: 44px square on phones, 40px from sm up', () => {
       render(<Button size="icon">X</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('h-10');
-      expect(button).toHaveClass('w-10');
+      expect(button).toHaveClass('h-11', 'w-11', 'sm:h-10', 'sm:w-10');
+    });
+
+    it('never drops below 44px without an sm: prefix (US-379)', () => {
+      for (const size of ['default', 'sm', 'lg', 'xl', 'icon'] as const) {
+        const { unmount } = render(<Button size={size}>{size}</Button>);
+        const unprefixed = screen
+          .getByRole('button')
+          .className.split(/\s+/)
+          .filter((c) => /^h-\d+$/.test(c))
+          .map((c) => Number(c.slice(2)));
+        expect(unprefixed.length).toBe(1);
+        expect(unprefixed[0]).toBeGreaterThanOrEqual(11);
+        unmount();
+      }
     });
   });
 

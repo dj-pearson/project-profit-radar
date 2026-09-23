@@ -6949,3 +6949,11 @@ fails if the entry statically reaches three, recharts or xlsx. ModernSection
 uses IntersectionObserver instead of framer-motion. Initial JS on /:
 694.6 -> 292.0 KB gz (319.1 KB with the Index chunk; AC is 300). Lighthouse
 config now mobile with an LCP gate at 4 s; not run locally.
+
+## US-379 - tap targets and mobile dialogs (partial)
+Shared primitives: button, input, select trigger/items, toggle are 44px
+below 640px and unchanged from sm up. DialogContent becomes a bottom sheet
+on phones; every dialog is capped at 90dvh and scrolls. New
+ResponsiveDialog renders Drawer on phones. Width/padding classes are
+unprefixed so the ~70 call sites passing max-w/p-0 still win. Open: adopt
+ResponsiveDialog in top forms, project id in mobile contextual nav.

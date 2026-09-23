@@ -23,12 +23,15 @@ const buttonVariants = cva(
         hero: "bg-construction-orange text-white hover:bg-construction-orange/90 text-base font-semibold px-8 py-4 h-auto",
         construction: "bg-construction-blue text-white hover:bg-construction-blue/90 border-0",
       },
+      // Below the sm breakpoint (phones) every size is at least 44px tall so
+      // field users can hit it with a gloved thumb (WCAG 2.5.5 / Apple HIG).
+      // From sm up the original desktop density is restored.
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
+        default: "h-11 px-4 py-2 sm:h-10",
+        sm: "h-11 rounded-md px-3 sm:h-9",
         lg: "h-11 rounded-md px-8",
         xl: "h-14 rounded-lg px-10 text-lg",
-        icon: "h-10 w-10",
+        icon: "h-11 w-11 sm:h-10 sm:w-10",
       },
     },
     defaultVariants: {

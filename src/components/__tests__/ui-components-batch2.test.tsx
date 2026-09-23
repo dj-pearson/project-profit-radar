@@ -204,13 +204,13 @@ describe('Toggle', () => {
   it('applies default size classes', () => {
     const { container } = render(<Toggle>B</Toggle>);
     const btn = container.querySelector('button');
-    expect(btn).toHaveClass('h-10', 'px-3');
+    expect(btn).toHaveClass('h-11', 'sm:h-10', 'px-3');
   });
 
   it('applies sm size classes', () => {
     const { container } = render(<Toggle size="sm">B</Toggle>);
     const btn = container.querySelector('button');
-    expect(btn).toHaveClass('h-9', 'px-2.5');
+    expect(btn).toHaveClass('h-11', 'sm:h-9', 'px-2.5');
   });
 
   it('applies lg size classes', () => {

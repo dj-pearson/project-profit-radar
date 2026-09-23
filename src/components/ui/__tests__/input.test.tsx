@@ -28,7 +28,7 @@ describe('Input', () => {
     it('applies default styles', () => {
       render(<Input data-testid="input" />);
       const input = screen.getByTestId('input');
-      expect(input).toHaveClass('flex', 'h-10', 'w-full', 'rounded-md', 'border');
+      expect(input).toHaveClass('flex', 'h-11', 'sm:h-10', 'w-full', 'rounded-md', 'border');
     });
 
     it('applies custom className', () => {
