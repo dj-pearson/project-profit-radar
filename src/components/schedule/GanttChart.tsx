@@ -6,13 +6,12 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Task, Project, ScheduleAnalytics } from "@/types/schedule";
 import { computeSchedule } from "@/lib/schedule/criticalPath";
-import { Clock, AlertCircle, GripVertical, Plus, Settings, Share, Download, Copy, Check } from 'lucide-react';
+import { Clock, AlertCircle, GripVertical, Plus, Settings, Share, Download } from 'lucide-react';
 
 interface GanttChartProps {
   project: Project;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onAddTask?: () => void;
-  onShare?: (shareUrl: string) => void;
   onExportPDF?: () => void;
   onSettings?: () => void;
 }
@@ -28,16 +27,12 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   project,
   onTaskUpdate,
   onAddTask,
-  onShare,
   onExportPDF,
   onSettings
 }) => {
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewMode, setViewMode] = useState<'days' | 'weeks' | 'months'>('days');
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
-  const [linkCopied, setLinkCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const ganttRef = useRef<HTMLDivElement>(null);
 
@@ -146,34 +141,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     setDragOffset({ x: 0, y: 0 });
   };
 
-  // Handle share functionality
-  const handleShare = async () => {
-    setIsSharing(true);
-    try {
-      // Generate a shareable URL (in real implementation, this would save to backend)
-      const shareUrl = `${window.location.origin}/shared-schedule/${project.id}`;
-      setShareUrl(shareUrl);
-      
-      if (onShare) {
-        onShare(shareUrl);
-      }
-    } catch (error) {
-      console.error('Error sharing schedule:', error);
-    }
-    setIsSharing(false);
-  };
-
-  // Handle copy link
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch (error) {
-      console.error('Error copying link:', error);
-    }
-  };
-
   // Handle PDF export
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -245,25 +212,14 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             </Button>
           )}
           
-          {/* Share Button with Dropdown */}
-          {shareUrl ? (
-            <div className="relative">
-              <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                {linkCopied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                {linkCopied ? 'Copied!' : 'Copy Link'}
-              </Button>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing}>
-              {isSharing ? (
-                <Clock className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Share className="mr-2 h-4 w-4" />
-              )}
-              Share
-            </Button>
-          )}
-          
+          {/* Sharing used to build ${origin}/shared-schedule/<id> and offer it as a
+              link. No route answers that path and nothing stores a shared
+              schedule, so anyone opening it got the 404 page (US-312). */}
+          <NotBuiltButton feature="Schedule sharing" variant="outline" size="sm">
+            <Share className="mr-2 h-4 w-4" />
+            Share
+          </NotBuiltButton>
+
           <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isExporting}>
             {isExporting ? (
               <Clock className="mr-2 h-4 w-4 animate-spin" />

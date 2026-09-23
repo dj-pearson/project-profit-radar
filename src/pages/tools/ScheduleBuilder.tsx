@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from "@/components/Header";
 import ToolsFooter from "@/components/ToolsFooter";
 import { Button } from "@/components/ui/button";
+import { NotBuiltButton } from "@/components/ui/not-built-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -152,15 +153,7 @@ const ScheduleBuilder = () => {
     });
   };
 
-  // Handle sharing functionality
-  const handleShare = (shareUrl: string) => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      alert(`Schedule shared! Link copied to clipboard:\n\n${shareUrl}\n\nAnyone with this link can view your project timeline.`);
-    }).catch(() => {
-      alert(`Share this link with your team:\n\n${shareUrl}`);
-    });
-  };
-
+  // Sharing is not built: no route answers a shared-schedule link (US-312).
   // Handle PDF export
   const handleExportPDF = async () => {
     if (!currentProject) return;
@@ -487,10 +480,10 @@ const ScheduleBuilder = () => {
                     </p>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <NotBuiltButton feature="Schedule sharing" variant="outline" size="sm">
                       <Share className="mr-2 h-4 w-4" />
                       Share
-                    </Button>
+                    </NotBuiltButton>
                     <Button size="sm" onClick={handleExportPDF}>
                       <Download className="mr-2 h-4 w-4" />
                       Export PDF
@@ -504,9 +497,6 @@ const ScheduleBuilder = () => {
               onTaskUpdate={handleTaskUpdate}
               onAddTask={() => {
                 handleAddTask();
-              }}
-              onShare={(shareUrl) => {
-                handleShare(shareUrl);
               }}
               onExportPDF={() => {
                 handleExportPDF();

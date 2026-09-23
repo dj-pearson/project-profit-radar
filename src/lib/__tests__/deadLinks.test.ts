@@ -142,3 +142,90 @@ describe('the guard', () => {
     expect(prose).toContain('not where they are mounted');
   });
 });
+
+describe('links built from window.location.origin', () => {
+  // The guard reads navigate()/to=/href= and `url:`-style literals. A link built
+  // as `${window.location.origin}/x/${id}` is none of those, and it is the shape
+  // that leaves the app: it gets copied to a clipboard, handed to Stripe as a
+  // return URL, or registered as an OAuth callback. GanttChart's Share button
+  // built `${origin}/shared-schedule/${project.id}`, which no route answered,
+  // and ScheduleBuilder told the user "Anyone with this link can view your
+  // project timeline" while copying it.
+  const ORIGIN_LINK = /\$\{window\.location\.origin\}(\/[A-Za-z0-9/_${}.-]*)/g;
+
+  /**
+   * Origin-built paths no route answers, each with why. Shrink only.
+   */
+  const KNOWN: Record<string, string> = {
+    '/book/*':
+      'BookingPageManager copies a public booking link. PublicBookingPage exists but is not routed, and neither is BookingsPage, the only thing that renders BookingPageManager - so the link is unreachable today. Route both or delete both.',
+  };
+
+  function walk(dir: string, out: string[] = []): string[] {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name.startsWith('.') || e.name === '__tests__' || e.name === 'test') continue;
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walk(full, out);
+      else if (/\.(ts|tsx)$/.test(e.name)) out.push(full);
+    }
+    return out;
+  }
+
+  /** `${window.location.origin}/x/${id}` -> '/x/*' so it can match '/x/:id'. */
+  function originLinks(): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    for (const file of walk('src')) {
+      readFileSync(file, 'utf8')
+        .split('\n')
+        .forEach((line, i) => {
+          for (const m of line.matchAll(ORIGIN_LINK)) {
+            const path = m[1].replace(/\$\{[^}]*\}/g, '*').replace(/\/$/, '') || '/';
+            if (!out.has(path)) out.set(path, []);
+            out.get(path)!.push(`${file}:${i + 1}`);
+          }
+        });
+    }
+    return out;
+  }
+
+  function answered(path: string, routes: Set<string>): boolean {
+    const parts = path.split('/');
+    return [...routes]
+      .filter((r) => r !== '*')
+      .map((r) => r.split('/'))
+      .some(
+        (shape) =>
+          shape.length === parts.length &&
+          shape.every((p, i) => p.startsWith(':') || p === '*' || parts[i] === '*' || p === parts[i]),
+      );
+  }
+
+  it('finds the origin-built links it is meant to check', () => {
+    // A regex that silently matches nothing would pass the next test forever.
+    const links = originLinks();
+    expect(links.has('/payment-success')).toBe(true);
+    expect(links.has('/quickbooks/callback')).toBe(true);
+  });
+
+  it('points every origin-built link at a route, or records why not', () => {
+    const routes = declaredRoutes();
+    const dead = [...originLinks().entries()]
+      .filter(([p]) => !answered(p, routes) && !(p in KNOWN))
+      .map(([p, sites]) => `${p} <- ${sites.join(', ')}`);
+    expect(dead, 'origin-built links that land on the 404 page').toEqual([]);
+  });
+
+  it('has no stale KNOWN entries', () => {
+    const links = originLinks();
+    const routes = declaredRoutes();
+    const stale = Object.keys(KNOWN).filter((p) => !links.has(p) || answered(p, routes));
+    expect(stale, 'delete these from KNOWN').toEqual([]);
+  });
+
+  it('GanttChart no longer offers a /shared-schedule link', () => {
+    const src = readFileSync('src/components/schedule/GanttChart.tsx', 'utf8');
+    expect(src).not.toMatch(/window\.location\.origin\}\/shared-schedule/);
+    expect(src).toMatch(/<NotBuiltButton feature="Schedule sharing"/);
+    expect(readFileSync('src/pages/tools/ScheduleBuilder.tsx', 'utf8')).not.toMatch(/Anyone with this link/);
+  });
+});
