@@ -50,7 +50,8 @@ describe('the financial screens', () => {
     // financial records look identical: blank space.
     const src = code('src/components/financial/ProjectFinancialDashboard.tsx');
     expect(src).toContain('loadError');
-    expect(src).toContain('Project financials unavailable');
+    // US-364 moved the failure view onto the shared ErrorState (with retry).
+    expect(src).toMatch(/<ErrorState[^>]*error=\{loadError\}/);
   });
 
   it('the overview clears stale figures rather than leaving them under a new period', () => {
