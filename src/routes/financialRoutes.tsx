@@ -98,7 +98,9 @@ export const financialRoutes = (
     <Route path="/vendors" element={<RouteGuard><LazyVendors /></RouteGuard>} />
 
     {/* Integrations */}
-    <Route path="/quickbooks-routing" element={<LazyQuickBooksRouting />} />
-    <Route path="/quickbooks/callback" element={<LazyQuickBooksCallback />} />
+    <Route path="/quickbooks-routing" element={<RouteGuard><LazyQuickBooksRouting /></RouteGuard>} />
+    {/* Intuit returns here to a user who started the connect flow signed in;
+        the page calls the token exchange with their session (US-350). */}
+    <Route path="/quickbooks/callback" element={<RouteGuard><LazyQuickBooksCallback /></RouteGuard>} />
   </>
 );

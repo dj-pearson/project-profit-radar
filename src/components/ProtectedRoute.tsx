@@ -10,6 +10,12 @@ import { PROFILE_FETCH_TIMEOUT_MS } from '@/lib/auth/timing';
 interface RouteGuardProps {
   children: ReactNode;
   routePath?: string;
+  /**
+   * A route a client_portal user may open (US-350). Everything else sends
+   * them to /client-portal: the contractor dashboard, projects and invoices
+   * are not theirs, even where RLS would show them an empty list.
+   */
+  portalScoped?: boolean;
 }
 
 /** Maximum redirects allowed within the reset window before tripping the breaker. */
@@ -34,7 +40,7 @@ function trackRedirect(): boolean {
   return true; // redirect allowed
 }
 
-export const RouteGuard: FC<RouteGuardProps> = ({ children }) => {
+export const RouteGuard: FC<RouteGuardProps> = ({ children, portalScoped = false }) => {
   const { user, userProfile, loading } = useAuth();
   const location = useLocation();
   const [profileWaitExpired, setProfileWaitExpired] = useState(false);
@@ -119,6 +125,10 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children }) => {
       return <RecoveryUI message="Your account role is not authorised." />;
     }
     return <Navigate to="/auth" replace />;
+  }
+
+  if (userProfile.role === "client_portal" && !portalScoped) {
+    return <Navigate to="/client-portal" replace />;
   }
 
   return <>{children}</>;

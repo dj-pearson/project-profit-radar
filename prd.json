@@ -5496,8 +5496,8 @@
         "ADD_ROLE_GUARDS.md is updated to the six pages still missing RoleGuard (DocumentManagement, Materials, MaterialTracking, Equipment, EstimatesHub, Reports) or deleted"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Data is RLS-gated so this is UI exposure, but the portal-user case is a real confusion for real customers."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Data is RLS-gated so this is UI exposure, but the portal-user case is a real confusion for real customers. || DONE 2026-09-23. AC1: RouteGuard takes portalScoped; a client_portal user on any route without it is redirected to /client-portal. Only /client-portal and /profile are portal-scoped. AC2: wrapped in RouteGuard: /setup, /marketplace, /collaboration, /referrals, /integrations, /workflows, /ai-insights, /visual-project, /field-management, /workflow-management, /workflow-testing, the four /mobile-* routes, /quickbooks-routing, and /quickbooks/callback (which the story did not list; Intuit returns a signed-in user there). src/routes/__tests__/routeGuards.test.tsx walks appRoutes, financialRoutes, projectRoutes, peopleRoutes, operationsRoutes and adminRoutes and fails on any Route whose element is not a guard, Navigate, or on a named public allowlist (/, /auth, /auth/callback, /estimate/:token, Stripe return pages, /tools, /resources, /accessibility*); it also pins the portal-scoped set. AC3: src/routes/routeSecurity.tsx deleted (imported by nothing). AC4: ADD_ROLE_GUARDS.md rewritten to the six pages still without RoleGuard (confirmed: DocumentManagement, Materials, MaterialTracking, Equipment, EstimatesHub, Reports) and why it is a product call. RouteGuard.failclosed.test.tsx updated: client_portal is no longer admitted to /dashboard, it lands on the portal."
     },
     {
       "id": "US-351",

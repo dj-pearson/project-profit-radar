@@ -61,14 +61,14 @@ export const appRoutes = (
     <Route path="/my-tasks" element={<RouteGuard><LazyMyTasks /></RouteGuard>} />
     <Route path="/auth" element={<LazyAuth />} />
     <Route path="/auth/callback" element={<LazyAuthCallback />} />
-    <Route path="/setup" element={<LazySetup />} />
+    <Route path="/setup" element={<RouteGuard><LazySetup /></RouteGuard>} />
 
     {/* The client portal (US-319). Routed at last: both portal pages were
         imported by no route file, so the entire customer-facing half of the
         product shipped as dead code. RouteGuard authenticates; the page itself
         sends anyone who is not a client_portal user to their dashboard, and
         RLS decides which projects they can see. */}
-    <Route path="/client-portal" element={<RouteGuard><LazyClientPortal /></RouteGuard>} />
+    <Route path="/client-portal" element={<RouteGuard portalScoped><LazyClientPortal /></RouteGuard>} />
 
     {/* The prospect's estimate page (US-325). Deliberately OUTSIDE RouteGuard:
         a person deciding whether to hire a contractor has no account, and
@@ -88,28 +88,28 @@ export const appRoutes = (
     <Route path="/admin-hub" element={<RouteGuard><LazyAdminHub /></RouteGuard>} />
 
     {/* Profile & Settings */}
-    <Route path="/profile" element={<RouteGuard><LazyUserProfile /></RouteGuard>} />
+    <Route path="/profile" element={<RouteGuard portalScoped><LazyUserProfile /></RouteGuard>} />
     <Route path="/user-settings" element={<RouteGuard><LazyUserSettings /></RouteGuard>} />
     <Route path="/subscription-settings" element={<RouteGuard><LazySubscriptionSettings /></RouteGuard>} />
     <Route path="/settings/custom-domain" element={<RouteGuard><CustomDomain /></RouteGuard>} />
 
     {/* Features */}
-    <Route path="/marketplace" element={<LazyAPIMarketplace />} />
-    <Route path="/collaboration" element={<LazyCollaboration />} />
-    <Route path="/referrals" element={<ReferralProgram />} />
-    <Route path="/integrations" element={<IntegrationMarketplace />} />
-    <Route path="/workflows" element={<WorkflowAutomation />} />
-    <Route path="/ai-insights" element={<AIInsights />} />
-    <Route path="/visual-project" element={<VisualProjectManagementPage />} />
-    <Route path="/field-management" element={<LazyFieldManagement />} />
-    <Route path="/workflow-management" element={<LazyWorkflowManagement />} />
-    <Route path="/workflow-testing" element={<LazyWorkflowTesting />} />
+    <Route path="/marketplace" element={<RouteGuard><LazyAPIMarketplace /></RouteGuard>} />
+    <Route path="/collaboration" element={<RouteGuard><LazyCollaboration /></RouteGuard>} />
+    <Route path="/referrals" element={<RouteGuard><ReferralProgram /></RouteGuard>} />
+    <Route path="/integrations" element={<RouteGuard><IntegrationMarketplace /></RouteGuard>} />
+    <Route path="/workflows" element={<RouteGuard><WorkflowAutomation /></RouteGuard>} />
+    <Route path="/ai-insights" element={<RouteGuard><AIInsights /></RouteGuard>} />
+    <Route path="/visual-project" element={<RouteGuard><VisualProjectManagementPage /></RouteGuard>} />
+    <Route path="/field-management" element={<RouteGuard><LazyFieldManagement /></RouteGuard>} />
+    <Route path="/workflow-management" element={<RouteGuard><LazyWorkflowManagement /></RouteGuard>} />
+    <Route path="/workflow-testing" element={<RouteGuard><LazyWorkflowTesting /></RouteGuard>} />
 
     {/* Mobile */}
-    <Route path="/mobile-testing" element={<LazyMobileTesting />} />
-    <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
-    <Route path="/mobile-showcase" element={<MobileShowcase />} />
-    <Route path="/mobile-showcase-advanced" element={<AdvancedMobileShowcase />} />
+    <Route path="/mobile-testing" element={<RouteGuard><LazyMobileTesting /></RouteGuard>} />
+    <Route path="/mobile-dashboard" element={<RouteGuard><LazyMobileDashboard /></RouteGuard>} />
+    <Route path="/mobile-showcase" element={<RouteGuard><MobileShowcase /></RouteGuard>} />
+    <Route path="/mobile-showcase-advanced" element={<RouteGuard><AdvancedMobileShowcase /></RouteGuard>} />
 
     {/* Resources */}
     <Route path="/tools" element={<LazyTools />} />

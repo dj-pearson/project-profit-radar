@@ -6549,3 +6549,14 @@ matched on email alone, with no `email_verified` check. `find_oauth_user` now
 matches on provider subject first. It falls back to email only if the provider
 verified that email and the account has no other subject on record, and it
 records the subject on first use.
+
+## US-350: portal users stay in the portal, and no app route is bare
+
+A `client_portal` user passed every RouteGuard and landed on the contractor
+dashboard. RouteGuard now sends them to `/client-portal` unless the route is
+marked `portalScoped`; only the portal and `/profile` are. Seventeen routes had
+no guard at all. The QuickBooks OAuth callback wasn't on the story's list, but
+it's the same case. A new test walks all six app route files and fails on any
+route that is neither guarded, a redirect, nor on a named public list.
+`routeSecurity.tsx`, which nothing imported, is deleted. `ADD_ROLE_GUARDS.md`
+now lists only the six pages that still need a role decision.

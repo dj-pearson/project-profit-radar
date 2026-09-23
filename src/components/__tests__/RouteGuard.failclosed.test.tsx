@@ -39,6 +39,14 @@ function renderGuard() {
           }
         />
         <Route path="/auth" element={<div>SIGN IN</div>} />
+        <Route
+          path="/client-portal"
+          element={
+            <RouteGuard portalScoped>
+              <div>PORTAL</div>
+            </RouteGuard>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -89,11 +97,17 @@ describe('RouteGuard fails closed', () => {
     'field_supervisor',
     'office_staff',
     'accounting',
-    'client_portal',
   ])('admits %s', (role) => {
     mockAuth.mockReturnValue({ user, userProfile: { id: 'u1', role }, loading: false });
     renderGuard();
     expect(screen.getByText('PROTECTED')).toBeTruthy();
+  });
+
+  it('sends a client_portal user from a contractor route to the portal (US-350)', () => {
+    mockAuth.mockReturnValue({ user, userProfile: { id: 'u1', role: 'client_portal' }, loading: false });
+    renderGuard();
+    expect(screen.getByText('PORTAL')).toBeTruthy();
+    expect(screen.queryByText('PROTECTED')).toBeNull();
   });
 
   it('exports ProtectedRoute as an alias of RouteGuard, so the legacy name is the same guard', () => {
