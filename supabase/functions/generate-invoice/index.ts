@@ -16,6 +16,8 @@ interface InvoiceRequest {
     unit_price: number;
     cost_code_id?: string;
     project_phase_id?: string;
+    tax_rate?: number | null;
+    taxable?: boolean;
   }[];
   tax_rate?: number;
   discount_amount?: number;
@@ -40,12 +42,40 @@ const InvoiceRequestSchema = z.object({
     unit_price: z.number(),
     cost_code_id: z.string().uuid().optional(),
     project_phase_id: z.string().uuid().optional(),
+    // US-332: a line may carry its own rate (county line, untaxed labour).
+    // Both optional, so a client that sends neither gets exactly the old
+    // single-rate arithmetic.
+    tax_rate: z.number().min(0).max(100).nullable().optional(),
+    taxable: z.boolean().optional(),
   })).min(1),
   tax_rate: z.number().optional(),
   discount_amount: z.number().optional(),
   notes: z.string().max(10000).optional(),
   terms: z.string().max(10000).optional(),
 });
+
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+/**
+ * Tax per line, rounded per rate rather than per line. Mirrors computeTax in
+ * src/lib/companyBilling.ts so the form's preview and the stored invoice agree.
+ * A line with no rate of its own takes the invoice rate.
+ */
+function lineTax(
+  lines: { quantity: number; unit_price: number; tax_rate?: number | null; taxable?: boolean }[],
+  invoiceRate: number,
+): number {
+  const groups = new Map<number, number>();
+  for (const line of lines) {
+    if (line.taxable === false) continue;
+    const rate = line.tax_rate == null ? invoiceRate : line.tax_rate;
+    if (!rate || rate <= 0) continue;
+    groups.set(rate, (groups.get(rate) ?? 0) + line.quantity * line.unit_price);
+  }
+  let tax = 0;
+  for (const [rate, taxable] of groups) tax += round2(taxable * (rate / 100));
+  return round2(tax);
+}
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -99,7 +129,9 @@ serve(async (req) => {
     );
 
     const taxRate = invoiceData.tax_rate || 0;
-    const taxAmount = subtotal * (taxRate / 100);
+    const taxAmount = lineTax(invoiceData.line_items, taxRate);
+    const hasLineTax = invoiceData.line_items.some(
+      (item) => item.tax_rate != null || item.taxable === false);
     const discountAmount = invoiceData.discount_amount || 0;
     const totalAmount = subtotal + taxAmount - discountAmount;
 
@@ -141,7 +173,10 @@ serve(async (req) => {
       quantity: item.quantity,
       unit_price: item.unit_price,
       cost_code_id: item.cost_code_id || null,
-      project_phase_id: item.project_phase_id || null
+      project_phase_id: item.project_phase_id || null,
+      // Only written when some line overrides the rate, so an invoice from a
+      // client that never sends them inserts exactly the columns it always did.
+      ...(hasLineTax ? { tax_rate: item.tax_rate ?? null, taxable: item.taxable !== false } : {}),
     }));
 
     const { error: lineItemsError } = await supabase

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { downloadInvoicePDF } from '@/utils/invoicePDFGenerator';
 import { ContactPicker } from '@/components/customers/ContactPicker';
+import { LineTaxSelect } from '@/components/billing/LineTaxSelect';
+import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import {
+  computeTax, newInvoiceDefaults, taxBreakdownLabel, FALLBACK_BILLING_DEFAULTS,
+} from '@/lib/companyBilling';
 
 interface LineItem {
   description: string;
@@ -19,7 +24,18 @@ interface LineItem {
   unit_price: number;
   cost_code_id?: string;
   project_phase_id?: string;
+  /** US-332: NULL means the invoice rate applies. */
+  tax_rate: number | null;
+  taxable: boolean;
 }
+
+const blankLine = (): LineItem => ({
+  description: '', quantity: 1, unit_price: 0, tax_rate: null, taxable: true,
+});
+
+// Before the company's settings arrive: exactly what this form always started
+// with (Net 30, no tax). Replaced by the company's own defaults once loaded.
+const initialDefaults = () => newInvoiceDefaults(FALLBACK_BILLING_DEFAULTS);
 
 interface InvoiceGeneratorProps {
   projectId?: string;
@@ -34,22 +50,37 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   const [_costCodes, setCostCodes] = useState<any[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  // US-332: payment terms, tax rate and terms come from Company Settings >
+  // Billing and documents rather than a hardcoded 30 days and zero tax.
+  const { defaults: billing, loaded: billingLoaded, error: billingError } = useBillingDefaults();
+  const appliedBillingDefaults = useRef(false);
 
   const [invoiceData, setInvoiceData] = useState({
     client_id: null as string | null,
     client_name: '',
     client_email: '',
     project_id: projectId || '',
-    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    tax_rate: 0,
+    ...initialDefaults(),
     discount_amount: 0,
     notes: '',
-    terms: 'Payment is due within 30 days of invoice date.'
   });
 
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { description: '', quantity: 1, unit_price: 0 }
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([blankLine()]);
+
+  // Apply the company's defaults once they load, to whichever of the three
+  // fields the user has not already changed.
+  useEffect(() => {
+    if (!billingLoaded || appliedBillingDefaults.current) return;
+    appliedBillingDefaults.current = true;
+    const initial = initialDefaults();
+    const next = newInvoiceDefaults(billing);
+    setInvoiceData(prev => ({
+      ...prev,
+      due_date: prev.due_date === initial.due_date ? next.due_date : prev.due_date,
+      tax_rate: prev.tax_rate === initial.tax_rate ? next.tax_rate : prev.tax_rate,
+      terms: prev.terms === initial.terms ? next.terms : prev.terms,
+    }));
+  }, [billingLoaded, billing]);
 
   useEffect(() => {
     loadProjects();
@@ -101,7 +132,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   };
 
   const addLineItem = () => {
-    setLineItems([...lineItems, { description: '', quantity: 1, unit_price: 0 }]);
+    setLineItems([...lineItems, blankLine()]);
   };
 
   const removeLineItem = (index: number) => {
@@ -116,13 +147,19 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
     setLineItems(updated);
   };
 
-  const calculateSubtotal = () => {
-    return lineItems.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-  };
+  // Per line, rounded per rate: the same arithmetic generate-invoice stores.
+  const taxTotals = computeTax(
+    lineItems.map(item => ({
+      amount: item.quantity * item.unit_price,
+      taxRate: item.tax_rate,
+      taxable: item.taxable,
+    })),
+    invoiceData.tax_rate,
+  );
 
-  const calculateTax = () => {
-    return calculateSubtotal() * (invoiceData.tax_rate / 100);
-  };
+  const calculateSubtotal = () => taxTotals.subtotal;
+
+  const calculateTax = () => taxTotals.taxAmount;
 
   const calculateTotal = () => {
     return calculateSubtotal() + calculateTax() - invoiceData.discount_amount;
@@ -150,7 +187,15 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           // undefined but not null - spreading state that holds null would
           // 400 the whole request.
           client_id: invoiceData.client_id ?? undefined,
-          line_items: lineItems.filter(item => item.description.trim() !== '')
+          line_items: lineItems
+            .filter(item => item.description.trim() !== '')
+            .map(({ tax_rate, taxable, ...item }) => ({
+              ...item,
+              // Sent only when the line overrides the invoice rate, so the
+              // request is byte-for-byte the old one when nobody does.
+              ...(tax_rate != null ? { tax_rate } : {}),
+              ...(taxable === false ? { taxable } : {}),
+            })),
         }
       });
 
@@ -173,13 +218,11 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           client_name: '',
           client_email: '',
           project_id: '',
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          tax_rate: 0,
+          ...newInvoiceDefaults(billing),
           discount_amount: 0,
           notes: '',
-          terms: 'Payment is due within 30 days of invoice date.'
         });
-        setLineItems([{ description: '', quantity: 1, unit_price: 0 }]);
+        setLineItems([blankLine()]);
       }
 
     } catch (error) {
@@ -213,19 +256,37 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       if (error) throw error;
 
       // Prepare data for PDF generator
+      // tax_rate and taxable are US-332 columns the generated types predate.
+      const lines = invoiceWithDetails.line_items as Array<{
+        description: string; quantity: number; unit_price: number; line_total: number | null;
+        tax_rate?: number | null; taxable?: boolean;
+      }>;
+      const breakdown = computeTax(
+        lines.map(item => ({
+          amount: item.quantity * item.unit_price,
+          taxRate: item.tax_rate ?? null,
+          taxable: item.taxable,
+        })),
+        Number(invoiceWithDetails.tax_rate) || 0,
+      ).byRate;
+
       const pdfData = {
         ...invoiceWithDetails,
         project_name: invoiceWithDetails.project?.name || null,
-        line_items: invoiceWithDetails.line_items.map((item: any) => ({
+        line_items: lines.map((item) => ({
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
           line_total: item.line_total || item.quantity * item.unit_price,
         })),
+        tax_breakdown: breakdown.map(g => ({
+          label: taxBreakdownLabel(g, billing.taxRates), tax: g.tax,
+        })),
       };
 
-      // Generate and download PDF
-      downloadInvoicePDF(pdfData, undefined, `invoice-${invoiceWithDetails.invoice_number}.pdf`);
+      // Generate and download PDF, with the company's own name and licence
+      // line rather than the Brikly placeholder.
+      downloadInvoicePDF(pdfData, billing.company ?? undefined, `invoice-${invoiceWithDetails.invoice_number}.pdf`);
 
       toast({
         title: "PDF Downloaded",
@@ -256,6 +317,12 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {billingError && (
+            <p role="alert" className="text-sm text-destructive">
+              Could not load your billing settings, so the tax rate and terms here are not your
+              company defaults. Check them before sending.
+            </p>
+          )}
           {/* Client Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -344,17 +411,19 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             <div className="space-y-4">
               {lineItems.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-4 items-end">
-                  <div className="col-span-5">
-                    <Label>Description</Label>
+                  <div className="col-span-12 md:col-span-4">
+                    <Label htmlFor={`line-description-${index}`}>Description</Label>
                     <Input
+                      id={`line-description-${index}`}
                       value={item.description}
                       onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                       placeholder="Item description"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label>Quantity</Label>
+                  <div className="col-span-6 md:col-span-2">
+                    <Label htmlFor={`line-quantity-${index}`}>Quantity</Label>
                     <Input
+                      id={`line-quantity-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
@@ -362,9 +431,10 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                       onChange={(e) => updateLineItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label>Unit Price</Label>
+                  <div className="col-span-6 md:col-span-2">
+                    <Label htmlFor={`line-price-${index}`}>Unit Price</Label>
                     <Input
+                      id={`line-price-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
@@ -372,13 +442,28 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                       onChange={(e) => updateLineItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-6 md:col-span-2">
+                    <Label htmlFor={`line-tax-${index}`}>Tax</Label>
+                    <LineTaxSelect
+                      id={`line-tax-${index}`}
+                      label={`Tax for line ${index + 1}`}
+                      value={item}
+                      documentRate={invoiceData.tax_rate}
+                      rates={billing.taxRates}
+                      onChange={(tax) => {
+                        const updated = [...lineItems];
+                        updated[index] = { ...updated[index], ...tax };
+                        setLineItems(updated);
+                      }}
+                    />
+                  </div>
+                  <div className="col-span-4 md:col-span-1">
                     <Label>Total</Label>
-                    <div className="h-9 flex items-center px-3 border rounded bg-muted">
+                    <div className="h-9 flex items-center px-2 border rounded bg-muted text-sm">
                       ${(item.quantity * item.unit_price).toFixed(2)}
                     </div>
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-2 md:col-span-1">
                     <Button
                       type="button"
                       variant="outline"
@@ -400,7 +485,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+                <Label htmlFor="tax_rate">Invoice tax rate (%)</Label>
                 <Input
                   id="tax_rate"
                   type="number"
@@ -429,10 +514,19 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                 <span>Subtotal:</span>
                 <span>${calculateSubtotal().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Tax ({invoiceData.tax_rate}%):</span>
-                <span>${calculateTax().toFixed(2)}</span>
-              </div>
+              {taxTotals.byRate.length > 1 ? (
+                taxTotals.byRate.map(group => (
+                  <div key={group.rate} className="flex justify-between">
+                    <span>{taxBreakdownLabel(group, billing.taxRates)}:</span>
+                    <span>${group.tax.toFixed(2)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-between">
+                  <span>Tax ({taxTotals.byRate[0]?.rate ?? invoiceData.tax_rate}%):</span>
+                  <span>${calculateTax().toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Discount:</span>
                 <span>-${invoiceData.discount_amount.toFixed(2)}</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,6 +24,9 @@ import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
 import { EstimateVersionHistory } from "@/components/estimates/EstimateVersionHistory";
 import { createEstimateVersion } from "@/services/estimateVersions";
 import { History } from "lucide-react";
+import { LineTaxSelect } from "@/components/billing/LineTaxSelect";
+import { useBillingDefaults } from "@/hooks/useBillingDefaults";
+import { computeTax, taxBreakdownLabel } from "@/lib/companyBilling";
 
 const estimateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -58,7 +61,14 @@ interface LineItem {
    * NOT NULL, which is why converting an estimate produced no budget at all.
    */
   cost_code_id: string;
+  /** US-332: NULL means the estimate's tax rate applies. */
+  tax_rate: number | null;
+  taxable: boolean;
 }
+
+// tax_rate and taxable are US-332 columns on estimate_line_items and
+// tax_amount on estimates; the generated types predate them.
+type LineTaxColumns = { tax_rate?: number | null; taxable?: boolean };
 
 interface EstimateFormProps {
   onSuccess: () => void;
@@ -80,6 +90,9 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const [showLineItemLibrary, setShowLineItemLibrary] = useState(false);
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | undefined>();
+  // US-332: tax rate and terms from Company Settings > Billing and documents.
+  const { defaults: billing, loaded: billingLoaded, error: billingError } = useBillingDefaults();
+  const appliedBillingDefaults = useRef(false);
 
   const form = useForm<EstimateFormData>({
     resolver: zodResolver(estimateSchema),
@@ -89,6 +102,19 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       discount_amount: 0,
     },
   });
+
+  // A new estimate starts from the company's tax rate and estimate terms,
+  // unless the user or a template has already filled them in.
+  useEffect(() => {
+    if (estimateId || !billingLoaded || appliedBillingDefaults.current) return;
+    appliedBillingDefaults.current = true;
+    if (!form.getFieldState("tax_percentage").isDirty && !form.getValues("tax_percentage")) {
+      form.setValue("tax_percentage", billing.taxRate);
+    }
+    if (!form.getValues("terms_and_conditions") && billing.terms.estimate) {
+      form.setValue("terms_and_conditions", billing.terms.estimate);
+    }
+  }, [estimateId, billingLoaded, billing, form]);
 
   useEffect(() => {
     fetchProjects();
@@ -170,6 +196,8 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           unit_cost: item.unit_cost,
           category: item.category || "",
           cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ""),
+          tax_rate: (item as LineTaxColumns).tax_rate ?? null,
+          taxable: (item as LineTaxColumns).taxable !== false,
         })));
       }
     }
@@ -209,6 +237,8 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       unit_cost: 0,
       category: "",
       cost_code_id: "",
+      tax_rate: null,
+      taxable: true,
     };
     setLineItems([...lineItems, newItem]);
   };
@@ -227,8 +257,9 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     // Apply template to form
     form.setValue('title', template.default_title || '');
     form.setValue('markup_percentage', template.default_markup_percentage || 20);
-    form.setValue('tax_percentage', template.default_tax_percentage || 0);
-    form.setValue('terms_and_conditions', template.default_terms_and_conditions || '');
+    // A template without its own tax rate or terms keeps the company's.
+    form.setValue('tax_percentage', template.default_tax_percentage ?? billing.taxRate);
+    form.setValue('terms_and_conditions', template.default_terms_and_conditions || billing.terms.estimate || '');
 
     // Set valid_until date based on template valid_days
     if (template.valid_days) {
@@ -248,6 +279,8 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         unit_cost: item.unit_cost,
         category: item.category || '',
         cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ''),
+        tax_rate: null,
+        taxable: true,
       }));
       setLineItems(newItems);
     }
@@ -269,6 +302,8 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       unit_cost: item.default_unit_cost,
       category: item.category || '',
       cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ''),
+      tax_rate: null,
+      taxable: true,
     }));
     setLineItems([...lineItems, ...newItems]);
   };
@@ -277,10 +312,27 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     return lineItems.reduce((sum, item) => sum + (item.quantity * item.unit_cost), 0);
   };
 
+  /**
+   * Tax per line on the marked-up amount, rounded per rate (US-332). Same
+   * base as before - subtotal plus markup, discount taken after - so an
+   * estimate with no per-line rates totals exactly what it did.
+   */
+  const calculateTaxTotals = () => {
+    const markupFactor = 1 + (form.watch("markup_percentage") || 0) / 100;
+    return computeTax(
+      lineItems.map((item) => ({
+        amount: item.quantity * item.unit_cost * markupFactor,
+        taxRate: item.tax_rate,
+        taxable: item.taxable,
+      })),
+      form.watch("tax_percentage") || 0,
+    );
+  };
+
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
     const markup = subtotal * (form.watch("markup_percentage") || 0) / 100;
-    const tax = (subtotal + markup) * (form.watch("tax_percentage") || 0) / 100;
+    const tax = calculateTaxTotals().taxAmount;
     const discount = form.watch("discount_amount") || 0;
     return subtotal + markup + tax - discount;
   };
@@ -336,11 +388,20 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         terms_and_conditions: data.terms_and_conditions,
       };
 
+      // Stored so the PDF prints the tax the form showed rather than
+      // recomputing it on a different base. estimates.tax_amount is a US-332
+      // column the generated types predate, hence the cast back to the known
+      // shape.
+      const estimateWrite = {
+        ...estimateData,
+        tax_amount: calculateTaxTotals().taxAmount,
+      } as typeof estimateData;
+
       let estimateResult;
       if (estimateId) {
         estimateResult = await supabase
           .from("estimates")
-          .update(estimateData)
+          .update(estimateWrite)
           .eq("id", estimateId)
           .select()
           .single();
@@ -348,7 +409,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         estimateResult = await supabase
           .from("estimates")
           .insert({
-            ...estimateData,
+            ...estimateWrite,
             estimate_number: '', // Will be auto-generated by trigger
           })
           .select()
@@ -391,10 +452,16 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           cost_code_id: item.cost_code_id || null,
           sort_order: index,
         }));
+        // tax_rate and taxable are US-332 columns the generated types predate.
+        const lineItemsWithTax = lineItems.map((item, index) => ({
+          ...lineItemsData[index],
+          tax_rate: item.tax_rate,
+          taxable: item.taxable,
+        })) as typeof lineItemsData;
 
         const { error: lineItemsError } = await supabase
           .from("estimate_line_items")
-          .insert(lineItemsData);
+          .insert(lineItemsWithTax);
 
         if (lineItemsError) throw lineItemsError;
       }
@@ -466,8 +533,23 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       if (error) throw error;
 
       // Prepare data for PDF generator
+      const detailLines = estimateWithDetails.line_items as Array<
+        { quantity: number; unit_cost: number } & LineTaxColumns
+      >;
+      const savedMarkup = 1 + (Number(estimateWithDetails.markup_percentage) || 0) / 100;
+      const byRate = computeTax(
+        detailLines.map((item) => ({
+          amount: item.quantity * item.unit_cost * savedMarkup,
+          taxRate: item.tax_rate ?? null,
+          taxable: item.taxable,
+        })),
+        Number(estimateWithDetails.tax_percentage) || 0,
+      ).byRate;
+
       const pdfData = {
         ...estimateWithDetails,
+        tax_amount: (estimateWithDetails as { tax_amount?: number | null }).tax_amount ?? null,
+        tax_breakdown: byRate.map((g) => ({ label: taxBreakdownLabel(g, billing.taxRates), tax: g.tax })),
         project_name: estimateWithDetails.project?.name || null,
         line_items: estimateWithDetails.line_items.map((item: any) => ({
           item_name: item.item_name,
@@ -484,7 +566,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       };
 
       // Generate and download PDF
-      downloadEstimatePDF(pdfData, undefined, `estimate-${estimateWithDetails.estimate_number}.pdf`);
+      downloadEstimatePDF(pdfData, billing.company ?? undefined, `estimate-${estimateWithDetails.estimate_number}.pdf`);
 
       toast({
         title: "PDF Downloaded",
@@ -510,6 +592,12 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   return (
     <Form {...form}>
       <form className="space-y-6">
+        {billingError && (
+          <p role="alert" className="text-sm text-destructive">
+            Could not load your billing settings, so the tax rate and terms here are not your
+            company defaults. Check them before sending.
+          </p>
+        )}
         {/* US-096: version history (editing an existing estimate) */}
         {estimateId && (
           <div className="flex justify-end">
@@ -810,6 +898,21 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                     />
                   </div>
                   <div className="col-span-1">
+                    <label className="text-sm font-medium" htmlFor={`line-tax-${item.id}`}>Tax</label>
+                    <LineTaxSelect
+                      id={`line-tax-${item.id}`}
+                      label={`Tax for ${item.item_name || `line ${index + 1}`}`}
+                      value={item}
+                      documentRate={form.watch("tax_percentage") || 0}
+                      rates={billing.taxRates}
+                      onChange={(tax) => {
+                        const updatedItems = [...lineItems];
+                        updatedItems[index] = { ...updatedItems[index], ...tax };
+                        setLineItems(updatedItems);
+                      }}
+                    />
+                  </div>
+                  <div className="col-span-1">
                     <label className="text-sm font-medium">Total</label>
                     <div className="text-sm font-medium py-2">
                       ${(item.quantity * item.unit_cost).toFixed(2)}
@@ -960,10 +1063,19 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                 <span>Markup ({form.watch("markup_percentage") || 0}%):</span>
                 <span>${(calculateSubtotal() * (form.watch("markup_percentage") || 0) / 100).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center mb-2">
-                <span>Tax ({form.watch("tax_percentage") || 0}%):</span>
-                <span>${((calculateSubtotal() + calculateSubtotal() * (form.watch("markup_percentage") || 0) / 100) * (form.watch("tax_percentage") || 0) / 100).toFixed(2)}</span>
-              </div>
+              {calculateTaxTotals().byRate.length > 1 ? (
+                calculateTaxTotals().byRate.map((group) => (
+                  <div key={group.rate} className="flex justify-between items-center mb-2">
+                    <span>{taxBreakdownLabel(group, billing.taxRates)}:</span>
+                    <span>${group.tax.toFixed(2)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-between items-center mb-2">
+                  <span>Tax ({calculateTaxTotals().byRate[0]?.rate ?? (form.watch("tax_percentage") || 0)}%):</span>
+                  <span>${calculateTaxTotals().taxAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center mb-2">
                 <span>Discount:</span>
                 <span>-${(form.watch("discount_amount") || 0).toFixed(2)}</span>

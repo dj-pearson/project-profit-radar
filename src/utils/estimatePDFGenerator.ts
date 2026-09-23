@@ -35,6 +35,13 @@ interface EstimateData {
   notes?: string | null;
   terms_and_conditions?: string | null;
   line_items?: EstimateLineItem[];
+  /**
+   * US-332: the tax the form computed and stored, per line and rounded per
+   * rate. When present it is printed as-is; older estimates without it fall
+   * back to recomputing from tax_percentage.
+   */
+  tax_amount?: number | null;
+  tax_breakdown?: Array<{ label: string; tax: number }>;
   project_name?: string | null;
 }
 
@@ -45,6 +52,8 @@ interface CompanyInfo {
   email?: string;
   website?: string;
   license?: string;
+  /** Licence and insurance, from Company Settings (US-332). */
+  licenseLine?: string;
 }
 
 export class EstimatePDFGenerator {
@@ -59,13 +68,12 @@ export class EstimatePDFGenerator {
   constructor(estimate: EstimateData, companyInfo: CompanyInfo = { name: 'Brikly' }) {
     this.doc = new jsPDF('portrait', 'mm', 'a4');
     this.estimate = estimate;
-    this.companyInfo = {
-      name: 'Brikly',
-      email: 'estimates@brikly.net',
-      website: 'www.brikly.net',
-      license: 'License #123456',
-      ...companyInfo,
-    };
+    // No invented licence number: 'License #123456' printed on every estimate
+    // was a claim about the contractor that nobody had made. The Brikly
+    // contact details are only for a caller with no company to print.
+    this.companyInfo = companyInfo
+      ? { ...companyInfo, license: companyInfo.license ?? companyInfo.licenseLine }
+      : { name: 'Brikly', email: 'estimates@brikly.net', website: 'www.brikly.net' };
 
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
@@ -187,7 +195,11 @@ export class EstimatePDFGenerator {
     if (this.companyInfo.license) {
       this.doc.setTextColor(100, 100, 100);
       this.doc.setFontSize(8);
-      this.doc.text(this.companyInfo.license, this.margin, yOffset);
+      // "Licence X | Insured by Y (policy Z)" outgrows the column; wrap it.
+      const licenceLines = this.doc.splitTextToSize(this.companyInfo.license, columnWidth - 5);
+      licenceLines.forEach((line: string, i: number) => {
+        this.doc.text(line, this.margin, yOffset + i * 4);
+      });
       this.doc.setTextColor(0, 0, 0);
       this.doc.setFontSize(9);
     }
@@ -480,7 +492,21 @@ export class EstimatePDFGenerator {
     }
 
     // Tax
-    if (this.estimate.tax_percentage && this.estimate.tax_percentage > 0) {
+    const breakdown = this.estimate.tax_breakdown ?? [];
+    if (breakdown.length > 1) {
+      for (const group of breakdown) {
+        this.doc.text(`${group.label}:`, labelX, y);
+        this.doc.text(`$${group.tax.toFixed(2)}`, valueX, y, { align: 'right' });
+        y += 7;
+      }
+    } else if (this.estimate.tax_amount != null) {
+      if (this.estimate.tax_amount > 0) {
+        const label = breakdown[0]?.label ?? `Tax (${this.estimate.tax_percentage ?? 0}%)`;
+        this.doc.text(`${label}:`, labelX, y);
+        this.doc.text(`$${Number(this.estimate.tax_amount).toFixed(2)}`, valueX, y, { align: 'right' });
+        y += 7;
+      }
+    } else if (this.estimate.tax_percentage && this.estimate.tax_percentage > 0) {
       const taxBase = subtotalBeforeMarkup * (1 + (this.estimate.markup_percentage || 0) / 100) - (this.estimate.discount_amount || 0);
       const taxAmount = taxBase * (this.estimate.tax_percentage / 100);
       this.doc.text(`Tax (${this.estimate.tax_percentage}%):`, labelX, y);

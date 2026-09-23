@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import { newInvoiceDefaults } from '@/lib/companyBilling';
 import { computeTimeAndMaterials, type UnbilledWorkRow } from '@/lib/progressBilling';
 
 interface ProjectRow {
@@ -41,6 +43,8 @@ const money = (n: number) =>
 const TimeAndMaterialsBilling: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  // US-332: due date and terms from the company's payment terms, not 30 days.
+  const { defaults: billingDefaults } = useBillingDefaults();
 
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
@@ -113,8 +117,7 @@ const TimeAndMaterialsBilling: React.FC = () => {
 
     setCreating(true);
     try {
-      const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString().split('T')[0];
+      const { due_date: dueDate, terms } = newInvoiceDefaults(billingDefaults);
 
       const { data: invoice, error } = await supabase
         .from('invoices')
@@ -131,7 +134,7 @@ const TimeAndMaterialsBilling: React.FC = () => {
           current_amount_due: totals.total,
           due_date: dueDate,
           notes: `Time and materials: ${totals.billable.length} item(s)`,
-          terms: 'Payment is due within 30 days of invoice date.',
+          terms,
         } as never)
         .select('id, invoice_number')
         .single();

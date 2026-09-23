@@ -6821,3 +6821,22 @@ became real buttons, labels or dialogs; the rest got a role, focus and key
 handling. Fixing the scheduling rows also removed a double toggle. A guard
 parses every component and fails on a new unnamed icon button, a mouse-only
 div or an image without alt.
+
+## US-332: billing settings reach the invoice, and numbering is safe
+
+The settings and number counters already existed, with four bugs.
+- Any signed-in user could advance another company's invoice counter.
+- Admins could rewind a counter and re-issue numbers.
+- Invoice and PO numbers were unique across all companies, so the second
+  company to choose `INV-` failed on its first invoice.
+- An unconfigured numbering row couldn't be edited.
+
+All four are fixed. A test with eight concurrent sessions creating 200 invoices
+shows no duplicates and no gaps.
+
+Invoices and estimates now start from the company's tax rate, payment terms
+and document terms, with a per-line tax override. The PDFs print the real
+company name, licence and insurance. The estimate PDF had been printing an
+invented "License #123456" on every estimate.
+
+TypeScript errors: 1536 to 1533.

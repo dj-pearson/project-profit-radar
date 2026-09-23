@@ -33,6 +33,11 @@ interface InvoiceData {
   retention_percentage?: number | null;
   retention_amount?: number | null;
   line_items?: InvoiceLineItem[];
+  /**
+   * US-332: tax per rate when lines carry different rates. One entry or none
+   * prints the single "Tax (x%)" line as before.
+   */
+  tax_breakdown?: Array<{ label: string; tax: number }>;
 }
 
 interface CompanyInfo {
@@ -41,6 +46,8 @@ interface CompanyInfo {
   phone?: string;
   email?: string;
   website?: string;
+  /** Licence and insurance, from Company Settings (US-332). */
+  licenseLine?: string;
 }
 
 export class InvoicePDFGenerator {
@@ -55,12 +62,12 @@ export class InvoicePDFGenerator {
   constructor(invoice: InvoiceData, companyInfo: CompanyInfo = { name: 'Brikly' }) {
     this.doc = new jsPDF('portrait', 'mm', 'a4');
     this.invoice = invoice;
-    this.companyInfo = {
-      name: 'Brikly',
-      email: 'billing@brikly.net',
-      website: 'www.brikly.net',
-      ...companyInfo,
-    };
+    // The Brikly contact details are a placeholder for a caller that has no
+    // company to print. When the company is known they must not leak in: a
+    // customer replying to billing@brikly.net reaches nobody who can help.
+    this.companyInfo = companyInfo
+      ? { ...companyInfo }
+      : { name: 'Brikly', email: 'billing@brikly.net', website: 'www.brikly.net' };
 
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
@@ -164,6 +171,18 @@ export class InvoicePDFGenerator {
     if (this.companyInfo.email) {
       this.doc.text(this.companyInfo.email, this.margin, yOffset);
       yOffset += 5;
+    }
+
+    if (this.companyInfo.licenseLine) {
+      this.doc.setTextColor(100, 100, 100);
+      this.doc.setFontSize(8);
+      const licenceLines = this.doc.splitTextToSize(this.companyInfo.licenseLine, columnWidth - 5);
+      licenceLines.forEach((line: string) => {
+        this.doc.text(line, this.margin, yOffset);
+        yOffset += 4;
+      });
+      this.doc.setTextColor(0, 0, 0);
+      this.doc.setFontSize(9);
     }
 
     // BILL TO section (Client)
@@ -347,7 +366,14 @@ export class InvoicePDFGenerator {
     }
 
     // Tax
-    if (this.invoice.tax_amount && this.invoice.tax_amount > 0) {
+    const breakdown = this.invoice.tax_breakdown ?? [];
+    if (breakdown.length > 1) {
+      for (const group of breakdown) {
+        this.doc.text(`${group.label}:`, labelX, y);
+        this.doc.text(`$${group.tax.toFixed(2)}`, valueX, y, { align: 'right' });
+        y += 7;
+      }
+    } else if (this.invoice.tax_amount && this.invoice.tax_amount > 0) {
       const taxLabel = this.invoice.tax_rate
         ? `Tax (${this.invoice.tax_rate}%):`
         : 'Tax:';

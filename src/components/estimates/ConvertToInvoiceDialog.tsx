@@ -12,6 +12,8 @@ import { Receipt, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import { newInvoiceDefaults } from '@/lib/companyBilling';
 import { formatCurrency } from '@/lib/utils';
 import {
   buildInvoiceLineItems, conversionSubtotal, summarizeBilled, lineBaseTotal,
@@ -32,6 +34,7 @@ interface EstimateRow {
   client_email: string | null;
   project_id: string | null;
   total_amount: number;
+  tax_percentage?: number | null;
 }
 
 interface LinkedInvoice {
@@ -44,6 +47,8 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
   estimateId, isOpen, onClose, onSuccess,
 }) => {
   const { toast } = useToast();
+  // US-332: due date and terms from the company's payment terms.
+  const { defaults: billing } = useBillingDefaults();
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [estimate, setEstimate] = useState<EstimateRow | null>(null);
@@ -62,7 +67,7 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
         setOverrides({});
         setPercentage(100);
         const [{ data: est, error: estErr }, { data: items, error: itemsErr }, { data: invs }] = await Promise.all([
-          supabase.from('estimates').select('id, estimate_number, client_id, client_name, client_email, project_id, total_amount').eq('id', estimateId).single(),
+          supabase.from('estimates').select('id, estimate_number, client_id, client_name, client_email, project_id, total_amount, tax_percentage').eq('id', estimateId).single(),
           supabase.from('estimate_line_items').select('id, item_name, description, quantity, unit_cost, total_cost, cost_code_id').eq('estimate_id', estimateId).order('sort_order', { ascending: true }),
           supabase.from('invoices').select('id, invoice_number, total_amount').eq('estimate_id', estimateId),
         ]);
@@ -109,6 +114,7 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
     }
     try {
       setCreating(true);
+      const invoiceDefaults = newInvoiceDefaults(billing);
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
         body: {
           // Carry the customer, not just their name. ProgressBillingManager and
@@ -118,11 +124,13 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
           client_name: estimate.client_name,
           client_email: estimate.client_email,
           project_id: estimate.project_id,
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          tax_rate: 0,
+          due_date: invoiceDefaults.due_date,
+          // The rate the customer accepted on the estimate. This sent 0, so a
+          // taxed estimate became an untaxed invoice (US-332).
+          tax_rate: estimate.tax_percentage ?? invoiceDefaults.tax_rate,
           discount_amount: 0,
           notes: `Converted from estimate ${estimate.estimate_number}${percentage !== 100 ? ` (${percentage}% progress billing)` : ''}`,
-          terms: 'Payment is due within 30 days of invoice date.',
+          terms: invoiceDefaults.terms,
           line_items: drafts.map((d) => ({ description: d.description, quantity: d.quantity, unit_price: d.unit_price })),
         },
       });

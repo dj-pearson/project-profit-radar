@@ -80,13 +80,15 @@ export const ChangeOrderManagement: React.FC = () => {
     try {
       const changeOrderData = {
         company_id: userProfile.company_id,
-        change_order_number: `CO-${Date.now().toString().slice(-8)}`,
         requested_by: userProfile.id,
         status: 'pending',
         ...changeOrderForm
       };
 
       if (editingOrder) {
+        // The number is not part of an edit. This wrote a fresh timestamp
+        // number on every save, so a change order the customer had signed as
+        // CO-12345678 came back as something else (US-332).
         const { error } = await supabase
           .from('change_orders')
           .update(changeOrderData)
@@ -101,7 +103,12 @@ export const ChangeOrderManagement: React.FC = () => {
       } else {
         const { error } = await supabase
           .from('change_orders')
-          .insert([changeOrderData]);
+          .insert([{
+            ...changeOrderData,
+            // A placeholder: set_change_order_number replaces it with the
+            // company's own sequence when numbering is configured (US-332).
+            change_order_number: `CO-${Date.now().toString().slice(-8)}`,
+          }]);
 
         if (error) throw error;
 

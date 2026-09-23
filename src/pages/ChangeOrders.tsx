@@ -26,8 +26,11 @@ import {
   Clock,
   Users,
   CalendarIcon,
-  Edit
+  Edit,
+  Download
 } from 'lucide-react';
+import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import { downloadChangeOrderPDF } from '@/utils/changeOrderPDFGenerator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,6 +74,8 @@ interface UserProfile {
 
 const ChangeOrders = () => {
   const { user, userProfile, loading } = useAuth();
+  // US-332: the change-order terms and licence line print on the PDF.
+  const { defaults: billing } = useBillingDefaults();
   const navigate = useNavigate();
   
   const [projects, setProjects] = useState<Project[]>([]);
@@ -501,6 +506,24 @@ const ChangeOrders = () => {
               </Button>
             </>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`Download change order ${order.change_order_number} as PDF`}
+            // Waits for the company header rather than printing a blank one.
+            disabled={!billing.company}
+            onClick={() => billing.company && downloadChangeOrderPDF(
+              {
+                ...order,
+                project_name: order.projects?.name,
+                customer_name: order.projects?.client_name,
+                terms: billing.terms.change_order,
+              },
+              billing.company,
+            )}
+          >
+            <Download className="h-3 w-3" aria-hidden="true" />
+          </Button>
           <Button
             variant="outline"
             size="sm"

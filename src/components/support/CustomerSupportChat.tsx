@@ -414,7 +414,6 @@ const CustomerSupportChat = () => {
                       onClick={() => setCurrentTicket(ticket)}
                       role="button"
                       tabIndex={0}
-                      aria-current={currentTicket?.id === ticket.id ? true : undefined}
                       onKeyDown={activateOnKey(() => setCurrentTicket(ticket))}
                     >
                       <div className="flex items-center justify-between mb-2">
