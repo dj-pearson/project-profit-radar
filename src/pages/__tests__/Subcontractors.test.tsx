@@ -9,7 +9,20 @@ import React from 'react';
 import type { Subcontractor } from '@/lib/subcontractors';
 
 vi.mock('@/components/layout/DashboardLayout', () => ({
-  DashboardLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  // The page's header buttons ride in on headerActions (US-377), so the stub
+  // renders them the way the real layout's PageHeader does.
+  DashboardLayout: ({
+    children,
+    headerActions,
+  }: {
+    children: React.ReactNode;
+    headerActions?: React.ReactNode;
+  }) => (
+    <div>
+      {headerActions}
+      {children}
+    </div>
+  ),
 }));
 vi.mock('@/components/accessibility/AccessiblePageWrapper', () => ({
   AccessiblePageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

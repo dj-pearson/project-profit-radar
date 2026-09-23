@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, CalendarClock, Trash2, FileDown, History, Mail } from 'lucide-react';
+import { Download, CalendarClock, Trash2, History, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -190,17 +190,11 @@ const ExportCenter = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout title="Export Center">
+      <DashboardLayout
+        title="Export Center"
+        description="Export reports as PDF, Excel, or CSV — and schedule recurring email delivery to stakeholders."
+      >
         <div className="space-y-6">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold">
-              <FileDown className="h-6 w-6" aria-hidden="true" /> Export Center
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Export reports as PDF, Excel, or CSV — and schedule recurring email delivery to stakeholders.
-            </p>
-          </div>
-
           {/* Build / export */}
           <Card>
             <CardHeader className="pb-3">

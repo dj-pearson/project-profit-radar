@@ -12,7 +12,6 @@ import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -574,206 +573,200 @@ const ChangeOrders = () => {
 
   return (
     <AccessiblePageWrapper pageTitle="Change Orders">
-    <DashboardLayout title="Change Orders" hasAccessibleWrapper>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className={mobileCardClasses.header}>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className={mobileButtonClasses.secondary}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-                Back to Dashboard
+    <DashboardLayout
+      title="Change Orders"
+      hasAccessibleWrapper
+      description="Client approval workflows and project modifications"
+      headerActions={
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className={mobileButtonClasses.secondary}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+            Back to Dashboard
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className={mobileButtonClasses.primary}>
+                <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                Create Change Order
               </Button>
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
-              <div>
-                <h1 className={mobileTextClasses.title}>Change Orders</h1>
-                <p className={mobileTextClasses.muted}>Client approval workflows and project modifications</p>
-              </div>
-            </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className={mobileButtonClasses.primary}>
-                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Create Change Order
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
-                <DialogHeader>
-                  <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
-                  <DialogDescription id="change-order-dialog-description">
-                    {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
+              <DialogHeader>
+                <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
+                <DialogDescription id="change-order-dialog-description">
+                  {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="project">Project *</Label>
+                  <Select value={newOrder.project_id} onValueChange={(value) => setNewOrder({...newOrder, project_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+          
+                <div>
+                  <Label htmlFor="title">Title * <FormFieldHelp content="Short summary of the change (e.g. 'Add bathroom exhaust fan')." /></Label>
+                  <Input
+                    id="title"
+                    placeholder="Brief description of the change"
+                    value={newOrder.title}
+                    onChange={(e) => setNewOrder({...newOrder, title: e.target.value})}
+                  />
+                </div>
+          
+                <div>
+                  <Label htmlFor="description">Description <FormFieldHelp content="Detail the scope change and why it's needed — this is what the client approves." /></Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Detailed description of the change order..."
+                    value={newOrder.description}
+                    onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}
+                  />
+                </div>
+          
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="project">Project *</Label>
-                    <Select value={newOrder.project_id} onValueChange={(value) => setNewOrder({...newOrder, project_id: value})}>
+                    <Label htmlFor="amount">Amount ($) * <FormFieldHelp content="The cost impact of this change. A positive value adds to the contract; use a negative value for a credit." /></Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={newOrder.amount}
+                      onChange={(e) => setNewOrder({...newOrder, amount: e.target.value})}
+                    />
+                  </div>
+                              
+                  <div>
+                    <Label htmlFor="reason">Reason <FormFieldHelp content="Why the change is needed (client request, field condition, design change) — used for analytics." /></Label>
+                    <Select value={newOrder.reason} onValueChange={(value) => setNewOrder({...newOrder, reason: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select project" />
+                        <SelectValue placeholder="Select reason" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="scope_change">Scope Change</SelectItem>
+                        <SelectItem value="material_upgrade">Material Upgrade</SelectItem>
+                        <SelectItem value="design_change">Design Change</SelectItem>
+                        <SelectItem value="unforeseen_conditions">Unforeseen Conditions</SelectItem>
+                        <SelectItem value="client_request">Client Request</SelectItem>
+                        <SelectItem value="code_requirement">Code Requirement</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div>
-                    <Label htmlFor="title">Title * <FormFieldHelp content="Short summary of the change (e.g. 'Add bathroom exhaust fan')." /></Label>
-                    <Input
-                      id="title"
-                      placeholder="Brief description of the change"
-                      value={newOrder.title}
-                      onChange={(e) => setNewOrder({...newOrder, title: e.target.value})}
-                    />
+                </div>
+          
+                {/* Approval Assignment Section */}
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4" aria-hidden="true" />
+                    <Label className="text-sm font-medium">Approval Assignment</Label>
                   </div>
-
+                              
                   <div>
-                    <Label htmlFor="description">Description <FormFieldHelp content="Detail the scope change and why it's needed — this is what the client approves." /></Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Detailed description of the change order..."
-                      value={newOrder.description}
-                      onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}
-                    />
+                    <Label htmlFor="approvers">Assign Approvers</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2 max-h-40 overflow-y-auto">
+                      {companyUsers.map((user) => (
+                        <div key={user.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`approver-${user.id}`}
+                            checked={selectedApprovers.includes(user.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedApprovers([...selectedApprovers, user.id]);
+                              } else {
+                                setSelectedApprovers(selectedApprovers.filter(id => id !== user.id));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`approver-${user.id}`} className="text-sm cursor-pointer">
+                            {user.first_name} {user.last_name} ({user.role})
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-
+          
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="amount">Amount ($) * <FormFieldHelp content="The cost impact of this change. A positive value adds to the contract; use a negative value for a credit." /></Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={newOrder.amount}
-                        onChange={(e) => setNewOrder({...newOrder, amount: e.target.value})}
+                      <Label>Approval Due Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                            aria-label="Select approval due date"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                            {approvalDueDate ? format(approvalDueDate, "PPP") : "Select date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={approvalDueDate}
+                            onSelect={setApprovalDueDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                                
+                    <div>
+                      <Label htmlFor="approval_notes">Approval Notes</Label>
+                      <Textarea
+                        id="approval_notes"
+                        placeholder="Special instructions for approvers..."
+                        value={newOrder.approval_notes}
+                        onChange={(e) => setNewOrder({...newOrder, approval_notes: e.target.value})}
                       />
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="reason">Reason <FormFieldHelp content="Why the change is needed (client request, field condition, design change) — used for analytics." /></Label>
-                      <Select value={newOrder.reason} onValueChange={(value) => setNewOrder({...newOrder, reason: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select reason" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="scope_change">Scope Change</SelectItem>
-                          <SelectItem value="material_upgrade">Material Upgrade</SelectItem>
-                          <SelectItem value="design_change">Design Change</SelectItem>
-                          <SelectItem value="unforeseen_conditions">Unforeseen Conditions</SelectItem>
-                          <SelectItem value="client_request">Client Request</SelectItem>
-                          <SelectItem value="code_requirement">Code Requirement</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Approval Assignment Section */}
-                  <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4" aria-hidden="true" />
-                      <Label className="text-sm font-medium">Approval Assignment</Label>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="approvers">Assign Approvers</Label>
-                      <div className="grid grid-cols-1 gap-2 mt-2 max-h-40 overflow-y-auto">
-                        {companyUsers.map((user) => (
-                          <div key={user.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`approver-${user.id}`}
-                              checked={selectedApprovers.includes(user.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedApprovers([...selectedApprovers, user.id]);
-                                } else {
-                                  setSelectedApprovers(selectedApprovers.filter(id => id !== user.id));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`approver-${user.id}`} className="text-sm cursor-pointer">
-                              {user.first_name} {user.last_name} ({user.role})
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Approval Due Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
-                              aria-label="Select approval due date"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                              {approvalDueDate ? format(approvalDueDate, "PPP") : "Select date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={approvalDueDate}
-                              onSelect={setApprovalDueDate}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="approval_notes">Approval Notes</Label>
-                        <Textarea
-                          id="approval_notes"
-                          placeholder="Special instructions for approvers..."
-                          value={newOrder.approval_notes}
-                          onChange={(e) => setNewOrder({...newOrder, approval_notes: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateDialogOpen(false);
-                      setEditingOrder(null);
-                      setNewOrder({
-                        project_id: '',
-                        title: '',
-                        description: '',
-                        amount: '',
-                        reason: '',
-                        approval_notes: ''
-                      });
-                      setSelectedApprovers([]);
-                      setApprovalDueDate(undefined);
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={editingOrder ? handleUpdateOrder : handleCreateOrder}>
-                      {editingOrder ? 'Update Change Order' : 'Create Change Order'}
-                    </Button>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </div>
+          
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    setEditingOrder(null);
+                    setNewOrder({
+                      project_id: '',
+                      title: '',
+                      description: '',
+                      amount: '',
+                      reason: '',
+                      approval_notes: ''
+                    });
+                    setSelectedApprovers([]);
+                    setApprovalDueDate(undefined);
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button onClick={editingOrder ? handleUpdateOrder : handleCreateOrder}>
+                    {editingOrder ? 'Update Change Order' : 'Create Change Order'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      }
+    >
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

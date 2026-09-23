@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Settings, 
   Bell, 
   Clock, 
   Smartphone, 
@@ -274,23 +273,17 @@ const UserSettings = () => {
 
   return (
     <AccessiblePageWrapper pageTitle="User Settings">
-    <DashboardLayout title="Personal Settings" hasAccessibleWrapper>
+    <DashboardLayout
+      title="Personal Settings" hasAccessibleWrapper
+      description="Customize your experience and preferences"
+      headerActions={
+        <Button onClick={savePreferences} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6" />
-            <div>
-              <h1 className="text-2xl font-bold">Personal Settings</h1>
-              <p className="text-sm text-muted-foreground">
-                Customize your experience and preferences
-              </p>
-            </div>
-          </div>
-          <Button onClick={savePreferences} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">

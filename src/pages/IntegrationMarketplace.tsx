@@ -251,16 +251,11 @@ export const IntegrationMarketplace = () => {
   }
 
   return (
-    <DashboardLayout title="Integration Marketplace">
+    <DashboardLayout
+      title="Integration Marketplace"
+      description="Connect Brikly with your favorite tools and apps"
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-construction-dark">Integration Marketplace</h1>
-          <p className="text-muted-foreground">
-            Connect Brikly with your favorite tools and apps
-          </p>
-        </div>
-
         {/* My Integrations Summary */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>

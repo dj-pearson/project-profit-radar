@@ -409,21 +409,20 @@ const QuickBooksRouting = () => {
   }
 
   return (
-    <DashboardLayout title="QuickBooks Data Routing">
+    <DashboardLayout
+      title="QuickBooks Data Routing"
+      headerActions={
+        <Button
+          onClick={runAutoRouting}
+          disabled={autoRoutingRunning}
+          className={mobileButtonClasses.primary}
+        >
+          <Zap className="h-4 w-4 mr-2" />
+          {autoRoutingRunning ? 'Routing...' : 'Run Auto-routing'}
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Auto-routing Button in Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className={mobileTextClasses.title}>QuickBooks Data Routing</h1>
-          <Button
-            onClick={runAutoRouting}
-            disabled={autoRoutingRunning}
-            className={mobileButtonClasses.primary}
-          >
-            <Zap className="h-4 w-4 mr-2" />
-            {autoRoutingRunning ? 'Routing...' : 'Run Auto-routing'}
-          </Button>
-        </div>
-            
         {/* Overview Cards */}
         <div className={mobileGridClasses.stats}>
           <Card className={mobileCardClasses.container}>

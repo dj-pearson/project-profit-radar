@@ -251,22 +251,17 @@ export const WorkflowAutomation = () => {
   }
 
   return (
-    <DashboardLayout title="Workflow Automation">
+    <DashboardLayout
+      title="Workflow Automation"
+      description="Create automated workflows to streamline your business processes"
+      headerActions={
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Create Workflow
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Workflow Automation</h1>
-            <p className="text-muted-foreground">
-              Create automated workflows to streamline your business processes
-            </p>
-          </div>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Workflow
-          </Button>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>

@@ -346,18 +346,14 @@ const AdminIntelligenceDashboard = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout title="Admin Intelligence" showTrialBanner={false}>
+      <DashboardLayout
+        title="Admin Intelligence" showTrialBanner={false}
+        description="Proactive account management and revenue operations"
+        headerActions={
+          <Button onClick={loadDashboardData}>Refresh Data</Button>
+        }
+      >
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Admin Intelligence Dashboard</h1>
-              <p className="text-muted-foreground">
-                Proactive account management and revenue operations
-              </p>
-            </div>
-            <Button onClick={loadDashboardData}>Refresh Data</Button>
-          </div>
-
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>

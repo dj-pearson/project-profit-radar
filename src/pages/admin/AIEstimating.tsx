@@ -201,25 +201,17 @@ export function AIEstimating() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      title="AI Estimating"
+      description="Generate accurate project estimates using AI and machine learning"
+      headerActions={
+        <Badge className="bg-construction-orange">
+          <Sparkles className="h-4 w-4 mr-1" />
+          AI Powered
+        </Badge>
+      }
+    >
       <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Brain className="h-8 w-8" />
-              AI Estimating
-            </h1>
-            <p className="text-muted-foreground">
-              Generate accurate project estimates using AI and machine learning
-            </p>
-          </div>
-          <Badge className="bg-construction-orange">
-            <Sparkles className="h-4 w-4 mr-1" />
-            AI Powered
-          </Badge>
-        </div>
-
         {/* Main Content Tabs */}
         <Tabs defaultValue="generate" className="space-y-4">
           <TabsList>

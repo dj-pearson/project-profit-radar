@@ -333,31 +333,23 @@ export const AuditLoggingCompliance = () => {
   }
 
   return (
-    <DashboardLayout title="Audit & Compliance">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-              <Shield className="w-8 h-8 text-construction-orange" />
-              Audit & Compliance
-            </h1>
-            <p className="text-muted-foreground">
-              Track all activity, manage GDPR requests, and maintain compliance
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportAuditLogs}>
-              <Download className="w-4 h-4 mr-2" />
-              Export Logs
-            </Button>
-            <Button onClick={generateComplianceReport}>
-              <FileText className="w-4 h-4 mr-2" />
-              Generate Report
-            </Button>
-          </div>
+    <DashboardLayout
+      title="Audit & Compliance"
+      description="Track all activity, manage GDPR requests, and maintain compliance"
+      headerActions={
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportAuditLogs}>
+            <Download className="w-4 h-4 mr-2" />
+            Export Logs
+          </Button>
+          <Button onClick={generateComplianceReport}>
+            <FileText className="w-4 h-4 mr-2" />
+            Generate Report
+          </Button>
         </div>
-
+      }
+    >
+      <div className="space-y-6">
         {/* Alert for overdue GDPR requests */}
         {overdueGDPRRequests.length > 0 && (
           <Card className="border-red-500 bg-red-50">

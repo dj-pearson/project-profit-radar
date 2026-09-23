@@ -320,18 +320,14 @@ const SupportTicketsEnhanced = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout title="Support Tickets" showTrialBanner={false}>
+      <DashboardLayout
+        title="Support Tickets" showTrialBanner={false}
+        description="AI-powered support with user context and response suggestions"
+        headerActions={
+          <Button onClick={loadTickets}>Refresh</Button>
+        }
+      >
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Smart Support Assistant</h1>
-              <p className="text-muted-foreground">
-                AI-powered support with user context and response suggestions
-              </p>
-            </div>
-            <Button onClick={loadTickets}>Refresh</Button>
-          </div>
-
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3">
             <Card>

@@ -293,25 +293,17 @@ export const APIKeyManagement = () => {
   const successRate = totalRequests > 0 ? ((totalRequests - totalErrors) / totalRequests * 100) : 100;
 
   return (
-    <DashboardLayout title="API Key Management">
+    <DashboardLayout
+      title="API Key Management"
+      description="Manage API keys for third-party integrations"
+      headerActions={
+        <Button onClick={() => setShowCreateKey(!showCreateKey)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Create API Key
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-              <Key className="w-8 h-8 text-construction-orange" />
-              API Key Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage API keys for third-party integrations
-            </p>
-          </div>
-          <Button onClick={() => setShowCreateKey(!showCreateKey)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create API Key
-          </Button>
-        </div>
-
         {/* New API Key Display */}
         {newKeyVisible && newGeneratedKey && (
           <Card className="border-construction-orange border-2">

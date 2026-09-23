@@ -684,31 +684,25 @@ ${JSON.stringify(faqSchema, null, 2)}
   }));
 
   return (
-    <DashboardLayout title="SEO Management">
-      <div className="space-y-6">
-        {/* Hero Section */}
-        <div className="text-center py-6 px-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 rounded-lg">
-          <div className="flex items-center justify-center mb-4">
-            <Search className="h-10 w-10 text-green-600 mr-3" />
-            <h1 className="text-2xl font-bold">Unified SEO Management</h1>
-          </div>
-          <p className="text-lg text-muted-foreground mb-4 max-w-2xl mx-auto">
-            Complete SEO management dashboard with analytics, configuration, content generation, and optimization tools
-          </p>
-          <div className="flex items-center justify-center space-x-4">
-            <Badge variant={mcpConfigured ? "default" : "destructive"} className="text-sm px-3 py-1">
-              {mcpConfigured ? <CheckCircle className="h-4 w-4 mr-1" /> : <AlertTriangle className="h-4 w-4 mr-1" />}
-              {mcpConfigured ? 'APIs Connected' : 'APIs Not Configured'}
-            </Badge>
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              {performanceData.totalImpressions?.toLocaleString() || 0} Impressions
-            </Badge>
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              {performanceData.totalClicks?.toLocaleString() || 0} Clicks
-            </Badge>
-          </div>
+    <DashboardLayout
+      title="SEO Management"
+      description="Complete SEO management dashboard with analytics, configuration, content generation, and optimization tools"
+      headerActions={
+        <div className="flex items-center justify-center space-x-4">
+          <Badge variant={mcpConfigured ? "default" : "destructive"} className="text-sm px-3 py-1">
+            {mcpConfigured ? <CheckCircle className="h-4 w-4 mr-1" /> : <AlertTriangle className="h-4 w-4 mr-1" />}
+            {mcpConfigured ? 'APIs Connected' : 'APIs Not Configured'}
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-1">
+            {performanceData.totalImpressions?.toLocaleString() || 0} Impressions
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-1">
+            {performanceData.totalClicks?.toLocaleString() || 0} Clicks
+          </Badge>
         </div>
-
+      }
+    >
+      <div className="space-y-6">
         {/* API Status Alert */}
         {!mcpConfigured && (
           <Alert className="border-orange-200 bg-orange-50">

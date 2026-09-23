@@ -180,95 +180,93 @@ export default function SafetyManagement() {
   };
 
   return (
-    <DashboardLayout title="Safety Management">
+    <DashboardLayout
+      title="Safety Management"
+      description="Manage workplace safety, incidents, and compliance"
+      headerActions={
+         <div className="flex flex-col sm:flex-row gap-2">
+           <Dialog>
+             <DialogTrigger asChild>
+               <Button className="w-full sm:w-auto">
+                 <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                 <span className="hidden sm:inline">Report Incident</span>
+                 <span className="sm:hidden">Report</span>
+               </Button>
+             </DialogTrigger>
+            <DialogContent className="max-w-2xl" aria-describedby="report-incident-description">
+              <DialogHeader>
+                <DialogTitle>Report Safety Incident</DialogTitle>
+                <DialogDescription id="report-incident-description">
+                  Report a workplace safety incident or near miss
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="incident-title">Incident Title</Label>
+                  <Input id="incident-title" placeholder="Brief description of incident" />
+                </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div>
+                     <Label htmlFor="incident-type">Incident Type</Label>
+                     <Select>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select type" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="injury">Injury</SelectItem>
+                         <SelectItem value="near_miss">Near Miss</SelectItem>
+                         <SelectItem value="property_damage">Property Damage</SelectItem>
+                         <SelectItem value="environmental">Environmental</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div>
+                     <Label htmlFor="severity">Severity</Label>
+                     <Select>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select severity" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="minor">Minor</SelectItem>
+                         <SelectItem value="moderate">Moderate</SelectItem>
+                         <SelectItem value="major">Major</SelectItem>
+                         <SelectItem value="critical">Critical</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                 </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div>
+                     <Label htmlFor="incident-date">Date & Time</Label>
+                     <Input id="incident-date" type="datetime-local" />
+                   </div>
+                   <div>
+                     <Label htmlFor="location">Location</Label>
+                     <Input id="location" placeholder="Where did this occur?" />
+                   </div>
+                 </div>
+                <div>
+                  <Label htmlFor="injured-person">Injured Person (if applicable)</Label>
+                  <Input id="injured-person" placeholder="Name of injured person" />
+                </div>
+                <div>
+                  <Label htmlFor="description">Detailed Description</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Provide detailed description of what happened..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      }
+    >
       <div className="space-y-6">
          {/* Disclaimer that this module supports — but does not replace —
              the customer's written safety program and OSHA filings. */}
          <ComplianceDisclaimer variant="safety" />
-         {/* Header */}
-         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-           <div className="text-center sm:text-left">
-             <h1 className="text-xl sm:text-2xl font-bold">Safety Management</h1>
-             <p className="text-sm sm:text-base text-muted-foreground">Manage workplace safety, incidents, and compliance</p>
-           </div>
-           <div className="flex flex-col sm:flex-row gap-2">
-             <Dialog>
-               <DialogTrigger asChild>
-                 <Button className="w-full sm:w-auto">
-                   <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                   <span className="hidden sm:inline">Report Incident</span>
-                   <span className="sm:hidden">Report</span>
-                 </Button>
-               </DialogTrigger>
-              <DialogContent className="max-w-2xl" aria-describedby="report-incident-description">
-                <DialogHeader>
-                  <DialogTitle>Report Safety Incident</DialogTitle>
-                  <DialogDescription id="report-incident-description">
-                    Report a workplace safety incident or near miss
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="incident-title">Incident Title</Label>
-                    <Input id="incident-title" placeholder="Brief description of incident" />
-                  </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                       <Label htmlFor="incident-type">Incident Type</Label>
-                       <Select>
-                         <SelectTrigger>
-                           <SelectValue placeholder="Select type" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="injury">Injury</SelectItem>
-                           <SelectItem value="near_miss">Near Miss</SelectItem>
-                           <SelectItem value="property_damage">Property Damage</SelectItem>
-                           <SelectItem value="environmental">Environmental</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     <div>
-                       <Label htmlFor="severity">Severity</Label>
-                       <Select>
-                         <SelectTrigger>
-                           <SelectValue placeholder="Select severity" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="minor">Minor</SelectItem>
-                           <SelectItem value="moderate">Moderate</SelectItem>
-                           <SelectItem value="major">Major</SelectItem>
-                           <SelectItem value="critical">Critical</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
-                   </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                       <Label htmlFor="incident-date">Date & Time</Label>
-                       <Input id="incident-date" type="datetime-local" />
-                     </div>
-                     <div>
-                       <Label htmlFor="location">Location</Label>
-                       <Input id="location" placeholder="Where did this occur?" />
-                     </div>
-                   </div>
-                  <div>
-                    <Label htmlFor="injured-person">Injured Person (if applicable)</Label>
-                    <Input id="injured-person" placeholder="Name of injured person" />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Detailed Description</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Provide detailed description of what happened..."
-                      rows={4}
-                    />
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">

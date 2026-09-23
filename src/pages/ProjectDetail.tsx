@@ -280,7 +280,6 @@ const ProjectDetail = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate('/projects')} aria-label="Back to projects">
                   <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <h1 className="text-2xl font-bold">{project.name}</h1>
                 <ProjectHealthBadge project={project} />
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">

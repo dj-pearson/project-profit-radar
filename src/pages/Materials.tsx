@@ -169,141 +169,139 @@ export default function Materials() {
   };
 
   return (
-    <DashboardLayout title="Materials Management">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Materials Management</h1>
-            <p className="text-muted-foreground">Track inventory, orders, and material costs</p>
-          </div>
-          <div className="flex gap-2">
-            {selectedMaterials.length > 0 && (
-              <Button
-                onClick={() => setShowCreatePODialog(true)}
-                className="bg-construction-blue hover:bg-construction-blue/90"
-              >
-                <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
-                Create PO ({selectedMaterials.length})
+    <DashboardLayout
+      title="Materials Management"
+      description="Track inventory, orders, and material costs"
+      headerActions={
+        <div className="flex gap-2">
+          {selectedMaterials.length > 0 && (
+            <Button
+              onClick={() => setShowCreatePODialog(true)}
+              className="bg-construction-blue hover:bg-construction-blue/90"
+            >
+              <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
+              Create PO ({selectedMaterials.length})
+            </Button>
+          )}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                Add Material
               </Button>
-            )}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Add Material
-                </Button>
-              </DialogTrigger>
-              <DialogContent aria-describedby="add-material-description">
-                <DialogHeader>
-                  <DialogTitle>Add New Material</DialogTitle>
-                  <DialogDescription id="add-material-description">
-                    Add a new material to your inventory
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
+            </DialogTrigger>
+            <DialogContent aria-describedby="add-material-description">
+              <DialogHeader>
+                <DialogTitle>Add New Material</DialogTitle>
+                <DialogDescription id="add-material-description">
+                  Add a new material to your inventory
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="project">Project (Optional)</Label>
+                  <Select value={newMaterial.project_id} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, project_id: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Project</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="name">Material Name</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="Enter material name" 
+                    value={newMaterial.name}
+                    onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="material-code">Material Code</Label>
+                  <Input 
+                    id="material-code" 
+                    placeholder="Enter material code" 
+                    value={newMaterial.material_code}
+                    onChange={(e) => setNewMaterial(prev => ({ ...prev, material_code: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={newMaterial.category} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="concrete">Concrete</SelectItem>
+                      <SelectItem value="steel">Steel</SelectItem>
+                      <SelectItem value="lumber">Lumber</SelectItem>
+                      <SelectItem value="electrical">Electrical</SelectItem>
+                      <SelectItem value="plumbing">Plumbing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="project">Project (Optional)</Label>
-                    <Select value={newMaterial.project_id} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, project_id: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select project (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">No Project</SelectItem>
-                        {projects.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="name">Material Name</Label>
+                    <Label htmlFor="quantity">Quantity</Label>
                     <Input 
-                      id="name" 
-                      placeholder="Enter material name" 
-                      value={newMaterial.name}
-                      onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="material-code">Material Code</Label>
-                    <Input 
-                      id="material-code" 
-                      placeholder="Enter material code" 
-                      value={newMaterial.material_code}
-                      onChange={(e) => setNewMaterial(prev => ({ ...prev, material_code: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={newMaterial.category} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, category: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="concrete">Concrete</SelectItem>
-                        <SelectItem value="steel">Steel</SelectItem>
-                        <SelectItem value="lumber">Lumber</SelectItem>
-                        <SelectItem value="electrical">Electrical</SelectItem>
-                        <SelectItem value="plumbing">Plumbing</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input 
-                        id="quantity" 
-                        type="number" 
-                        placeholder="Enter quantity"
-                        value={newMaterial.quantity}
-                        onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="unit">Unit</Label>
-                      <Input 
-                        id="unit" 
-                        placeholder="e.g., bags, tons" 
-                        value={newMaterial.unit}
-                        onChange={(e) => setNewMaterial(prev => ({ ...prev, unit: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="cost">Cost per Unit</Label>
-                    <Input 
-                      id="cost" 
+                      id="quantity" 
                       type="number" 
-                      step="0.01" 
-                      placeholder="Enter cost"
-                      value={newMaterial.cost}
-                      onChange={(e) => setNewMaterial(prev => ({ ...prev, cost: e.target.value }))}
+                      placeholder="Enter quantity"
+                      value={newMaterial.quantity}
+                      onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity: e.target.value }))}
                     />
                   </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={() => setNewMaterial({
-                      name: '',
-                      material_code: '',
-                      category: '',
-                      unit: '',
-                      quantity: '',
-                      cost: '',
-                      project_id: ''
-                    })}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateMaterial}>
-                      Add Material
-                    </Button>
+                  <div>
+                    <Label htmlFor="unit">Unit</Label>
+                    <Input 
+                      id="unit" 
+                      placeholder="e.g., bags, tons" 
+                      value={newMaterial.unit}
+                      onChange={(e) => setNewMaterial(prev => ({ ...prev, unit: e.target.value }))}
+                    />
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div>
+                  <Label htmlFor="cost">Cost per Unit</Label>
+                  <Input 
+                    id="cost" 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="Enter cost"
+                    value={newMaterial.cost}
+                    onChange={(e) => setNewMaterial(prev => ({ ...prev, cost: e.target.value }))}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setNewMaterial({
+                    name: '',
+                    material_code: '',
+                    category: '',
+                    unit: '',
+                    quantity: '',
+                    cost: '',
+                    project_id: ''
+                  })}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateMaterial}>
+                    Add Material
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+      }
+    >
+      <div className="space-y-6">
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">

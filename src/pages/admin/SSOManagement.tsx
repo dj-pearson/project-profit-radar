@@ -386,25 +386,17 @@ export const SSOManagement = () => {
   }
 
   return (
-    <DashboardLayout title="SSO & Authentication">
+    <DashboardLayout
+      title="SSO & Authentication"
+      description="Manage single sign-on, multi-factor authentication, and security settings"
+      headerActions={
+        <Button variant="outline" onClick={loadSSOData}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-              <Shield className="w-8 h-8 text-construction-orange" />
-              SSO & Authentication
-            </h1>
-            <p className="text-muted-foreground">
-              Manage single sign-on, multi-factor authentication, and security settings
-            </p>
-          </div>
-          <Button variant="outline" onClick={loadSSOData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-
         {/* Tabs */}
         <Tabs defaultValue="sso" aria-label="SSO and authentication settings">
           <TabsList aria-label="Authentication categories">

@@ -277,19 +277,11 @@ export const CustomDomain = () => {
 
   // Main content for Enterprise users
   return (
-    <DashboardLayout title="Custom Domain">
+    <DashboardLayout
+      title="Custom Domain"
+      description="Configure your custom domain to white-label your Brikly experience"
+    >
       <div className="space-y-6 max-w-4xl">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-3">
-            <Globe className="w-8 h-8 text-construction-orange" />
-            Custom Domain
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Configure your custom domain to white-label your Brikly experience
-          </p>
-        </div>
-
         {/* Current Status */}
         {tenantData?.custom_domain && (
           <Alert className={tenantData.domain_verified ? 'border-green-500' : 'border-yellow-500'}>

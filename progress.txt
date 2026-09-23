@@ -6965,3 +6965,10 @@ nothing imported them. useSecurity.enable2FA turned 2FA on without checking
 the TOTP code. Reasons recorded in the guard header. Baselines: security 14
 -> 0, components 222 -> 217, modules 106 -> 99. TS 1490 -> 1483. Open: route
 role enforcement (AC6) and lazy-import detection (AC2).
+
+## US-377 - one page header (partial)
+PageHeader is the only h1 on DashboardLayout pages; the sticky bar no longer
+carries one. 52 pages lost their own h1 block and pass description and
+headerActions instead. Pages with no title keep the Brikly h1 fallback.
+TS 1483 -> 1484: the existing TS2589 in useSupabaseMutation.ts is reported
+twice again, no new error. Open: the format module and its eslint rule.

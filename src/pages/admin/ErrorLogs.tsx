@@ -409,31 +409,23 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
   }
 
   return (
-    <DashboardLayout title="Error Logs">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Bug className="h-6 w-6" />
-              Error Logs
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Monitor and manage application errors across all users
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportCSV}>
-              <Download className="h-4 w-4 mr-1" />
-              Export CSV
-            </Button>
-          </div>
+    <DashboardLayout
+      title="Error Logs"
+      description="Monitor and manage application errors across all users"
+      headerActions={
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="h-4 w-4 mr-1" />
+            Export CSV
+          </Button>
         </div>
-
+      }
+    >
+      <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>

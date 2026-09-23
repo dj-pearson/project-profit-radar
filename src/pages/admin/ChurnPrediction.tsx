@@ -206,20 +206,17 @@ export const ChurnPrediction = () => {
   }
 
   return (
-    <DashboardLayout title="Churn Prediction">
+    <DashboardLayout
+      title="Churn Prediction"
+      description="Predict and prevent customer churn with AI-powered insights"
+      headerActions={
+        <Button onClick={generatePredictions}>
+          <Target className="w-4 h-4 mr-2" />
+          Generate Predictions
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Churn Prediction AI</h1>
-            <p className="text-muted-foreground">Predict and prevent customer churn with AI-powered insights</p>
-          </div>
-          <Button onClick={generatePredictions}>
-            <Target className="w-4 h-4 mr-2" />
-            Generate Predictions
-          </Button>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-5">
           <Card>

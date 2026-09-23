@@ -252,7 +252,7 @@ export default function SystemAdminSettings() {
 
   if (loadingData || saving) {
     return (
-      <DashboardLayout>
+      <DashboardLayout title="System Admin Settings">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-lg">Loading system settings...</div>
         </div>
@@ -262,21 +262,17 @@ export default function SystemAdminSettings() {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout>
-        <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">System Admin Settings</h1>
-            <p className="text-muted-foreground">
-              Configure system-wide settings for email templates, forms, reports, and document management
-            </p>
-          </div>
+      <DashboardLayout
+        title="System Admin Settings"
+        description="Configure system-wide settings for email templates, forms, reports, and document management"
+        headerActions={
           <Button onClick={saveSettings} disabled={saving}>
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Saving..." : "Save Settings"}
           </Button>
-        </div>
-
+        }
+      >
+        <div className="space-y-6">
         <Tabs defaultValue="email-templates" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="email-templates" className="flex items-center gap-2">

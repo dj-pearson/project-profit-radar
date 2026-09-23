@@ -290,33 +290,29 @@ const SearchTrafficDashboard: React.FC = () => {
   const totalPlatforms = 4; // GA, GSC, Bing, Yandex
 
   return (
-    <DashboardLayout title="Search Traffic Dashboard">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Search Traffic Analytics</h1>
-            <p className="text-muted-foreground mt-1">
-              Unified analytics dashboard combining all major search and analytics platforms
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setActiveTab('settings')}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button
-              onClick={syncAllPlatforms}
-              disabled={syncing || connectedCount === 0}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync All'}
-            </Button>
-          </div>
+    <DashboardLayout
+      title="Search Traffic Dashboard"
+      description="Unified analytics dashboard combining all major search and analytics platforms"
+      headerActions={
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setActiveTab('settings')}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          <Button
+            onClick={syncAllPlatforms}
+            disabled={syncing || connectedCount === 0}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync All'}
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-6">
 
         {/* Platform Status Overview */}
         {connectedCount < totalPlatforms && (

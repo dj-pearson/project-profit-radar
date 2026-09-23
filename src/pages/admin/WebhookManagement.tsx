@@ -337,25 +337,17 @@ export const WebhookManagement = () => {
   const successRate = totalDeliveries > 0 ? (successfulDeliveries / totalDeliveries * 100) : 100;
 
   return (
-    <DashboardLayout title="Webhook Management">
+    <DashboardLayout
+      title="Webhook Management"
+      description="Real-time event notifications to your applications"
+      headerActions={
+        <Button onClick={() => setShowCreateEndpoint(!showCreateEndpoint)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Create Webhook
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-              <Webhook className="w-8 h-8 text-construction-orange" />
-              Webhook Management
-            </h1>
-            <p className="text-muted-foreground">
-              Real-time event notifications to your applications
-            </p>
-          </div>
-          <Button onClick={() => setShowCreateEndpoint(!showCreateEndpoint)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Webhook
-          </Button>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

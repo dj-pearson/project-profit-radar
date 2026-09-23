@@ -297,16 +297,10 @@ const ComplianceAudit = () => {
         </div>
       </DashboardLayout>
     }>
-      <DashboardLayout title="SOC 2 Compliance Audit">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl font-bold">System-Wide SOC 2 Compliance Audit</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                System-wide audit trail for compliance monitoring and reporting (Root Admin Only)
-              </p>
-            </div>
+      <DashboardLayout
+        title="SOC 2 Compliance Audit"
+        description="System-wide audit trail for compliance monitoring and reporting (Root Admin Only)"
+        headerActions={
           <div className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
               <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -319,7 +313,9 @@ const ComplianceAudit = () => {
               <span className="sm:hidden">Report</span>
             </Button>
           </div>
-        </div>
+        }
+      >
+        <div className="space-y-6">
 
        {/* Statistics Cards */}
        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">

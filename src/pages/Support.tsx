@@ -111,89 +111,87 @@ export default function Support() {
   };
 
   return (
-    <DashboardLayout title="Support Center">
-      <main aria-label="Support center" className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Support Center</h1>
-            <p className="text-muted-foreground">Manage customer support tickets and help resources</p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  New Ticket
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create Support Ticket</DialogTitle>
-                  <DialogDescription>
-                    Create a new customer support ticket
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="customer-name">Customer Name</Label>
-                      <Input id="customer-name" placeholder="Enter customer name" />
-                    </div>
-                    <div>
-                      <Label htmlFor="customer-email">Customer Email</Label>
-                      <Input id="customer-email" type="email" placeholder="customer@email.com" />
-                    </div>
+    <DashboardLayout
+      title="Support Center"
+      description="Manage customer support tickets and help resources"
+      headerActions={
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                New Ticket
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create Support Ticket</DialogTitle>
+                <DialogDescription>
+                  Create a new customer support ticket
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="customer-name">Customer Name</Label>
+                    <Input id="customer-name" placeholder="Enter customer name" />
                   </div>
                   <div>
-                    <Label htmlFor="title">Issue Title</Label>
-                    <Input id="title" placeholder="Brief description of the issue" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General Support</SelectItem>
-                          <SelectItem value="technical">Technical Issue</SelectItem>
-                          <SelectItem value="billing">Billing</SelectItem>
-                          <SelectItem value="integration">Integration</SelectItem>
-                          <SelectItem value="mobile">Mobile App</SelectItem>
-                          <SelectItem value="reporting">Reporting</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Detailed description of the issue..."
-                      rows={4}
-                    />
+                    <Label htmlFor="customer-email">Customer Email</Label>
+                    <Input id="customer-email" type="email" placeholder="customer@email.com" />
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div>
+                  <Label htmlFor="title">Issue Title</Label>
+                  <Input id="title" placeholder="Brief description of the issue" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General Support</SelectItem>
+                        <SelectItem value="technical">Technical Issue</SelectItem>
+                        <SelectItem value="billing">Billing</SelectItem>
+                        <SelectItem value="integration">Integration</SelectItem>
+                        <SelectItem value="mobile">Mobile App</SelectItem>
+                        <SelectItem value="reporting">Reporting</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Detailed description of the issue..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+      }
+    >
+      <main aria-label="Support center" className="space-y-6">
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">

@@ -5857,7 +5857,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || AC1/AC2 done: src/components/ui/PageHeader.tsx (title, description, breadcrumb, actions, one h1#page-title); DashboardLayout renders it in the content area and drops the top-bar h1 (mobile shows an aria-hidden label). 52 pages migrated: own h1 headers removed, description/actions moved to props. OPEN: AC3 @/lib/format module and AC4 eslint rule for toLocaleDateString/new Intl.NumberFormat; pages whose h1 lives in a child component not audited; ~60 pages now show a visible title and need a visual check for duplicate h2s."
     },
     {
       "id": "US-378",

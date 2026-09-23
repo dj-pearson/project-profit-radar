@@ -13,6 +13,7 @@ import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
@@ -20,7 +21,15 @@ import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigg
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  /**
+   * The page's heading. When set, the layout renders it as the page's one
+   * <h1> through PageHeader, so the page itself must not render another.
+   */
   title?: string;
+  /** Line under the title, rendered by PageHeader. */
+  description?: React.ReactNode;
+  /** Page-level buttons rendered beside the title by PageHeader. */
+  headerActions?: React.ReactNode;
   showTrialBanner?: boolean;
   showBottomNav?: boolean;
   actions?: React.ReactNode;
@@ -30,7 +39,9 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
-  title = "Brikly",
+  title,
+  description,
+  headerActions,
   showTrialBanner = true,
   showBottomNav = true,
   actions,
@@ -50,6 +61,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // ("Brikly") and empty titles shouldn't override the route-derived label.
   const breadcrumbLabel =
     title && title !== 'Brikly' ? title : undefined;
+  // Pages that pass no title keep the legacy "Brikly" <h1> in the top bar;
+  // every other page gets its one <h1> from PageHeader in the content area.
+  const hasPageHeader = Boolean(breadcrumbLabel);
+
+  const breadcrumb = <AutoBreadcrumb currentLabel={breadcrumbLabel} />;
+  const pageHeader = hasPageHeader ? (
+    <PageHeader
+      title={title}
+      description={description}
+      actions={headerActions}
+      breadcrumb={breadcrumb}
+    />
+  ) : (
+    breadcrumb
+  );
 
   // Mobile bottom navigation items
   const bottomNavItems = [
@@ -90,12 +116,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   className="flex-shrink-0"
                   aria-label="Toggle navigation menu"
                 />
-                <h1
-                  className="text-base md:text-xl lg:text-2xl font-bold truncate"
-                  id="page-title"
-                >
-                  {title}
-                </h1>
+                {hasPageHeader ? (
+                  // Compact label so the page name stays visible on phones once
+                  // the PageHeader scrolls away. Hidden from AT: the <h1> below
+                  // already names the page.
+                  <span
+                    className="md:hidden text-base font-semibold truncate"
+                    aria-hidden="true"
+                  >
+                    {title}
+                  </span>
+                ) : (
+                  <h1
+                    className="text-base md:text-xl lg:text-2xl font-bold truncate"
+                    id="page-title"
+                  >
+                    Brikly
+                  </h1>
+                )}
               </div>
 
               {/* Right: Actions + User */}
@@ -152,7 +190,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               )}
             >
               <ResponsiveContainer className="py-4 md:py-6" padding="sm">
-                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
+                {pageHeader}
                 {showTrialBanner && <TrialStatusBanner />}
                 {children}
               </ResponsiveContainer>
@@ -169,7 +207,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               tabIndex={-1}
             >
               <ResponsiveContainer className="py-4 md:py-6" padding="sm">
-                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
+                {pageHeader}
                 {showTrialBanner && <TrialStatusBanner />}
                 {children}
               </ResponsiveContainer>

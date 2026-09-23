@@ -290,38 +290,35 @@ export default function EnvironmentalPermitting() {
   };
 
   return (
-    <DashboardLayout title="Environmental Permitting" showTrialBanner={false}>
+    <DashboardLayout
+      title="Environmental Permitting" showTrialBanner={false}
+      description="NEPA compliance and environmental permits"
+      headerActions={
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">New Permit Application</span>
+              <span className="sm:hidden">New Permit</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>New Environmental Permit Application</DialogTitle>
+              <DialogDescription>
+                Start a new environmental permit application with NEPA compliance
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-4">
+              <p className="text-sm text-muted-foreground">
+                Permit application form would be implemented here with all required fields for environmental permitting.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Environmental Permitting</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">NEPA compliance and environmental permits</p>
-          </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">New Permit Application</span>
-                <span className="sm:hidden">New Permit</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>New Environmental Permit Application</DialogTitle>
-                <DialogDescription>
-                  Start a new environmental permit application with NEPA compliance
-                </DialogDescription>
-              </DialogHeader>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">
-                  Permit application form would be implemented here with all required fields for environmental permitting.
-                </p>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
         {/* Content */}
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">

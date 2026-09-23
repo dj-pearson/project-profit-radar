@@ -180,16 +180,11 @@ export const ReferralProgram = () => {
   const referralLink = `https://brikly.net/?ref=${referralCode.code}`;
 
   return (
-    <DashboardLayout title="Referral Program">
+    <DashboardLayout
+      title="Referral Program"
+      description={<>Earn ${referralCode.referrer_reward_amount} for every friend who becomes a paying customer</>}
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-construction-dark">Referral Program</h1>
-          <p className="text-muted-foreground">
-            Earn ${referralCode.referrer_reward_amount} for every friend who becomes a paying customer
-          </p>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>

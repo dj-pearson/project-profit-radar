@@ -13,17 +13,11 @@ const WorkflowManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <DashboardLayout title="Workflow Management">
+    <DashboardLayout
+      title="Workflow Management"
+      description="Streamline your construction workflows with integrated management tools"
+    >
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Workflow Management</h1>
-            <p className="text-muted-foreground">
-              Streamline your construction workflows with integrated management tools
-            </p>
-          </div>
-        </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>

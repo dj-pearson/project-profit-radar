@@ -24,17 +24,11 @@ const PaymentCenter = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      title="Payment Center"
+      description="Comprehensive payment management for your construction business"
+    >
       <div className="container mx-auto py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Payment Center</h1>
-            <p className="text-muted-foreground">
-              Comprehensive payment management for your construction business
-            </p>
-          </div>
-        </div>
-
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>

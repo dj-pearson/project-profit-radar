@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GitCompare, Plus, Trash2, Award, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Award, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -291,41 +291,36 @@ const BidLeveling = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout title="Bid Leveling">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold">
-                <GitCompare className="h-6 w-6" aria-hidden="true" /> Bid Leveling
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Compare subcontractor/supplier bids against a shared scope, flag gaps and outliers, see variance vs estimate, and award.
-              </p>
+      <DashboardLayout
+        title="Bid Leveling"
+        description="Compare subcontractor/supplier bids against a shared scope, flag gaps and outliers, see variance vs estimate, and award."
+        headerActions={
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="bl-project">Project</Label>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger id="bl-project" className="w-[12rem]"><SelectValue placeholder="Select project" /></SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="bl-project">Project</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
-                  <SelectTrigger id="bl-project" className="w-[12rem]"><SelectValue placeholder="Select project" /></SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="bl-package">Package</Label>
-                <Select value={packageId} onValueChange={setPackageId} disabled={packages.length === 0}>
-                  <SelectTrigger id="bl-package" className="w-[12rem]"><SelectValue placeholder="No packages" /></SelectTrigger>
-                  <SelectContent>
-                    {packages.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="outline" onClick={() => setPkgDialog(true)} disabled={!projectId}>
-                <Plus className="mr-1 h-4 w-4" /> Package
-              </Button>
+            <div className="space-y-1">
+              <Label htmlFor="bl-package">Package</Label>
+              <Select value={packageId} onValueChange={setPackageId} disabled={packages.length === 0}>
+                <SelectTrigger id="bl-package" className="w-[12rem]"><SelectValue placeholder="No packages" /></SelectTrigger>
+                <SelectContent>
+                  {packages.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
             </div>
+            <Button variant="outline" onClick={() => setPkgDialog(true)} disabled={!projectId}>
+              <Plus className="mr-1 h-4 w-4" /> Package
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-6">
 
           {!packageId ? (
             <Card><CardContent className="py-10 text-center text-muted-foreground">Create or select a bid package to begin leveling.</CardContent></Card>

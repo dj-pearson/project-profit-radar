@@ -82,18 +82,16 @@ const ProjectTaskCreate = () => {
   }
 
   return (
-    <DashboardLayout title={`Create Task - ${project.name}`}>
+    <DashboardLayout
+      title={`Create Task - ${project.name}`}
+      description={<>Add a task to {project.name}</>}
+      headerActions={
+        <Button variant="ghost" size="sm" onClick={handleClose}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      }
+    >
       <div className="max-w-2xl mx-auto p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Button variant="ghost" size="sm" onClick={handleClose}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Create New Task</h1>
-            <p className="text-muted-foreground">Add a task to {project.name}</p>
-          </div>
-        </div>
-
         <CreateTaskDialog 
           isOpen={true}
           onClose={handleClose}

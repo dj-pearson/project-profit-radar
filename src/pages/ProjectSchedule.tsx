@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarRange, Plus, Link2, Save, Trash2, GitBranch, AlertTriangle } from 'lucide-react';
+import { Plus, Link2, Save, Trash2, GitBranch, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -265,42 +265,37 @@ const ProjectSchedule = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout title="Project Schedule">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold">
-                <CalendarRange className="h-6 w-6" aria-hidden="true" /> Project Schedule
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Gantt with task dependencies, critical-path highlighting, drag-to-reschedule (dependents cascade), and baseline comparison.
-              </p>
+      <DashboardLayout
+        title="Project Schedule"
+        description="Gantt with task dependencies, critical-path highlighting, drag-to-reschedule (dependents cascade), and baseline comparison."
+        headerActions={
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="sched-project">Project</Label>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger id="sched-project" className="w-[14rem]">
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="sched-project">Project</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
-                  <SelectTrigger id="sched-project" className="w-[14rem]">
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="outline" onClick={() => setLinkDialog(true)} disabled={tasks.length < 2}>
-                <Link2 className="mr-1 h-4 w-4" /> Link
-              </Button>
-              <Button variant="outline" onClick={handleSaveBaseline} disabled={busy || tasks.length === 0}>
-                <Save className="mr-1 h-4 w-4" /> Save baseline
-              </Button>
-              <Button onClick={() => setTaskDialog(true)} disabled={!projectId}>
-                <Plus className="mr-1 h-4 w-4" /> Add task
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => setLinkDialog(true)} disabled={tasks.length < 2}>
+              <Link2 className="mr-1 h-4 w-4" /> Link
+            </Button>
+            <Button variant="outline" onClick={handleSaveBaseline} disabled={busy || tasks.length === 0}>
+              <Save className="mr-1 h-4 w-4" /> Save baseline
+            </Button>
+            <Button onClick={() => setTaskDialog(true)} disabled={!projectId}>
+              <Plus className="mr-1 h-4 w-4" /> Add task
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-6">
 
           {projectId && (
             <Card>

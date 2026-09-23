@@ -230,21 +230,11 @@ export const GPSTimeTracking = () => {
   );
 
   return (
-    <DashboardLayout title="GPS Time Tracking">
+    <DashboardLayout
+      title="GPS Time Tracking"
+      description="Location-based time tracking with geofencing and travel logs"
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-              <MapPin className="w-8 h-8 text-construction-orange" />
-              GPS Time Tracking
-            </h1>
-            <p className="text-muted-foreground">
-              Location-based time tracking with geofencing and travel logs
-            </p>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ListChecks,
   Plus,
   Trash2,
   Check,
@@ -245,37 +244,31 @@ const ClientSelections = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout title="Client Selections">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold">
-                <ListChecks className="h-6 w-6" aria-hidden="true" /> Client Selections
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Define selection categories and allowances. Approving an over-allowance pick creates a change order and updates the budget.
-              </p>
+      <DashboardLayout
+        title="Client Selections"
+        description="Define selection categories and allowances. Approving an over-allowance pick creates a change order and updates the budget."
+        headerActions={
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="sel-project">Project</Label>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger id="sel-project" className="w-[14rem]">
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="sel-project">Project</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
-                  <SelectTrigger id="sel-project" className="w-[14rem]">
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={() => setCategoryDialog(true)} disabled={!projectId}>
-                <Plus className="mr-1 h-4 w-4" /> Add Category
-              </Button>
-            </div>
+            <Button onClick={() => setCategoryDialog(true)} disabled={!projectId}>
+              <Plus className="mr-1 h-4 w-4" /> Add Category
+            </Button>
           </div>
-
+        }
+      >
+        <div className="space-y-6">
           {projectId && (
             <Card>
               <CardContent className="flex flex-wrap gap-x-6 gap-y-1 py-4 text-sm">

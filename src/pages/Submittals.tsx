@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -362,34 +361,21 @@ const Submittals = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout title="Submittals">
-        <Helmet>
-        <title>Submittals Tracker – Approvals & Accountability | Brikly</title>
-        <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
-        <link rel="canonical" href="https://brikly.net/submittals" />
-      </Helmet>
-      <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 sm:h-16">
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="w-full sm:w-auto"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
-              <div className="text-center sm:text-left">
-                <h1 className="text-lg sm:text-xl font-semibold">Submittals Workflow</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">Submit and track drawings, product data, and samples for approval</p>
-              </div>
-            </div>
+      <DashboardLayout
+        title="Submittals"
+        description="Submit and track drawings, product data, and samples for approval"
+        headerActions={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="w-full sm:w-auto"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
@@ -421,7 +407,7 @@ const Submittals = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
+            
                   <div>
                     <Label htmlFor="title">Title *</Label>
                     <Input
@@ -432,7 +418,7 @@ const Submittals = () => {
                       aria-required="true"
                     />
                   </div>
-
+            
                   <div>
                     <Label htmlFor="description">Description *</Label>
                     <Textarea
@@ -444,7 +430,7 @@ const Submittals = () => {
                       aria-required="true"
                     />
                   </div>
-
+            
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                    <div>
                      <Label htmlFor="spec-section">Specification Section</Label>
@@ -455,7 +441,7 @@ const Submittals = () => {
                        onChange={(e) => setNewSubmittal({...newSubmittal, spec_section: e.target.value})}
                      />
                    </div>
-                     
+                                 
                       <div>
                         <Label htmlFor="priority">Priority</Label>
                         <Select value={newSubmittal.priority} onValueChange={(value) => setNewSubmittal({...newSubmittal, priority: value})}>
@@ -469,7 +455,7 @@ const Submittals = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+                                  
                       <div>
                         <Label htmlFor="due_date">Due Date</Label>
                         <Input
@@ -480,8 +466,8 @@ const Submittals = () => {
                         />
                       </div>
                    </div>
-
-
+            
+            
                    <div className="flex flex-col sm:flex-row justify-end gap-2">
                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="w-full sm:w-auto">
                        Cancel
@@ -493,9 +479,15 @@ const Submittals = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      >
+        <Helmet>
+        <title>Submittals Tracker – Approvals & Accountability | Brikly</title>
+        <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
+        <link rel="canonical" href="https://brikly.net/submittals" />
+      </Helmet>
+      <div className="space-y-4 sm:space-y-6">
 
       {/* Edit Submittal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

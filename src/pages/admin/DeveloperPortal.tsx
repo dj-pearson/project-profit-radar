@@ -136,16 +136,11 @@ export function DeveloperPortal() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      title="Developer Portal"
+      description="API documentation, code examples, and interactive playground"
+    >
       <div className="p-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Developer Portal</h1>
-          <p className="text-muted-foreground">
-            API documentation, code examples, and interactive playground
-          </p>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>

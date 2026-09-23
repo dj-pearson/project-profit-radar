@@ -318,20 +318,17 @@ const MyTasks = () => {
   const isLoading = assignedTasksQuery.isLoading || createdTasksQuery.isLoading;
 
   return (
-    <DashboardLayout title="My Tasks">
+    <DashboardLayout
+      title="My Tasks"
+      description="All your assignments in one place"
+      headerActions={
+        <Button onClick={() => setCreateDialogOpen(true)} aria-describedby="page-title">
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+          Add Task
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 id="page-heading" className="text-2xl font-bold">My Tasks</h1>
-            <p className="text-muted-foreground">All your assignments in one place</p>
-          </div>
-          <Button onClick={() => setCreateDialogOpen(true)} aria-describedby="page-heading">
-            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-            Add Task
-          </Button>
-        </header>
-
         {/* Filters */}
         <div className="flex items-center gap-4" role="search" aria-label="Filter tasks">
           <div className="relative flex-1 max-w-sm">

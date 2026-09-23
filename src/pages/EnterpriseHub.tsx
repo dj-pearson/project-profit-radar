@@ -10,7 +10,6 @@ import {
   Brain, 
   Smartphone, 
   DollarSign,
-  Award,
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
@@ -101,32 +100,25 @@ const EnterpriseHub = () => {
   };
 
   return (
-    <DashboardLayout title="Enterprise Hub">
-      <div className="space-y-6">
-        {/* Hero Section */}
-        <div className="text-center py-8 px-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg">
-          <div className="flex items-center justify-center mb-4">
-            <Award className="h-12 w-12 text-blue-600 mr-3" />
-            <h1 className="text-3xl font-bold">Enterprise Command Center</h1>
-          </div>
-          <p className="text-xl text-muted-foreground mb-6 max-w-3xl mx-auto">
-            Advanced AI-powered construction management with enterprise-grade automation, 
-            compliance, and integration capabilities
-          </p>
-          <div className="flex items-center justify-center space-x-4">
-            <Badge variant="success" className="text-sm px-3 py-1">
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Production Ready
-            </Badge>
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              SOC 2 Compliant
-            </Badge>
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              Enterprise Scale
-            </Badge>
-          </div>
+    <DashboardLayout
+      title="Enterprise Hub"
+      description="Advanced AI-powered construction management with enterprise-grade automation, compliance, and integration capabilities"
+      headerActions={
+        <div className="flex items-center justify-center space-x-4">
+          <Badge variant="success" className="text-sm px-3 py-1">
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Production Ready
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-1">
+            SOC 2 Compliant
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-1">
+            Enterprise Scale
+          </Badge>
         </div>
-
+      }
+    >
+      <div className="space-y-6">
         {/* Enterprise Dashboard */}
         <EnterpriseDashboard />
 

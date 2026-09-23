@@ -299,28 +299,24 @@ const Subcontractors: React.FC = () => {
   const ready = !isLoading && !error && available && hasCompany;
 
   return (
-    <DashboardLayout hasAccessibleWrapper>
+    <DashboardLayout
+      hasAccessibleWrapper
+      title="Subcontractors"
+      description="Manage subcontractors, track prequalification status, and monitor insurance compliance."
+      headerActions={
+        ready && canManage ? (
+          <Button className="gap-2" onClick={openAdd} aria-label="Add a new subcontractor">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add Subcontractor
+          </Button>
+        ) : undefined
+      }
+    >
       <AccessiblePageWrapper
         pageTitle="Subcontractor Management"
         mainLabel="Subcontractor management content"
       >
         <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Subcontractors</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage subcontractors, track prequalification status, and monitor insurance compliance.
-              </p>
-            </div>
-            {ready && canManage && (
-              <Button className="gap-2" onClick={openAdd} aria-label="Add a new subcontractor">
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Add Subcontractor
-              </Button>
-            )}
-          </div>
-
           {/* The tables exist in a migration this database has not had applied. */}
           {!isLoading && !available && (
             <div className="rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 p-4" role="status">

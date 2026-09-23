@@ -118,9 +118,9 @@ const ROICalculator = () => {
         <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white rounded-lg p-8">
           <div className="max-w-3xl mx-auto text-center">
             <Calculator className="h-16 w-16 mx-auto mb-6 opacity-90" />
-            <h1 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
               Construction ROI Calculator - Free Project Management Software Savings Calculator
-            </h1>
+            </h2>
             <p className="text-lg opacity-90 mb-4">
               Calculate your potential savings with construction management software. Discover how much money your construction business can save with professional project management tools and construction software solutions.
             </p>

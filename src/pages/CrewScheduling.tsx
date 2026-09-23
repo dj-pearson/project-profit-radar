@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { mobileTextClasses } from '@/utils/mobileHelpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -346,14 +345,10 @@ const CrewScheduling = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
-      <DashboardLayout title="Crew Scheduling & Dispatch" showTrialBanner={false}>
-        <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className={mobileTextClasses.title}>Crew Scheduling & Dispatch</h1>
-            <p className={mobileTextClasses.muted}>Manage crew assignments and dispatch</p>
-          </div>
+      <DashboardLayout
+        title="Crew Scheduling & Dispatch" showTrialBanner={false}
+        description="Manage crew assignments and dispatch"
+        headerActions={
           <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0" role="search" aria-label="Date filter">
             <Input
               type="date"
@@ -466,8 +461,9 @@ const CrewScheduling = () => {
                 </DialogContent>
               </Dialog>
             </div>
-          </div>
-
+        }
+      >
+        <div className="space-y-6">
         {/* Weekly drag-and-drop board (US-106) */}
         <CrewScheduleBoard />
 

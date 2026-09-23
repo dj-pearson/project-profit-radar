@@ -208,25 +208,22 @@ export const RetentionAnalytics = () => {
     : 0;
 
   return (
-    <DashboardLayout title="Retention Analytics">
+    <DashboardLayout
+      title="Retention Analytics"
+      description="Monitor cohort retention and identify churn risks"
+      headerActions={
+        <Select value={cohortType} onValueChange={(v) => setCohortType(v as 'signup' | 'paid')}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="signup">Signup Cohorts</SelectItem>
+            <SelectItem value="paid">Paid Cohorts</SelectItem>
+          </SelectContent>
+        </Select>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Retention Analytics</h1>
-            <p className="text-muted-foreground">Monitor cohort retention and identify churn risks</p>
-          </div>
-          <Select value={cohortType} onValueChange={(v) => setCohortType(v as 'signup' | 'paid')}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="signup">Signup Cohorts</SelectItem>
-              <SelectItem value="paid">Paid Cohorts</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Health Distribution Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="border-green-200">

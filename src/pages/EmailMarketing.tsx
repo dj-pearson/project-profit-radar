@@ -149,78 +149,76 @@ export default function EmailMarketing() {
   };
 
   return (
-    <DashboardLayout title="Email Marketing">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Email Marketing</h1>
-            <p className="text-muted-foreground">Create and manage email campaigns for clients and prospects</p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Campaign
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create Email Campaign</DialogTitle>
-                  <DialogDescription>
-                    Create a new email marketing campaign
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="campaign-name">Campaign Name</Label>
-                    <Input id="campaign-name" placeholder="Enter campaign name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="subject">Email Subject</Label>
-                    <Input id="subject" placeholder="Enter email subject line" />
-                  </div>
-                  <div>
-                    <Label htmlFor="list">Recipient List</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select recipient list" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active-clients">Active Clients (156)</SelectItem>
-                        <SelectItem value="prospects">Prospects (89)</SelectItem>
-                        <SelectItem value="vendors">Vendors & Suppliers (67)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="template">Template</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a template" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="newsletter">Monthly Newsletter</SelectItem>
-                        <SelectItem value="project-update">Project Update</SelectItem>
-                        <SelectItem value="promotion">Service Promotion</SelectItem>
-                        <SelectItem value="blank">Start from Blank</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="content">Email Content</Label>
-                    <Textarea 
-                      id="content" 
-                      placeholder="Write your email content here..."
-                      rows={6}
-                    />
-                  </div>
+    <DashboardLayout
+      title="Email Marketing"
+      description="Create and manage email campaigns for clients and prospects"
+      headerActions={
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Campaign
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create Email Campaign</DialogTitle>
+                <DialogDescription>
+                  Create a new email marketing campaign
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="campaign-name">Campaign Name</Label>
+                  <Input id="campaign-name" placeholder="Enter campaign name" />
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div>
+                  <Label htmlFor="subject">Email Subject</Label>
+                  <Input id="subject" placeholder="Enter email subject line" />
+                </div>
+                <div>
+                  <Label htmlFor="list">Recipient List</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select recipient list" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active-clients">Active Clients (156)</SelectItem>
+                      <SelectItem value="prospects">Prospects (89)</SelectItem>
+                      <SelectItem value="vendors">Vendors & Suppliers (67)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="template">Template</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newsletter">Monthly Newsletter</SelectItem>
+                      <SelectItem value="project-update">Project Update</SelectItem>
+                      <SelectItem value="promotion">Service Promotion</SelectItem>
+                      <SelectItem value="blank">Start from Blank</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="content">Email Content</Label>
+                  <Textarea 
+                    id="content" 
+                    placeholder="Write your email content here..."
+                    rows={6}
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+      }
+    >
+      <div className="space-y-6">
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">

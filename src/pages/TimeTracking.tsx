@@ -32,16 +32,12 @@ const TimeTracking = () => {
 
   return (
     <AccessiblePageWrapper pageTitle="Time Tracking">
-    <DashboardLayout hasAccessibleWrapper>
+    <DashboardLayout
+      hasAccessibleWrapper
+      title="Time Tracking"
+      description="Track hours and manage productivity"
+    >
       <div className="min-h-screen pb-20">
-        {/* Mobile Header */}
-        <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 sm:px-6">
-          <h1 className="text-xl font-semibold sm:text-2xl">Time Tracking</h1>
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            Track hours and manage productivity
-          </p>
-        </div>
-
         {/* FLSA / wage-and-hour disclaimer for time-tracking inputs that
             feed payroll, certified payroll, and prevailing-wage workflows. */}
         <div className="px-4 sm:px-6 pt-3">

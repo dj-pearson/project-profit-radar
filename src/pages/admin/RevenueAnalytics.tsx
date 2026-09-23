@@ -194,36 +194,33 @@ export const RevenueAnalytics = () => {
   const customerGrowth = calculateGrowth(currentMetric?.active_customers, previousMetric?.active_customers);
 
   return (
-    <DashboardLayout title="Revenue Analytics">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Revenue Analytics</h1>
-            <p className="text-muted-foreground">Track MRR, ARR, growth metrics, and customer lifetime value</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={selectedPeriod === '6m' ? 'default' : 'outline'}
-              onClick={() => setSelectedPeriod('6m')}
-            >
-              6 Months
-            </Button>
-            <Button
-              variant={selectedPeriod === '12m' ? 'default' : 'outline'}
-              onClick={() => setSelectedPeriod('12m')}
-            >
-              12 Months
-            </Button>
-            <Button
-              variant={selectedPeriod === 'all' ? 'default' : 'outline'}
-              onClick={() => setSelectedPeriod('all')}
-            >
-              All Time
-            </Button>
-          </div>
+    <DashboardLayout
+      title="Revenue Analytics"
+      description="Track MRR, ARR, growth metrics, and customer lifetime value"
+      headerActions={
+        <div className="flex gap-2">
+          <Button
+            variant={selectedPeriod === '6m' ? 'default' : 'outline'}
+            onClick={() => setSelectedPeriod('6m')}
+          >
+            6 Months
+          </Button>
+          <Button
+            variant={selectedPeriod === '12m' ? 'default' : 'outline'}
+            onClick={() => setSelectedPeriod('12m')}
+          >
+            12 Months
+          </Button>
+          <Button
+            variant={selectedPeriod === 'all' ? 'default' : 'outline'}
+            onClick={() => setSelectedPeriod('all')}
+          >
+            All Time
+          </Button>
         </div>
-
+      }
+    >
+      <div className="space-y-6">
         {/* Key Metrics Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>

@@ -343,19 +343,11 @@ export const AIInsights = () => {
   const mediumImpactInsights = insights.filter(i => i.impact === 'medium');
 
   return (
-    <DashboardLayout title="AI Insights">
+    <DashboardLayout
+      title="AI Insights"
+      description="Personalized recommendations and predictive insights powered by AI"
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-construction-dark flex items-center gap-2">
-            <Sparkles className="w-8 h-8 text-construction-orange" />
-            AI Insights
-          </h1>
-          <p className="text-muted-foreground">
-            Personalized recommendations and predictive insights powered by AI
-          </p>
-        </div>
-
         {/* AI output disclaimer — required disclosure for AI-assisted features. */}
         <ComplianceDisclaimer variant="ai" />
 

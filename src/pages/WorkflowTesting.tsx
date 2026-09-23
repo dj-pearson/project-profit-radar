@@ -14,15 +14,11 @@ const WorkflowTestPage = () => {
   const [activeTab, setActiveTab] = React.useState('testing-guide');
 
   return (
-    <DashboardLayout title="Workflow Management Testing">
+    <DashboardLayout
+      title="Workflow Management Testing"
+      description="Comprehensive testing of all workflow components with real database integration"
+    >
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 rounded-lg">
-            <h1 className="text-3xl font-bold mb-2">🔍 Workflow Management Deep Dive Testing</h1>
-            <p className="text-muted-foreground">
-              Comprehensive testing of all workflow components with real database integration
-            </p>
-          </div>
-
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="testing-guide">Testing Guide</TabsTrigger>

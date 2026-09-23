@@ -377,20 +377,17 @@ export const LeadManagement = () => {
   };
 
   return (
-    <DashboardLayout title="Lead Management">
+    <DashboardLayout
+      title="Lead Management"
+      description="Manage leads, demos, and sales inquiries"
+      headerActions={
+        <Button onClick={exportToCSV} variant="outline">
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Lead Management</h1>
-            <p className="text-muted-foreground">Manage leads, demos, and sales inquiries</p>
-          </div>
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
-        </div>
-
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">

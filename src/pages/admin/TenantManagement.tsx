@@ -257,22 +257,17 @@ export const TenantManagement = () => {
   }
 
   return (
-    <DashboardLayout title="Tenant Management">
+    <DashboardLayout
+      title="Tenant Management"
+      description="Manage multi-tenant organizations and subscriptions"
+      headerActions={
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Create Tenant
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Tenant Management</h1>
-            <p className="text-muted-foreground">
-              Manage multi-tenant organizations and subscriptions
-            </p>
-          </div>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Tenant
-          </Button>
-        </div>
-
         {/* Stats Cards */}
         <section className="grid gap-4 md:grid-cols-4" aria-label="Tenant statistics">
           <Card>

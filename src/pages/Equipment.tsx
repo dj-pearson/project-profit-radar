@@ -96,113 +96,111 @@ export default function Equipment() {
 
   return (
     <AccessiblePageWrapper pageTitle="Equipment">
-    <DashboardLayout title="Equipment Management" hasAccessibleWrapper>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Equipment Management</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage fleet, maintenance, and equipment utilization</p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">Add Equipment</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent aria-describedby="add-equipment-description">
-                <DialogHeader>
-                  <DialogTitle>Add New Equipment</DialogTitle>
-                  <DialogDescription id="add-equipment-description">
-                    Register new equipment to your fleet
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Equipment Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Enter equipment name"
-                      value={newEquipment.name}
-                      onChange={(e) => setNewEquipment(prev => ({ ...prev, name: e.target.value }))}
-                      aria-required="true"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="equipment_type">Equipment Type *</Label>
-                    <Select
-                      value={newEquipment.equipment_type}
-                      onValueChange={(value) => setNewEquipment(prev => ({ ...prev, equipment_type: value }))}
-                      aria-required="true"
-                    >
-                      <SelectTrigger aria-label="Select equipment type">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="excavator">Excavator</SelectItem>
-                        <SelectItem value="loader">Loader</SelectItem>
-                        <SelectItem value="bulldozer">Bulldozer</SelectItem>
-                        <SelectItem value="crane">Crane</SelectItem>
-                        <SelectItem value="truck">Truck</SelectItem>
-                        <SelectItem value="compactor">Compactor</SelectItem>
-                        <SelectItem value="generator">Generator</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="model">Model</Label>
-                      <Input
-                        id="model"
-                        placeholder="e.g., 320 GC"
-                        value={newEquipment.model}
-                        onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="serial">Serial Number</Label>
-                      <Input
-                        id="serial"
-                        placeholder="Serial number"
-                        value={newEquipment.serial_number}
-                        onChange={(e) => setNewEquipment(prev => ({ ...prev, serial_number: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="purchase_cost">Purchase Cost ($)</Label>
-                    <Input
-                      id="purchase_cost"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={newEquipment.purchase_cost}
-                      onChange={(e) => setNewEquipment(prev => ({ ...prev, purchase_cost: e.target.value }))}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleAddEquipment}
-                    disabled={!newEquipment.name || !newEquipment.equipment_type || createEquipment.isPending}
-                    className="w-full"
-                  >
-                    {createEquipment.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                        Adding...
-                      </>
-                    ) : (
-                      'Add Equipment'
-                    )}
-                  </Button>
+    <DashboardLayout
+      title="Equipment Management" hasAccessibleWrapper
+      description="Manage fleet, maintenance, and equipment utilization"
+      headerActions={
+        <div className="flex gap-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Add Equipment</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent aria-describedby="add-equipment-description">
+              <DialogHeader>
+                <DialogTitle>Add New Equipment</DialogTitle>
+                <DialogDescription id="add-equipment-description">
+                  Register new equipment to your fleet
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Equipment Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter equipment name"
+                    value={newEquipment.name}
+                    onChange={(e) => setNewEquipment(prev => ({ ...prev, name: e.target.value }))}
+                    aria-required="true"
+                  />
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div>
+                  <Label htmlFor="equipment_type">Equipment Type *</Label>
+                  <Select
+                    value={newEquipment.equipment_type}
+                    onValueChange={(value) => setNewEquipment(prev => ({ ...prev, equipment_type: value }))}
+                    aria-required="true"
+                  >
+                    <SelectTrigger aria-label="Select equipment type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="excavator">Excavator</SelectItem>
+                      <SelectItem value="loader">Loader</SelectItem>
+                      <SelectItem value="bulldozer">Bulldozer</SelectItem>
+                      <SelectItem value="crane">Crane</SelectItem>
+                      <SelectItem value="truck">Truck</SelectItem>
+                      <SelectItem value="compactor">Compactor</SelectItem>
+                      <SelectItem value="generator">Generator</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="model">Model</Label>
+                    <Input
+                      id="model"
+                      placeholder="e.g., 320 GC"
+                      value={newEquipment.model}
+                      onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="serial">Serial Number</Label>
+                    <Input
+                      id="serial"
+                      placeholder="Serial number"
+                      value={newEquipment.serial_number}
+                      onChange={(e) => setNewEquipment(prev => ({ ...prev, serial_number: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="purchase_cost">Purchase Cost ($)</Label>
+                  <Input
+                    id="purchase_cost"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={newEquipment.purchase_cost}
+                    onChange={(e) => setNewEquipment(prev => ({ ...prev, purchase_cost: e.target.value }))}
+                  />
+                </div>
+                <Button
+                  onClick={handleAddEquipment}
+                  disabled={!newEquipment.name || !newEquipment.equipment_type || createEquipment.isPending}
+                  className="w-full"
+                >
+                  {createEquipment.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Equipment'
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+      }
+    >
+      <div className="space-y-6">
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4" aria-label="Equipment management sections">

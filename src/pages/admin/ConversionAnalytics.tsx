@@ -309,27 +309,24 @@ export const ConversionAnalytics = () => {
   }
 
   return (
-    <DashboardLayout title="Conversion Analytics">
+    <DashboardLayout
+      title="Conversion Analytics"
+      description="Track leads, conversions, and engagement metrics"
+      headerActions={
+        <Select value={dateRange} onValueChange={setDateRange}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">Last 7 days</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="90">Last 90 days</SelectItem>
+            <SelectItem value="365">Last 12 months</SelectItem>
+          </SelectContent>
+        </Select>
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-construction-dark">Conversion Analytics</h1>
-            <p className="text-muted-foreground">Track leads, conversions, and engagement metrics</p>
-          </div>
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="365">Last 12 months</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Tabs */}
         <Tabs defaultValue="funnel" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">

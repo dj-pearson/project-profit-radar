@@ -14,7 +14,6 @@ import {
   Layers,
   Wallet,
   SlidersHorizontal,
-  BarChart3,
   AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -206,46 +205,40 @@ const ExecutiveKpiDashboard = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout title="Executive Dashboard">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold">
-                <BarChart3 className="h-6 w-6" aria-hidden="true" /> Executive Dashboard
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Company-wide KPIs with revenue forecasting — profit-margin trend, cash runway, win rate, average project size, and backlog.
-              </p>
+      <DashboardLayout
+        title="Executive Dashboard"
+        description="Company-wide KPIs with revenue forecasting — profit-margin trend, cash runway, win rate, average project size, and backlog."
+        headerActions={
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="exec-period">Period</Label>
+              <Select value={months} onValueChange={setMonths}>
+                <SelectTrigger id="exec-period" className="w-[12rem]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONTH_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="exec-period">Period</Label>
-                <Select value={months} onValueChange={setMonths}>
-                  <SelectTrigger id="exec-period" className="w-[12rem]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {MONTH_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline"><SlidersHorizontal className="mr-1 h-4 w-4" /> Customize</Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-56">
-                  <p className="mb-2 text-sm font-medium">Show KPIs</p>
-                  <div className="space-y-2">
-                    {KPI_WIDGETS.map((w) => (
-                      <label key={w.id} htmlFor={`kpi-${w.id}`} className="flex items-center gap-2 text-sm">
-                        <Checkbox id={`kpi-${w.id}`} checked={isEnabled(w.id)} onCheckedChange={() => toggle(w.id)} />
-                        {w.label}
-                      </label>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline"><SlidersHorizontal className="mr-1 h-4 w-4" /> Customize</Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56">
+                <p className="mb-2 text-sm font-medium">Show KPIs</p>
+                <div className="space-y-2">
+                  {KPI_WIDGETS.map((w) => (
+                    <label key={w.id} htmlFor={`kpi-${w.id}`} className="flex items-center gap-2 text-sm">
+                      <Checkbox id={`kpi-${w.id}`} checked={isEnabled(w.id)} onCheckedChange={() => toggle(w.id)} />
+                      {w.label}
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
-
+        }
+      >
+        <div className="space-y-6">
           {loading ? (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
