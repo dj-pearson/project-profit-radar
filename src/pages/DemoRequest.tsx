@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { Turnstile, useTurnstileToken } from '@/components/security/Turnstile';
 import { logger } from '@/lib/logger';
 
 /**
@@ -76,6 +77,7 @@ const WHAT_YOU_GET = [
 
 const DemoRequest = () => {
   const [submitted, setSubmitted] = useState(false);
+  const human = useTurnstileToken();
 
   const {
     register,
@@ -94,6 +96,7 @@ const DemoRequest = () => {
 
     const { data, error } = await supabase.functions.invoke('handle-demo-request', {
       body: {
+        turnstileToken: human.token ?? undefined,
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
@@ -349,7 +352,9 @@ const DemoRequest = () => {
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Turnstile onToken={human.setToken} />
+
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !human.ready}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />

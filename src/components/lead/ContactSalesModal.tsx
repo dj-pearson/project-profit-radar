@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Building2, Phone, Mail, MessageSquare, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Turnstile, useTurnstileToken } from '@/components/security/Turnstile';
 import { useToast } from '@/hooks/use-toast';
 
 interface ContactSalesModalProps {
@@ -18,6 +19,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
+  const human = useTurnstileToken();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -47,6 +49,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
       const { data, error } = await supabase.functions.invoke('handle-sales-contact', {
         body: {
           ...formData,
+          turnstileToken: human.token ?? undefined,
           utm_source,
           utm_medium,
           utm_campaign
@@ -307,6 +310,8 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
                 </div>
               </div>
 
+              <Turnstile onToken={human.setToken} />
+
               {/* Submit Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button
@@ -320,7 +325,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !human.ready}
                   className="flex-1 bg-construction-orange hover:bg-construction-orange/90"
                 >
                   {isLoading ? (

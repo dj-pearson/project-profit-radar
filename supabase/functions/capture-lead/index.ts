@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
+import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from "../_shared/turnstile.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -28,6 +29,9 @@ const DEFAULT_SITE_KEY = 'brikly';
 // is silently dropped and the lead is written without it. That is a lost field
 // nobody is told about.
 const LeadCaptureSchema = z.object({
+  // Cloudflare Turnstile token from the form (US-351). Optional in the
+  // schema; _shared/turnstile.ts decides whether it is required.
+  turnstileToken: z.string().max(2048).optional(),
   email: z.string().email().max(255),
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
@@ -154,6 +158,20 @@ serve(async (req) => {
 
     const parsed = await validateBody(req, LeadCaptureSchema, { name: 'capture-lead' });
     if (!parsed.ok) return parsed.response;
+
+    // A person, not a script, before anything is written (US-351).
+    const human = await verifyTurnstile(
+      (parsed.data as { turnstileToken?: unknown }).turnstileToken,
+      clientIP,
+      { secret: Deno.env.get('TURNSTILE_SECRET_KEY') },
+    );
+    if (!human.ok) {
+      console.warn('[capture-lead] Turnstile check failed:', human.reason);
+      return new Response(
+        JSON.stringify({ success: false, error: TURNSTILE_FAILED_MESSAGE, timestamp: new Date().toISOString() }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
     const requestData = parsed.data as LeadCaptureRequest;
 
     // Security: Validate and sanitize all input fields

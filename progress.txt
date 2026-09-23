@@ -6412,3 +6412,21 @@ use it: if the limiter can't answer, the request is refused. Authenticated
 endpoints still fail open.
 
 Turnstile is still to do.
+
+## US-351 finished: Turnstile on the public forms
+
+The contact, demo and sales-contact functions now check a Cloudflare Turnstile
+token before writing anything, and the four forms render the widget. The check
+is enforced only once `TURNSTILE_SECRET_KEY` is set, and the widget only shows
+once the web build has `VITE_TURNSTILE_SITE_KEY`. The order matters: site key
+first, then the secret. Otherwise every real submission is refused.
+
+The Turnstile script had to be allowed in three places: `script-src`,
+`frame-src`, and the Trusted Types default policy inside `index.html`. Editing
+that inline script changes its hash, so the CSP hash was recomputed as well.
+
+While wiring the exit-intent modal I found it discarded the `capture-lead`
+result and showed the success screen regardless. It checks now.
+
+Not covered: the calculator writes through an RPC, not an edge function, so a
+token can't gate it without moving that path.

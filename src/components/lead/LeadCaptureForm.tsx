@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Turnstile, useTurnstileToken } from '@/components/security/Turnstile';
 
 interface LeadCaptureFormProps {
   variant?: 'inline' | 'card';
@@ -27,6 +28,7 @@ export const LeadCaptureForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const human = useTurnstileToken();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +46,7 @@ export const LeadCaptureForm = ({
 
       const { data, error: submitError } = await supabase.functions.invoke('capture-lead', {
         body: {
+          turnstileToken: human.token ?? undefined,
           email,
           interestType,
           leadSource: 'website',
@@ -101,9 +104,10 @@ export const LeadCaptureForm = ({
             disabled={isLoading}
           />
         </div>
+        <Turnstile onToken={human.setToken} />
         <Button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !human.ready}
           className="bg-construction-orange hover:bg-construction-orange/90"
         >
           {isLoading ? (
@@ -144,9 +148,11 @@ export const LeadCaptureForm = ({
           </div>
         </div>
 
+        <Turnstile onToken={human.setToken} />
+
         <Button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !human.ready}
           className="w-full bg-construction-orange hover:bg-construction-orange/90"
         >
           {isLoading ? (

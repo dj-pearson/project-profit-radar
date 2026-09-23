@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Gift, Calendar, Mail, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Turnstile, useTurnstileToken } from '@/components/security/Turnstile';
 import { useNavigate } from 'react-router-dom';
 
 interface ExitIntentModalProps {
@@ -20,6 +21,8 @@ export const ExitIntentModal = ({
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const human = useTurnstileToken();
   const navigate = useNavigate();
 
   const handleCapture = async () => {
@@ -31,8 +34,12 @@ export const ExitIntentModal = ({
       // Capture lead with exit intent context
       const urlParams = new URLSearchParams(window.location.search);
 
-      await supabase.functions.invoke('capture-lead', {
+      setCaptureError(null);
+      // The result used to be ignored, so a failed capture still showed the
+      // success state and the email went nowhere.
+      const { data, error } = await supabase.functions.invoke('capture-lead', {
         body: {
+          turnstileToken: human.token ?? undefined,
           email,
           interestType: variant,
           leadSource: 'exit_intent',
@@ -43,6 +50,9 @@ export const ExitIntentModal = ({
           utm_campaign: urlParams.get('utm_campaign'),
         }
       });
+      if (error || data?.success === false) {
+        throw new Error(data?.error || 'We could not save your email. Please try again.');
+      }
 
       setIsSuccess(true);
 
@@ -54,6 +64,7 @@ export const ExitIntentModal = ({
       }, 2000);
     } catch (error) {
       console.error('Exit intent capture error:', error);
+      setCaptureError(error instanceof Error ? error.message : 'We could not save your email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -190,9 +201,11 @@ export const ExitIntentModal = ({
                 className="text-center"
                 disabled={isLoading}
               />
+              <Turnstile onToken={human.setToken} className="flex justify-center" />
+              {captureError && <p role="alert" className="text-sm text-destructive">{captureError}</p>}
               <Button
                 onClick={handleCapture}
-                disabled={!email || isLoading}
+                disabled={!email || isLoading || !human.ready}
                 className="w-full bg-construction-orange hover:bg-construction-orange/90"
                 size="lg"
               >
