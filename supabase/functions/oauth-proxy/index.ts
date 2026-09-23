@@ -10,18 +10,37 @@
  * 5. Redirects to frontend /auth/callback with token
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
+import { enforceRateLimit, getClientIP, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import {
+  checkPendingState, decideLink, emailVerified, randomToken, readCookie, safeReturnPath,
+  sha256Hex, signState, verifyState, type Candidate,
+} from './flow.ts';
 
 // Configuration from environment variables
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
 const FUNCTIONS_URL = Deno.env.get('FUNCTIONS_URL') || 'https://functions.brikly.net';
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://api.brikly.net';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
 const APPLE_CLIENT_ID = Deno.env.get('APPLE_CLIENT_ID') || '';
 const APPLE_CLIENT_SECRET = Deno.env.get('APPLE_CLIENT_SECRET') || '';
+// Signs the state string. Falls back to the service-role key, which is
+// already a server-only secret, so no deploy is blocked on a new one.
+const STATE_SECRET = Deno.env.get('OAUTH_STATE_SECRET') || SUPABASE_SERVICE_ROLE_KEY;
+// __Host-: Secure, Path=/, no Domain, so no other subdomain can set or read it.
+const BINDING_COOKIE = '__Host-brikly_oauth';
+
+const failTo = (reason: string, extra?: Record<string, string>) => {
+  const errorUrl = new URL(`${FRONTEND_URL}/auth`);
+  errorUrl.searchParams.set('error', reason);
+  for (const [k, v] of Object.entries(extra ?? {})) errorUrl.searchParams.set(k, v);
+  return new Response(null, {
+    status: 302,
+    headers: { 'Location': errorUrl.toString(), 'Set-Cookie': `${BINDING_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0` },
+  });
+};
 
 // Export handler for edge-functions-server
 export default async function handler(req: Request): Promise<Response> {
@@ -34,17 +53,44 @@ export default async function handler(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const provider = url.searchParams.get('provider') || 'google';
-    const redirectTo = url.searchParams.get('redirect_to') || '/dashboard';
+    const redirectTo = safeReturnPath(url.searchParams.get('redirect_to'));
     const functionUrl = `${FUNCTIONS_URL}/oauth-proxy`;
 
     if (action === 'authorize') {
+      if (provider !== 'google' && provider !== 'apple') {
+        return new Response(JSON.stringify({ error: 'Unsupported provider' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      // Each authorize writes a pending-state row, and anyone can call it.
+      const limited = await enforceRateLimit(createServiceClient(), `ip:${getClientIP(req)}`, 'oauth-proxy', RATE_LIMITS.AUTH, corsHeaders);
+      if (limited) return limited;
+
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-      const stateData = btoa(JSON.stringify({
-        verifier: codeVerifier,
-        redirectTo: redirectTo,
-        provider: provider,
-      }));
+
+      // US-349: the state used to be btoa(JSON{verifier, redirectTo, provider})
+      // and the callback trusted whatever decoded, so the PKCE verifier rode in
+      // the URL and nothing tied the callback to the browser that started it.
+      // Now the verifier and return path stay server-side, the state is a
+      // signed random id, and a nonce cookie binds it to this browser.
+      const stateId = randomToken();
+      const nonce = randomToken();
+      const { error: stateError } = await createServiceClient().from('oauth_pending_states').insert({
+        state: stateId,
+        code_verifier: codeVerifier,
+        return_url: redirectTo,
+        provider,
+        browser_binding: await sha256Hex(nonce),
+        ip_address: req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+      });
+      if (stateError) {
+        console.error('[oauth-proxy] could not store state:', stateError.message);
+        return failTo('state_store_failed');
+      }
+      const stateData = await signState(stateId, STATE_SECRET);
 
       let authUrl: URL;
 
@@ -76,7 +122,11 @@ export default async function handler(req: Request): Promise<Response> {
 
       return new Response(null, {
         status: 302,
-        headers: { ...corsHeaders, 'Location': authUrl.toString() },
+        headers: {
+          ...corsHeaders,
+          'Location': authUrl.toString(),
+          'Set-Cookie': `${BINDING_COOKIE}=${nonce}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+        },
       });
     }
 
@@ -99,17 +149,31 @@ export default async function handler(req: Request): Promise<Response> {
         });
       }
 
-      let stateData;
-      try {
-        stateData = JSON.parse(atob(state));
-      } catch {
-        return new Response(JSON.stringify({ error: 'Invalid state' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      // Signed by us, known to the table, unexpired, used once, and back in the
+      // browser that started it. The row is deleted as it is read.
+      const stateId = await verifyState(state, STATE_SECRET);
+      if (!stateId) return failTo('invalid_state');
+      const admin = createServiceClient();
+      const { data: pending, error: consumeError } = await admin
+        .from('oauth_pending_states')
+        .delete()
+        .eq('state', stateId)
+        .is('connection_id', null)
+        .select('code_verifier, return_url, provider, browser_binding, expires_at')
+        .maybeSingle();
+      // If the row could not be consumed, single use is not guaranteed: refuse.
+      if (consumeError) {
+        console.error('[oauth-proxy] could not consume state:', consumeError.message);
+        return failTo('invalid_state');
       }
-
-      const { verifier, redirectTo: finalRedirect, provider: stateProvider } = stateData;
+      const check = await checkPendingState(pending, readCookie(req.headers.get('cookie'), BINDING_COOKIE));
+      if (!check.ok) {
+        console.warn('[oauth-proxy] state rejected:', check.reason);
+        return failTo('invalid_state');
+      }
+      const verifier = pending!.code_verifier as string;
+      const finalRedirect = safeReturnPath(pending!.return_url as string | null);
+      const stateProvider = pending!.provider as string;
       let tokenData;
 
       // Exchange code for tokens
@@ -142,6 +206,7 @@ export default async function handler(req: Request): Promise<Response> {
         tokenData = await tokenResponse.json();
       }
 
+      if (!tokenData) return failTo('unsupported_provider');
       if (tokenData.error) {
         console.error('Token error:', tokenData);
         const errorUrl = new URL(`${FRONTEND_URL}/auth`);
@@ -149,21 +214,33 @@ export default async function handler(req: Request): Promise<Response> {
         return new Response(null, { status: 302, headers: { 'Location': errorUrl.toString() } });
       }
 
-      // Decode ID token to get user info
-      const payload = JSON.parse(atob(tokenData.id_token.split('.')[1]));
+      // Received straight from the provider's token endpoint over TLS with our
+      // client secret, so its claims are the provider's.
+      const payload = JSON.parse(atob(tokenData.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const subject: string | null = typeof payload.sub === 'string' ? payload.sub : null;
+      const verified = emailVerified(payload);
 
-      // Create Supabase admin client
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-        auth: { autoRefreshToken: false, persistSession: false },
+      // US-349: this used to scan the admin user list for a matching email - the first
+      // page of users only, matched on email alone, with no email_verified check.
+      const { data: candidates, error: findError } = await admin.rpc('find_oauth_user', {
+        p_provider: stateProvider,
+        p_subject: subject,
+        p_email: payload.email ?? null,
       });
+      if (findError) {
+        console.error('[oauth-proxy] user lookup failed:', findError.message);
+        return failTo('lookup_failed');
+      }
+      const decision = decideLink((candidates ?? []) as Candidate[], subject, verified);
+      if (decision.action === 'refuse') {
+        console.warn('[oauth-proxy] refused:', decision.reason);
+        return failTo('account_link_refused', { error_description: decision.reason });
+      }
 
-      // Check if user exists
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === payload.email);
-
-      if (!existingUser) {
-        // Create new user
-        const { error: createError } = await supabase.auth.admin.createUser({
+      let loginEmail: string = payload.email;
+      const isNewUser = decision.action === 'create';
+      if (decision.action === 'create') {
+        const { error: createError } = await admin.auth.admin.createUser({
           email: payload.email,
           email_confirm: true,
           user_metadata: {
@@ -174,20 +251,35 @@ export default async function handler(req: Request): Promise<Response> {
           app_metadata: {
             provider: stateProvider,
             providers: [stateProvider],
+            oauth_subjects: { [stateProvider]: subject },
           },
         });
         if (createError) {
           console.error('Create user error:', createError);
-          const errorUrl = new URL(`${FRONTEND_URL}/auth`);
-          errorUrl.searchParams.set('error', 'create_user_failed');
-          return new Response(null, { status: 302, headers: { 'Location': errorUrl.toString() } });
+          return failTo('create_user_failed');
+        }
+      } else {
+        const { data: found } = await admin.auth.admin.getUserById(decision.userId);
+        if (!found?.user?.email) return failTo('lookup_failed');
+        loginEmail = found.user.email;
+        if (decision.action === 'link-then-sign-in') {
+          const app = (found.user.app_metadata ?? {}) as Record<string, unknown>;
+          const subjects = { ...((app.oauth_subjects as Record<string, string>) ?? {}), [stateProvider]: subject };
+          const providers = Array.from(new Set([...((app.providers as string[]) ?? []), stateProvider]));
+          const { error: linkErr } = await admin.auth.admin.updateUserById(decision.userId, {
+            app_metadata: { ...app, oauth_subjects: subjects, providers },
+          });
+          if (linkErr) {
+            console.error('[oauth-proxy] could not bind provider subject:', linkErr.message);
+            return failTo('link_failed');
+          }
         }
       }
 
       // Generate magic link for session
-      const { data, error: linkError } = await supabase.auth.admin.generateLink({
+      const { data, error: linkError } = await admin.auth.admin.generateLink({
         type: 'magiclink',
-        email: payload.email,
+        email: loginEmail,
         options: { redirectTo: `${FRONTEND_URL}${finalRedirect}` },
       });
 
@@ -207,9 +299,15 @@ export default async function handler(req: Request): Promise<Response> {
       successUrl.searchParams.set('token', token || '');
       successUrl.searchParams.set('type', type || 'magiclink');
       successUrl.searchParams.set('redirect_to', finalRedirect);
-      if (!existingUser) successUrl.searchParams.set('new_user', 'true');
+      if (isNewUser) successUrl.searchParams.set('new_user', 'true');
 
-      return new Response(null, { status: 302, headers: { 'Location': successUrl.toString() } });
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': successUrl.toString(),
+          'Set-Cookie': `${BINDING_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      });
     }
 
     // Default response

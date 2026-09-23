@@ -6530,3 +6530,22 @@ allowed 10, which bounced slow first loads to /auth and back. Both use one
 My first test for the refresh passed on the old code, because the fake timers
 went in after the interval was registered. Installing them before render makes
 it fail on the old code with 3 calls.
+
+## US-349: oauth-proxy binds the callback to the browser and the provider account
+
+The Google/Apple proxy put `{verifier, redirectTo, provider}` in base64 as the
+OAuth state, and the callback trusted whatever decoded. So the PKCE verifier
+travelled in the URL, and nothing tied the callback to the browser that
+started it: the login-CSRF case where an attacker finishes their own Google
+flow and hands someone else the resulting link. The verifier and return path
+now stay server-side in `oauth_pending_states`. The state is a signed random
+id, and an HttpOnly `__Host-` cookie binds it to the starting browser. The
+callback uses the row once and deletes it.
+
+Account matching used `listUsers().find(u => u.email === ...)`. That had two
+problems. `listUsers` returns only the first page, so a user past it could
+never sign in with Google because the create step failed as a duplicate. And it
+matched on email alone, with no `email_verified` check. `find_oauth_user` now
+matches on provider subject first. It falls back to email only if the provider
+verified that email and the account has no other subject on record, and it
+records the subject on first use.

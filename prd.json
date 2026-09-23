@@ -5482,8 +5482,8 @@
         "A test replays a state from another session and asserts rejection"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. The SAML half of the linking fix lands with US-340."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. The SAML half of the linking fix lands with US-340. || DONE 2026-09-23 for oauth-proxy; the sso-saml-callback half is covered by US-340 (SAML answers 503 until its identity binding and signature check land). AC1: authorize stores the PKCE verifier, return path and provider in oauth_pending_states (migration 20260923110000 adds nullable provider and browser_binding columns) and sends state = id.HMAC(id) (OAUTH_STATE_SECRET, falling back to the service-role key). It also sets an HttpOnly __Host- cookie with a nonce whose SHA-256 is the row's browser_binding; the callback verifies the HMAC, deletes the row as it reads it (single use), checks expiry, and refuses when the cookie does not match - which is the login-CSRF case. return paths are limited to same-site relative paths. AC2/AC3: find_oauth_user(provider, subject, email) (service_role only) replaces listUsers().find by email - which only ever read the first page of users, so anyone past it could not sign in with Google at all. decideLink: a (provider, subject) match signs in; else an email match only if the provider verified the email and that user has no different subject for this provider, binding app_metadata.oauth_subjects[provider] on first use; a new user needs a verified email and is created with the subject bound. AC4: _shared/oauth-proxy-flow.test.ts (12) includes a state replayed with another browser's cookie, a forged and a legacy base64 state, an expired or used state, and the identity rules. Not run against live Google/Apple from here."
     },
     {
       "id": "US-350",
