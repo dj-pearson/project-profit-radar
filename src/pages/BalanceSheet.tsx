@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
 import { balanceSheet, fiscalYearStartFor, hasSubtype, type LedgerActivityRow } from '@/lib/ledgerReporting';
@@ -18,16 +19,18 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { BarChart3, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
+import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 
 export default function BalanceSheet() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const companyId = user?.user_metadata?.company_id;
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Posted ledger movement up to the as-at date. This used to sum
   // chart_of_accounts.current_balance, an undated running total (US-334).
-  const { data: activity, isLoading } = useLedgerActivity(companyId, asOfDate);
+  const { data: activity, isLoading, isError, refetch } = useLedgerActivity(companyId, asOfDate);
   const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
   const sheet = balanceSheet(
@@ -172,6 +175,16 @@ export default function BalanceSheet() {
         </Card>
       </section>
 
+      {isError ? (
+        <ErrorState
+          title="The balance sheet did not load"
+          description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
+          onRetry={() => { void refetch(); }}
+        />
+      ) : activity && activity.length === 0 ? (
+        <NoLedgerActivity onCreate={() => navigate('/finance/journal-entries')} />
+      ) : (
+      <>
       {/* Balance Sheet */}
       <section aria-label="Balance sheet report">
         <Card>
@@ -347,6 +360,8 @@ export default function BalanceSheet() {
         </CardContent>
       </Card>
       </section>
+      </>
+      )}
     </main>
   );
 }

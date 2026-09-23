@@ -6624,3 +6624,12 @@ The AI quality-control page now shows real inspections instead of mock
 metrics. The developer portal's playground stops answering every request with
 a canned 200. The workflow tester stops reporting a random 90% success rate and
 now lists the actual step order.
+
+## US-375, first part: statements stop reporting zeros as fact
+
+When a ledger query failed, all five financial statements rendered a full
+statement of zeros, and the balance sheet and trial balance then said
+"Balanced". They now show an error with a retry and hide the figures, and a
+company with no activity gets an empty state pointing at journal entries or
+the chart of accounts. The empty states for the twelve list pages are still to
+do.

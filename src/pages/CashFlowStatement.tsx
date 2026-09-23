@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +13,7 @@ import { formatCurrency } from '@/utils/accountingUtils';
 
 export default function CashFlowStatement() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const companyId = user?.user_metadata?.company_id;
 
   const [startDate, setStartDate] = useState(
@@ -19,7 +22,7 @@ export default function CashFlowStatement() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Fetch accounts
-  const { data: accounts, isLoading } = useChartOfAccounts(companyId);
+  const { data: accounts, isLoading, isError, refetch } = useChartOfAccounts(companyId);
 
   // In a real implementation, we would calculate actual cash flows
   // For now, we'll use placeholder calculations based on account balances
@@ -188,6 +191,21 @@ export default function CashFlowStatement() {
         </Card>
       </section>
 
+      {isError ? (
+        <ErrorState
+          title="The cash flow statement did not load"
+          description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
+          onRetry={() => { void refetch(); }}
+        />
+      ) : accounts && accounts.length === 0 ? (
+        <NoLedgerActivity
+          title="No chart of accounts yet"
+          description="Set up your chart of accounts before running this report."
+          actionLabel="Set Up Chart of Accounts"
+          onCreate={() => navigate('/finance/chart-of-accounts')}
+        />
+      ) : (
+      <>
       {/* Cash Flow Metrics */}
       <section aria-label="Cash flow metrics">
         <div className="grid gap-4 md:grid-cols-4">
@@ -370,6 +388,8 @@ export default function CashFlowStatement() {
         </CardContent>
       </Card>
       </section>
+      </>
+      )}
 
       {/* Supplemental Information */}
       <aside aria-label="Supplemental cash flow information">

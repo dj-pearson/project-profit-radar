@@ -16,6 +16,7 @@ import { FileSpreadsheet, FileText, Download, BarChart3, Settings } from 'lucide
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorState } from "@/components/ui/EmptyStates";
 
 interface ReportProject {
   id: string;
@@ -74,6 +75,7 @@ const Reports = () => {
     end: new Date().toISOString().split('T')[0]
   });
   const [generating, setGenerating] = useState(false);
+  const [projectsError, setProjectsError] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -90,6 +92,7 @@ const Reports = () => {
   }, [user, userProfile, loading, navigate]);
 
   const loadProjects = async () => {
+    setProjectsError(false);
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -101,6 +104,9 @@ const Reports = () => {
       setProjects(data || []);
     } catch (error: unknown) {
       console.error('Error loading projects:', error);
+      // Without this the project picker just sat empty, which reads the same
+      // as a company with no projects.
+      setProjectsError(true);
     }
   };
 
@@ -324,6 +330,13 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="exports" className="space-y-6">
+            {projectsError && (
+              <ErrorState
+                title="Your projects did not load"
+                description="Reports need a project to export. Try again, or contact support if it keeps failing."
+                onRetry={() => { void loadProjects(); }}
+              />
+            )}
             <Card className={mobileCardClasses.container}>
               <CardHeader className={mobileCardClasses.header}>
                 <CardTitle className={mobileTextClasses.cardTitle}>Project Report Generator</CardTitle>

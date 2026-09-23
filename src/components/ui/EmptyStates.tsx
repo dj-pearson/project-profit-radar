@@ -247,12 +247,20 @@ export const NoFilterResults: React.FC<{ onReset?: () => void }> = ({ onReset })
 };
 
 // Error State
-export const ErrorState: React.FC<{ onRetry?: () => void }> = ({ onRetry }) => {
+export const ErrorState: React.FC<{
+  onRetry?: () => void;
+  title?: string;
+  description?: string;
+}> = ({
+  onRetry,
+  title = 'Something went wrong',
+  description = 'We encountered an error loading this content. Please try again.'
+}) => {
   return (
     <EmptyState
       icon={<AlertCircle className="h-8 w-8 text-red-500" />}
-      title="Something went wrong"
-      description="We encountered an error loading this content. Please try again."
+      title={title}
+      description={description}
       action={
         onRetry
           ? {
@@ -265,6 +273,36 @@ export const ErrorState: React.FC<{ onRetry?: () => void }> = ({ onRetry }) => {
         label: 'Contact Support',
         onClick: () => (window.location.href = '/help')
       }}
+    />
+  );
+};
+
+// No Ledger Activity (financial statements with nothing posted yet)
+export const NoLedgerActivity: React.FC<{
+  onCreate?: () => void;
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+}> = ({
+  onCreate,
+  title = 'Nothing has been posted to the ledger yet',
+  description = 'This statement is built from posted journal entries. Record one to see figures here.',
+  actionLabel = 'Record Journal Entry'
+}) => {
+  return (
+    <EmptyState
+      icon={<FileText className="h-8 w-8 text-gray-400" />}
+      title={title}
+      description={description}
+      action={
+        onCreate
+          ? {
+              label: actionLabel,
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
     />
   );
 };

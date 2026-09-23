@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
 import { profitAndLoss, type LedgerActivityRow } from '@/lib/ledgerReporting';
@@ -17,9 +18,11 @@ import {
 } from '@/components/ui/table';
 import { TrendingUp, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/accountingUtils';
+import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 
 export default function ProfitAndLoss() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const companyId = user?.user_metadata?.company_id;
 
   const [startDate, setStartDate] = useState(
@@ -31,7 +34,7 @@ export default function ProfitAndLoss() {
   // chart_of_accounts.current_balance - a running total with no date on it -
   // so the date inputs above were decorative and every period returned the
   // same figures (US-334).
-  const { data: activity, isLoading } = useLedgerActivity(companyId, endDate);
+  const { data: activity, isLoading, isError, refetch } = useLedgerActivity(companyId, endDate);
   const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
   const statement = profitAndLoss(
@@ -202,6 +205,16 @@ export default function ProfitAndLoss() {
         </Card>
       </section>
 
+      {isError ? (
+        <ErrorState
+          title="The profit and loss statement did not load"
+          description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
+          onRetry={() => { void refetch(); }}
+        />
+      ) : activity && activity.length === 0 ? (
+        <NoLedgerActivity onCreate={() => navigate('/finance/journal-entries')} />
+      ) : (
+      <>
       {/* P&L Statement */}
       <section aria-label="Profit and loss report">
         <Card>
@@ -432,6 +445,8 @@ export default function ProfitAndLoss() {
         </Card>
         </div>
       </section>
+      </>
+      )}
     </main>
   );
 }

@@ -5829,7 +5829,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). The audit table of loading/error/empty per page is in the 2026-09-09 session transcript; the 25-page matrix should be pasted into docs/UX_IMPROVEMENT_ROADMAP.md as the checklist."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). The audit table of loading/error/empty per page is in the 2026-09-09 session transcript; the 25-page matrix should be pasted into docs/UX_IMPROVEMENT_ROADMAP.md as the checklist. || AC1 DONE 2026-09-23, AC2 already met, AC3 open. The five statements (BalanceSheet, ProfitAndLoss, GeneralLedger, CashFlowStatement, TrialBalance), Equipment's four tabs and Reports read only isLoading, so a failed query rendered a statement of zeros and the balance sheet and trial balance then reported Balanced; GeneralLedger threw in queryFn but never read isError; Reports only console.error'd. Each now renders ErrorState (EmptyStates.tsx, which gained optional title/description) with Try Again -> refetch and hides figures and the Balanced badge; zero rows show NoLedgerActivity with a CTA to journal entries or chart of accounts. AC2: no h-32 w-32 spinners remain in src/pages. AC3 (CTA empty states on the 12 list pages) not done. Tests: LedgerStatements.states.test.tsx (11)."
     },
     {
       "id": "US-376",

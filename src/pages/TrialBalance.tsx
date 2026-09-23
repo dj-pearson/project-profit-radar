@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,12 +29,13 @@ interface ChartAccount {
 
 export default function TrialBalance() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const companyId = user?.user_metadata?.company_id;
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Fetch accounts
-  const { data: accounts, isLoading } = useChartOfAccounts(companyId);
+  const { data: accounts, isLoading, isError, refetch } = useChartOfAccounts(companyId);
 
   // Calculate total debits and credits
   const totalDebits = accounts?.reduce((sum, account) => {
@@ -124,7 +127,9 @@ export default function TrialBalance() {
                 />
               </div>
 
-              {/* Balance Status */}
+              {/* Balance Status: only once accounts have loaded, so a failed
+                  read never shows as "Balanced" on zero totals. */}
+              {!isLoading && !isError && accounts && accounts.length > 0 && (
               <div className="flex items-center gap-2 ml-auto">
                 {isBalanced ? (
                   <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg" role="status" aria-live="polite">
@@ -140,11 +145,27 @@ export default function TrialBalance() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </section>
 
+      {isError ? (
+        <ErrorState
+          title="The trial balance did not load"
+          description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
+          onRetry={() => { void refetch(); }}
+        />
+      ) : accounts && accounts.length === 0 ? (
+        <NoLedgerActivity
+          title="No chart of accounts yet"
+          description="Set up your chart of accounts before running this report."
+          actionLabel="Set Up Chart of Accounts"
+          onCreate={() => navigate('/finance/chart-of-accounts')}
+        />
+      ) : (
+      <>
       {/* Trial Balance */}
       <section aria-label="Trial balance report">
         <Card>
@@ -305,6 +326,8 @@ export default function TrialBalance() {
         </Card>
         </div>
       </section>
+      </>
+      )}
     </main>
   );
 }

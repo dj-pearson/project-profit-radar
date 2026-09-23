@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
+import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 
 interface JournalEntry {
   id: string;
@@ -58,6 +60,7 @@ interface MonthGroup {
 
 export default function GeneralLedger() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const companyId = user?.user_metadata?.company_id;
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
@@ -68,10 +71,20 @@ export default function GeneralLedger() {
   const [groupBy, setGroupBy] = useState<'month' | 'none'>('month');
 
   // Fetch accounts
-  const { data: accounts, isLoading: accountsLoading } = useChartOfAccounts(companyId);
+  const {
+    data: accounts,
+    isLoading: accountsLoading,
+    isError: accountsError,
+    refetch: refetchAccounts,
+  } = useChartOfAccounts(companyId);
 
   // Fetch journal entry lines for selected account
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+  const {
+    data: transactions,
+    isLoading: transactionsLoading,
+    isError: transactionsError,
+    refetch: refetchTransactions,
+  } = useQuery({
     queryKey: ['general-ledger', selectedAccountId, startDate, endDate],
     queryFn: async () => {
       if (!selectedAccountId) return [];
@@ -162,6 +175,8 @@ export default function GeneralLedger() {
   };
 
   const isLoading = accountsLoading || transactionsLoading;
+  const isError = accountsError || transactionsError;
+  const retry = () => (accountsError ? refetchAccounts() : refetchTransactions());
 
   // Calculate totals
   const totalDebits = transactionsWithBalance?.reduce((sum: number, tx: TransactionWithBalance) => sum + tx.debit, 0) || 0;
@@ -264,6 +279,21 @@ export default function GeneralLedger() {
         </Card>
       </section>
 
+      {isError ? (
+        <ErrorState
+          title="The general ledger did not load"
+          description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
+          onRetry={() => { void retry(); }}
+        />
+      ) : accounts && accounts.length === 0 ? (
+        <NoLedgerActivity
+          title="No chart of accounts yet"
+          description="Set up your chart of accounts before running this report."
+          actionLabel="Set Up Chart of Accounts"
+          onCreate={() => navigate('/finance/chart-of-accounts')}
+        />
+      ) : (
+      <>
       {/* Account Summary */}
       {selectedAccount && (
         <section aria-label="Account summary">
@@ -456,6 +486,8 @@ export default function GeneralLedger() {
         </CardContent>
       </Card>
       </section>
+      </>
+      )}
     </main>
   );
 }

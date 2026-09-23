@@ -15,6 +15,7 @@ import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { useEquipmentWithMaintenance, useMaintenanceRecords, useEquipmentStats, useCreateEquipment } from '@/hooks/useEquipment';
 import { EquipmentAssignmentsTab } from '@/components/equipment/EquipmentAssignmentsTab';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/ui/EmptyStates';
 import { formatCurrency } from '@/lib/utils';
 
 export default function Equipment() {
@@ -30,9 +31,24 @@ export default function Equipment() {
   });
 
   // Fetch real data from database
-  const { data: equipment, isLoading: equipmentLoading } = useEquipmentWithMaintenance();
-  const { data: maintenanceRecords, isLoading: maintenanceLoading } = useMaintenanceRecords();
-  const { data: stats, isLoading: statsLoading } = useEquipmentStats();
+  const {
+    data: equipment,
+    isLoading: equipmentLoading,
+    isError: equipmentError,
+    refetch: refetchEquipment,
+  } = useEquipmentWithMaintenance();
+  const {
+    data: maintenanceRecords,
+    isLoading: maintenanceLoading,
+    isError: maintenanceError,
+    refetch: refetchMaintenance,
+  } = useMaintenanceRecords();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useEquipmentStats();
   const createEquipment = useCreateEquipment();
 
   // Filter equipment based on search term
@@ -224,7 +240,12 @@ export default function Equipment() {
           </div>
 
           <TabsContent value="fleet" className="space-y-4">
-            {(() => {
+            {equipmentError ? (
+              <ErrorState
+                title="Your equipment list did not load"
+                onRetry={() => { void refetchEquipment(); }}
+              />
+            ) : (() => {
               const equipmentColumns: TableColumn<any>[] = [
                 {
                   key: 'name',
@@ -326,7 +347,12 @@ export default function Equipment() {
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-4">
-            {maintenanceLoading ? (
+            {maintenanceError ? (
+              <ErrorState
+                title="Maintenance records did not load"
+                onRetry={() => { void refetchMaintenance(); }}
+              />
+            ) : maintenanceLoading ? (
               <div className="grid gap-4">
                 {[1, 2].map((i) => (
                   <Card key={i}>
@@ -409,7 +435,12 @@ export default function Equipment() {
           </TabsContent>
 
           <TabsContent value="utilization" className="space-y-4">
-            {equipmentLoading ? (
+            {equipmentError ? (
+              <ErrorState
+                title="Equipment utilization did not load"
+                onRetry={() => { void refetchEquipment(); }}
+              />
+            ) : equipmentLoading ? (
               <div className="grid gap-4">
                 {[1, 2].map((i) => (
                   <Card key={i}>
@@ -485,6 +516,12 @@ export default function Equipment() {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
+            {statsError ? (
+              <ErrorState
+                title="Equipment statistics did not load"
+                onRetry={() => { void refetchStats(); }}
+              />
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="pb-3">
@@ -585,6 +622,7 @@ export default function Equipment() {
                 </CardContent>
               </Card>
             </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
