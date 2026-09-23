@@ -80,6 +80,10 @@ node scripts/check-anonymous-writes.mjs || exit 1
 #     check, not authentication; the anon key satisfies it.
 node scripts/check-unauthenticated-edge-functions.mjs || exit 1
 
+# 3n2. SECURITY DEFINER search_path (US-353) - a definer function without a
+#      pinned search_path resolves names through the caller's path.
+node scripts/check-definer-search-path.mjs || exit 1
+
 # 3o. Fake success (US-309) — a success message the user acts on has to mean the
 #     thing happened.
 node scripts/check-fake-success.mjs || exit 1

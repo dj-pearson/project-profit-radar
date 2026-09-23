@@ -6353,3 +6353,24 @@ session's refresh token is unusable and the current one still works. After a
 reset, none of the user's tokens is usable, and anon and signed-in users can't
 call the function. What it does not cover: an access token already issued keeps
 working against PostgREST until it expires, at most an hour.
+
+## US-353, first three parts: privileged SQL functions
+
+`revoke_all_user_sessions`, `grant_permission_to_user` and `log_audit_event`
+were callable by any signed-in user through `/rest/v1/rpc`. The first two have no
+caller anywhere, so they're revoked. `log_audit_event` is called from the browser
+and the audit trail is required, so it stays callable and now checks its
+arguments: the user must be the caller, and the company must be the caller's
+unless they are root_admin. The consent-withdrawal trigger logs the consent
+owner rather than the caller, which that check would refuse, so it now writes
+through an internal function nobody else can execute.
+
+For search_path, I didn't rewrite 123 bodies. One migration walks `pg_proc` and
+pins every unpinned definer function to `public, extensions, pg_temp`, which is
+the path API roles already had, with pg_temp moved last. A test shows a temp
+table shadowing a definer function's table before the pin and not after. A new
+guard, `check-definer-search-path.mjs`, replays the migrations and fails on any
+new definer function without a pinned path.
+
+Still open: the roughly 69 functions that take a company or user id as an
+argument need checking one by one.
