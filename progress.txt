@@ -6799,3 +6799,15 @@ the one after.
 
 Before deploying, set `QUICKBOOKS_TOKEN_ENCRYPTION_KEY`, then run the
 backfill until it reports nothing remaining.
+
+## US-355: the production dependency tree is clean enough to pass its audit
+
+One critical and 25 highs in production dependencies, and the audit allowlist
+had expired, so CI's dependency audit could not pass. jspdf 4 fixes the
+critical. Eight packages that nothing imports are gone, including
+`lovable-tagger`, which pulled vite into production. The rest are fixed by
+range-scoped overrides. What remains is allowlisted to December with a reason
+each: the Expo chain (the real fix is removing Expo, US-278), Lighthouse CI's
+unpatched extract-zip, xlsx (no fixed release; replace it with exceljs), and
+vite, which is dev-only here. The build passes. The PDF exports on jspdf 4
+haven't been clicked through in a browser yet.

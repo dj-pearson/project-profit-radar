@@ -1,139 +1,89 @@
 {
   "allowlist": [
     {
-      "id": "@hono/node-server",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "expo",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "@modelcontextprotocol/sdk",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@expo/cli",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "@modelcontextprotocol/server-puppeteer",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@expo/metro",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "@xmldom/xmldom",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@expo/metro-config",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "basic-ftp",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "metro",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "express-rate-limit",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "metro-config",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "fast-uri",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "metro-transform-worker",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "flatted",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "image-size",
+      "reason": "Archived Expo/React Native toolchain (devDependencies; npm also counts it in --omit=dev because @react-three/fiber lists expo as an optional peer). Root cause is image-size<=2.0.2 under metro 0.83; image-size 2.x drops the callable default export metro's Assets.js requires, and npm's only fix is expo 57 (major). Fix = remove the Expo tree, US-278. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "happy-dom",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@lhci/cli",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "hono",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@lhci/utils",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "jspdf",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "lighthouse",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "lodash",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "puppeteer-core",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "lodash-es",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "@puppeteer/browsers",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
-      "id": "minimatch",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "node-forge",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "path-to-regexp",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "picomatch",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "rollup",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "shell-quote",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "svgo",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "tar",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "id": "extract-zip",
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
       "id": "tmp",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "undici",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "vite",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "vitest",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
-    },
-    {
-      "id": "ws",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "reason": "@lhci/cli (devDependency, lighthouse.yml only, never shipped). Root cause is extract-zip, which has no patched release, pulled by lighthouse -> puppeteer-core -> @puppeteer/browsers; tmp is pinned ^0.1 by @lhci/cli. npm's only suggestion is a downgrade to @lhci/cli 0.1.0. Added US-355 2026-09-23.",
+      "expires": "2026-12-15"
     },
     {
       "id": "xlsx",
-      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
-      "expires": "2026-09-01"
+      "reason": "No patched xlsx on the npm registry (CVE-2023-30533 fixed in 0.19.3, CVE-2024-22363 in 0.20.2; SheetJS publishes those only on cdn.sheetjs.com, which this sandbox's proxy blocks). Replacing it in ScheduleImport.tsx/export-formats.ts/Reports.tsx/WipReport.tsx/CustomReportBuilder.tsx is a source change tracked by US-355 AC2. Added 2026-09-23.",
+      "expires": "2026-12-15"
+    },
+    {
+      "id": "vite",
+      "reason": "US-355: vite is a devDependency; production is the static build served by Cloudflare Pages, so this dev-server/build-tool advisory (GHSA-4w7w-66w2-5vf9, also via esbuild) does not reach users. The fix is vite 5 -> 8, a major upgrade tracked as its own follow-up.",
+      "expires": "2026-12-15"
     }
   ]
 }
