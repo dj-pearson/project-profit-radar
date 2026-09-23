@@ -15,7 +15,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -23,7 +23,7 @@ serve(async (req) => {
       .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -32,6 +32,8 @@ serve(async (req) => {
 
     if (!clientId) {
       return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: 'Google OAuth not configured',
         message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Supabase secrets'
       }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -80,13 +82,14 @@ serve(async (req) => {
     authUrl.searchParams.set('state', state);
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       auth_url: authUrl.toString(),
       message: 'Redirect user to this URL to authorize Google Search Console access'
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

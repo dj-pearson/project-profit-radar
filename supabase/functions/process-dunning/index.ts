@@ -227,6 +227,7 @@ serve(async (req) => {
     logStep("Dunning process completed", results);
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       results
     }), {
@@ -240,7 +241,7 @@ serve(async (req) => {
     // Cron-driven: nobody is watching the response, so the only way this
     // surfaces is if it reports itself (US-251).
     await captureException(error, { fn: 'process-dunning' });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

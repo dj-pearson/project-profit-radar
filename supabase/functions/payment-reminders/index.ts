@@ -38,7 +38,7 @@ serve(async (req) => {
 
     if (!tenant_id) {
       return new Response(
-        JSON.stringify({ error: 'tenant_id is required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'tenant_id is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
@@ -52,7 +52,7 @@ serve(async (req) => {
         return await generateReminders(supabaseClient, tenant_id, corsHeaders)
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action. Use: check_pending_reminders, send_reminder, generate_reminders' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action. Use: check_pending_reminders, send_reminder, generate_reminders' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         )
     }
@@ -60,7 +60,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in payment-reminders:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
@@ -107,6 +107,7 @@ async function checkPendingReminders(supabase: any, tenant_id: string, corsHeade
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       pending_reminders: remindersToSend.length,
       reminders: remindersToSend
@@ -167,6 +168,7 @@ async function sendReminder(supabase: any, tenant_id: string, invoice_id: string
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       reminder_sent: true,
       reminder_id: reminder.id,
@@ -261,6 +263,7 @@ async function generateReminders(supabase: any, tenant_id: string, corsHeaders: 
   return new Response(
     JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       reminders_generated: reminders.length,
       reminders: reminders.slice(0, 10) // Return first 10 for brevity
     }),

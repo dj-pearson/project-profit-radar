@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
     const { lead_id, include_ai_insights = true } = body;
 
     if (!lead_id) {
-      return new Response(JSON.stringify({ error: 'lead_id is required' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'lead_id is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
     }
 
     if (!userProfile?.company_id) {
-      return new Response(JSON.stringify({ error: 'User company not found' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User company not found' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
 
     if (leadError || !lead) {
       logStep('Lead not found', { error: leadError?.message });
-      return new Response(JSON.stringify({ error: 'Lead not found' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Lead not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
       conversion_probability: score.conversion_probability,
     });
 
-    return new Response(JSON.stringify(score), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...score }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep('ERROR', { message: errorMessage });
 
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

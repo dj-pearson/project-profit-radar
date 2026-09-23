@@ -54,7 +54,7 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -67,7 +67,7 @@ serve(async (req) => {
 
     if (!userProfile || userProfile.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ success: false, error: 'Access denied. Root admin required.' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Access denied. Root admin required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -77,6 +77,7 @@ serve(async (req) => {
     if (!serviceAccountJson) {
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: false,
           error: 'Google service account credentials not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON in Supabase Secrets.',
         }),
@@ -89,14 +90,14 @@ serve(async (req) => {
       serviceAccount = JSON.parse(serviceAccountJson)
     } catch {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid GOOGLE_SERVICE_ACCOUNT_JSON format' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Invalid GOOGLE_SERVICE_ACCOUNT_JSON format' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     if (!serviceAccount.client_email || !serviceAccount.private_key) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Service account JSON missing client_email or private_key' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Service account JSON missing client_email or private_key' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -107,14 +108,14 @@ serve(async (req) => {
 
     if (!requestData.urls || !Array.isArray(requestData.urls) || requestData.urls.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'urls must be a non-empty array of URL strings' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'urls must be a non-empty array of URL strings' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     if (!requestData.action || !['URL_UPDATED', 'URL_DELETED'].includes(requestData.action)) {
       return new Response(
-        JSON.stringify({ success: false, error: 'action must be URL_UPDATED or URL_DELETED' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'action must be URL_UPDATED or URL_DELETED' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -122,7 +123,7 @@ serve(async (req) => {
     // Google Indexing API has a batch limit of 200 URLs per day
     if (requestData.urls.length > 200) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Maximum 200 URLs per request (Google Indexing API daily limit)' }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Maximum 200 URLs per request (Google Indexing API daily limit)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -198,6 +199,7 @@ serve(async (req) => {
     console.error('Google Indexing API Error:', error)
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: false,
         error: 'Internal server error',
         details: error instanceof Error ? error.message : String(error),

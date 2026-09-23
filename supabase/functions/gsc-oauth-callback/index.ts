@@ -16,12 +16,12 @@ serve(async (req) => {
     const error = url.searchParams.get('error');
 
     if (error) {
-      return new Response(JSON.stringify({ error: `OAuth error: ${error}` }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: `OAuth error: ${error}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (!code || !state) {
-      return new Response(JSON.stringify({ error: 'Missing code or state parameter' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Missing code or state parameter' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -39,7 +39,7 @@ serve(async (req) => {
       .single();
 
     if (credError || !credentials) {
-      return new Response(JSON.stringify({ error: 'Invalid state token or session expired' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid state token or session expired' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -48,7 +48,7 @@ serve(async (req) => {
     const redirectUri = Deno.env.get('GOOGLE_REDIRECT_URI') || `${Deno.env.get('SUPABASE_URL')}/functions/v1/gsc-oauth-callback`;
 
     if (!clientId || !clientSecret) {
-      return new Response(JSON.stringify({ error: 'OAuth credentials not configured' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'OAuth credentials not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -67,7 +67,7 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
-      return new Response(JSON.stringify({ error: 'Token exchange failed', details: errorData }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Token exchange failed', details: errorData }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -95,7 +95,7 @@ serve(async (req) => {
       .eq('id', credentials.id);
 
     if (updateError) {
-      return new Response(JSON.stringify({ error: 'Failed to save tokens', details: updateError }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to save tokens', details: updateError }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -116,7 +116,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

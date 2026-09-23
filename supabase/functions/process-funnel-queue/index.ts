@@ -335,6 +335,7 @@ const handler = async (req: Request): Promise<Response> => {
     // the logs (US-300).
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: bookkeepingFailures.length === 0,
         processed: sent,
         fetched: queueItems?.length || 0,
@@ -355,7 +356,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Cron-driven: a stalled queue looks like nothing happening (US-251).
     await captureException(error, { fn: 'process-funnel-queue' });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

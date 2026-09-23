@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
       return handleVerifyReset(req, rawBody, supabaseAdmin, corsHeaders);
     } else {
       return new Response(
-        JSON.stringify({ error: 'Invalid action. Use "request" or "verify".' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action. Use "request" or "verify".' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('[ResetPasswordOTP] Error:', error);
     return new Response(
-      JSON.stringify({ error: 'An error occurred processing your request' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -98,7 +98,7 @@ async function handleRequestReset(
   if (!validation.success) {
     console.error('[ResetPasswordOTP] Validation error:', validation.error);
     return new Response(
-      JSON.stringify({ error: 'Invalid request parameters' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters' }),
       { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -115,6 +115,7 @@ async function handleRequestReset(
     console.log('[ResetPasswordOTP] No user found for:', email);
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'If an account exists with this email, a verification code will be sent.',
         expiresInMinutes: OTP_EXPIRY_MINUTES
@@ -135,7 +136,7 @@ async function handleRequestReset(
   if (recentCodes && recentCodes.length >= MAX_REQUESTS_PER_WINDOW) {
     console.warn(`[ResetPasswordOTP] Rate limit exceeded for ${email}`);
     return new Response(
-      JSON.stringify({ error: 'Too many requests. Please wait before requesting another code.' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Too many requests. Please wait before requesting another code.' }),
       { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -163,7 +164,7 @@ async function handleRequestReset(
   if (otpError) {
     console.error('[ResetPasswordOTP] Error storing OTP:', otpError);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate verification code' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to generate verification code' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -208,7 +209,7 @@ async function handleRequestReset(
     }
 
     return new Response(
-      JSON.stringify({ error: 'Failed to send verification email. Please try again.' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to send verification email. Please try again.' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -217,6 +218,7 @@ async function handleRequestReset(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Verification code sent. Please check your email.',
       expiresInMinutes: OTP_EXPIRY_MINUTES
@@ -236,7 +238,7 @@ async function handleVerifyReset(
   if (!validation.success) {
     console.error('[ResetPasswordOTP] Validation error:', validation.error);
     return new Response(
-      JSON.stringify({ error: 'Invalid request parameters' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters' }),
       { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -250,7 +252,7 @@ async function handleVerifyReset(
   if (!passwordCheck.valid) {
     console.log('[ResetPasswordOTP] Password policy violation:', passwordCheck.errors);
     return new Response(
-      JSON.stringify({ error: 'Password does not meet security requirements', details: passwordCheck.errors }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Password does not meet security requirements', details: passwordCheck.errors }),
       { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -265,7 +267,7 @@ async function handleVerifyReset(
   if (verifyError) {
     console.error('[ResetPasswordOTP] Verification error:', verifyError);
     return new Response(
-      JSON.stringify({ error: 'Verification failed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Verification failed' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -274,7 +276,7 @@ async function handleVerifyReset(
   if (!result?.success) {
     console.log('[ResetPasswordOTP] OTP verification failed:', result?.error_message);
     return new Response(
-      JSON.stringify({ error: result?.error_message || 'Invalid verification code' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: result?.error_message || 'Invalid verification code' }),
       { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -285,7 +287,7 @@ async function handleVerifyReset(
   if (!authUser?.user) {
     console.error('[ResetPasswordOTP] User not found:', email);
     return new Response(
-      JSON.stringify({ error: 'User not found' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User not found' }),
       { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -299,7 +301,7 @@ async function handleVerifyReset(
   if (updateError) {
     console.error('[ResetPasswordOTP] Error updating password:', updateError);
     return new Response(
-      JSON.stringify({ error: 'Failed to update password' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to update password' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -320,6 +322,7 @@ async function handleVerifyReset(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Password has been reset successfully. You can now sign in.'
     }),

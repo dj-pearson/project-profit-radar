@@ -143,7 +143,7 @@ serve(async (req) => {
     console.log(`QuickBooks disconnected for company ${company_id}`)
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Successfully disconnected from QuickBooks' }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'Successfully disconnected from QuickBooks' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -155,7 +155,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

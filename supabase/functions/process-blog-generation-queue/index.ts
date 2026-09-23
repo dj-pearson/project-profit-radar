@@ -132,7 +132,8 @@ serve(async (req) => {
   } catch (error) {
     console.error("[BLOG-QUEUE] Fatal error:", error);
     
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       error: error instanceof Error ? error.message : String(error),
       success: false
     }), {

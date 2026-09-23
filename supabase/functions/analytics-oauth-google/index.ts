@@ -83,6 +83,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           data: {
             authorization_url: authUrl.toString(),
@@ -278,6 +279,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           data: {
             connection_id: connection.id,
@@ -351,6 +353,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           data: {
             access_token: tokens.access_token,
@@ -411,6 +414,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
         }),
         {
@@ -424,6 +428,7 @@ serve(async (req) => {
   } catch (error) {
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: false,
         error: error.message,
       }),

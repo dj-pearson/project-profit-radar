@@ -131,7 +131,8 @@ serve(async (req) => {
 
     if (referralError || !referrals || referrals.length === 0) {
       logStep("No valid pending referrals found");
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true, 
         message: "No referral to process" 
       }), {
@@ -163,6 +164,7 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: "Self-referral not allowed"
       }), {
@@ -279,7 +281,8 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       referral_processed: true,
       rewards_created: subscription_tier && subscription_duration_months,
@@ -293,7 +296,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-referral-signup", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

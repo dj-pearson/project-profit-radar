@@ -44,7 +44,7 @@ serve(async (req) => {
 
     if (!userProfile || userProfile.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ error: 'Access denied. Root admin required.' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied. Root admin required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -56,7 +56,7 @@ serve(async (req) => {
 
     if (!url) {
       return new Response(
-        JSON.stringify({ error: 'URL is required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -65,6 +65,8 @@ serve(async (req) => {
     if (!pagespeedApiKey) {
       return new Response(
         JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(),
           error: 'PageSpeed Insights API key not configured',
           message: 'Set PAGESPEED_INSIGHTS_API_KEY in Supabase secrets',
         }),
@@ -182,6 +184,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         vitals: {
           ...vitalsData,
@@ -198,7 +201,7 @@ serve(async (req) => {
     console.error('Core Web Vitals Error:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

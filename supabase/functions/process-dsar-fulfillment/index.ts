@@ -108,7 +108,7 @@ serve(async (req) => {
 
   if (fetchError) {
     console.error("[dsar-fulfill] failed to fetch due rows", fetchError);
-    return new Response(JSON.stringify({ error: fetchError.message }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: fetchError.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
@@ -284,6 +284,8 @@ serve(async (req) => {
 
   return new Response(
     JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(),
       processed: rows.length,
       fulfilled,
       denied,

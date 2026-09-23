@@ -37,7 +37,7 @@ serve(async (req) => {
       .single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -45,7 +45,7 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { keyword, domain, country = 'us', device = 'desktop' } = parsed.data;
     if (!keyword) {
-      return new Response(JSON.stringify({ error: 'keyword required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'keyword required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -195,6 +195,7 @@ serve(async (req) => {
       }));
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       stored: !saveError,
       storage_error: saveError?.message ?? null,
@@ -210,7 +211,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

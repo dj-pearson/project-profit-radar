@@ -138,7 +138,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -185,6 +185,7 @@ async function recordUsage(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       record,
       message: 'Usage recorded successfully'
@@ -294,6 +295,7 @@ async function getUsage(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       records,
       aggregated,
@@ -388,6 +390,7 @@ async function getUsageSummary(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       tier,
       summary,
@@ -481,6 +484,7 @@ async function calculateUsageBill(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       bill,
       summary: {
@@ -579,6 +583,7 @@ async function generateUsageInvoice(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       invoice,
       bill,
@@ -594,6 +599,7 @@ async function getLimits(corsHeaders: Record<string, string>, tier: keyof typeof
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       tier,
       limits: {

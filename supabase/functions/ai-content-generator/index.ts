@@ -91,7 +91,8 @@ serve(async (req) => {
         result = await aiService.generateSimpleContent(prompt, system_prompt, model_alias);
     }
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       content: result,
       model_used: model_alias || 'default'
@@ -101,7 +102,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('AI content generation error:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }), {

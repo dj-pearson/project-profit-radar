@@ -116,6 +116,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         mrr: currentMetrics.mrr,
         arr: currentMetrics.arr,
@@ -130,7 +131,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[CALCULATE-REVENUE-METRICS] Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

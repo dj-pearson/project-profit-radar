@@ -48,7 +48,7 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -62,7 +62,7 @@ serve(async (req) => {
 
     if (!profile || profile.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ error: 'Insufficient permissions' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -83,7 +83,9 @@ serve(async (req) => {
     if (!bingSearchApiKey) {
       console.error('Missing Bing Search API key')
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(), 
           error: 'Bing Search API key not configured in Supabase Secrets',
           help: 'Add BING_SEARCH_API_KEY from Azure Cognitive Services → Bing Search v7',
           setup: 'https://portal.azure.com → Create Resource → Bing Search v7'
@@ -107,7 +109,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
@@ -120,7 +122,9 @@ serve(async (req) => {
       name: error instanceof Error ? error.name : 'Unknown'
     })
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error' 
       }),
@@ -160,6 +164,8 @@ async function getBingSearchAnalytics(corsHeaders: Record<string, string>, apiKe
 
     return new Response(
       JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(),
         data: {
           // Simulated performance data based on search results
           clicks: Math.floor(totalResults * 0.02), // Estimate 2% CTR
@@ -212,7 +218,7 @@ async function getBingSiteInfo(corsHeaders: Record<string, string>, apiKey: stri
     }))
 
     return new Response(
-      JSON.stringify({ data: pages }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: pages }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -255,7 +261,7 @@ async function getBingSearchTrends(corsHeaders: Record<string, string>, apiKey: 
     }
 
     return new Response(
-      JSON.stringify({ data: trendData }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: trendData }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

@@ -40,6 +40,7 @@ serve(async (req) => {
       logStep("Error fetching configurations:", configError.message);
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: false,
           error: configError.message,
         }),
@@ -54,6 +55,7 @@ serve(async (req) => {
       logStep("No posts due");
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: "No posts due",
           processed: 0,
@@ -143,6 +145,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         processed: totalProcessed,
         results: allResults,
@@ -158,6 +161,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false,
       }),

@@ -119,7 +119,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -177,6 +177,7 @@ async function createRefund(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       refund,
       message: requiresApproval ? 'Refund created and pending approval' : 'Refund created and processing'
@@ -292,7 +293,7 @@ async function rejectRefund(
   logStep('Refund rejected', { refundId });
 
   return new Response(
-    JSON.stringify({ success: true, message: 'Refund rejected' }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'Refund rejected' }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -347,6 +348,7 @@ async function processRefundWithStripe(
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         refund: { ...refund, status: 'succeeded' },
         message: 'Refund marked as completed (manual processing - Stripe not configured)'
@@ -389,6 +391,7 @@ async function processRefundWithStripe(
 
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           refund: { ...refund, status: 'succeeded' },
           message: 'Refund marked as completed (no Stripe payment info - manual processing)'
@@ -433,6 +436,7 @@ async function processRefundWithStripe(
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         refund: {
           ...refund,
@@ -497,7 +501,7 @@ async function cancelRefund(
   }
 
   return new Response(
-    JSON.stringify({ success: true, message: 'Refund canceled' }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'Refund canceled' }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -523,7 +527,7 @@ async function listRefunds(
   }
 
   return new Response(
-    JSON.stringify({ success: true, refunds }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, refunds }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -554,7 +558,7 @@ async function getRefund(
   }
 
   return new Response(
-    JSON.stringify({ success: true, refund }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, refund }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }

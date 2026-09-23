@@ -144,7 +144,8 @@ serve(async (req) => {
     console.log('Analytics calculated successfully:', analyticsData);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true, 
         analytics: analyticsData,
         insights: {
@@ -162,7 +163,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in calculate-bid-analytics function:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: error instanceof Error ? error.message : 'Unknown error',
         details: 'Failed to calculate bid analytics'
       }),

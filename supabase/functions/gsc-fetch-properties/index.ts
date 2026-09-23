@@ -15,7 +15,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -26,7 +26,7 @@ serve(async (req) => {
       .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -39,6 +39,8 @@ serve(async (req) => {
 
     if (credError || !credentials) {
       return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: 'No active Google Search Console connection',
         message: 'Please authenticate with Google Search Console first'
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -66,7 +68,7 @@ serve(async (req) => {
       });
 
       if (!refreshResponse.ok) {
-        return new Response(JSON.stringify({ error: 'Failed to refresh token' }),
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to refresh token' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
@@ -105,7 +107,7 @@ serve(async (req) => {
 
     if (!gscResponse.ok) {
       const errorData = await gscResponse.json();
-      return new Response(JSON.stringify({ error: 'Failed to fetch properties', details: errorData }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to fetch properties', details: errorData }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -134,12 +136,14 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         properties: saved || propertyRecords,
         total: propertyRecords.length,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
     } else {
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         properties: [],
         total: 0,
@@ -148,7 +152,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Internal error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

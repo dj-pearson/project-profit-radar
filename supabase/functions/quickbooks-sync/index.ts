@@ -345,7 +345,8 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          timestamp: new Date().toISOString(), 
           success: true,
           records_processed: recordsProcessed,
           errors_count: errorsCount,
@@ -387,7 +388,7 @@ serve(async (req) => {
     // data, which is exactly the failure US-252 was about (US-251).
     await captureException(error, { fn: 'quickbooks-sync' });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

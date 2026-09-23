@@ -40,7 +40,7 @@ serve(async (req) => {
     if (!expectedSecret) {
       console.error('[SECURITY] ADMIN_CREATION_SECRET not configured');
       return new Response(
-        JSON.stringify({ error: 'Server configuration error', success: false }),
+        JSON.stringify({ timestamp: new Date().toISOString(), error: 'Server configuration error', success: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
@@ -49,7 +49,7 @@ serve(async (req) => {
     if (!adminCreationSecret || typeof adminCreationSecret !== 'string' || !constantTimeEqual(adminCreationSecret, expectedSecret)) {
       console.error('[SECURITY] Unauthorized attempt to create root admin');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', success: false }),
+        JSON.stringify({ timestamp: new Date().toISOString(), error: 'Unauthorized', success: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
@@ -117,7 +117,8 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true,
         message: "Root admin user created successfully",
         user_id: authData.user?.id,
@@ -134,6 +135,7 @@ serve(async (req) => {
     // SECURITY: Don't expose internal error details
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: 'An error occurred during admin creation',
         success: false
       }),

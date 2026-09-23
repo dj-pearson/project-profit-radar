@@ -35,7 +35,7 @@ serve(async (req) => {
       .eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -43,12 +43,12 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { keywords, domain, country = 'us', device = 'desktop' } = parsed.data;
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
-      return new Response(JSON.stringify({ error: 'Keywords array required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Keywords array required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (!domain) {
-      return new Response(JSON.stringify({ error: 'Domain required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Domain required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -170,6 +170,7 @@ serve(async (req) => {
     };
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       summary,
       positions: saved || serpRecords,
@@ -177,7 +178,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

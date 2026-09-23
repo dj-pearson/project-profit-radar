@@ -40,7 +40,7 @@ serve(async (req) => {
 
     if (!sites || sites.length === 0) {
       logStep("No active sites found");
-      return new Response(JSON.stringify({ message: "No active sites", sent: 0 }), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), message: "No active sites", sent: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -304,6 +304,7 @@ serve(async (req) => {
     logStep("Email processing complete across all sites", { sent: totalSentCount, failed: totalFailedCount });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       sent: totalSentCount,
       failed: totalFailedCount,
@@ -318,6 +319,7 @@ serve(async (req) => {
     logStep("ERROR in email sender", { message: errorMessage });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage,
     }), {

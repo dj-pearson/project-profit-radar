@@ -92,7 +92,8 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true, 
         buildId: buildData.id,
         buildUrl: `https://expo.dev/accounts/djpearson/projects/brikly/builds/${buildData.id}`,
@@ -110,7 +111,8 @@ serve(async (req) => {
     const errorObj = error as Error;
     console.error('Expo build trigger error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: false,
         error: errorObj.message 
       }),

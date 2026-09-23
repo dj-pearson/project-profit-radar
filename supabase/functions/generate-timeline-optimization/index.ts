@@ -171,13 +171,15 @@ serve(async (req) => {
     // Enhance with real project data
     const enhancedOptimization = enhanceOptimizationWithProjects(optimizationData, projects || []);
 
-    return new Response(JSON.stringify(enhancedOptimization), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...enhancedOptimization }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
     console.error('Timeline optimization error:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(), 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

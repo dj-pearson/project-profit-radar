@@ -72,7 +72,9 @@ serve(async (req) => {
         siteUrl: !!searchConsoleSiteUrl
       })
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(), 
           error: 'Google Search Console credentials not configured in Supabase Secrets',
           missing: {
             clientEmail: !googleClientEmail,
@@ -105,7 +107,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
@@ -118,7 +120,9 @@ serve(async (req) => {
       name: error instanceof Error ? error.name : undefined
     })
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : String(error) 
       }),
@@ -298,7 +302,8 @@ async function getPerformanceData(corsHeaders: Record<string, string>, accessTok
   const averagePosition = data.rows?.reduce((sum: number, row: any) => sum + row.position, 0) / (data.rows?.length || 1) || 0
 
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: {
         totalClicks,
@@ -358,7 +363,8 @@ async function getKeywords(corsHeaders: Record<string, string>, accessToken: str
   })) || []
 
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { keywords },
       period: dateRange 
@@ -411,7 +417,8 @@ async function getPages(corsHeaders: Record<string, string>, accessToken: string
   })) || []
 
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { pages },
       period: dateRange 
@@ -441,7 +448,8 @@ async function getCrawlErrors(corsHeaders: Record<string, string>, accessToken: 
   const site = data.siteEntry?.find((entry: any) => entry.siteUrl === siteUrl)
   
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: {
         siteVerified: !!site,

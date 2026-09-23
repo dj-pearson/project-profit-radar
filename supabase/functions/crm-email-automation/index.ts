@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
     if (automations.length === 0) {
       logStep('No matching automations found');
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'No matching automations',
         processed: 0
@@ -163,6 +164,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       processed: results.filter(r => r.success).length,
       failed: results.filter(r => !r.success).length,
@@ -176,6 +178,7 @@ Deno.serve(async (req) => {
     logStep('ERROR', { message: errorMessage });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage
     }), {

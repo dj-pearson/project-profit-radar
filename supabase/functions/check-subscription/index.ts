@@ -100,6 +100,8 @@ export default async (req: Request) => {
 
         logStep("Active complimentary subscription confirmed", { tier, endDate });
         return new Response(JSON.stringify({
+          success: true,
+          timestamp: new Date().toISOString(),
           subscribed: true,
           subscription_tier: tier,
           subscription_end: endDate,
@@ -132,7 +134,7 @@ export default async (req: Request) => {
       if (upsertSubscribersError) {
         console.error(`[subscribers] upsert failed`, upsertSubscribersError);
       }
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -200,6 +202,8 @@ export default async (req: Request) => {
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(),
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
@@ -212,7 +216,7 @@ export default async (req: Request) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     // SECURITY: Return generic error message to client
-    return new Response(JSON.stringify({ error: "Failed to check subscription" }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Failed to check subscription" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

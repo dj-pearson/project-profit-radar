@@ -358,6 +358,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         redirectUrl: sessionData.properties?.action_link || `${siteUrl}/dashboard`,
         user: {

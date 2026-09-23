@@ -115,6 +115,7 @@ serve(async (req) => {
     if (!triggers || triggers.length === 0) {
       logStep("No matching triggers found");
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'No triggers matched',
         triggered: 0,
@@ -264,6 +265,7 @@ serve(async (req) => {
     logStep("Trigger processing complete", { triggered: triggeredCount, total: triggers.length });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       triggered: triggeredCount,
       results,
@@ -277,6 +279,7 @@ serve(async (req) => {
     logStep("ERROR in trigger processor", { message: errorMessage });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage,
     }), {

@@ -55,6 +55,7 @@ serve(async (req) => {
     if (!expiringSubscriptions || expiringSubscriptions.length === 0) {
       logStep(`No expiring subscriptions found`);
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: "No expiring complimentary subscriptions found",
         processed: 0,
@@ -130,6 +131,7 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: `Processed ${totalProcessed} expiring complimentary subscriptions`,
       processed: totalProcessed,
@@ -144,6 +146,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage
     }), {

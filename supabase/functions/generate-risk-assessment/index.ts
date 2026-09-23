@@ -164,7 +164,7 @@ serve(async (req) => {
       riskCategories: enhancedRiskData.riskCategories?.length || 0
     });
 
-    return new Response(JSON.stringify(enhancedRiskData), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...enhancedRiskData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
@@ -172,6 +172,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in risk assessment", { message: errorMessage });
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage
     }), {

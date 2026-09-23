@@ -201,6 +201,7 @@ serve(async (req) => {
       });
 
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: `Complimentary ${tier} subscription granted to ${request.user_email}`,
         expires_at: expiresAt,
@@ -271,6 +272,7 @@ serve(async (req) => {
       logStep("Complimentary subscription revoked", { targetUser: request.user_email });
 
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: `Complimentary subscription revoked for ${request.user_email}`
       }), {
@@ -280,7 +282,7 @@ serve(async (req) => {
     }
 
     // Default: invalid action
-    return new Response(JSON.stringify({ success: false, error: 'Invalid action' }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: 'Invalid action' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });
@@ -288,7 +290,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

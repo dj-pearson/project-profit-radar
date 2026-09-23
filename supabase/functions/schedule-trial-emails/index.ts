@@ -237,6 +237,7 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: `Scheduled ${emailsScheduled.length} trial nurture emails`,
       emailsScheduled,
@@ -250,6 +251,7 @@ serve(async (req) => {
     logStep("ERROR in email scheduling", { message: errorMessage });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: errorMessage,
     }), {

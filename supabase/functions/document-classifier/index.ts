@@ -62,7 +62,7 @@ serve(async (req) => {
     if (!openAIApiKey) {
       console.log('OpenAI API key not found, using rule-based classification');
       const ruleBasedResult = performRuleBasedClassification(text, projects);
-      return new Response(JSON.stringify({ classification: ruleBasedResult }), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), classification: ruleBasedResult }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -70,13 +70,15 @@ serve(async (req) => {
     // Use AI classification
     const aiResult = await performAIClassification(text, projects, openAIApiKey);
     
-    return new Response(JSON.stringify({ classification: aiResult }), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), classification: aiResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Classification error:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(), 
       error: 'Classification failed', 
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {

@@ -84,19 +84,19 @@ Deno.serve(async (req) => {
     if (executionId) {
       // Continue existing execution
       const execution = await continueExecution(supabase, executionId)
-      return new Response(JSON.stringify(execution), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...execution }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } else {
       // Start new execution
       const execution = await startExecution(supabase, workflowId, triggerData)
-      return new Response(JSON.stringify(execution), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...execution }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
   } catch (error) {
     console.error('Error in execute-workflow:', error)
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

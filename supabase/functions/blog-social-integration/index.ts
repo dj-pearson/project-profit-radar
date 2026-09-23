@@ -70,6 +70,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       posts_generated: socialContent.length
     }), {
@@ -78,7 +79,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error generating social content:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

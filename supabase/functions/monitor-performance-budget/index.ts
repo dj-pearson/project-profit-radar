@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -40,7 +40,7 @@ serve(async (req) => {
       .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -48,7 +48,7 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { url, budget_id } = parsed.data as z.infer<typeof PerformanceBudgetSchema>;
     if (!url) {
-      return new Response(JSON.stringify({ error: 'URL required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'URL required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -256,12 +256,13 @@ serve(async (req) => {
     };
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       performance_budget_check: analysisResult,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

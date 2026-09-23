@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!validation.success) {
       console.error('[SendAuthOTP] Validation error:', validation.error);
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters', details: validation.error.errors }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters', details: validation.error.errors }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!rateError && recentTokens && recentTokens.length >= MAX_REQUESTS_PER_WINDOW) {
       console.warn(`[SendAuthOTP] Rate limit exceeded for ${email}`);
       return new Response(
-        JSON.stringify({ error: 'Too many requests. Please wait before requesting another code.' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Too many requests. Please wait before requesting another code.' }),
         { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -143,7 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
           // Don't reveal if email exists - just pretend we sent it
           console.log(`[SendAuthOTP] No user found for reset_password: ${email}`);
           return new Response(
-            JSON.stringify({ success: true, message: 'If an account exists, a verification code has been sent.' }),
+            JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'If an account exists, a verification code has been sent.' }),
             { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -180,7 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (tokenError) {
       console.error('[SendAuthOTP] Error creating token:', tokenError);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate verification code' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to generate verification code' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -233,7 +233,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       return new Response(
-        JSON.stringify({ error: 'Failed to send verification email' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to send verification email' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -242,6 +242,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'Verification code sent successfully',
         expiresInMinutes
@@ -252,7 +253,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('[SendAuthOTP] Error:', error);
     return new Response(
-      JSON.stringify({ error: 'An error occurred processing your request' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }

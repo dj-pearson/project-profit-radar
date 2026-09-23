@@ -103,6 +103,7 @@ export default async (req: Request) => {
       logStep(message);
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message,
           processed: 0,
@@ -315,6 +316,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         processed: results.length,
         results,
@@ -330,6 +332,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false,
       }),

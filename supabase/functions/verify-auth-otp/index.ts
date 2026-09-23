@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!validation.success) {
       console.error('[VerifyAuthOTP] Validation error:', validation.error);
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (verifyError) {
       console.error('[VerifyAuthOTP] Verification error:', verifyError);
       return new Response(
-        JSON.stringify({ error: 'Verification failed' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Verification failed' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -114,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!result?.success) {
       console.log('[VerifyAuthOTP] OTP verification failed:', result?.error_message);
       return new Response(
-        JSON.stringify({ error: result?.error_message || 'Invalid verification code' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: result?.error_message || 'Invalid verification code' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -132,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (getUserError || !authUser) {
           console.error('[VerifyAuthOTP] User not found for email confirmation:', email);
           return new Response(
-            JSON.stringify({ error: 'User not found' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -146,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (updateError) {
           console.error('[VerifyAuthOTP] Error confirming email:', updateError);
           return new Response(
-            JSON.stringify({ error: 'Failed to confirm email' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to confirm email' }),
             { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -163,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Create new user from invitation
         if (!password) {
           return new Response(
-            JSON.stringify({ error: 'Password is required for invitation acceptance' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Password is required for invitation acceptance' }),
             { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -173,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (!invitePasswordCheck.valid) {
           console.log('[VerifyAuthOTP] Password policy violation for invite_user:', invitePasswordCheck.errors);
           return new Response(
-            JSON.stringify({ error: 'Password does not meet security requirements', details: invitePasswordCheck.errors }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Password does not meet security requirements', details: invitePasswordCheck.errors }),
             { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -195,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (createError) {
           console.error('[VerifyAuthOTP] Error creating invited user:', createError);
           return new Response(
-            JSON.stringify({ error: 'Failed to create account' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to create account' }),
             { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -236,7 +236,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (!authUser) {
           return new Response(
-            JSON.stringify({ error: 'User not found' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -250,7 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (linkError) {
           console.error('[VerifyAuthOTP] Error generating magic link:', linkError);
           return new Response(
-            JSON.stringify({ error: 'Failed to generate sign-in link' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to generate sign-in link' }),
             { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -276,14 +276,14 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (!authUser) {
           return new Response(
-            JSON.stringify({ error: 'User not found' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
 
         if (!result.new_email) {
           return new Response(
-            JSON.stringify({ error: 'New email not specified' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'New email not specified' }),
             { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -300,7 +300,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (updateError) {
           console.error('[VerifyAuthOTP] Error updating email:', updateError);
           return new Response(
-            JSON.stringify({ error: 'Failed to update email' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to update email' }),
             { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -319,6 +319,8 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('[VerifyAuthOTP] Auth email changed but profile did not:', profileEmailError);
           return new Response(
             JSON.stringify({
+              success: false,
+              timestamp: new Date().toISOString(),
               error: 'Email partially updated. Sign in with your new address and contact support.',
             }),
             { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -340,7 +342,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (!authUser) {
           return new Response(
-            JSON.stringify({ error: 'User not found' }),
+            JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
           );
         }
@@ -352,7 +354,7 @@ const handler = async (req: Request): Promise<Response> => {
           if (!resetPasswordCheck.valid) {
             console.log('[VerifyAuthOTP] Password policy violation for reset_password:', resetPasswordCheck.errors);
             return new Response(
-              JSON.stringify({ error: 'Password does not meet security requirements', details: resetPasswordCheck.errors }),
+              JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Password does not meet security requirements', details: resetPasswordCheck.errors }),
               { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
             );
           }
@@ -365,7 +367,7 @@ const handler = async (req: Request): Promise<Response> => {
           if (updateError) {
             console.error('[VerifyAuthOTP] Error updating password:', updateError);
             return new Response(
-              JSON.stringify({ error: 'Failed to update password' }),
+              JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to update password' }),
               { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
             );
           }
@@ -402,6 +404,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         ...actionResult
       }),
@@ -411,7 +414,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('[VerifyAuthOTP] Error:', error);
     return new Response(
-      JSON.stringify({ error: 'An error occurred processing your request' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }

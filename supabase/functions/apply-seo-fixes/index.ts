@@ -37,7 +37,7 @@ serve(async (req) => {
       .eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -45,7 +45,7 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { audit_id, fixes } = parsed.data;
     if (!audit_id || !fixes || !Array.isArray(fixes)) {
-      return new Response(JSON.stringify({ error: 'audit_id and fixes array required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'audit_id and fixes array required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -66,13 +66,14 @@ serve(async (req) => {
     if (insertError) throw insertError;
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       fixes_applied: saved?.length || 0,
       fixes: saved
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

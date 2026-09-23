@@ -214,6 +214,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         company_name: companyName,
         realm_id: realm_id,
@@ -229,7 +230,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

@@ -44,7 +44,7 @@ serve(async (req) => {
 
     if (!queueId) {
       return new Response(
-        JSON.stringify({ error: "queueId is required" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "queueId is required" }),
         { 
           status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -80,7 +80,7 @@ serve(async (req) => {
     if (queueError || !queueItem || !callerOwnsItem) {
       logStep("Queue item not found", { queueId, error: queueError });
       return new Response(
-        JSON.stringify({ error: "Queue item not found" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Queue item not found" }),
         { 
           status: 404, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -101,7 +101,7 @@ serve(async (req) => {
         error: configError 
       });
       return new Response(
-        JSON.stringify({ error: "No webhook URL configured for company" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "No webhook URL configured for company" }),
         { 
           status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -119,7 +119,7 @@ serve(async (req) => {
     if (postsError) {
       logStep("Error fetching social posts", postsError);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch social posts" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Failed to fetch social posts" }),
         { 
           status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -213,6 +213,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         webhook_sent: webhookSuccess,
         webhook_status: webhookResponse.status,
@@ -232,7 +233,9 @@ serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: "Internal server error",
         details: errorObj.message 
       }),

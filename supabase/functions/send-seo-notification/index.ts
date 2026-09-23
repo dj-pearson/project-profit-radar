@@ -50,7 +50,7 @@ serve(async (req) => {
     } = parsed.data;
 
     if (!subject || !message) {
-      return new Response(JSON.stringify({ error: 'Subject and message required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Subject and message required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -227,6 +227,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: results.email_sent || results.slack_sent || results.webhook_sent,
       results,
       message: results.errors.length > 0
@@ -235,7 +236,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

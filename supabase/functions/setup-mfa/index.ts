@@ -104,6 +104,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(),
         qr_code_url: qrCodeDataUrl,
         secret: secret.secret,
       }),

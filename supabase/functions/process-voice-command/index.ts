@@ -83,7 +83,7 @@ serve(async (req) => {
       action_taken: false, // Actions are handled by the frontend
     };
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...response }), {
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
@@ -96,6 +96,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         transcript: "",
         intent: "unknown",

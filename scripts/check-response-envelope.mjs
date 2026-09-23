@@ -43,7 +43,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fnDir = join(root, 'supabase', 'functions');
 
 /** Lower as functions are converted. It never goes up. */
-const BASELINE = 685;
+const BASELINE = 0;
 
 /**
  * Provider webhooks whose response body the provider specifies (AC4). Stripe

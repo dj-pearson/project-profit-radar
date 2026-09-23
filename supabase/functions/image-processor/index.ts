@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
     }
 
     if (!storagePath || !bucket) {
-      return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Missing required parameters' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
 
     if (downloadError || !imageData) {
       logStep('Download failed', { error: downloadError?.message });
-      return new Response(JSON.stringify({ error: 'Failed to download image' }), {
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to download image' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -223,6 +223,8 @@ Deno.serve(async (req) => {
     // Validate format
     if (!CONFIG.supportedInputFormats.includes(contentType)) {
       return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: `Unsupported format: ${contentType}. Supported: ${CONFIG.supportedInputFormats.join(', ')}`
       }), {
         status: 400,
@@ -233,6 +235,8 @@ Deno.serve(async (req) => {
     // Validate size
     if (originalSize > CONFIG.maxFileSize) {
       return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: `File too large: ${formatFileSize(originalSize)}. Max: ${formatFileSize(CONFIG.maxFileSize)}`
       }), {
         status: 400,
@@ -290,7 +294,7 @@ Deno.serve(async (req) => {
       savings: result.savings?.percentage,
     });
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify({ ...result, success: result.success, timestamp: new Date().toISOString() }), {
       status: result.success ? 200 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -299,7 +303,7 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep('ERROR', { message: errorMessage });
 
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

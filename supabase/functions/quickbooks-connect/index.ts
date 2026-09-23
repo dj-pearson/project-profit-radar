@@ -75,7 +75,9 @@ serve(async (req) => {
       `state=${state}`
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(), 
         auth_url: authUrl,
         state: state
       }),
@@ -89,7 +91,7 @@ serve(async (req) => {
     console.error('Error in quickbooks-connect:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

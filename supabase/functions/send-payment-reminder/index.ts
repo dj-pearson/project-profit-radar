@@ -92,7 +92,7 @@ serve(async (req) => {
     logStep('Processing action', { action: body.action });
 
     const json = (payload: Record<string, unknown>, status: number) =>
-      new Response(JSON.stringify(payload), {
+      new Response(JSON.stringify({ success: status < 400, timestamp: new Date().toISOString(), ...payload }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status,
       });
 
@@ -124,7 +124,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -138,7 +138,7 @@ async function sendReminder(
 ) {
   if (!invoiceId) {
     return new Response(
-      JSON.stringify({ error: 'invoice_id is required' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'invoice_id is required' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }
@@ -156,7 +156,7 @@ async function sendReminder(
 
   if (invoiceError || !invoice) {
     return new Response(
-      JSON.stringify({ error: 'Invoice not found' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invoice not found' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
     );
   }
@@ -193,7 +193,7 @@ async function sendReminder(
 
   if (!recipientEmail) {
     return new Response(
-      JSON.stringify({ error: 'No recipient email found for invoice' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'No recipient email found for invoice' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }
@@ -252,6 +252,7 @@ async function sendReminder(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: emailSent,
       reminder_type: type,
       recipient: recipientEmail,
@@ -275,6 +276,7 @@ async function scheduleReminders(
   if (!settings?.is_enabled) {
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         scheduled: 0,
         message: 'Payment reminders are disabled for this company'
@@ -300,7 +302,7 @@ async function scheduleReminders(
 
   if (invoiceError) {
     return new Response(
-      JSON.stringify({ error: `Failed to fetch invoices: ${invoiceError.message}` }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: `Failed to fetch invoices: ${invoiceError.message}` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -369,6 +371,7 @@ async function scheduleReminders(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       scheduled,
       message: `Scheduled ${scheduled} reminders for today`
@@ -394,7 +397,7 @@ async function processScheduledReminders(corsHeaders: Record<string, string>, su
 
   if (error) {
     return new Response(
-      JSON.stringify({ error: `Failed to fetch pending reminders: ${error.message}` }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: `Failed to fetch pending reminders: ${error.message}` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -446,6 +449,7 @@ async function processScheduledReminders(corsHeaders: Record<string, string>, su
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       processed: sent + failed,
       sent,
@@ -468,13 +472,14 @@ async function getSettings(
 
   if (error && error.code !== 'PGRST116') {
     return new Response(
-      JSON.stringify({ error: `Failed to fetch settings: ${error.message}` }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: `Failed to fetch settings: ${error.message}` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       settings: settings || getDefaultSettings()
     }),
@@ -504,13 +509,14 @@ async function updateSettings(
 
   if (error) {
     return new Response(
-      JSON.stringify({ error: `Failed to update settings: ${error.message}` }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: `Failed to update settings: ${error.message}` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       settings: data,
       message: 'Settings updated successfully'
@@ -538,7 +544,7 @@ async function previewReminder(
 
   if (invoiceError || !invoice) {
     return new Response(
-      JSON.stringify({ error: 'Invoice not found' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invoice not found' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
     );
   }
@@ -559,6 +565,7 @@ async function previewReminder(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       preview: {
         subject: email.subject,

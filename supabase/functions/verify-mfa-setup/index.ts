@@ -167,6 +167,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         backup_codes: backupCodes,
       }),

@@ -14,7 +14,7 @@ const DisableMFARequestSchema = z.object({
 // SECURITY: Sanitize errors to prevent information disclosure
 function createSafeErrorResponse(statusCode: number, message: string, headers: Record<string, string> = {}) {
   return new Response(
-    JSON.stringify({ error: message }),
+    JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: message }),
     {
       headers: { ...headers, "Content-Type": "application/json" },
       status: statusCode,
@@ -148,7 +148,7 @@ serve(async (req) => {
     console.log("[MFA] Successfully disabled for user");
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: true }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

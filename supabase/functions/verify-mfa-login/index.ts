@@ -144,6 +144,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: true,
             mfaRequired: hasMFA,
             mfaType: hasMFA ? "totp" : null,
@@ -292,6 +293,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: true,
             verified: true,
             message: "MFA verification successful",
@@ -389,6 +391,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: true,
             verified: true,
             message: "Backup code verified",
@@ -440,6 +443,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: true,
             isTrusted,
             expiresAt: trustedDevice?.trust_expires_at,

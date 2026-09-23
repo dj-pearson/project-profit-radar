@@ -140,7 +140,8 @@ serve(async (req) => {
 
     logStep("Trial management completed", results);
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       results 
     }), {
@@ -151,7 +152,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in trial-management", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

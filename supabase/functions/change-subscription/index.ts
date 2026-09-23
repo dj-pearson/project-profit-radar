@@ -108,6 +108,7 @@ serve(async (req) => {
     if (currentPrice.unit_amount === newAmount && 
         currentPrice.recurring?.interval === newInterval) {
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: false,
         error: "Selected plan is the same as current plan"
       }), {
@@ -243,7 +244,7 @@ serve(async (req) => {
       }
     };
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify({ ...result, success: result.success, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -251,7 +252,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in subscription change", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

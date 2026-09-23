@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') {
     console.log('[SignupWithOTP] Method not POST:', req.method);
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -84,7 +84,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!validation.success) {
       console.error('[SignupWithOTP] Validation error:', validation.error);
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters', details: validation.error.errors }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters', details: validation.error.errors }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -104,6 +104,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('[SignupWithOTP] Blocked disposable email:', email);
       return new Response(
         JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(),
           error: 'Disposable email addresses are not allowed. Please use a permanent work or personal email address.',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -117,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (userExists) {
       console.log('[SignupWithOTP] User already exists:', email);
       return new Response(
-        JSON.stringify({ error: 'An account with this email already exists. Please sign in instead.' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An account with this email already exists. Please sign in instead.' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -139,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (createError) {
       console.error('[SignupWithOTP] Error creating user:', createError);
       return new Response(
-        JSON.stringify({ error: createError.message || 'Failed to create account' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: createError.message || 'Failed to create account' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -194,7 +196,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Try to clean up the user we created
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate verification code' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to generate verification code' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -243,7 +245,7 @@ const handler = async (req: Request): Promise<Response> => {
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
 
       return new Response(
-        JSON.stringify({ error: 'Failed to send verification email. Please try again.' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to send verification email. Please try again.' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -252,6 +254,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'Account created. Please check your email for the verification code.',
         userId: newUser.user.id,
@@ -263,7 +266,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('[SignupWithOTP] Error:', error);
     return new Response(
-      JSON.stringify({ error: 'An error occurred processing your request' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }

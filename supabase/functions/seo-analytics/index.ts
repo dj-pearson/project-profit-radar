@@ -50,7 +50,7 @@ serve(async (req) => {
 
     if (!userProfile || userProfile.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ error: 'Access denied. Root admin required.' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied. Root admin required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -68,7 +68,9 @@ serve(async (req) => {
 
     if (!googleClientEmail || !googlePrivateKey || !ga4PropertyId || !searchConsoleSiteUrl) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(), 
           error: 'Google Analytics and Search Console credentials not configured in Supabase Secrets',
           message: 'Please configure GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY, GA4_PROPERTY_ID, and SEARCH_CONSOLE_SITE_URL in Supabase Secrets'
         }),
@@ -108,7 +110,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
@@ -116,7 +118,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('SEO Analytics Error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : String(error) 
       }),
@@ -221,7 +225,8 @@ async function getDashboardData(corsHeaders: Record<string, string>, supabaseCli
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true, 
         data: combinedData
       }),
@@ -231,7 +236,8 @@ async function getDashboardData(corsHeaders: Record<string, string>, supabaseCli
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to fetch dashboard data'
       }),
@@ -250,13 +256,13 @@ async function getGoogleAnalyticsData(corsHeaders: Record<string, string>, supab
 
   if (error) {
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
   return new Response(
-    JSON.stringify({ success: true, data: data.data }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, data: data.data }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -274,13 +280,13 @@ async function getSearchConsoleData(corsHeaders: Record<string, string>, supabas
 
   if (error) {
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
   return new Response(
-    JSON.stringify({ success: true, data: data.data }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, data: data.data }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -298,13 +304,13 @@ async function getTopQueries(corsHeaders: Record<string, string>, supabaseClient
 
   if (error) {
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
   return new Response(
-    JSON.stringify({ success: true, data: data.data.keywords }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, data: data.data.keywords }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -322,13 +328,13 @@ async function getTopPages(corsHeaders: Record<string, string>, supabaseClient: 
 
   if (error) {
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
   return new Response(
-    JSON.stringify({ success: true, data: data.data.pages }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, data: data.data.pages }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -336,7 +342,8 @@ async function getTopPages(corsHeaders: Record<string, string>, supabaseClient: 
 async function getBingData(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   // For now, return a message that Bing is not configured
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: 'Bing Webmaster Tools integration is not configured. This feature requires OAuth setup with Microsoft.',
       requiresSetup: true 
@@ -348,7 +355,8 @@ async function getBingData(corsHeaders: Record<string, string>, supabaseClient: 
 async function generateAIInsights(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   // For now, return a message that AI insights are not configured
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: 'AI insights generation is not configured. This feature requires OpenAI API integration.',
       requiresSetup: true 
@@ -361,7 +369,8 @@ async function getAuthUrl(corsHeaders: Record<string, string>, action: string) {
   // For now, return a message that OAuth is not configured
   const provider = action.includes('google') ? 'Google' : 'Microsoft'
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: `${provider} OAuth is not configured. This legacy feature has been replaced with service account authentication.`,
       message: 'Please use the new SEO Analytics (MCP) page which uses secure service account credentials stored in Supabase Secrets.'

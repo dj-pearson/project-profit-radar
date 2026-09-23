@@ -236,6 +236,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         interventionsScheduled: allInterventions.length,
         details: allInterventions,
@@ -248,7 +249,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[AUTO-INTERVENTION-SCHEDULER] Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

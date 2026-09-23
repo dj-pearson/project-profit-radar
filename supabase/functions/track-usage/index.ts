@@ -163,7 +163,7 @@ serve(async (req) => {
     // Check for usage alerts/limits
     await checkUsageAlerts(targetCompanyId, metric_type, serviceClient);
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -171,7 +171,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in track-usage", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

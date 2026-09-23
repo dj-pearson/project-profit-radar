@@ -52,6 +52,7 @@ serve(async (req) => {
 
     if (schedules.length === 0) {
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: 'No schedules due for execution',
         schedules_checked: schedule_id ? 1 : 'all',
@@ -299,13 +300,14 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       schedules_executed: results.length,
       results,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

@@ -156,7 +156,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Customer email:", customerEmailResponse);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true,
         adminEmailId: adminEmailResponse.data?.id,
         customerEmailId: customerEmailResponse.data?.id
@@ -172,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-support-notification function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

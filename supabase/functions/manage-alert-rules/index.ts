@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -42,7 +42,7 @@ serve(async (req) => {
       .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -60,6 +60,7 @@ serve(async (req) => {
           .order('created_at', { ascending: false });
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           rules: rules || [],
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
@@ -87,12 +88,14 @@ serve(async (req) => {
 
         if (createError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Alert rule was not created: ${createError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'Alert rule created',
           rule: created,
@@ -101,7 +104,7 @@ serve(async (req) => {
 
       case 'update': {
         if (!rule_id) {
-          return new Response(JSON.stringify({ error: 'rule_id required for update' }),
+          return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'rule_id required for update' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
@@ -118,12 +121,14 @@ serve(async (req) => {
 
         if (updateError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Alert rule ${rule_id} was not updated: ${updateError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'Alert rule updated',
           rule: updated,
@@ -132,7 +137,7 @@ serve(async (req) => {
 
       case 'delete': {
         if (!rule_id) {
-          return new Response(JSON.stringify({ error: 'rule_id required for delete' }),
+          return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'rule_id required for delete' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
@@ -147,12 +152,14 @@ serve(async (req) => {
 
         if (deleteError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Alert rule ${rule_id} was NOT deleted and will keep firing: ${deleteError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: deleted && deleted.length > 0
             ? 'Alert rule deleted'
@@ -162,12 +169,12 @@ serve(async (req) => {
       }
 
       default:
-        return new Response(JSON.stringify({ error: 'Invalid action. Use: list, create, update, delete' }),
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action. Use: list, create, update, delete' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

@@ -224,7 +224,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -270,6 +270,7 @@ async function createRule(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       rule: data,
       message: 'Automation rule created successfully'
@@ -314,6 +315,7 @@ async function updateRule(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       rule: data,
       message: 'Automation rule updated successfully'
@@ -343,6 +345,7 @@ async function deleteRule(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Automation rule deleted successfully'
     }),
@@ -377,6 +380,7 @@ async function listRules(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       rules,
       grouped,
@@ -452,6 +456,7 @@ async function executeRule(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: result.success,
       result,
       message: result.message
@@ -511,6 +516,7 @@ async function runScheduledRules(corsHeaders: Record<string, string>, supabase: 
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       executed,
       failed,
@@ -734,6 +740,7 @@ async function getExecutionLogs(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       logs
     }),

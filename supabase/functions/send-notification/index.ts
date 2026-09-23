@@ -66,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!validation.success) {
       console.error("Validation error:", validation.error);
       return new Response(
-        JSON.stringify({ error: "Invalid request parameters" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Invalid request parameters" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -105,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
@@ -114,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error sending notification:", error);
     // SECURITY: Don't expose internal error details to clients
     return new Response(
-      JSON.stringify({ error: "Failed to send notification" }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Failed to send notification" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

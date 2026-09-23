@@ -63,13 +63,13 @@ serve(async (req) => {
 
       logStep("Generated auth URL", { authUrl });
 
-      return new Response(JSON.stringify({ auth_url: authUrl }), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), auth_url: authUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Method not allowed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 405,
     });
@@ -77,7 +77,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

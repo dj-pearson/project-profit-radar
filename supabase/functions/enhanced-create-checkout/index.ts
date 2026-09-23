@@ -173,7 +173,9 @@ serve(async (req) => {
 
     logStep("Checkout session created", { sessionId: session.id });
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(), 
       url: session.url,
       session_id: session.id,
       processor_type: paymentSettings.processor_type,
@@ -187,7 +189,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in enhanced-create-checkout", { message: errorMessage });
     
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

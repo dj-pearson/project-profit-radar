@@ -50,7 +50,7 @@ serve(async (req) => {
 
     if (!apiKeyHeader) {
       return new Response(
-        JSON.stringify({ error: 'API key required', code: 'MISSING_API_KEY' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key required', code: 'MISSING_API_KEY' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -72,7 +72,7 @@ serve(async (req) => {
 
     if (keyError || !apiKey) {
       return new Response(
-        JSON.stringify({ error: 'Invalid API key', code: 'INVALID_API_KEY' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid API key', code: 'INVALID_API_KEY' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -83,7 +83,7 @@ serve(async (req) => {
     // Check if key is active
     if (!apiKey.is_active) {
       return new Response(
-        JSON.stringify({ error: 'API key is inactive', code: 'INACTIVE_API_KEY' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key is inactive', code: 'INACTIVE_API_KEY' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -94,7 +94,7 @@ serve(async (req) => {
     // Check if key is expired
     if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
       return new Response(
-        JSON.stringify({ error: 'API key has expired', code: 'EXPIRED_API_KEY' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key has expired', code: 'EXPIRED_API_KEY' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -107,7 +107,7 @@ serve(async (req) => {
     if (apiKey.ip_whitelist && apiKey.ip_whitelist.length > 0) {
       if (!apiKey.ip_whitelist.includes(clientIP)) {
         return new Response(
-          JSON.stringify({ error: 'IP address not allowed', code: 'IP_NOT_WHITELISTED', ip: clientIP }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'IP address not allowed', code: 'IP_NOT_WHITELISTED', ip: clientIP }),
           {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -121,6 +121,8 @@ serve(async (req) => {
     if (!rateLimitCheck.allowed) {
       return new Response(
         JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(),
           error: 'Rate limit exceeded',
           code: 'RATE_LIMIT_EXCEEDED',
           limit_type: rateLimitCheck.limitType,
@@ -150,6 +152,8 @@ serve(async (req) => {
     if (!hasRequiredScope(apiKey.scopes, requiredScope)) {
       return new Response(
         JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(),
           error: 'Insufficient permissions',
           code: 'INSUFFICIENT_SCOPE',
           required_scope: requiredScope,
@@ -189,6 +193,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         user_id: apiKey.user_id,
         tenant_id: apiKey.tenant_id,
@@ -213,7 +218,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('API Auth Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', code: 'INTERNAL_ERROR' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error', code: 'INTERNAL_ERROR' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

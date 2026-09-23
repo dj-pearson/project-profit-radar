@@ -43,6 +43,8 @@ serve(async (req) => {
     if (!event_type || !tenant_id) {
       return new Response(
         JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(),
           error: 'Missing required fields: event_type and tenant_id are required'
         }),
         {
@@ -64,6 +66,7 @@ serve(async (req) => {
     if (!endpoints || endpoints.length === 0) {
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'No active webhook endpoints found',
           deliveries_created: 0
@@ -83,6 +86,7 @@ serve(async (req) => {
     if (subscribedEndpoints.length === 0) {
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'No endpoints subscribed to this event type',
           event_type,
@@ -128,6 +132,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         event_type,
         deliveries_created: createdDeliveries.length,
@@ -146,7 +151,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Webhook Trigger Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error', details: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

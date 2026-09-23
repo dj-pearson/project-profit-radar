@@ -31,7 +31,7 @@ export default async function handler(req: Request): Promise<Response> {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -46,7 +46,7 @@ export default async function handler(req: Request): Promise<Response> {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -59,7 +59,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (profile?.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ error: 'Root admin access required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Root admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

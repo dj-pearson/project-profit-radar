@@ -86,6 +86,8 @@ serve(async (req) => {
 
     if (!isAuthorized) {
       return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: "Unauthorized. Provide either 'x-api-key' header or valid Bearer token.",
         methods: ["x-api-key: YOUR_API_KEY", "Authorization: Bearer SERVICE_ROLE_KEY"]
       }), {
@@ -107,6 +109,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(),
       error: "Invalid action",
       availableActions: ['generate-auto-content', 'test-generation']
     }), {
@@ -119,6 +123,7 @@ serve(async (req) => {
     logStep("ERROR", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
 
     return new Response(JSON.stringify({
+      success: false,
       error: errorMessage,
       timestamp: new Date().toISOString(),
       function: "blog-ai-automation"
@@ -256,6 +261,7 @@ Make the content authoritative, actionable, and valuable for construction profes
     logStep("Blog post created successfully", { blogPostId: blogPost.id, title: blogPost.title });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       content: parsed,
       blogPost: blogPost,

@@ -91,7 +91,7 @@ export default async (req: Request) => {
     if (status !== "published") {
       logStep("Post not published, skipping");
       return new Response(
-        JSON.stringify({ success: true, message: "Post not published, skipping" }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: "Post not published, skipping" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -114,7 +114,7 @@ export default async (req: Request) => {
     if (!config) {
       logStep("No active automation config found for company");
       return new Response(
-        JSON.stringify({ success: true, message: "No active automation config" }),
+        JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: "No active automation config" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -233,6 +233,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         processed: results.length,
         results,
@@ -253,6 +254,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false,
       }),

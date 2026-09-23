@@ -196,7 +196,7 @@ serve(async (req) => {
       total_amount: response.total_payments_reported 
     });
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify({ ...response, success: response.success, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -204,7 +204,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in generate-1099s", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

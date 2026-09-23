@@ -123,6 +123,7 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       url: portalSession.url
     }), {
@@ -135,6 +136,7 @@ serve(async (req) => {
     logStep("ERROR in customer-portal", { message: errorMessage });
     // SECURITY: Return generic error message to client
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: "Failed to open customer portal"
     }), {

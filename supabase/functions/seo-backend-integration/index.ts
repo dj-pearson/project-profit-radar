@@ -47,7 +47,7 @@ serve(async (req) => {
     console.error('SEO Backend Integration Error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -224,7 +224,8 @@ async function syncSEOPages(corsHeaders: Record<string, string>, supabaseClient:
   }
 
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       message: `Synced ${seoPages.length} SEO pages to database`,
       pages: seoPages.length
@@ -255,7 +256,7 @@ async function updateSchemaMarkup(corsHeaders: Record<string, string>, supabaseC
   if (error) throw error
 
   return new Response(
-    JSON.stringify({ success: true, message: 'Schema markup updated' }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'Schema markup updated' }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
@@ -292,7 +293,7 @@ async function refreshSEOConfig(corsHeaders: Record<string, string>, supabaseCli
   if (error) throw error
 
   return new Response(
-    JSON.stringify({ success: true, message: 'SEO configuration refreshed' }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, message: 'SEO configuration refreshed' }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }

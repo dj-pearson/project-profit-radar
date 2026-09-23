@@ -305,6 +305,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         blog_post_id,
         social_posts_created: socialPosts.length,
@@ -323,6 +324,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false,
       }),

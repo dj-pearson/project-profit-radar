@@ -7102,3 +7102,9 @@ npm run lint already exits 0. CI's Lint job now runs
 check-eslint-warnings.mjs: any error fails, and the warning count must
 equal .github/eslint-warning-baseline.txt (4370), so it can only go down.
 Commits that remove warnings must lower the baseline.
+
+## US-274 - envelope keys on every edge response (release N)
+685 JSON responses gained success and timestamp next to their existing keys;
+nothing was renamed, removed or re-coded, so older web and iOS clients read
+the same fields. The guard baseline is 0, so any new response without the
+envelope fails pre-commit. Nesting payloads under data is the next release.

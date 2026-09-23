@@ -63,7 +63,9 @@ serve(async (req) => {
     if (!googleClientEmail || !googlePrivateKey || !ga4PropertyId) {
       console.log('Missing credentials')
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(), 
           error: 'Google Analytics credentials not configured in Supabase Secrets',
           missing: {
             clientEmail: !googleClientEmail,
@@ -111,7 +113,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
@@ -119,7 +121,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Google Analytics API Error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
@@ -325,7 +329,8 @@ async function getMetrics(corsHeaders: Record<string, string>, accessToken: stri
 
   console.log('Analytics metrics processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: metrics,
       period: dateRange 
@@ -384,7 +389,8 @@ async function getPages(corsHeaders: Record<string, string>, accessToken: string
 
   console.log('Pages data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { pages },
       period: dateRange 
@@ -441,7 +447,8 @@ async function getTrafficSources(corsHeaders: Record<string, string>, accessToke
 
   console.log('Traffic sources data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { sources },
       period: dateRange 
@@ -492,7 +499,8 @@ async function getRealtimeData(corsHeaders: Record<string, string>, accessToken:
 
   console.log('Realtime data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { 
         totalActiveUsers,
@@ -558,7 +566,8 @@ async function getOrganicTraffic(corsHeaders: Record<string, string>, accessToke
 
   console.log('Organic traffic data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: { 
         ...organicData,
@@ -616,7 +625,8 @@ async function getDeviceBreakdown(corsHeaders: Record<string, string>, accessTok
 
   console.log('Device breakdown data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: deviceData
     }),
@@ -674,6 +684,7 @@ async function getConversionData(corsHeaders: Record<string, string>, accessToke
   return new Response(
     JSON.stringify({ 
       success: true, 
+      timestamp: new Date().toISOString(),
       data: {
         totalConversions,
         totalRevenue,
@@ -731,7 +742,8 @@ async function getGeographicData(corsHeaders: Record<string, string>, accessToke
 
   console.log('Geographic data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: locationData
     }),
@@ -786,7 +798,8 @@ async function getUserBehavior(corsHeaders: Record<string, string>, accessToken:
 
   console.log('User behavior data processed successfully')
   return new Response(
-    JSON.stringify({ 
+    JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       data: pageData
     }),

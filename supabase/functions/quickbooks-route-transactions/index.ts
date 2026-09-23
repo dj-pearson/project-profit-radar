@@ -100,6 +100,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false
       }),
@@ -172,6 +173,7 @@ async function processSingleTransaction(corsHeaders: Record<string, string>, sup
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         matched: true,
         suggestion: bestMatch,
@@ -186,6 +188,7 @@ async function processSingleTransaction(corsHeaders: Record<string, string>, sup
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       matched: false,
       message: "No routing rules matched this transaction"
@@ -303,6 +306,7 @@ async function processBatchTransactions(corsHeaders: Record<string, string>, sup
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       results: {
         processed_count: processedCount,
@@ -363,6 +367,7 @@ async function manualAssignment(corsHeaders: Record<string, string>, supabase: a
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: "Transaction manually assigned to project"
     }),
@@ -380,6 +385,7 @@ async function importQuickBooksTransactions(corsHeaders: Record<string, string>,
   return new Response(
     JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       message: "QuickBooks transaction import initiated",
       imported_count: 0 // Would be actual count from QB sync
     }),

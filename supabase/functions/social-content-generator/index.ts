@@ -1116,6 +1116,7 @@ export default async (req: Request) => {
       });
       
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: "Invalid JSON in request body",
         details: errorObj.message,
         success: false,
@@ -1290,6 +1291,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         template: selectedTemplate,
         platforms_processed: platformContents.map((p) => p.platform),
@@ -1308,6 +1310,7 @@ export default async (req: Request) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         error: errorMessage,
         success: false,
       }),

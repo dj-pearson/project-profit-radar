@@ -292,6 +292,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
     logStep("Optimization completed successfully");
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       optimization_run_id: optimizationRun.id,
       summary: optimizationData.summary,
@@ -306,7 +307,8 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

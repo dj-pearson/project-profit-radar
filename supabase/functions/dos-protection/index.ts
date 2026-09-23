@@ -67,7 +67,7 @@ serve(async (req) => {
     } catch {
       console.error("[DoS] Invalid JSON in request body");
       return new Response(
-        JSON.stringify({ error: 'Invalid request format' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -76,7 +76,7 @@ serve(async (req) => {
     if (!validation.success) {
       console.error("[DoS] Validation failed:", validation.error.errors);
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid request parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -114,7 +114,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('DOS Protection Error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@ async function getSettings(supabase: any) {
     const settings = data?.setting_value || defaultSettings;
 
     return new Response(
-      JSON.stringify({ settings }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), settings }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -157,7 +157,7 @@ async function getSettings(supabase: any) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ settings: defaultSettings }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), settings: defaultSettings }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -178,7 +178,7 @@ async function updateSettings(supabase: any, settings: DosSettings) {
   if (error) throw error;
 
   return new Response(
-    JSON.stringify({ success: true }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -234,7 +234,7 @@ async function getAttackMetrics(supabase: any) {
   };
 
   return new Response(
-    JSON.stringify({ metrics }),
+    JSON.stringify({ success: true, timestamp: new Date().toISOString(), metrics }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -279,7 +279,7 @@ async function blockIP(supabase: any, ipAddress: string, reason: string) {
   }
 
   return new Response(
-    JSON.stringify({ success: true }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -315,7 +315,7 @@ async function unblockIP(supabase: any, ipAddress: string) {
   }
 
   return new Response(
-    JSON.stringify({ success: true }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -337,7 +337,7 @@ async function whitelistIP(supabase: any, ipAddress: string) {
   if (error) throw error;
 
   return new Response(
-    JSON.stringify({ success: true }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -387,7 +387,7 @@ async function analyzeTraffic(supabase: any, timeWindow = 60) {
     .sort((a, b) => b.request_count - a.request_count);
 
   return new Response(
-    JSON.stringify({ patterns: suspiciousPatterns }),
+    JSON.stringify({ success: true, timestamp: new Date().toISOString(), patterns: suspiciousPatterns }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -424,7 +424,7 @@ async function detectAttacks(supabase: any) {
       .map(([ip, count]) => ({ ip_address: ip, attack_count: count }));
 
     return new Response(
-      JSON.stringify({ attacks }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), attacks }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -433,7 +433,7 @@ async function detectAttacks(supabase: any) {
   }
 
   return new Response(
-    JSON.stringify({ attacks: recentViolations || [] }),
+    JSON.stringify({ success: true, timestamp: new Date().toISOString(), attacks: recentViolations || [] }),
     {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

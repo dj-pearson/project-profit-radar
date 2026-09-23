@@ -169,7 +169,7 @@ serve(async (req) => {
 
     logStep("Generated predictions successfully");
 
-    return new Response(JSON.stringify(enhancedPredictions), {
+    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...enhancedPredictions }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -177,7 +177,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

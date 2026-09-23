@@ -59,12 +59,12 @@ serve(async (req) => {
 
       const generatedContent = await aiService.generateBlogContent((blogTopic || prompt) as string);
 
-      return new Response(JSON.stringify({ content: generatedContent }), {
+      return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), content: generatedContent }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -72,7 +72,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

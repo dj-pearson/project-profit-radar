@@ -34,7 +34,7 @@ serve(async (req) => {
       .single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -52,6 +52,7 @@ serve(async (req) => {
         .limit(limit);
 
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         keywords: keywords || [],
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
@@ -67,12 +68,13 @@ serve(async (req) => {
       .limit(limit);
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       history: history || [],
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

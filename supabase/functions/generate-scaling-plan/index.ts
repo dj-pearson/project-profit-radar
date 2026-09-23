@@ -139,6 +139,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       assessment,
       recommendations,
       milestones,
@@ -149,7 +150,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in generate-scaling-plan function:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

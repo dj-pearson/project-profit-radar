@@ -196,6 +196,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(),
         url: session.url,
         session_id: session.id
       }),
@@ -211,7 +213,7 @@ serve(async (req) => {
     console.error("Error creating checkout:", error);
     // SECURITY: Return generic error message to client
     return new Response(
-      JSON.stringify({ error: "Failed to create checkout session" }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Failed to create checkout session" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

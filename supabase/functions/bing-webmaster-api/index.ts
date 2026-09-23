@@ -57,7 +57,7 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -71,7 +71,7 @@ serve(async (req) => {
 
     if (!profile || profile.role !== 'root_admin') {
       return new Response(
-        JSON.stringify({ error: 'Insufficient permissions' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -95,7 +95,9 @@ serve(async (req) => {
         bingSiteUrl: !!bingSiteUrl
       })
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
+          timestamp: new Date().toISOString(), 
           error: 'Bing Webmaster API credentials not configured in Supabase Secrets',
           missing: {
             bingApiKey: !bingApiKey,
@@ -131,7 +133,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
@@ -144,7 +146,9 @@ serve(async (req) => {
       name: error instanceof Error ? error.name : 'Unknown'
     })
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(), 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error' 
       }),
@@ -183,6 +187,8 @@ async function getBingPerformanceData(corsHeaders: Record<string, string>, apiKe
     // Return formatted data compatible with the frontend
     return new Response(
       JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(),
         data: {
           clicks: performanceData.d || 0,
           impressions: performanceData.d || 0,
@@ -234,7 +240,7 @@ async function getBingPages(corsHeaders: Record<string, string>, apiKey: string,
     }))
 
     return new Response(
-      JSON.stringify({ data: formattedPages }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: formattedPages }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -278,7 +284,7 @@ async function getBingKeywords(corsHeaders: Record<string, string>, apiKey: stri
     }))
 
     return new Response(
-      JSON.stringify({ data: formattedKeywords }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: formattedKeywords }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -321,7 +327,7 @@ async function getBingCrawlErrors(corsHeaders: Record<string, string>, apiKey: s
     }))
 
     return new Response(
-      JSON.stringify({ data: formattedErrors }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: formattedErrors }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -364,7 +370,7 @@ async function getBingBacklinks(corsHeaders: Record<string, string>, apiKey: str
     }))
 
     return new Response(
-      JSON.stringify({ data: formattedBacklinks }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), data: formattedBacklinks }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

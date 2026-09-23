@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -44,7 +44,7 @@ serve(async (req) => {
       .single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -52,7 +52,7 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { base_url, urls } = parsed.data;
     if (!base_url) {
-      return new Response(JSON.stringify({ error: 'base_url required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'base_url required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -70,11 +70,11 @@ serve(async (req) => {
 ${urlEntries}
 </urlset>`;
 
-    return new Response(JSON.stringify({ success: true, sitemap, url_count: urls?.length || 0 }),
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true, sitemap, url_count: urls?.length || 0 }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

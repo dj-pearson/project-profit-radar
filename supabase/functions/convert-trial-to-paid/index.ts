@@ -208,7 +208,7 @@ serve(async (req) => {
 
     logStep("Updated company status to converting", { company_id });
 
-    return new Response(JSON.stringify(subscriptionResult), {
+    return new Response(JSON.stringify({ ...subscriptionResult, success: subscriptionResult.success, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -216,7 +216,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in trial conversion", { message: errorMessage });
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: false, 
       error: errorMessage 
     }), {

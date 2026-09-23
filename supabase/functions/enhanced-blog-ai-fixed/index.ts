@@ -239,7 +239,7 @@ export default async (req: Request) => {
     };
     
     logStep("Response prepared", { blogPostId: blogPost.id, title: blogPost.title });
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify({ ...response, success: response.success, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
@@ -260,7 +260,7 @@ export default async (req: Request) => {
     
     console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
     
-    return new Response(JSON.stringify(errorDetails), {
+    return new Response(JSON.stringify({ ...errorDetails, success: errorDetails.success, timestamp: new Date().toISOString() }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

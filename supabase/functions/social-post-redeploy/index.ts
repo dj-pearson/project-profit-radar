@@ -89,7 +89,7 @@ serve(async (req) => {
     if (cfgErr) throw cfgErr;
     if (!config?.webhook_url) {
       return new Response(
-        JSON.stringify({ error: "No webhook_url configured for company" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "No webhook_url configured for company" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -113,7 +113,7 @@ serve(async (req) => {
 
     if (!posts || posts.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No matching posts found to redeploy" }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "No matching posts found to redeploy" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -161,13 +161,13 @@ serve(async (req) => {
     log("Redeploy webhook sent successfully");
 
     return new Response(
-      JSON.stringify({ success: true, redeployed: filteredContents.length }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: true, redeployed: filteredContents.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     log("ERROR", error);
     const message = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ success: false, error: message }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

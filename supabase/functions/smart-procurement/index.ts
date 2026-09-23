@@ -44,7 +44,7 @@ serve(async (req) => {
 
     if (!tenant_id) {
       return new Response(
-        JSON.stringify({ error: 'tenant_id is required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'tenant_id is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
@@ -58,7 +58,7 @@ serve(async (req) => {
         return await generateRecommendations(corsHeaders, supabaseClient, tenant_id, project_id)
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action. Use: forecast_materials, optimize_suppliers, generate_recommendations' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action. Use: forecast_materials, optimize_suppliers, generate_recommendations' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         )
     }
@@ -66,7 +66,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('[SMART-PROCUREMENT] Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
@@ -153,6 +153,7 @@ async function forecastMaterials(corsHeaders: Record<string, string>, supabase: 
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       forecasts_generated: forecasts.length,
       forecasts: forecasts
@@ -195,6 +196,7 @@ async function optimizeSuppliers(corsHeaders: Record<string, string>, supabase: 
   return new Response(
     JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       suppliers: scoredSuppliers.slice(0, 20), // Top 20
       optimization_criteria: {
         price_weight: 40,
@@ -297,6 +299,7 @@ async function generateRecommendations(corsHeaders: Record<string, string>, supa
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       recommendations_generated: recommendations.length,
       recommendations: recommendations,

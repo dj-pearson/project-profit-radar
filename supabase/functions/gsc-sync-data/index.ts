@@ -25,7 +25,7 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -36,7 +36,7 @@ serve(async (req) => {
       .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -44,7 +44,7 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { property_id, start_date, end_date } = parsed.data;
     if (!property_id) {
-      return new Response(JSON.stringify({ error: 'property_id required' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'property_id required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -55,7 +55,7 @@ serve(async (req) => {
       .single();
 
     if (propError || !property) {
-      return new Response(JSON.stringify({ error: 'Property not found' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Property not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -117,7 +117,7 @@ serve(async (req) => {
 
     if (!queryResponse.ok) {
       const errorData = await queryResponse.json();
-      return new Response(JSON.stringify({ error: 'Failed to fetch query data', details: errorData }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to fetch query data', details: errorData }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -219,13 +219,14 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       sync_results: results,
       date_range: { start: startDate, end: endDate },
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Internal error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

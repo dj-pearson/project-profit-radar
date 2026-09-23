@@ -69,6 +69,7 @@ serve(async (req) => {
     if (action === 'test-generation') {
       // Return diagnostic information
       return new Response(JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         diagnostic: true,
         environment: {
@@ -138,6 +139,7 @@ serve(async (req) => {
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           claudeTest: true,
           content: {
@@ -154,6 +156,7 @@ serve(async (req) => {
       } catch (error: any) {
         console.error("Claude API error:", error);
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: false,
           error: `Claude API failed: ${error.message}`,
           fallback: true
@@ -166,6 +169,7 @@ serve(async (req) => {
 
     // Default fallback response
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       fallback: true,
       message: "Simplified function working",
@@ -178,6 +182,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Function error:", error);
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: false,
       error: error.message,
     }), {

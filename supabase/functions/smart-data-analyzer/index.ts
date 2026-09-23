@@ -270,6 +270,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       analysis: {
         dataType: analysis.dataType,
@@ -287,6 +288,8 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
     console.error('Error in smart-data-analyzer:', error);
     const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
     return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(),
       error: errorMessage
     }), {
       status: 500,

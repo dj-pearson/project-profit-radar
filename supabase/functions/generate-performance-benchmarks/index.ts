@@ -219,7 +219,7 @@ Ensure all numbers are realistic for the construction industry and consistent wi
     }
 
     return new Response(
-      JSON.stringify(enhancedBenchmarks),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...enhancedBenchmarks }),
       { 
         headers: { 
           ...corsHeaders, 
@@ -231,7 +231,7 @@ Ensure all numbers are realistic for the construction industry and consistent wi
   } catch (error) {
     console.error('Error generating performance benchmarks:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500, 
         headers: { 

@@ -179,7 +179,7 @@ serve(async (req) => {
     if (!validation.valid) {
       console.error('[VALIDATE-TIME-ENTRY] Validation failed:', validation.errors);
       return new Response(
-        JSON.stringify({ error: 'Validation failed', details: validation.errors }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Validation failed', details: validation.errors }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -197,20 +197,20 @@ serve(async (req) => {
     if (error) {
       console.error('[VALIDATE-TIME-ENTRY] Database error:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to create time entry', details: error.message }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to create time entry', details: error.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
     console.log('[VALIDATE-TIME-ENTRY] Time entry created successfully:', data.id);
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: true, data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
     console.error('[VALIDATE-TIME-ENTRY] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

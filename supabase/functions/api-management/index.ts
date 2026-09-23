@@ -104,7 +104,7 @@ serve(async (req) => {
       return await handleInvoicesApi(corsHeaders, req, supabase);
     } else {
       return new Response(
-        JSON.stringify({ error: 'Endpoint not found' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Endpoint not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -112,7 +112,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('API Management error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -123,7 +123,7 @@ async function validateApiKey(corsHeaders: Record<string, string>, req: Request,
 
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: 'API key required' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key required' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -138,7 +138,7 @@ async function validateApiKey(corsHeaders: Record<string, string>, req: Request,
 
   if (error || !keyData || !keyData.is_active) {
     return new Response(
-      JSON.stringify({ error: 'Invalid API key' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid API key' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -146,13 +146,15 @@ async function validateApiKey(corsHeaders: Record<string, string>, req: Request,
   // Check expiration
   if (keyData.expires_at && new Date(keyData.expires_at) < new Date()) {
     return new Response(
-      JSON.stringify({ error: 'API key expired' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key expired' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
   return new Response(
     JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(),
       valid: true,
       company_id: keyData.company_id,
       permissions: keyData.permissions,
@@ -170,7 +172,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   if (!authHeader) {
     return new Response(
-      JSON.stringify({ error: 'Authorization required' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Authorization required' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -182,7 +184,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   if (userError || !userData.user) {
     return new Response(
-      JSON.stringify({ error: 'Invalid authorization' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid authorization' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -190,7 +192,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
   // Validate request body: key_name is required and stored on the api_keys row.
   if (!key_name || typeof key_name !== 'string' || key_name.trim().length === 0) {
     return new Response(
-      JSON.stringify({ error: 'key_name is required and must be a non-empty string' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'key_name is required and must be a non-empty string' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -203,6 +205,8 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
   if (unknown.length) {
     return new Response(
       JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
         error: `Unknown permission(s): ${unknown.join(', ')}. Valid: ${[...API_PERMISSIONS].join(', ')}`
       }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -225,7 +229,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   if (profileError || !profile || !['admin', 'root_admin'].includes(profile.role)) {
     return new Response(
-      JSON.stringify({ error: 'Insufficient permissions' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Insufficient permissions' }),
       { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -236,7 +240,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   if (keyGenError || !newKey) {
     return new Response(
-      JSON.stringify({ error: 'Failed to generate API key' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to generate API key' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -277,7 +281,7 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   if (storeError) {
     return new Response(
-      JSON.stringify({ error: 'Failed to store API key' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Failed to store API key' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -287,6 +291,8 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 
   return new Response(
     JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(),
       id: keyRecord.id,
       key_name: keyRecord.key_name,
       api_key: newKey, // Only returned once during creation
@@ -328,7 +334,7 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
 
   if (webhookError || !webhook) {
     return new Response(
-      JSON.stringify({ error: 'Webhook not found or inactive' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Webhook not found or inactive' }),
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -336,7 +342,7 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
   // Check if event type is configured for this webhook
   if (!webhook.events.includes(event_type)) {
     return new Response(
-      JSON.stringify({ error: 'Event type not configured for this webhook' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Event type not configured for this webhook' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -424,6 +430,7 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: response.ok,
         status: response.status,
         processing_time_ms: processingTime,
@@ -455,7 +462,7 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
     }
 
     return new Response(
-      JSON.stringify({ error: 'Webhook delivery failed', details: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Webhook delivery failed', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -511,7 +518,7 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
       await logApiUsage(supabase, validation.keyHash!, '/api/projects', 'GET', null, null, 200);
 
       return new Response(
-        JSON.stringify({ projects }),
+        JSON.stringify({ success: true, timestamp: new Date().toISOString(), projects }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -539,7 +546,7 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
 
       if (companyError || !company) {
         return new Response(
-          JSON.stringify({ error: 'Could not resolve company for this API key' }),
+          JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Could not resolve company for this API key' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -559,13 +566,13 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
       await logApiUsage(supabase, validation.keyHash!, '/api/projects', 'POST', null, null, 201);
 
       return new Response(
-        JSON.stringify({ project: newProject }),
+        JSON.stringify({ success: true, timestamp: new Date().toISOString(), project: newProject }),
         { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Method not allowed' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -574,7 +581,7 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
     await logApiUsage(supabase, validation.keyHash!, '/api/projects', method, null, null, 500);
 
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -597,7 +604,7 @@ async function handleEstimatesApi(corsHeaders: Record<string, string>, req: Requ
     await logApiUsage(supabase, validation.keyHash!, '/api/estimates', 'GET', null, null, 200);
 
     return new Response(
-      JSON.stringify({ estimates }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), estimates }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -606,7 +613,7 @@ async function handleEstimatesApi(corsHeaders: Record<string, string>, req: Requ
     await logApiUsage(supabase, validation.keyHash!, '/api/estimates', 'GET', null, null, 500);
 
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -629,7 +636,7 @@ async function handleInvoicesApi(corsHeaders: Record<string, string>, req: Reque
     await logApiUsage(supabase, validation.keyHash!, '/api/invoices', 'GET', null, null, 200);
 
     return new Response(
-      JSON.stringify({ invoices }),
+      JSON.stringify({ success: true, timestamp: new Date().toISOString(), invoices }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -638,7 +645,7 @@ async function handleInvoicesApi(corsHeaders: Record<string, string>, req: Reque
     await logApiUsage(supabase, validation.keyHash!, '/api/invoices', 'GET', null, null, 500);
 
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -656,7 +663,7 @@ async function validateApiRequest(corsHeaders: Record<string, string>, req: Requ
     return {
       isValid: false,
       response: new Response(
-        JSON.stringify({ error: 'API key required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     };
@@ -674,7 +681,7 @@ async function validateApiRequest(corsHeaders: Record<string, string>, req: Requ
     return {
       isValid: false,
       response: new Response(
-        JSON.stringify({ error: 'Invalid API key' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid API key' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     };
@@ -685,7 +692,7 @@ async function validateApiRequest(corsHeaders: Record<string, string>, req: Requ
     return {
       isValid: false,
       response: new Response(
-        JSON.stringify({ error: 'API key expired' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'API key expired' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     };
@@ -696,7 +703,7 @@ async function validateApiRequest(corsHeaders: Record<string, string>, req: Requ
     return {
       isValid: false,
       response: new Response(
-        JSON.stringify({ error: 'Insufficient permissions' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     };

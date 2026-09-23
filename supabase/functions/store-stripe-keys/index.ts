@@ -156,6 +156,7 @@ serve(async (req) => {
     logStep("Keys stored successfully", { company_id });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: "Stripe keys stored securely"
     }), {
@@ -169,6 +170,7 @@ serve(async (req) => {
 
     // SECURITY: Return generic error message to prevent information disclosure
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       error: "Failed to store Stripe keys",
       success: false
     }), {

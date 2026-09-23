@@ -129,7 +129,7 @@ serve(async (req) => {
       return await testGeneration(corsHeaders, supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -137,7 +137,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
@@ -205,7 +205,8 @@ async function handleAutoGeneration(
     await sendGenerationNotification(supabaseClient, finalSettings.notification_emails, blogPost, generatedContent);
   }
 
-  return new Response(JSON.stringify({ 
+  return new Response(JSON.stringify({
+    timestamp: new Date().toISOString(), 
     success: true,
     blogPost,
     content: generatedContent,
@@ -268,6 +269,7 @@ async function handleManualGeneration(
   const generatedContent = await generateContentWithAI(finalSettings, suggestedTopic, companyId, supabaseClient);
 
   return new Response(JSON.stringify({
+    timestamp: new Date().toISOString(),
     success: true,
     generatedContent,
     topic: suggestedTopic
@@ -879,7 +881,7 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
 
   if (!claimed || claimed.length === 0) {
     logStep("Queue item already being processed, skipping", { queueId });
-    return new Response(JSON.stringify({ success: true, skipped: true, reason: 'already processing' }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true, skipped: true, reason: 'already processing' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -911,7 +913,7 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
@@ -1043,6 +1045,8 @@ async function analyzeContentDiversity(corsHeaders: Record<string, string>, supa
   }, {}) || {};
 
   return new Response(JSON.stringify({
+    success: true,
+    timestamp: new Date().toISOString(),
     topicCounts,
     categoryDiversity,
     totalPosts: topicHistory?.length || 0,
@@ -1060,7 +1064,7 @@ async function updateModelConfiguration(corsHeaders: Record<string, string>, sup
 
   if (error) throw error;
 
-  return new Response(JSON.stringify({ success: true }), {
+  return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
@@ -1074,6 +1078,7 @@ async function testGeneration(
   const content = await generateContentWithAI(settings, topic, companyId, supabaseClient);
 
   return new Response(JSON.stringify({
+    timestamp: new Date().toISOString(),
     success: true,
     content,
     preview: true

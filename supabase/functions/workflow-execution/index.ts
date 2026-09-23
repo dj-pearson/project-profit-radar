@@ -232,7 +232,8 @@ Deno.serve(async (req) => {
     console.log('Workflow execution completed:', finalStatus);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: true, 
         execution_id: execution.id,
         status: finalStatus,
@@ -244,7 +245,7 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('Workflow execution error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

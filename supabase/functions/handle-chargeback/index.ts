@@ -143,7 +143,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -213,7 +213,7 @@ async function createChargeback(
   }
 
   return new Response(
-    JSON.stringify({ success: true, chargeback }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, chargeback }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -255,7 +255,7 @@ async function updateChargeback(
   }
 
   return new Response(
-    JSON.stringify({ success: true, chargeback: updated }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, chargeback: updated }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -336,6 +336,7 @@ async function submitEvidence(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       chargeback: updated,
       message: 'Evidence submitted successfully'
@@ -439,6 +440,7 @@ async function acceptChargeback(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       chargeback: updated,
       message: 'Chargeback accepted (dispute lost)'
@@ -479,7 +481,7 @@ async function listChargebacks(
   };
 
   return new Response(
-    JSON.stringify({ success: true, chargebacks, summary }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, chargebacks, summary }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -510,7 +512,7 @@ async function getChargeback(
   }
 
   return new Response(
-    JSON.stringify({ success: true, chargeback }),
+    JSON.stringify({ timestamp: new Date().toISOString(), success: true, chargeback }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
 }
@@ -538,6 +540,7 @@ async function syncChargebacksFromStripe(
     if (!company?.stripe_customer_id) {
       return new Response(
         JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           synced: 0,
           message: 'No Stripe customer ID found for company'
@@ -607,6 +610,7 @@ async function syncChargebacksFromStripe(
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         synced,
         total_disputes: disputes.data.length,

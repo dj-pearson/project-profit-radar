@@ -166,7 +166,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -273,6 +273,7 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       processed,
       retried,
@@ -457,6 +458,7 @@ async function retryPayment(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: result.success,
       message: result.success ? 'Payment recovered' : `Retry failed: ${result.error}`,
       error: result.error
@@ -489,6 +491,7 @@ async function sendDunningEmail(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: sent,
       message: sent ? 'Dunning email sent' : 'Failed to send email'
     }),
@@ -563,6 +566,7 @@ async function getSettings(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       settings: settings || getDefaultSettings()
     }),
@@ -598,6 +602,7 @@ async function updateSettings(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       settings: data,
       message: 'Settings updated successfully'
@@ -654,6 +659,7 @@ async function getDashboard(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       dashboard: {
         summary,
@@ -684,6 +690,7 @@ async function pauseDunning(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Dunning paused for subscriber'
     }),
@@ -713,6 +720,7 @@ async function resumeDunning(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Dunning resumed for subscriber'
     }),

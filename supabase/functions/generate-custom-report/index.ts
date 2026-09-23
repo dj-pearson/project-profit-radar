@@ -39,7 +39,7 @@ serve(async (req) => {
 
     if (!report_id) {
       return new Response(
-        JSON.stringify({ error: 'report_id is required' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'report_id is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
@@ -48,7 +48,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unauthorized' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       )
     }
@@ -71,7 +71,7 @@ serve(async (req) => {
 
     if (reportError || !report) {
       return new Response(
-        JSON.stringify({ error: 'Report not found' }),
+        JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Report not found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       )
     }
@@ -134,7 +134,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-custom-report:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }

@@ -132,7 +132,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
-      JSON.stringify({ success: false, error: errorObj.message }),
+      JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: errorObj.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
@@ -218,6 +218,7 @@ async function calculateProration(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       proration: result,
       summary: {
@@ -255,7 +256,7 @@ async function applyProration(
   const prorationData = await prorationResponse.json();
 
   if (!prorationData.success) {
-    return new Response(JSON.stringify(prorationData), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), ...prorationData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400
     });
@@ -362,6 +363,7 @@ async function applyProration(
 
         return new Response(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: true,
             proration,
             stripe_subscription: {
@@ -433,6 +435,7 @@ async function applyProration(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       proration,
       message: 'Subscription updated (manual - Stripe not configured)'
@@ -468,6 +471,7 @@ async function getProrationHistory(
 
   return new Response(
     JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       history,
       summary

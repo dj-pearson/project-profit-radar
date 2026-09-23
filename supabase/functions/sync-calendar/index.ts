@@ -136,6 +136,7 @@ serve(async (req) => {
     logStep("Sync completed", { fetched: events.length, stored: storedCount });
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: storeFailures.length === 0,
       events_fetched: events.length,
       events_synced: storedCount,
@@ -148,7 +149,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

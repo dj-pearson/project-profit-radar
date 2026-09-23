@@ -112,6 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(),
       success: true,
       message: 'Safety notifications sent successfully',
       recipients: recipients.length,
@@ -128,7 +129,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-safety-notification function:", error);
     
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: false,
         error: error.message,
         message: 'Failed to send safety notifications'

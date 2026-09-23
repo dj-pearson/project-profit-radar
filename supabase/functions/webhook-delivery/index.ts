@@ -157,6 +157,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         processed: deliveriesToProcess.length,
         results
@@ -170,7 +171,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Webhook Delivery Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error', details: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -90,6 +90,7 @@ serve(async (req) => {
 
   return new Response(
     JSON.stringify({
+      success: httpStatus < 400,
       status: overallStatus,
       timestamp: new Date().toISOString(),
       totalResponseTime,

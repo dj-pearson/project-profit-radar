@@ -112,7 +112,8 @@ serve(async (req) => {
     console.log('Transcription successful');
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         text: result.text,
         success: true 
       }),
@@ -129,7 +130,8 @@ serve(async (req) => {
     console.error('Voice-to-text error:', error);
     
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         error: errorObj.message,
         success: false 
       }),

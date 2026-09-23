@@ -47,7 +47,7 @@ serve(async (req) => {
       .eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
-      return new Response(JSON.stringify({ error: 'Access denied' }),
+      return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -67,6 +67,7 @@ serve(async (req) => {
           .order('created_at', { ascending: false });
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           schedules: schedules || [],
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
@@ -112,12 +113,14 @@ serve(async (req) => {
 
         if (createError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Schedule was not created: ${createError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'Schedule created',
           schedule: created,
@@ -126,7 +129,7 @@ serve(async (req) => {
 
       case 'update': {
         if (!schedule_id) {
-          return new Response(JSON.stringify({ error: 'schedule_id required for update' }),
+          return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'schedule_id required for update' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
@@ -142,12 +145,14 @@ serve(async (req) => {
 
         if (updateError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Schedule ${schedule_id} was not updated: ${updateError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: 'Schedule updated',
           schedule: updated,
@@ -156,7 +161,7 @@ serve(async (req) => {
 
       case 'delete': {
         if (!schedule_id) {
-          return new Response(JSON.stringify({ error: 'schedule_id required for delete' }),
+          return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'schedule_id required for delete' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
@@ -172,12 +177,14 @@ serve(async (req) => {
 
         if (deleteError) {
           return new Response(JSON.stringify({
+            timestamp: new Date().toISOString(),
             success: false,
             error: `Schedule ${schedule_id} was NOT deleted and will keep running audits: ${deleteError.message}`,
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
         }
 
         return new Response(JSON.stringify({
+          timestamp: new Date().toISOString(),
           success: true,
           message: deleted && deleted.length > 0
             ? 'Schedule deleted'
@@ -187,12 +194,12 @@ serve(async (req) => {
       }
 
       default:
-        return new Response(JSON.stringify({ error: 'Invalid action. Use: list, create, update, delete' }),
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Invalid action. Use: list, create, update, delete' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

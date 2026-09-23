@@ -373,6 +373,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         message: `Content creation complete! Created: ${created}, Skipped: ${skipped}`,
         created,
@@ -387,7 +388,8 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
   } catch (error) {
     console.error('Error creating missing content:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        timestamp: new Date().toISOString(), 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
       }),

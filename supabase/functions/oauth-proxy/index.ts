@@ -58,7 +58,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (action === 'authorize') {
       if (provider !== 'google' && provider !== 'apple') {
-        return new Response(JSON.stringify({ error: 'Unsupported provider' }), {
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unsupported provider' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -114,7 +114,7 @@ export default async function handler(req: Request): Promise<Response> {
         authUrl.searchParams.set('state', stateData);
         authUrl.searchParams.set('response_mode', 'query');
       } else {
-        return new Response(JSON.stringify({ error: 'Unsupported provider' }), {
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Unsupported provider' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -143,7 +143,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       if (!code || !state) {
-        return new Response(JSON.stringify({ error: 'Missing code or state' }), {
+        return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Missing code or state' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -312,6 +312,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     // Default response
     return new Response(JSON.stringify({
+      success: true,
+      timestamp: new Date().toISOString(),
       usage: 'Call with ?action=authorize&provider=google to start OAuth flow',
       providers: ['google', 'apple'],
     }), {
@@ -320,7 +322,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   } catch (error) {
     console.error('OAuth proxy error:', error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: (error as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

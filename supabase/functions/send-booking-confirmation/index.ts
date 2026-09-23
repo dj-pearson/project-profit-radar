@@ -92,7 +92,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Confirmation email sent successfully:", attendeeEmail);
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
+      timestamp: new Date().toISOString(), 
       success: true, 
       emailId: attendeeEmail.data?.id 
     }), {
@@ -103,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error sending booking confirmation:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -235,6 +235,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        timestamp: new Date().toISOString(),
         success: true,
         schedule: savedSchedule,
         assignments: bestSchedule,
@@ -249,7 +250,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in auto-scheduling function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
