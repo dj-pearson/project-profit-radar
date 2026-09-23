@@ -290,6 +290,9 @@ jobs:
       - name: God-file guard (US-267)
         run: node scripts/check-god-files.mjs
 
+      - name: Direct-formatting guard (US-377)
+        run: node scripts/check-direct-formatting.mjs
+
       - name: Unreferenced-module guard (US-314 follow-up)
         run: node scripts/check-unreferenced-modules.mjs
 

@@ -7026,3 +7026,9 @@ matches a per-company token (DNS-over-HTTPS). A trigger also stops clients
 setting tenants.domain_verified = true directly through PostgREST. Owner:
 apply 20260924140000, deploy the function, allow egress to cloudflare-dns.com
 and dns.google, decide whether to reset tenants verified by the old check.
+
+## US-377 - format module and lint rule
+src/lib/format.ts is the one formatter; the four formatCurrency exports go
+through it with their old output pinned by tests. ESLint warns on direct
+toLocaleDateString / new Intl.NumberFormat, and check-direct-formatting.mjs
+ratchets the remaining 326 and 51 uses so they can only go down.

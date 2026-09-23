@@ -125,6 +125,28 @@ export default tseslint.config(
         "error",
         { object: "window", property: "confirm", message: "Use confirmAction() from @/components/ui/confirm-dialog." },
       ],
+      // US-377: dates and numbers are formatted by @/lib/format (formatDate,
+      // formatDateTime, formatNumber, formatCurrency). "warn" because ~375
+      // direct calls predate it; scripts/check-direct-formatting.mjs holds
+      // that count at an exact baseline so new ones fail the hook and CI.
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "MemberExpression[property.name='toLocaleDateString']",
+          message: "Use formatDate() from @/lib/format instead of toLocaleDateString.",
+        },
+        {
+          selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
+          message: "Use formatNumber() or formatCurrency() from @/lib/format instead of new Intl.NumberFormat.",
+        },
+      ],
+    },
+  },
+  {
+    // US-377: the one sanctioned home for direct date/number formatting.
+    files: ["src/lib/format.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
   {

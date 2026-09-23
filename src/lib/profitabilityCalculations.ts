@@ -3,6 +3,8 @@
  * Industry-standard formulas and benchmarks for construction project profitability
  */
 
+import { formatCurrency as formatCurrencyBase } from '@/lib/format';
+
 export interface CalculatorInputs {
   projectType: string;
   laborHours: number;
@@ -372,12 +374,7 @@ export function calculateWhatIf(
  * Format currency for display
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
+  return formatCurrencyBase(amount, { decimals: 0 });
 }
 
 /**

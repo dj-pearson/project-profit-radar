@@ -153,6 +153,10 @@ node scripts/check-param-route-traps.mjs || exit 1
 #      be deleted rather than split, the other is rewritten by npm run db:types.
 node scripts/check-god-files.mjs || exit 1
 
+# 3u1b. Direct formatting (US-377) - dates and numbers go through @/lib/format.
+#       ESLint only warns on the ~375-call backlog; this holds the count exact.
+node scripts/check-direct-formatting.mjs || exit 1
+
 # 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
 #      looks at components/ and pages/. hooks, lib, services and utils were
 #      uncounted, and useCRM.ts is 1,945 lines that nothing imports.

@@ -9,6 +9,8 @@
  * - Financial reporting calculations
  */
 
+import { formatCurrency as formatCurrencyBase, formatDate } from '@/lib/format';
+
 // =====================================================
 // TYPE DEFINITIONS
 // =====================================================
@@ -407,7 +409,7 @@ export function generateMonthlyPeriods(
       monthEnd.setTime(fiscalYearEnd.getTime());
     }
 
-    const monthName = monthStart.toLocaleDateString('en-US', {
+    const monthName = formatDate(monthStart, {
       year: 'numeric',
       month: 'long',
     });
@@ -522,21 +524,11 @@ export function formatCurrency(
     currencySymbol = '$',
   } = options;
 
-  const absAmount = Math.abs(amount);
-  const isNegative = amount < 0;
-
-  const formatted = absAmount.toLocaleString('en-US', {
-    minimumFractionDigits: showCents ? 2 : 0,
-    maximumFractionDigits: showCents ? 2 : 0,
+  return formatCurrencyBase(amount, {
+    decimals: showCents ? 2 : 0,
+    negative: showParensForNegative ? 'parens' : 'minus',
+    symbol: currencySymbol,
   });
-
-  let result = `${currencySymbol}${formatted}`;
-
-  if (isNegative) {
-    result = showParensForNegative ? `(${result})` : `-${result}`;
-  }
-
-  return result;
 }
 
 /**

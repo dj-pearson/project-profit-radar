@@ -64,7 +64,7 @@ const ALLOWED = new Map([
     'consent session id - correlates a consent record for an anonymous visitor, and is the value the anon RLS policy on consent_ledger keys on for grouping, not for authorisation',
   ],
   [
-    'src/lib/profitabilityCalculations.ts:415',
+    'src/lib/profitabilityCalculations.ts:412',
     'calculator run id - a label on a calculation',
   ],
   [

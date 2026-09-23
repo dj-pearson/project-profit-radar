@@ -5,12 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
+// US-377: formatting lives in @/lib/format; re-exported for existing importers.
+export { formatCurrency } from "./format"
 
 /**
  * Get the base URL for Supabase storage
