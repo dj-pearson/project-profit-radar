@@ -3,6 +3,7 @@ import { Plus, Trash2, Award, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -291,7 +292,8 @@ const BidLeveling = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Bid Leveling">
+      <DashboardLayout hasAccessibleWrapper
         title="Bid Leveling"
         description="Compare subcontractor/supplier bids against a shared scope, flag gaps and outliers, see variance vs estimate, and award."
         headerActions={
@@ -552,6 +554,7 @@ const BidLeveling = () => {
           </DialogContent>
         </Dialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

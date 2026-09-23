@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
@@ -240,14 +241,17 @@ export const WorkflowAutomation = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Workflow Automation">
+      <AccessiblePageWrapper pageTitle="Workflow Automation">
+      <DashboardLayout hasAccessibleWrapper title="Workflow Automation">
         <DataTablePageSkeleton label="Loading workflows" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Workflow Automation">
+    <DashboardLayout hasAccessibleWrapper
       title="Workflow Automation"
       description="Create automated workflows to streamline your business processes"
       headerActions={
@@ -460,6 +464,7 @@ export const WorkflowAutomation = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

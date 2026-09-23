@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useExpenseBulkActions } from '@/hooks/useExpenseBulkActions';
 import { useToast } from '@/hooks/use-toast';
 import { usePaginatedQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation, useDeleteMutation } from '@/hooks/useSupabaseMutation';
@@ -108,7 +108,8 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   const [amountMin, setAmountMin] = useState('');
   const [amountMax, setAmountMax] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkLoading, setBulkLoading] = useState(false);
+  const bulkUpdate = useExpenseBulkActions();
+  const bulkLoading = bulkUpdate.isPending;
   const [categorizeValue, setCategorizeValue] = useState('');
 
   const resetPage = () => setPage(1);
@@ -164,36 +165,26 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   const runBulkPaymentStatus = async (status: 'approved' | 'rejected') => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    setBulkLoading(true);
     try {
-      const { error: err } = await supabase.from('expenses').update({ payment_status: status }).in('id', ids);
-      if (err) throw err;
+      await bulkUpdate.mutateAsync({ ids, patch: { payment_status: status } });
       toast({ title: 'Expenses updated', description: `${ids.length} ${status}.` });
       setSelectedIds(new Set());
-      refetch();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Bulk update failed', description: err.message });
-    } finally {
-      setBulkLoading(false);
     }
   };
 
   const runBulkCategorize = async () => {
     const ids = [...selectedIds];
     if (ids.length === 0 || !categorizeValue) return;
-    setBulkLoading(true);
     try {
-      const { error: err } = await supabase.from('expenses').update({ category_id: categorizeValue }).in('id', ids);
-      if (err) throw err;
+      await bulkUpdate.mutateAsync({ ids, patch: { category_id: categorizeValue } });
       const catName = (categoriesList?.data || []).find((c) => c.id === categorizeValue)?.name || 'the selected category';
       toast({ title: 'Expenses categorized', description: `${ids.length} set to ${catName}.` });
       setSelectedIds(new Set());
       setCategorizeValue('');
-      refetch();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Categorize failed', description: err.message });
-    } finally {
-      setBulkLoading(false);
     }
   };
 

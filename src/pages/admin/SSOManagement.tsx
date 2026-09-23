@@ -10,6 +10,7 @@ import { SAML_AVAILABLE, SAML_UNAVAILABLE_NOTICE } from '@/lib/sso/samlAvailabil
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { SSOConfigurationForm } from '@/components/sso/SSOConfigurationForm';
 import { TOTPSetupScreen } from '@/components/mfa/TOTPSetupScreen';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
@@ -375,14 +376,17 @@ export const SSOManagement = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="SSO & Authentication">
+      <AccessiblePageWrapper pageTitle="SSO & Authentication">
+      <DashboardLayout hasAccessibleWrapper title="SSO & Authentication">
         <DataTablePageSkeleton label="Loading authentication settings" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="SSO & Authentication">
+    <DashboardLayout hasAccessibleWrapper
       title="SSO & Authentication"
       description="Manage single sign-on, multi-factor authentication, and security settings"
       headerActions={
@@ -773,6 +777,7 @@ export const SSOManagement = () => {
         }
       />
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

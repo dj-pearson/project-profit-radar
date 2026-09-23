@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface FunnelMetrics {
@@ -298,14 +299,17 @@ export const ConversionAnalytics = () => {
 
   if (loading && !funnelMetrics) {
     return (
-      <DashboardLayout title="Conversion Analytics">
+      <AccessiblePageWrapper pageTitle="Conversion Analytics">
+      <DashboardLayout hasAccessibleWrapper title="Conversion Analytics">
         <DashboardSkeleton label="Loading analytics" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Conversion Analytics">
+    <DashboardLayout hasAccessibleWrapper
       title="Conversion Analytics"
       description="Track leads, conversions, and engagement metrics"
       headerActions={
@@ -622,6 +626,7 @@ export const ConversionAnalytics = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

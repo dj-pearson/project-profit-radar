@@ -139,7 +139,7 @@ export const EmptyDashboard = ({ userRole, onAction }: EmptyDashboardProps) => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Getting Started Section */}
           <div className="text-center mb-12">
@@ -232,7 +232,7 @@ export const EmptyDashboard = ({ userRole, onAction }: EmptyDashboardProps) => {
             </CardContent>
           </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

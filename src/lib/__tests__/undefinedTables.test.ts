@@ -31,9 +31,10 @@ function code(path: string): string {
 }
 
 describe('the financial screens', () => {
+  // The overview's reads moved into its query hook (US-266).
   const SCREENS = [
     'src/components/financial/ProjectFinancialDashboard.tsx',
-    'src/pages/FinancialOverview.tsx',
+    'src/hooks/useFinancialOverview.ts',
   ];
 
   it.each(SCREENS)('%s reads the error on every query before summing', (path) => {
@@ -55,9 +56,12 @@ describe('the financial screens', () => {
   });
 
   it('the overview clears stale figures rather than leaving them under a new period', () => {
+    // Figures come only from the current period's query (the period start is in
+    // the key), and a failed query renders the ErrorState instead of the cards.
     const src = code('src/pages/FinancialOverview.tsx');
-    const catchBlock = src.slice(src.indexOf('} catch (error) {'));
-    expect(catchBlock).toContain('setPayments([]);');
+    expect(src).toContain('useFinancialOverview(startStr)');
+    expect(src).toContain('data?.payments ?? []');
+    expect(src).toMatch(/\{loadError \? \(\s*<ErrorState/);
   });
 });
 

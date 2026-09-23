@@ -209,6 +209,7 @@ export const WarrantyClaimsManager: React.FC = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter claims by status"
                 className="border rounded px-3 py-2 text-sm"
               >
                 <option value="all">All Status</option>

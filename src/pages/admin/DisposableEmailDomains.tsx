@@ -31,6 +31,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import {
   ShieldOff,
   Search,
@@ -364,7 +365,8 @@ const DisposableEmailDomains: React.FC = () => {
 
   if (loading || loadingData) {
     return (
-      <DashboardLayout title="Disposable Email Blocklist" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Disposable Email Blocklist">
+      <DashboardLayout hasAccessibleWrapper title="Disposable Email Blocklist" showTrialBanner={false}>
         <div
           className="space-y-6"
           role="status"
@@ -379,12 +381,14 @@ const DisposableEmailDomains: React.FC = () => {
           <Skeleton className="h-[400px] rounded-lg" />
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout title="Disposable Email Blocklist" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Disposable Email Blocklist">
+      <DashboardLayout hasAccessibleWrapper title="Disposable Email Blocklist" showTrialBanner={false}>
         <div className="space-y-6">
           {/* Stats */}
           <section aria-label="Blocklist summary" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -712,6 +716,7 @@ const DisposableEmailDomains: React.FC = () => {
           </AlertDialogContent>
         </AlertDialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

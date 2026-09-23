@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import { EmptyState } from '@/components/ui/states';
 import { useLoadingState } from '@/hooks/useLoadingState';
@@ -409,7 +410,8 @@ const QuickBooksRouting = () => {
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="QuickBooks Data Routing">
+    <DashboardLayout hasAccessibleWrapper
       title="QuickBooks Data Routing"
       headerActions={
         <Button
@@ -901,6 +903,7 @@ const QuickBooksRouting = () => {
             </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

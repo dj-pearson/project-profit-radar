@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { NotBuiltButton } from '@/components/ui/not-built-button';
 import { getIntegrationAuthUrl, hasOAuthStart } from '@/lib/integrationOAuth';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
@@ -240,14 +241,17 @@ export const IntegrationMarketplace = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Integration Marketplace">
+      <AccessiblePageWrapper pageTitle="Integration Marketplace">
+      <DashboardLayout hasAccessibleWrapper title="Integration Marketplace">
         <DataTablePageSkeleton label="Loading integration marketplace" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Integration Marketplace">
+    <DashboardLayout hasAccessibleWrapper
       title="Integration Marketplace"
       description="Connect Brikly with your favorite tools and apps"
     >
@@ -447,6 +451,7 @@ export const IntegrationMarketplace = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

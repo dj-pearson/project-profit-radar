@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle, Repeat, TrendingUp, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useInvoiceList, invoicesKey } from '@/hooks/useInvoiceList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
@@ -42,53 +43,27 @@ const Invoices: React.FC = () => {
   }, [searchParams, setSearchParams]);
   const [searchTerm, setSearchTerm] = usePersistedState<string>('invoices-search', '');
   const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
   // A failed load used to leave invoices at [] and render a list of nothing
-  // with $0 stats. Keep the failure so the page says so and offers a retry.
-  const [loadError, setLoadError] = useState(false);
-  const { userProfile } = useAuth();
+  // with $0 stats. The query keeps the failure so the page says so and offers a retry.
+  const { invoices, isLoading: loading, error: loadErrorObj, refetch } = useInvoiceList();
+  const loadError = !!loadErrorObj;
+  const loadInvoices = () => { void refetch(); };
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { userProfile } = useAuth();
 
   useEffect(() => {
-    if (userProfile?.company_id) {
-      loadInvoices();
-    }
-  }, [userProfile?.company_id]);
-
-  const loadInvoices = async () => {
-    if (!userProfile?.company_id) return;
-    
-    try {
-      setLoading(true);
-      setLoadError(false);
-      const { data, error } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          projects(name),
-          invoice_payments(payment_amount, payment_date)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setInvoices(data || []);
-    } catch (error) {
-      logger.error('Error loading invoices', error instanceof Error ? error : undefined);
-      setLoadError(true);
-      toast({
-        title: "Error",
-        description: "Failed to load invoices",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (!loadErrorObj) return;
+    logger.error('Error loading invoices', loadErrorObj);
+    toast({
+      title: "Error",
+      description: "Failed to load invoices",
+      variant: "destructive"
+    });
+  }, [loadErrorObj, toast]);
 
   const handleInvoiceCreated = (newInvoice: any) => {
-    setInvoices(prev => [newInvoice, ...prev]);
+    void queryClient.invalidateQueries({ queryKey: invoicesKey(userProfile?.company_id ?? undefined) });
     setShowInvoiceGenerator(false);
     toast({
       title: "Invoice Created",

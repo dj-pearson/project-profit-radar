@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -201,7 +202,8 @@ export function AIEstimating() {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="AI Estimating">
+    <DashboardLayout hasAccessibleWrapper
       title="AI Estimating"
       description="Generate accurate project estimates using AI and machine learning"
       headerActions={
@@ -502,6 +504,7 @@ export function AIEstimating() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }
 

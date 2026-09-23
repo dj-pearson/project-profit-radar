@@ -1,11 +1,13 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { EnhancedLeadIntelligence } from "@/components/crm/EnhancedLeadIntelligence";
 import { LeadScoring } from "@/components/crm/LeadScoring";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CRMLeadIntelligence = () => {
   return (
-    <DashboardLayout title="Lead Intelligence">
+    <AccessiblePageWrapper pageTitle="Lead Intelligence">
+    <DashboardLayout hasAccessibleWrapper title="Lead Intelligence">
       <div className="space-y-6">
         <Tabs defaultValue="intelligence" className="w-full" aria-label="Lead intelligence sections">
           <TabsList className="grid w-full grid-cols-2" aria-label="Intelligence categories">
@@ -21,6 +23,7 @@ const CRMLeadIntelligence = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

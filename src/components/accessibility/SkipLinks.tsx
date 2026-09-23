@@ -18,7 +18,13 @@ const focusTarget = (id: string, fallbackSelector: string) => {
     target.setAttribute('tabindex', '-1');
   }
   target.focus();
-  target.scrollIntoView({ behavior: 'smooth' });
+  // CSS scroll-behavior does not reach an explicit behavior: 'smooth', so the
+  // reduced-motion preference has to be read here (US-221).
+  const reduceMotion =
+    document.documentElement.classList.contains('reduce-motion') ||
+    (typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
 };
 
 export const SkipLinks: React.FC = () => {

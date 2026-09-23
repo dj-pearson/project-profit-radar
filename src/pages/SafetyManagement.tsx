@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -180,7 +181,8 @@ export default function SafetyManagement() {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Safety Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Safety Management"
       description="Manage workplace safety, incidents, and compliance"
       headerActions={
@@ -786,5 +788,6 @@ export default function SafetyManagement() {
          </Dialog>
        </div>
      </DashboardLayout>
+     </AccessiblePageWrapper>
    );
  }

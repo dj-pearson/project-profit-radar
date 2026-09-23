@@ -305,6 +305,12 @@ jobs:
       - name: Ad-hoc loader guard (US-285)
         run: node scripts/check-adhoc-loaders.mjs
 
+      - name: Accessible page wrapper guard (US-221)
+        run: node scripts/count-a11y-adoption.mjs --check
+
+      - name: Raw supabase.from() in components guard (US-266)
+        run: node scripts/check-raw-supabase-in-components.mjs
+
 
       - name: Unreferenced-module guard (US-314 follow-up)
         run: node scripts/check-unreferenced-modules.mjs

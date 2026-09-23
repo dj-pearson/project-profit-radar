@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -398,14 +399,17 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
 
   if (loading && errors.length === 0) {
     return (
-      <DashboardLayout title="Error Logs">
+      <AccessiblePageWrapper pageTitle="Error Logs">
+      <DashboardLayout hasAccessibleWrapper title="Error Logs">
         <DataTablePageSkeleton label="Loading error logs" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Error Logs">
+    <DashboardLayout hasAccessibleWrapper
       title="Error Logs"
       description="Monitor and manage application errors across all users"
       headerActions={
@@ -760,6 +764,7 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
         )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

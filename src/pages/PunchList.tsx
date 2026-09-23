@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { usePunchListPage } from '@/hooks/usePunchListPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import { CheckSquare, AlertTriangle, PlusCircle, CheckCircle, XCircle, Clock, User, Calendar, MapPin, MessageSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -54,11 +55,27 @@ const PunchList = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [punchItems, setPunchItems] = useState<PunchListItem[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [loadingItems, setLoadingItems] = useState(true);
+  const canViewPunchList = !!userProfile && ['admin', 'project_manager', 'field_supervisor', 'office_staff', 'root_admin'].includes(userProfile.role);
+  const punchList = usePunchListPage<PunchListItem>({ enabled: canViewPunchList });
+  const { isLoading: queryLoading, error: loadError, refetch } = punchList;
+  const projects: Project[] = punchList.projects;
+  const punchItems: PunchListItem[] = punchList.items;
+  // Before the profile arrives there is nothing to fetch yet; keep the skeleton up.
+  const loadingItems = queryLoading || !userProfile;
+  const loadData = useCallback(() => { void refetch(); }, [refetch]);
+
+  useEffect(() => {
+    if (!loadError) return;
+    console.error('Error loading data:', loadError);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to load punch list data"
+    });
+  }, [loadError]);
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PunchListItem | null>(null);
@@ -96,50 +113,7 @@ const PunchList = () => {
       });
       return;
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoadingItems(true);
-      
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, status')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load punch list items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('punch_list_items')
-        .select(`
-          *,
-          projects(name, client_name)
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
-
-      if (itemsError) throw itemsError;
-      setPunchItems((itemsData || []) as PunchListItem[]);
-
-    } catch (error: unknown) {
-      console.error('Error loading data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load punch list data"
-      });
-    } finally {
-      setLoadingItems(false);
-    }
-  }, [userProfile?.company_id]);
 
   const handleCreateItem = useCallback(async () => {
     if (!newItem.project_id || !newItem.description) {
@@ -152,23 +126,20 @@ const PunchList = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('punch_list_items')
-        .insert({
-          item_number: `PLI-${Date.now().toString().slice(-8)}`,
-          project_id: newItem.project_id,
-          description: newItem.description,
-          location: newItem.location || null,
-          trade: newItem.trade || null,
-          priority: newItem.priority,
-          assigned_to: newItem.assigned_to || null,
-          company_id: userProfile?.company_id,
-          created_by: user?.id
-        })
-        .select();
-
-
-      if (error) throw error;
+      if (!userProfile?.company_id || !user?.id) {
+        throw new Error('Your account is not linked to a company, so there is nowhere to save this.');
+      }
+      await punchList.insert({
+        item_number: `PLI-${Date.now().toString().slice(-8)}`,
+        project_id: newItem.project_id,
+        description: newItem.description,
+        location: newItem.location || null,
+        trade: newItem.trade || null,
+        priority: newItem.priority,
+        assigned_to: newItem.assigned_to || null,
+        company_id: userProfile.company_id,
+        created_by: user.id
+      });
 
       toast({
         title: "Success",
@@ -186,8 +157,6 @@ const PunchList = () => {
         assigned_to: '',
         due_date: ''
       });
-      
-      loadData();
     } catch (error: unknown) {
       console.error('Error creating punch list item:', error);
       toast({
@@ -196,7 +165,7 @@ const PunchList = () => {
         description: "Failed to create punch list item"
       });
     }
-  }, [newItem, userProfile?.company_id, user?.id, loadData]);
+  }, [newItem, userProfile?.company_id, user?.id, punchList]);
 
   const handleStatusUpdate = useCallback(async (itemId: string, newStatus: string) => {
     // This said "Status updated successfully" and wrote nothing at all. The
@@ -222,19 +191,12 @@ const PunchList = () => {
         updates.verified_by = user?.id ?? null;
       }
 
-      const { error } = await supabase
-        .from('punch_list_items')
-        .update(updates)
-        .eq('id', itemId);
-
-      if (error) throw error;
+      await punchList.update(itemId, updates);
 
       toast({
         title: "Success",
         description: "Status updated successfully"
       });
-
-      loadData();
     } catch (error: unknown) {
       console.error('Error updating status:', error);
       toast({
@@ -243,26 +205,21 @@ const PunchList = () => {
         description: error instanceof Error ? error.message : "Failed to update status"
       });
     }
-  }, [loadData, user?.id]);
+  }, [punchList, user?.id]);
 
   const handleEditItem = useCallback(async () => {
     if (!editingItem || !editingItem.id) return;
 
     try {
-      const { error } = await supabase
-        .from('punch_list_items')
-        .update({
-          description: editingItem.description,
-          category: editingItem.category,
-          priority: editingItem.priority,
-          location: editingItem.location,
-          trade: editingItem.trade,
-          due_date: editingItem.due_date || null,
-          assigned_to: editingItem.assigned_to || null
-        })
-        .eq('id', editingItem.id);
-
-      if (error) throw error;
+      await punchList.update(editingItem.id, {
+        description: editingItem.description,
+        category: editingItem.category,
+        priority: editingItem.priority,
+        location: editingItem.location,
+        trade: editingItem.trade,
+        due_date: editingItem.due_date || null,
+        assigned_to: editingItem.assigned_to || null
+      });
 
       toast({
         title: "Success",
@@ -271,7 +228,6 @@ const PunchList = () => {
 
       setIsEditDialogOpen(false);
       setEditingItem(null);
-      loadData();
     } catch (error) {
       console.error('Error updating punch list item:', error);
       toast({
@@ -280,7 +236,7 @@ const PunchList = () => {
         description: "There was a problem updating the punch list item."
       });
     }
-  }, [editingItem, loadData]);
+  }, [editingItem, punchList]);
 
   const handleAddComment = useCallback(async () => {
     if (!commentText.trim()) {
@@ -308,12 +264,7 @@ const PunchList = () => {
       const entry = `[${stamp}] ${author}: ${commentText.trim()}`;
       const nextNotes = selectedItem.notes ? `${selectedItem.notes}\n${entry}` : entry;
 
-      const { error } = await supabase
-        .from('punch_list_items')
-        .update({ notes: nextNotes, updated_at: new Date().toISOString() })
-        .eq('id', selectedItem.id);
-
-      if (error) throw error;
+      await punchList.update(selectedItem.id, { notes: nextNotes, updated_at: new Date().toISOString() });
 
       toast({
         title: "Success",
@@ -323,8 +274,6 @@ const PunchList = () => {
       setIsCommentDialogOpen(false);
       setCommentText('');
       setSelectedItem(null);
-
-      loadData();
     } catch (error: unknown) {
       console.error('Error adding comment:', error);
       toast({
@@ -333,7 +282,7 @@ const PunchList = () => {
         description: error instanceof Error ? error.message : "Failed to add comment"
       });
     }
-  }, [commentText, loadData, selectedItem, userProfile]);
+  }, [commentText, punchList, selectedItem, userProfile]);
 
   const getStatusBadge = useCallback((status: string) => {
     switch (status) {
@@ -578,7 +527,14 @@ const PunchList = () => {
 
         {/* Punch List Items */}
         <div className="space-y-6">
-          {filteredItems.length === 0 ? (
+          {loadError ? (
+            <ErrorState
+              inline
+              title="Punch list did not load"
+              error={loadError}
+              onRetry={loadData}
+            />
+          ) : filteredItems.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

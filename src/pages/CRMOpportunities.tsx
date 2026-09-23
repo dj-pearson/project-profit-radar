@@ -7,6 +7,7 @@ import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton, TableSkeleton } from '@/components/ui/skeletons';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
@@ -329,7 +330,8 @@ const CRMOpportunities = () => {
   }
 
   return (
-    <DashboardLayout title="Sales Opportunities">
+    <AccessiblePageWrapper pageTitle="Sales Opportunities">
+    <DashboardLayout hasAccessibleWrapper title="Sales Opportunities">
             
             {/* Pipeline Summary */}
             <section aria-label="Pipeline summary">
@@ -780,6 +782,7 @@ const CRMOpportunities = () => {
         currentLimit={checkLimit('projects').limit}
       />
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

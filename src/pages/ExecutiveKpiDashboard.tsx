@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -205,7 +206,8 @@ const ExecutiveKpiDashboard = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Executive Dashboard">
+      <DashboardLayout hasAccessibleWrapper
         title="Executive Dashboard"
         description="Company-wide KPIs with revenue forecasting — profit-margin trend, cash runway, win rate, average project size, and backlog."
         headerActions={
@@ -339,6 +341,7 @@ const ExecutiveKpiDashboard = () => {
           ) : null}
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

@@ -112,7 +112,7 @@ export const ConstructionDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Welcome Section */}
         <Card>
           <CardHeader>
@@ -242,7 +242,7 @@ export const ConstructionDashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
     </div>
   );
 };

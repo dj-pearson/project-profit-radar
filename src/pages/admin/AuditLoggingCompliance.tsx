@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface AuditLog {
@@ -322,14 +323,17 @@ export const AuditLoggingCompliance = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Audit & Compliance">
+      <AccessiblePageWrapper pageTitle="Audit & Compliance">
+      <DashboardLayout hasAccessibleWrapper title="Audit & Compliance">
         <DataTablePageSkeleton label="Loading compliance data" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Audit & Compliance">
+    <DashboardLayout hasAccessibleWrapper
       title="Audit & Compliance"
       description="Track all activity, manage GDPR requests, and maintain compliance"
       headerActions={
@@ -743,6 +747,7 @@ export const AuditLoggingCompliance = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

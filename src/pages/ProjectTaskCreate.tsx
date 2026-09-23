@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { FormSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,8 @@ const ProjectTaskCreate = () => {
 
   if (!project) {
     return (
-      <DashboardLayout title="Project Not Found">
+      <AccessiblePageWrapper pageTitle="Project Not Found">
+      <DashboardLayout hasAccessibleWrapper title="Project Not Found">
         <div className="text-center py-8">
           <p className="text-muted-foreground">Project not found</p>
           <Button onClick={() => navigate('/projects')} className="mt-4">
@@ -78,11 +80,13 @@ const ProjectTaskCreate = () => {
           </Button>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle={`Create Task - ${project.name}`}>
+    <DashboardLayout hasAccessibleWrapper
       title={`Create Task - ${project.name}`}
       description={<>Add a task to {project.name}</>}
       headerActions={
@@ -100,6 +104,7 @@ const ProjectTaskCreate = () => {
         />
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

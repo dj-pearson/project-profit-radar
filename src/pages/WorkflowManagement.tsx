@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,8 @@ const WorkflowManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Workflow Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Workflow Management"
       description="Streamline your construction workflows with integrated management tools"
     >
@@ -291,6 +293,7 @@ const WorkflowManagement = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

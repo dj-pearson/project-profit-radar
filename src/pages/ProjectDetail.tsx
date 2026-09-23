@@ -136,12 +136,12 @@ const ProjectDetail = () => {
     return (
       <AccessiblePageWrapper pageTitle="Project Details">
         <DashboardLayout title="Project Not Found" hasAccessibleWrapper>
-          <main className="text-center py-8" role="main" aria-label="Project not found">
+          <div className="text-center py-8">
             <p className="text-muted-foreground">Project not found</p>
             <Button onClick={() => navigate('/projects')} className="mt-4">
               Back to Projects
             </Button>
-          </main>
+          </div>
         </DashboardLayout>
       </AccessiblePageWrapper>
     );
@@ -228,7 +228,7 @@ const ProjectDetail = () => {
         </header>
         </SharedElement>
 
-        <main className="flex-1 px-4 py-4 space-y-4 pb-20" role="main" aria-label={`${project.name} details`}>
+        <div className="flex-1 px-4 py-4 space-y-4 pb-20">
           {/* Contextual Actions - Mobile */}
           <ContextualActions
             context={{
@@ -254,7 +254,7 @@ const ProjectDetail = () => {
             onNavigate={navigate}
             onProjectChanged={() => { if (projectId) void loadProject(projectId); }}
           />
-        </main>
+        </div>
 
         {/* Mobile Bottom Navigation - project-scoped, keeps the project id */}
         <MobileBottomNav items={projectContextNavItems(project.id)} />
@@ -266,7 +266,7 @@ const ProjectDetail = () => {
   return (
     <AccessiblePageWrapper pageTitle="Project Details">
     <DashboardLayout title={project.name} hasAccessibleWrapper>
-      <main className="flex-1 overflow-auto" role="main" aria-label={`${project.name} project details`}>
+      <div className="flex-1 overflow-auto">
         <div className="p-6 space-y-6">
           {/* Header with project summary */}
           <header className="flex items-start justify-between">
@@ -426,7 +426,7 @@ const ProjectDetail = () => {
             </Suspense>
           </section>
         </div>
-      </main>
+      </div>
     </DashboardLayout>
     </AccessiblePageWrapper>
   );

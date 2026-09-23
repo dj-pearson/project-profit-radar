@@ -31,6 +31,9 @@ function builder(table: string) {
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (table: string) => builder(table) },
 }));
+vi.mock('@/components/accessibility/AccessiblePageWrapper', () => ({
+  AccessiblePageWrapper: ({ children }: { children: ReactNode }) => <main>{children}</main>,
+}));
 vi.mock('@/components/layout/DashboardLayout', () => ({
   DashboardLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

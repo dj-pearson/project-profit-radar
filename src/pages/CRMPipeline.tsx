@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { EnhancedPipelineKanban } from "@/components/crm/EnhancedPipelineKanban";
 import { PipelineSettings } from "@/components/crm/PipelineSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,7 +56,8 @@ const CRMPipeline = () => {
   };
 
   return (
-    <DashboardLayout title="Pipeline Management">
+    <AccessiblePageWrapper pageTitle="Pipeline Management">
+    <DashboardLayout hasAccessibleWrapper title="Pipeline Management">
       <div className="space-y-6">
         {/* Data Sync Notice */}
         <Card className="border-orange-200 bg-orange-50">
@@ -113,6 +115,7 @@ const CRMPipeline = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

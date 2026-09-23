@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import { Users, Search, UserCheck, UserX, Building2, Mail, Eye, UserCog } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -194,7 +195,8 @@ const UsersPage = () => {
 
   if (loading || loadingData) {
     return (
-      <DashboardLayout title="Users" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Users">
+      <DashboardLayout hasAccessibleWrapper title="Users" showTrialBanner={false}>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -202,12 +204,14 @@ const UsersPage = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout title="Users" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Users">
+      <DashboardLayout hasAccessibleWrapper title="Users" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
         <section className="flex flex-col sm:flex-row gap-4" aria-label="User filters">
@@ -509,6 +513,7 @@ const UsersPage = () => {
         </div>
       </AccessibleModal>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

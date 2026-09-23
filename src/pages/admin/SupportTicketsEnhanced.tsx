@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -311,15 +312,18 @@ const SupportTicketsEnhanced = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Support Tickets" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Support Tickets">
+      <DashboardLayout hasAccessibleWrapper title="Support Tickets" showTrialBanner={false}>
         <DataTablePageSkeleton label="Loading support tickets" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Support Tickets">
+      <DashboardLayout hasAccessibleWrapper
         title="Support Tickets" showTrialBanner={false}
         description="AI-powered support with user context and response suggestions"
         headerActions={
@@ -573,6 +577,7 @@ const SupportTicketsEnhanced = () => {
           </div>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

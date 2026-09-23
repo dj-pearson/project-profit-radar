@@ -164,6 +164,13 @@ import UserSettings from '../UserSettings';
 import PurchaseOrders from '../PurchaseOrders';
 import RFIs from '../RFIs';
 import PunchList from '../PunchList';
+import Vendors from '../Vendors';
+import Support from '../Support';
+import OperationsHub from '../hubs/OperationsHub';
+import Submittals from '../Submittals';
+import WarrantyManagement from '../WarrantyManagement';
+import ServiceDispatch from '../ServiceDispatch';
+import CRMContacts from '../CRMContacts';
 
 const PAGES: Array<[string, React.ComponentType, string]> = [
   ['TimeTracking', TimeTracking, '/time-tracking'],
@@ -179,6 +186,16 @@ const PAGES: Array<[string, React.ComponentType, string]> = [
   ['PurchaseOrders', PurchaseOrders, '/purchase-orders'],
   ['RFIs', RFIs, '/rfis'],
   ['PunchList', PunchList, '/punch-list'],
+  // Wrapped in the adoption pass; Vendors, Support and OperationsHub also had
+  // a <main> of their own nested inside the layout's. (BlogManager is
+  // root_admin-only and redirects the admin fixture, so it is not scanned.)
+  ['Vendors', Vendors, '/vendors'],
+  ['Support', Support, '/support'],
+  ['OperationsHub', OperationsHub, '/operations-hub'],
+  ['Submittals', Submittals, '/submittals'],
+  ['WarrantyManagement', WarrantyManagement, '/warranty-management'],
+  ['ServiceDispatch', ServiceDispatch, '/service-dispatch'],
+  ['CRMContacts', CRMContacts, '/crm/contacts'],
 ];
 
 function blocking(violations: AxeResults['violations']): string[] {

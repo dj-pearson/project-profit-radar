@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
@@ -334,14 +335,17 @@ export const PermissionManagement = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Permission Management">
+      <AccessiblePageWrapper pageTitle="Permission Management">
+      <DashboardLayout hasAccessibleWrapper title="Permission Management">
         <DataTablePageSkeleton label="Loading permissions" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Permission Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Permission Management"
       description="Manage custom roles, permissions, and access control"
     >
@@ -839,6 +843,7 @@ export const PermissionManagement = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

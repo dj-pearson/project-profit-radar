@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState } from '@/components/ui/states';
@@ -318,7 +319,8 @@ const CRMContacts = () => {
   }
 
   return (
-    <DashboardLayout title="Contact Management">
+    <AccessiblePageWrapper pageTitle="Contact Management">
+    <DashboardLayout hasAccessibleWrapper title="Contact Management">
 
             {/* Filters and Actions */}
             <Card className="mb-6">
@@ -656,6 +658,7 @@ const CRMContacts = () => {
               })()}
             </ErrorBoundary>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

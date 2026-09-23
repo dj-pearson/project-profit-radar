@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { JobCostingDashboard } from '@/components/job-costing/JobCostingDashboard';
 import { BudgetManager } from '@/components/job-costing/BudgetManager';
@@ -134,16 +135,18 @@ const JobCosting: React.FC = () => {
   };
 
   if (loading) {
-    return <DashboardLayout title="Job Costing">
+    return <AccessiblePageWrapper pageTitle="Job Costing"><DashboardLayout hasAccessibleWrapper title="Job Costing">
       <div className="flex items-center justify-center h-64">
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+    </AccessiblePageWrapper>;
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout title="Job Costing">
+      <AccessiblePageWrapper pageTitle="Job Costing">
+      <DashboardLayout hasAccessibleWrapper title="Job Costing">
         <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -214,6 +217,7 @@ const JobCosting: React.FC = () => {
         )}
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

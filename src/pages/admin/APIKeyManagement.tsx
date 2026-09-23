@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
@@ -277,9 +278,11 @@ export const APIKeyManagement = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="API Keys">
+      <AccessiblePageWrapper pageTitle="API Keys">
+      <DashboardLayout hasAccessibleWrapper title="API Keys">
         <DataTablePageSkeleton label="Loading API keys" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -289,7 +292,8 @@ export const APIKeyManagement = () => {
   const successRate = totalRequests > 0 ? ((totalRequests - totalErrors) / totalRequests * 100) : 100;
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="API Key Management">
+    <DashboardLayout hasAccessibleWrapper
       title="API Key Management"
       description="Manage API keys for third-party integrations"
       headerActions={
@@ -624,6 +628,7 @@ export const APIKeyManagement = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

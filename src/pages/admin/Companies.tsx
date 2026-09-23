@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Building2, Users, Calendar, Search, Eye } from 'lucide-react';
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -218,7 +219,8 @@ const Companies = () => {
 
   if (loading || loadingData) {
     return (
-      <DashboardLayout title="Companies" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Companies">
+      <DashboardLayout hasAccessibleWrapper title="Companies" showTrialBanner={false}>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -226,12 +228,14 @@ const Companies = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout title="Companies" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Companies">
+      <DashboardLayout hasAccessibleWrapper title="Companies" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
         <section className="flex flex-col sm:flex-row gap-4" aria-label="Company filters">
@@ -521,6 +525,7 @@ const Companies = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

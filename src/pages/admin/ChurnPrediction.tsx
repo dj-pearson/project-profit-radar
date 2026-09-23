@@ -7,6 +7,7 @@ import { AlertTriangle, TrendingDown, Users, Mail, Phone, Clock, Target, CheckCi
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface ChurnPrediction {
@@ -195,14 +196,17 @@ export const ChurnPrediction = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Churn Prediction">
+      <AccessiblePageWrapper pageTitle="Churn Prediction">
+      <DashboardLayout hasAccessibleWrapper title="Churn Prediction">
         <DashboardSkeleton label="Loading churn predictions" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Churn Prediction">
+    <DashboardLayout hasAccessibleWrapper
       title="Churn Prediction"
       description="Predict and prevent customer churn with AI-powered insights"
       headerActions={
@@ -507,6 +511,7 @@ export const ChurnPrediction = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

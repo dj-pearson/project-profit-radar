@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { gtag } from '@/hooks/useGoogleAnalytics';
 import { 
   DollarSign,
@@ -176,7 +177,8 @@ const Billing = () => {
 
   if (loading || loadingData) {
     return (
-      <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Billing & Subscriptions">
+      <DashboardLayout hasAccessibleWrapper title="Billing & Subscriptions" showTrialBanner={false}>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -184,12 +186,14 @@ const Billing = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Billing & Subscriptions">
+      <DashboardLayout hasAccessibleWrapper title="Billing & Subscriptions" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Analytics Cards */}
         <section className="grid grid-cols-1 md:grid-cols-5 gap-6" aria-label="Revenue metrics">
@@ -445,6 +449,7 @@ const Billing = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

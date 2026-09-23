@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -155,7 +156,8 @@ const WarrantyManagement = () => {
   }
 
   return (
-    <DashboardLayout title="Warranty Management">
+    <AccessiblePageWrapper pageTitle="Warranty Management">
+    <DashboardLayout hasAccessibleWrapper title="Warranty Management">
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -243,6 +245,7 @@ const WarrantyManagement = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
+                    aria-label="Filter warranties by status"
                     className="border rounded px-3 py-2 text-sm"
                   >
                     <option value="all">All Status</option>
@@ -391,6 +394,7 @@ const WarrantyManagement = () => {
       )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

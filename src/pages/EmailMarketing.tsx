@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -149,7 +150,8 @@ export default function EmailMarketing() {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Email Marketing">
+    <DashboardLayout hasAccessibleWrapper
       title="Email Marketing"
       description="Create and manage email campaigns for clients and prospects"
       headerActions={
@@ -516,5 +518,6 @@ export default function EmailMarketing() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

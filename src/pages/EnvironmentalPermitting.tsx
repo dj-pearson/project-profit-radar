@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -290,7 +291,8 @@ export default function EnvironmentalPermitting() {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Environmental Permitting">
+    <DashboardLayout hasAccessibleWrapper
       title="Environmental Permitting" showTrialBanner={false}
       description="NEPA compliance and environmental permits"
       headerActions={
@@ -907,5 +909,6 @@ export default function EnvironmentalPermitting() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,8 @@ export default function CustomerDetail() {
     : 'Customer';
 
   return (
-    <DashboardLayout title={name}>
+    <AccessiblePageWrapper pageTitle={name}>
+    <DashboardLayout hasAccessibleWrapper title={name}>
       <div className="space-y-6">
         {loading ? (
           <>
@@ -221,5 +223,6 @@ export default function CustomerDetail() {
         )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

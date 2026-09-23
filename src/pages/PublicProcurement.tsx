@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -232,7 +233,8 @@ export default function PublicProcurement() {
   };
 
   return (
-    <DashboardLayout title="Public Procurement">
+    <AccessiblePageWrapper pageTitle="Public Procurement">
+    <DashboardLayout hasAccessibleWrapper title="Public Procurement">
       <div className="space-y-6">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -608,5 +610,6 @@ export default function PublicProcurement() {
       </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

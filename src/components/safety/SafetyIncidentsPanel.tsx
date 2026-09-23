@@ -3,7 +3,6 @@
  * list with a detail view. company_id-scoped (RLS); uses safety_incidents.
  */
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -15,8 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useSafetyIncidentsPanel, type IncidentRow } from '@/hooks/useSafetyIncidentsPanel';
 import { ShieldCheck, AlertTriangle, CalendarClock, ClipboardList, FileWarning } from 'lucide-react';
 import {
   summarizeIncidents,
@@ -25,26 +24,6 @@ import {
   type Severity,
   type IncidentSortField,
 } from '@/lib/safety/incidentStats';
-
-interface IncidentRow {
-  id: string;
-  incident_date: string;
-  incident_time: string | null;
-  severity: string;
-  incident_type: string;
-  status: string | null;
-  location: string | null;
-  description: string;
-  project_id: string | null;
-  injured_person_name: string | null;
-  immediate_actions: string | null;
-  corrective_actions: string | null;
-  root_cause_analysis: string | null;
-  witnesses: string[] | null;
-  osha_recordable: boolean | null;
-  lost_time: boolean | null;
-  days_away_from_work: number | null;
-}
 
 const severityBadge: Record<Severity, string> = {
   critical: 'bg-red-100 text-red-700 border-red-200',
@@ -60,9 +39,6 @@ function fmtDate(value?: string | null): string {
 }
 
 export function SafetyIncidentsPanel() {
-  const { userProfile } = useAuth();
-  const companyId = userProfile?.company_id;
-
   const [severity, setSeverity] = useState<Severity | 'all'>('all');
   const [projectId, setProjectId] = useState<string>('all');
   const [from, setFrom] = useState('');
@@ -70,29 +46,7 @@ export function SafetyIncidentsPanel() {
   const [sortBy, setSortBy] = useState<IncidentSortField>('date');
   const [selected, setSelected] = useState<IncidentRow | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['safety-incidents-panel', companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const [incidentsRes, projectsRes] = await Promise.all([
-        supabase
-          .from('safety_incidents')
-          .select(
-            'id, incident_date, incident_time, severity, incident_type, status, location, description, project_id, injured_person_name, immediate_actions, corrective_actions, root_cause_analysis, witnesses, osha_recordable, lost_time, days_away_from_work'
-          )
-          .eq('company_id', companyId)
-          .order('incident_date', { ascending: false }),
-        supabase.from('projects').select('id, name').eq('company_id', companyId),
-      ]);
-      if (incidentsRes.error) throw incidentsRes.error;
-      return {
-        incidents: (incidentsRes.data ?? []) as IncidentRow[],
-        projectNames: new Map(
-          ((projectsRes.data ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name])
-        ),
-      };
-    },
-  });
+  const { data, isLoading, error, refetch } = useSafetyIncidentsPanel();
 
   const stats = useMemo(
     () => (data ? summarizeIncidents(data.incidents) : null),
@@ -115,6 +69,17 @@ export function SafetyIncidentsPanel() {
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        inline
+        title="Safety incidents could not be loaded"
+        error={error as Error}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

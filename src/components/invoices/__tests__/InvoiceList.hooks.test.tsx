@@ -1,4 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render as rtlRender, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import InvoiceList from '../InvoiceList';
 
@@ -6,6 +8,16 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: () => ({ update: () => ({ in: async () => ({ error: null }) }) }) },
 }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ userProfile: { company_id: 'c1' } }) }));
+
+// The bulk actions are TanStack mutations now (US-266), so the list needs a client.
+const render = (ui: ReactElement) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  return rtlRender(ui, { wrapper });
+};
 
 /**
  * US-363: useRef and useVirtualizer sat below the `if (loading)` early return,

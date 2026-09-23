@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useProjectTabRecords } from '@/hooks/useProjectTabRecords';
+import { ErrorState } from '@/components/common/ErrorState';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   FileX, 
@@ -26,37 +26,7 @@ export const ProjectChangeOrders: React.FC<ProjectChangeOrdersProps> = ({
   projectId,
   onNavigate
 }) => {
-  const [changeOrders, setChangeOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (projectId) {
-      loadChangeOrders();
-    }
-  }, [projectId]);
-
-  const loadChangeOrders = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('change_orders')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setChangeOrders(data || []);
-    } catch (error: any) {
-      console.error('Error loading change orders:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load change orders"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { records: changeOrders, isLoading: loading, error: loadError, refetch } = useProjectTabRecords('change_orders', projectId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,6 +61,17 @@ export const ProjectChangeOrders: React.FC<ProjectChangeOrdersProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Change orders could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

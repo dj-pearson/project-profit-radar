@@ -71,9 +71,13 @@ describe('PunchList: two live handlers that wrote nothing', () => {
     // It said "Status updated successfully" and wrote nothing, then loadData()
     // re-read the row and the badge snapped back. /punch-list is a live route,
     // and a punch list is the snag list for handover.
+    // US-266: the write goes through usePunchListPage, which selects the row
+    // back and throws when RLS changed nothing.
     const src = code(SRC);
-    expect(src).toMatch(/const \{ error \} = await supabase\s*\n\s*\.from\('punch_list_items'\)\s*\n\s*\.update\(updates\)/);
+    expect(src).toMatch(/await punchList\.update\(itemId, updates\)/);
     expect(src).toContain('status: newStatus');
+    const hook = code('src/hooks/usePunchListPage.ts');
+    expect(hook).toMatch(/\.from\('punch_list_items'\)\.update\(patch\)\.eq\('id', id\)\.select\('id'\)/);
   });
 
   it('and stamps who completed or verified it, which the schema has columns for', () => {
@@ -89,7 +93,7 @@ describe('PunchList: two live handlers that wrote nothing', () => {
     // notes column. Appending there is only honest if the notes are shown -
     // otherwise it is a write nobody can read.
     const src = code(SRC);
-    expect(src).toMatch(/\.update\(\{ notes: nextNotes/);
+    expect(src).toMatch(/punchList\.update\(selectedItem\.id, \{ notes: nextNotes/);
     expect(src).toContain('{item.notes}');
   });
 

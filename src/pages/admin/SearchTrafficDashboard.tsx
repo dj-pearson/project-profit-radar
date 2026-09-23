@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -285,7 +286,8 @@ const SearchTrafficDashboard: React.FC = () => {
   const totalPlatforms = 4; // GA, GSC, Bing, Yandex
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Search Traffic Dashboard">
+    <DashboardLayout hasAccessibleWrapper
       title="Search Traffic Dashboard"
       description="Unified analytics dashboard combining all major search and analytics platforms"
       headerActions={
@@ -694,6 +696,7 @@ const SearchTrafficDashboard: React.FC = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

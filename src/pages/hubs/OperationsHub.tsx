@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { dashboardAreas } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { supabase } from '@/integrations/supabase/client';
 
 const OperationsHub = () => {
@@ -71,8 +72,9 @@ const OperationsHub = () => {
   };
 
   return (
-    <DashboardLayout title={operationsArea.title}>
-      <main aria-label="Operations Hub">
+    <AccessiblePageWrapper pageTitle={operationsArea.title}>
+    <DashboardLayout hasAccessibleWrapper title={operationsArea.title}>
+      <div>
         {/* Quick Stats */}
         <section aria-label="Operations quick statistics">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -202,8 +204,9 @@ const OperationsHub = () => {
             );
           })}
         </div>
-      </main>
+      </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

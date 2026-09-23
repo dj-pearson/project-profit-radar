@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { dashboardAreas, NavigationItem } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateMissingContent } from '@/components/admin/CreateMissingContent';
 
@@ -69,7 +70,8 @@ const AdminHub = () => {
   // Check if user has admin access
   if (!['admin', 'root_admin'].includes(userProfile?.role || '')) {
     return (
-      <DashboardLayout title="Access Denied">
+      <AccessiblePageWrapper pageTitle="Access Denied">
+      <DashboardLayout hasAccessibleWrapper title="Access Denied">
         <div className="flex items-center justify-center min-h-96">
           <Card className="max-w-md">
             <CardContent className="text-center py-12">
@@ -84,6 +86,7 @@ const AdminHub = () => {
           </Card>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -94,7 +97,8 @@ const AdminHub = () => {
   };
 
   return (
-    <DashboardLayout title={adminArea.title}>
+    <AccessiblePageWrapper pageTitle={adminArea.title}>
+    <DashboardLayout hasAccessibleWrapper title={adminArea.title}>
       <div>
         {/* Admin Stats (only for root_admin) */}
         {userProfile?.role === 'root_admin' && (
@@ -248,6 +252,7 @@ const AdminHub = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

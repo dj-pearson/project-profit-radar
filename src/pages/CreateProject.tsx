@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap } from 'lucide-react';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
@@ -144,7 +145,8 @@ const CreateProject = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Create Project">
+      <AccessiblePageWrapper pageTitle="Create Project">
+      <DashboardLayout hasAccessibleWrapper title="Create Project">
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -152,6 +154,7 @@ const CreateProject = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -245,7 +248,8 @@ const CreateProject = () => {
   };
 
   return (
-    <DashboardLayout title="Create New Project">
+    <AccessiblePageWrapper pageTitle="Create New Project">
+    <DashboardLayout hasAccessibleWrapper title="Create New Project">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Quick Mode Toggle & Template Selector */}
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
@@ -589,6 +593,7 @@ const CreateProject = () => {
         />
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

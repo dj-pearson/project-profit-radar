@@ -3603,8 +3603,8 @@
         "No visual or functional regressions on migrated pages"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: testing/a11y audit. Continuation of US-010..014 beyond 'top 20'. Large; batch by section. || Pass 2026-09-23: src/pages/__tests__/AuthenticatedPages.a11y.test.tsx scans 13 authenticated pages and every tab with axe (WCAG 2.0/2.1 A+AA, fails on serious/critical; contrast left to Playwright). Fixed the critical violations it found: unnamed filter selects on EstimatesHub, CRM Leads tab, Safety, Reports (Export Center, executive dashboard, custom report builder), DocumentManagement, UserSettings (~30 controls), RFIs, PunchList; Reports double h1; PurchaseOrders nested main; Label htmlFor pointing at missing ids. AccessiblePageWrapper added to Materials, PurchaseOrders, RFIs, PunchList. OPEN: adoption 26/110 pages = 23.6% vs 90% AC (scripts/count-a11y-adoption.mjs); dialog forms not scanned; skip-link / visible-focus / reduced-motion AC untouched."
+      "passes": true,
+      "notes": "Source: testing/a11y audit. Continuation of US-010..014 beyond 'top 20'. Large; batch by section. || Pass 2026-09-23: src/pages/__tests__/AuthenticatedPages.a11y.test.tsx scans 13 authenticated pages and every tab with axe (WCAG 2.0/2.1 A+AA, fails on serious/critical; contrast left to Playwright). Fixed the critical violations it found: unnamed filter selects on EstimatesHub, CRM Leads tab, Safety, Reports (Export Center, executive dashboard, custom report builder), DocumentManagement, UserSettings (~30 controls), RFIs, PunchList; Reports double h1; PurchaseOrders nested main; Label htmlFor pointing at missing ids. AccessiblePageWrapper added to Materials, PurchaseOrders, RFIs, PunchList. OPEN: adoption 26/110 pages = 23.6% vs 90% AC (scripts/count-a11y-adoption.mjs); dialog forms not scanned; skip-link / visible-focus / reduced-motion AC untouched. || AccessiblePageWrapper on 110/110 DashboardLayout pages (was 26); 8 nested main landmarks removed; skip link honours reduced motion; global prefers-reduced-motion CSS; focus-visible ring verified on all primitives that remove outline. count-a11y-adoption.mjs --check ratchets missingWrapper/unflaggedLayout/pageMain at 0 in pre-commit and CI. Axe suite covers 20 pages, 40 tests. Loading branches that render bare skeletons without DashboardLayout still lack a main landmark."
     },
     {
       "id": "US-222",
@@ -4246,7 +4246,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. || Pass 2026-09-23: 15 components moved to TanStack Query hooks in src/hooks (useVendors, useInvoiceList, useExpenseBulkActions, useSafetyIncidentsPanel, useCrewScheduleBoard, useEquipmentAssignmentsTab, useRecurringInvoices, useProjectProcurement, useFinancialOverview, useDailyReportsPage, usePunchListPage, useProjectTabRecords); keys carry company_id, writes select back and throw on zero rows, errors show ErrorState. scripts/check-raw-supabase-in-components.mjs ratchets raw supabase.from in reachable components at 910 (was 962). OPEN: ~250 files still raw; the eslint rule AC deferred (the script guard stands in)."
     },
     {
       "id": "US-267",

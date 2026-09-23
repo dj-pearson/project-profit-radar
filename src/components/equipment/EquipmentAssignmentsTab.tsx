@@ -7,7 +7,6 @@
  * timeline (EquipmentGanttChart). All queries are company_id-scoped (RLS).
  */
 import { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +15,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useEquipmentAssignmentsTab, type AssignmentRow } from '@/hooks/useEquipmentAssignmentsTab';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Truck, PackageCheck, Clock, Activity, CalendarClock } from 'lucide-react';
 import EquipmentAssignmentForm from '@/components/equipment/EquipmentAssignmentForm';
@@ -25,20 +24,7 @@ import EquipmentGanttChart from '@/components/equipment/EquipmentGanttChart';
 import {
   computeEquipmentUtilization,
   IDLE_THRESHOLD_DAYS,
-  type EquipmentLike,
-  type AssignmentLike,
 } from '@/lib/equipment/utilization';
-
-interface AssignmentRow extends AssignmentLike {
-  id: string;
-  assigned_quantity: number | null;
-}
-
-interface EquipmentRow extends EquipmentLike {
-  id: string;
-  name: string;
-  status: string | null;
-}
 
 const ACTIVE_STATUSES = new Set(['active', 'assigned', 'in_use', 'checked_out', 'in_progress']);
 
@@ -49,65 +35,26 @@ function fmtDate(value?: string | Date | null): string {
 }
 
 export function EquipmentAssignmentsTab() {
-  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const companyId = userProfile?.company_id;
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { data, isLoading, error, refetch, returnAssignment, invalidate } = useEquipmentAssignmentsTab();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['equipment-assignments-tab', companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const [assignmentsRes, equipmentRes, projectsRes] = await Promise.all([
-        supabase
-          .from('equipment_assignments')
-          .select(
-            'id, equipment_id, project_id, start_date, end_date, planned_start_date, planned_end_date, actual_start_date, actual_end_date, assignment_status, assigned_quantity'
-          )
-          .eq('company_id', companyId),
-        supabase.from('equipment').select('id, name, status').eq('company_id', companyId),
-        supabase.from('projects').select('id, name').eq('company_id', companyId),
-      ]);
-      if (assignmentsRes.error) throw assignmentsRes.error;
-      return {
-        assignments: (assignmentsRes.data ?? []) as AssignmentRow[],
-        equipment: (equipmentRes.data ?? []) as EquipmentRow[],
-        projectNames: new Map(
-          ((projectsRes.data ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name])
-        ),
-      };
-    },
-  });
-
-  const returnMutation = useMutation({
-    mutationFn: async (assignment: AssignmentRow) => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { error: aErr } = await supabase
-        .from('equipment_assignments')
-        .update({ actual_end_date: today, assignment_status: 'completed' })
-        .eq('id', assignment.id);
-      if (aErr) throw aErr;
-      // Free the equipment so it can be re-assigned.
-      const { error: eErr } = await supabase
-        .from('equipment')
-        .update({ status: 'available' })
-        .eq('id', assignment.equipment_id);
-      if (eErr) throw eErr;
-    },
-    onSuccess: () => {
-      toast({ title: 'Equipment returned', description: 'Assignment closed and equipment freed.' });
-      queryClient.invalidateQueries({ queryKey: ['equipment-assignments-tab', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['equipment'] });
-    },
-    onError: (e: unknown) => {
-      toast({
-        title: 'Could not return equipment',
-        description: e instanceof Error ? e.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
+  const returnMutation = {
+    isPending: returnAssignment.isPending,
+    mutate: (assignment: AssignmentRow) =>
+      returnAssignment.mutate(assignment, {
+        onSuccess: () => {
+          toast({ title: 'Equipment returned', description: 'Assignment closed and equipment freed.' });
+        },
+        onError: (e: unknown) => {
+          toast({
+            title: 'Could not return equipment',
+            description: e instanceof Error ? e.message : 'Please try again.',
+            variant: 'destructive',
+          });
+        },
+      }),
+  };
 
   const equipmentNames = useMemo(
     () => new Map((data?.equipment ?? []).map((e) => [e.id, e.name])),
@@ -143,11 +90,21 @@ export function EquipmentAssignmentsTab() {
     );
   }
 
+  if (error) {
+    return (
+      <ErrorState
+        inline
+        title="Equipment assignments could not be loaded"
+        error={error as Error}
+        onRetry={() => { void refetch(); }}
+      />
+    );
+  }
+
   const handleCheckoutSuccess = () => {
     setCheckoutOpen(false);
     toast({ title: 'Equipment checked out', description: 'Assignment created.' });
-    queryClient.invalidateQueries({ queryKey: ['equipment-assignments-tab', companyId] });
-    queryClient.invalidateQueries({ queryKey: ['equipment'] });
+    invalidate();
   };
 
   return (
@@ -314,9 +271,7 @@ export function EquipmentAssignmentsTab() {
         {/* Assignment timeline (history) */}
         <TabsContent value="timeline">
           <EquipmentGanttChart
-            onAssignmentChange={() =>
-              queryClient.invalidateQueries({ queryKey: ['equipment-assignments-tab', companyId] })
-            }
+            onAssignmentChange={() => invalidate(false)}
           />
         </TabsContent>
       </Tabs>

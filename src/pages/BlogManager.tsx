@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { PlusCircle, Settings, Bot, Bug } from "lucide-react";
 import BlogPostList from "@/components/blog/BlogPostList";
 import BlogPostFormDialog from "@/components/blog/BlogPostFormDialog";
@@ -271,8 +272,9 @@ const BlogManager = () => {
   }
 
   return (
-    <DashboardLayout title="Blog Manager">
-      <main aria-label="Blog management" className="space-y-6">
+    <AccessiblePageWrapper pageTitle="Blog Manager">
+    <DashboardLayout hasAccessibleWrapper title="Blog Manager">
+      <div className="space-y-6">
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="grid w-full grid-cols-2" aria-label="Blog manager sections">
             <TabsTrigger value="posts">Blog Posts</TabsTrigger>
@@ -348,8 +350,9 @@ const BlogManager = () => {
           open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}
           aiSettings={aiSettings} onUpdateSettings={updateAISettings}
         />
-      </main>
+      </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

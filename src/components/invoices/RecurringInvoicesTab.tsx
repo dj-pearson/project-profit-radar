@@ -19,7 +19,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Plus, Pause, Play, Pencil, Trash2, RefreshCw, Repeat } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useRecurringInvoices, type RecurringInvoiceRow } from '@/hooks/useRecurringInvoices';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
@@ -29,21 +30,6 @@ import {
   computeNextRunDate, remainingLabel, templateTotal,
   type RecurrenceFrequency, type RecurringLineItem,
 } from '@/lib/reports/recurringInvoices';
-
-interface RecurringInvoiceRow {
-  id: string;
-  name: string;
-  client_name: string | null;
-  frequency: RecurrenceFrequency;
-  start_date: string;
-  end_date: string | null;
-  occurrence_limit: number | null;
-  occurrences_generated: number;
-  next_run_date: string | null;
-  status: 'active' | 'paused' | 'completed';
-  line_items: RecurringLineItem[];
-  notes: string | null;
-}
 
 interface FormState {
   id?: string;
@@ -79,43 +65,20 @@ const FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
 };
 
 const RecurringInvoicesTab: React.FC = () => {
-  const { userProfile, user } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<RecurringInvoiceRow[]>([]);
+  const { rows, isLoading: loading, isFetching, error: loadError, refetch, save, setStatus, remove } = useRecurringInvoices();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
-  const [saving, setSaving] = useState(false);
+  const saving = save.isPending;
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const load = async () => {
-    if (!userProfile?.company_id) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('recurring_invoices')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setRows(
-        (data ?? []).map((r: Record<string, unknown>) => ({
-          ...(r as object),
-          line_items: Array.isArray(r.line_items) ? (r.line_items as RecurringLineItem[]) : [],
-        })) as RecurringInvoiceRow[]
-      );
-    } catch (error) {
-      logger.error('Error loading recurring invoices', error instanceof Error ? error : undefined);
-      toast({ title: 'Error', description: 'Failed to load recurring invoices', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const load = () => { void refetch(); };
 
   useEffect(() => {
-    if (userProfile?.company_id) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.company_id]);
+    if (!loadError) return;
+    logger.error('Error loading recurring invoices', loadError);
+    toast({ title: 'Error', description: 'Failed to load recurring invoices', variant: 'destructive' });
+  }, [loadError, toast]);
 
   const openCreate = () => {
     setForm(emptyForm());
@@ -151,7 +114,6 @@ const RecurringInvoicesTab: React.FC = () => {
       : [];
 
     const payload = {
-      company_id: userProfile.company_id,
       name: form.name.trim(),
       client_name: form.client_name.trim() || null,
       frequency: form.frequency,
@@ -171,41 +133,30 @@ const RecurringInvoicesTab: React.FC = () => {
     };
 
     try {
-      setSaving(true);
+      await save.mutateAsync({ input: payload, id: form.id });
       if (form.id) {
-        const { error } = await supabase.from('recurring_invoices').update(payload).eq('id', form.id);
-        if (error) throw error;
         toast({ title: 'Updated', description: 'Recurring invoice updated.' });
       } else {
-        const { error } = await supabase.from('recurring_invoices').insert({ ...payload, created_by: user?.id ?? null });
-        if (error) throw error;
         toast({ title: 'Created', description: 'Recurring invoice scheduled.' });
       }
       setDialogOpen(false);
-      load();
     } catch (error) {
       logger.error('Error saving recurring invoice', error instanceof Error ? error : undefined);
       toast({ title: 'Error', description: 'Failed to save recurring invoice', variant: 'destructive' });
-    } finally {
-      setSaving(false);
     }
   };
 
   const toggleStatus = async (row: RecurringInvoiceRow) => {
     const nextStatus = row.status === 'active' ? 'paused' : 'active';
     try {
-      const { error } = await supabase
-        .from('recurring_invoices')
-        .update({
-          status: nextStatus,
-          next_run_date: nextStatus === 'active'
-            ? computeNextRunDate({ ...row, status: 'active' })
-            : null,
-        })
-        .eq('id', row.id);
-      if (error) throw error;
+      await setStatus.mutateAsync({
+        id: row.id,
+        status: nextStatus,
+        nextRunDate: nextStatus === 'active'
+          ? computeNextRunDate({ ...row, status: 'active' })
+          : null,
+      });
       toast({ title: nextStatus === 'active' ? 'Resumed' : 'Paused', description: `${row.name} ${nextStatus === 'active' ? 'resumed' : 'paused'}.` });
-      load();
     } catch (error) {
       logger.error('Error toggling recurring invoice', error instanceof Error ? error : undefined);
       toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
@@ -215,11 +166,9 @@ const RecurringInvoicesTab: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const { error } = await supabase.from('recurring_invoices').delete().eq('id', deleteId);
-      if (error) throw error;
+      await remove.mutateAsync(deleteId);
       toast({ title: 'Deleted', description: 'Recurring invoice removed.' });
       setDeleteId(null);
-      load();
     } catch (error) {
       logger.error('Error deleting recurring invoice', error instanceof Error ? error : undefined);
       toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
@@ -251,8 +200,8 @@ const RecurringInvoicesTab: React.FC = () => {
           <p className="text-sm text-muted-foreground">Automate retainer and progress billing schedules</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          <Button variant="outline" size="sm" onClick={load} disabled={isFetching}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} aria-hidden="true" />
             Refresh
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -334,6 +283,8 @@ const RecurringInvoicesTab: React.FC = () => {
         <CardContent>
           {loading ? (
             <Skeleton className="h-40 w-full" />
+          ) : loadError ? (
+            <ErrorState inline title="Recurring invoices could not be loaded" error={loadError} onRetry={load} />
           ) : rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
               <Repeat className="h-10 w-10 mb-3 opacity-50" aria-hidden="true" />

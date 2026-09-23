@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { supabase } from '@/integrations/supabase/client';
+import { useFinancialOverview } from '@/hooks/useFinancialOverview';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -50,101 +51,28 @@ const FinancialOverview = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [period, setPeriod] = useState<PeriodType>('year');
-  const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<Array<{ amount: number; status: string; created_at: string; project_id: string }>>([]);
-  const [expenses, setExpenses] = useState<Array<{ amount: number; date: string; project_id: string }>>([]);
-  const [payments, setPayments] = useState<Array<{ amount: number; payment_date: string; project_id: string }>>([]);
-  const [projects, setProjects] = useState<Array<{ id: string; name: string; budget: number; status: string }>>([]);
-
-  const loadData = async () => {
-    if (!userProfile?.company_id) return;
-    try {
-      setLoading(true);
-      const { start } = getPeriodRange(period);
-      const startStr = start.toISOString().split('T')[0];
-
-      // There is no `payments` table (US-311): recorded payments live in
-      // invoice_payments, the table ProjectFinancialDashboard already reads. It
-      // carries invoice_id and no project_id, so each payment is attributed to
-      // a project through its invoice. invoices has total_amount (not amount)
-      // and expenses has expense_date (not date); the aliases keep the shapes
-      // the summaries below were written against.
-      const [invRes, expRes, payRes, projRes] = await Promise.all([
-        supabase.from('invoices').select('amount:total_amount, status, created_at, project_id')
-          .eq('company_id', userProfile.company_id)
-          .gte('created_at', startStr),
-        supabase.from('expenses').select('amount, date:expense_date, project_id')
-          .eq('company_id', userProfile.company_id)
-          .gte('expense_date', startStr),
-        supabase.from('invoice_payments').select('payment_amount, payment_date, invoice_id')
-          .eq('company_id', userProfile.company_id)
-          .gte('payment_date', startStr),
-        supabase.from('projects').select('id, name, budget, status')
-          .eq('company_id', userProfile.company_id),
-      ]);
-
-      // supabase-js returns the error rather than throwing it, so each read is
-      // checked explicitly; `res.data || []` alone would render a failed read
-      // as revenue of zero.
-      const failed = [
-        ['invoices', invRes.error],
-        ['expenses', expRes.error],
-        ['invoice_payments', payRes.error],
-        ['projects', projRes.error],
-      ].filter(([, error]) => error) as Array<[string, { message: string }]>;
-
-      // A payment in the period can be against an invoice issued before it, so
-      // the project lookup cannot reuse the period-filtered invoice list.
-      const paymentRows = payRes.data || [];
-      const invoiceIds = [...new Set(paymentRows.map((p) => p.invoice_id).filter(Boolean))];
-      const projectByInvoice = new Map<string, string>();
-      if (failed.length === 0 && invoiceIds.length > 0) {
-        const payInvRes = await supabase.from('invoices').select('id, project_id')
-          .eq('company_id', userProfile.company_id)
-          .in('id', invoiceIds);
-        if (payInvRes.error) failed.push(['invoices (for payments)', payInvRes.error]);
-        for (const inv of payInvRes.data || []) {
-          if (inv.project_id) projectByInvoice.set(inv.id, inv.project_id);
-        }
-      }
-
-      if (failed.length > 0) {
-        throw new Error(failed.map(([t, e]) => `${t}: ${e.message}`).join('; '));
-      }
-
-      const payments = paymentRows.map((p) => ({
-        amount: Number(p.payment_amount) || 0,
-        payment_date: p.payment_date,
-        project_id: projectByInvoice.get(p.invoice_id) ?? '',
-      }));
-
-      setInvoices(invRes.data || []);
-      setExpenses(expRes.data || []);
-      setPayments(payments);
-      setProjects(projRes.data || []);
-    } catch (error) {
-      // Clear the previous period's figures rather than leaving them on screen
-      // under a new period label.
-      setInvoices([]);
-      setExpenses([]);
-      setPayments([]);
-      setProjects([]);
-      toast({
-        variant: 'destructive',
-        title: 'Financial data not loaded',
-        description:
-          error instanceof Error
-            ? `Figures are not shown because a query failed - ${error.message}`
-            : 'Failed to load financial data',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const startStr = useMemo(() => getPeriodRange(period).start.toISOString().split('T')[0], [period]);
+  const { data, isLoading, error: loadError, refetch } = useFinancialOverview(startStr);
+  // Before a profile arrives there is nothing to fetch yet; keep the skeleton up.
+  const loading = isLoading || (!userProfile?.company_id && !userProfile);
+  const loadData = () => { void refetch(); };
+  // A failed period shows no figures at all rather than the last period's, or zeros.
+  const invoices = useMemo(() => data?.invoices ?? [], [data]);
+  const expenses = useMemo(() => data?.expenses ?? [], [data]);
+  const payments = useMemo(() => data?.payments ?? [], [data]);
+  const projects = useMemo(() => data?.projects ?? [], [data]);
 
   useEffect(() => {
-    loadData();
-  }, [userProfile?.company_id, period]);
+    if (!loadError) return;
+    toast({
+      variant: 'destructive',
+      title: 'Financial data not loaded',
+      description:
+        loadError instanceof Error
+          ? `Figures are not shown because a query failed - ${loadError.message}`
+          : 'Failed to load financial data',
+    });
+  }, [loadError, toast]);
 
   const summaryData = useMemo(() => {
     const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -268,6 +196,14 @@ const FinancialOverview = () => {
               Refresh
             </Button>
           </div>
+
+          {loadError ? (
+            <ErrorState
+              title="Financial data not loaded"
+              error={loadError as Error}
+              onRetry={loadData}
+            />
+          ) : (<>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -396,6 +332,7 @@ const FinancialOverview = () => {
               )}
             </CardContent>
           </Card>
+          </>)}
         </div>
       </DashboardLayout>
     </AccessiblePageWrapper>

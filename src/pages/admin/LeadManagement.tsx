@@ -33,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -378,7 +379,8 @@ export const LeadManagement = () => {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Lead Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Lead Management"
       description="Manage leads, demos, and sales inquiries"
       headerActions={
@@ -879,6 +881,7 @@ export const LeadManagement = () => {
         </Dialog>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

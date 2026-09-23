@@ -9,6 +9,7 @@ import { MapPin, Navigation, Clock, AlertCircle, CheckCircle, Map, Route, Dollar
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface GPSTimeEntry {
@@ -211,9 +212,11 @@ export const GPSTimeTracking = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="GPS Time Tracking">
+      <AccessiblePageWrapper pageTitle="GPS Time Tracking">
+      <DashboardLayout hasAccessibleWrapper title="GPS Time Tracking">
         <DashboardSkeleton label="Loading GPS data" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -226,7 +229,8 @@ export const GPSTimeTracking = () => {
   );
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="GPS Time Tracking">
+    <DashboardLayout hasAccessibleWrapper
       title="GPS Time Tracking"
       description="Location-based time tracking with geofencing and travel logs"
     >
@@ -584,6 +588,7 @@ export const GPSTimeTracking = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

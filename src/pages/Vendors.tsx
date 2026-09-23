@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,28 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Search, Building2, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useVendors, type Vendor } from '@/hooks/useVendors';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Vendor {
-  id: string;
-  name: string;
-  contact_person: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  payment_terms: string;
-  is_active: boolean;
-  notes: string | null;
-}
-
 const Vendors = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
@@ -46,34 +34,14 @@ const Vendors = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { vendors, isLoading: loading, error: loadError, refetch, create, update, remove } = useVendors();
 
-  useEffect(() => {
-    loadVendors();
-  }, [userProfile?.company_id]);
-
-  const loadVendors = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('vendors')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('name');
-
-      if (error) throw error;
-      setVendors(data || []);
-    } catch (error) {
-      console.error('Error loading vendors:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load vendors"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const failed = (description: string, error: unknown) => {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: error instanceof Error && error.message ? `${description}: ${error.message}` : description
+    });
   };
 
   const resetForm = () => {
@@ -113,36 +81,25 @@ const Vendors = () => {
       return;
     }
 
+    const vendorData = {
+      name: formData.name.trim(),
+      contact_person: formData.contact_person || null,
+      email: formData.email || null,
+      phone: formData.phone || null,
+      address: formData.address || null,
+      payment_terms: formData.payment_terms,
+      notes: formData.notes || null,
+    };
+
     try {
-      const vendorData = {
-        company_id: userProfile.company_id,
-        name: formData.name.trim(),
-        contact_person: formData.contact_person || null,
-        email: formData.email || null,
-        phone: formData.phone || null,
-        address: formData.address || null,
-        payment_terms: formData.payment_terms,
-        notes: formData.notes || null,
-        created_by: userProfile.id
-      };
-
       if (editingVendor) {
-        const { error } = await supabase
-          .from('vendors')
-          .update(vendorData)
-          .eq('id', editingVendor.id);
-        if (error) throw error;
-
+        await update.mutateAsync({ id: editingVendor.id, patch: vendorData });
         toast({
           title: "Vendor Updated",
           description: "Vendor information updated successfully"
         });
       } else {
-        const { error } = await supabase
-          .from('vendors')
-          .insert(vendorData);
-        if (error) throw error;
-
+        await create.mutateAsync(vendorData);
         toast({
           title: "Vendor Added",
           description: "New vendor added successfully"
@@ -151,39 +108,20 @@ const Vendors = () => {
 
       setShowAddDialog(false);
       resetForm();
-      loadVendors();
     } catch (error) {
-      console.error('Error saving vendor:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save vendor"
-      });
+      failed("Failed to save vendor", error);
     }
   };
 
   const toggleVendorStatus = async (vendor: Vendor) => {
     try {
-      const { error } = await supabase
-        .from('vendors')
-        .update({ is_active: !vendor.is_active })
-        .eq('id', vendor.id);
-
-      if (error) throw error;
-
+      await update.mutateAsync({ id: vendor.id, patch: { is_active: !vendor.is_active } });
       toast({
         title: "Status Updated",
         description: `Vendor ${vendor.is_active ? 'deactivated' : 'activated'} successfully`
       });
-
-      loadVendors();
     } catch (error) {
-      console.error('Error updating vendor status:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update vendor status"
-      });
+      failed("Failed to update vendor status", error);
     }
   };
 
@@ -191,26 +129,13 @@ const Vendors = () => {
     if (!(await confirmAction({ title: `Are you sure you want to delete ${vendor.name}?`, destructive: true }))) return;
 
     try {
-      const { error } = await supabase
-        .from('vendors')
-        .delete()
-        .eq('id', vendor.id);
-
-      if (error) throw error;
-
+      await remove.mutateAsync(vendor.id);
       toast({
         title: "Vendor Deleted",
         description: "Vendor deleted successfully"
       });
-
-      loadVendors();
     } catch (error) {
-      console.error('Error deleting vendor:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete vendor"
-      });
+      failed("Failed to delete vendor", error);
     }
   };
 
@@ -224,8 +149,9 @@ const Vendors = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
-      <DashboardLayout title="Vendors">
-        <main aria-label="Vendors management" className="space-y-6">
+      <AccessiblePageWrapper pageTitle="Vendors">
+      <DashboardLayout hasAccessibleWrapper title="Vendors">
+        <div className="space-y-6">
         {/* Summary Cards */}
         <section aria-label="Vendor statistics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -375,6 +301,8 @@ const Vendors = () => {
           <CardContent>
             {loading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
+            ) : loadError ? (
+              <ErrorState inline title="Vendors could not be loaded" error={loadError} onRetry={() => { void refetch(); }} />
             ) : filteredVendors.length === 0 ? (
               <div className="text-center py-8">
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
@@ -464,8 +392,9 @@ const Vendors = () => {
             )}
           </CardContent>
         </Card>
-        </main>
+        </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

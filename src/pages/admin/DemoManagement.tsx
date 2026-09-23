@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DemoCalendar } from '@/components/admin/DemoCalendar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -24,9 +25,11 @@ export const DemoManagement = () => {
   }, [userProfile, navigate, toast]);
 
   return (
-    <DashboardLayout title="Demo Management">
+    <AccessiblePageWrapper pageTitle="Demo Management">
+    <DashboardLayout hasAccessibleWrapper title="Demo Management">
       <DemoCalendar />
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

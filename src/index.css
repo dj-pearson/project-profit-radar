@@ -366,6 +366,22 @@ All colors MUST be HSL.
   scroll-behavior: auto !important;
 }
 
+/* US-221: honour the OS setting directly as well. The .reduce-motion class
+   above is applied by useAccessibility after mount, so without this the first
+   paint (and any change to the OS setting mid-session) still animated:
+   tailwindcss-animate dialog/sheet transitions, animate-pulse skeletons,
+   animate-spin loaders. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Global Focus Indicators - all interactive elements */
 *:focus-visible {
   outline: 2px solid hsl(var(--ring));

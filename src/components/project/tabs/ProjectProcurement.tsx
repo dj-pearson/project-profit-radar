@@ -11,27 +11,18 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Plus, Package, RefreshCw, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useProjectProcurement } from '@/hooks/useProjectProcurement';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { formatCurrency } from '@/lib/utils';
 import {
-  summarizeMaterialCosts, type PoLineItemInput, type BudgetMeta, type CostCodeMeta,
+  summarizeMaterialCosts,
 } from '@/lib/projects/materialCostSummary';
 
 interface ProjectProcurementProps {
   projectId: string;
   onNavigate?: (path: string) => void;
-}
-
-interface PoRow {
-  id: string;
-  po_number: string;
-  vendor_id: string | null;
-  status: string;
-  total_amount: number;
-  po_date: string | null;
 }
 
 const PO_STATUS_VARIANT: Record<string, string> = {
@@ -48,65 +39,25 @@ type SortKey = 'po_date' | 'total_amount' | 'status';
 
 export const ProjectProcurement: React.FC<ProjectProcurementProps> = ({ projectId, onNavigate }) => {
   const navigate = useNavigate();
-  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [pos, setPos] = useState<PoRow[]>([]);
-  const [lineItems, setLineItems] = useState<PoLineItemInput[]>([]);
-  const [budgets, setBudgets] = useState<BudgetMeta[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCodeMeta[]>([]);
-  const [vendorNames, setVendorNames] = useState<Record<string, string>>({});
+  const { data, isLoading, isFetching, error: loadError, refetch } = useProjectProcurement(projectId);
+  const loading = isLoading || isFetching;
+  const pos = useMemo(() => data?.pos ?? [], [data]);
+  const lineItems = useMemo(() => data?.lineItems ?? [], [data]);
+  const budgets = useMemo(() => data?.budgets ?? [], [data]);
+  const costCodes = useMemo(() => data?.costCodes ?? [], [data]);
+  const vendorNames = data?.vendorNames ?? {};
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [sortKey, setSortKey] = useState<SortKey>('po_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-
-  const load = async () => {
-    if (!userProfile?.company_id) return;
-    try {
-      setLoading(true);
-      const { data: poData, error: poErr } = await supabase
-        .from('purchase_orders')
-        .select('id, po_number, vendor_id, status, total_amount, po_date')
-        .eq('project_id', projectId);
-      if (poErr) throw poErr;
-      const poRows = (poData ?? []) as PoRow[];
-      setPos(poRows);
-
-      const poIds = poRows.map((p) => p.id);
-      const statusById = new Map(poRows.map((p) => [p.id, p.status]));
-
-      const [{ data: liData }, { data: budgetData }, { data: ccData }, { data: vendorData }] = await Promise.all([
-        poIds.length
-          ? supabase.from('purchase_order_line_items').select('purchase_order_id, cost_code_id, total_price').in('purchase_order_id', poIds)
-          : Promise.resolve({ data: [] as Array<{ purchase_order_id: string; cost_code_id: string | null; total_price: number | null }> }),
-        supabase.from('project_budgets').select('cost_code_id, material_budget, budgeted_amount').eq('project_id', projectId),
-        supabase.from('cost_codes').select('id, code, name').eq('company_id', userProfile.company_id),
-        supabase.from('vendors').select('id, name').eq('company_id', userProfile.company_id),
-      ]);
-
-      setLineItems(
-        (liData ?? []).map((li) => ({
-          cost_code_id: li.cost_code_id,
-          amount: li.total_price ?? 0,
-          status: statusById.get(li.purchase_order_id) ?? null,
-        }))
-      );
-      setBudgets((budgetData ?? []) as BudgetMeta[]);
-      setCostCodes((ccData ?? []) as CostCodeMeta[]);
-      setVendorNames(Object.fromEntries((vendorData ?? []).map((v: { id: string; name: string }) => [v.id, v.name])));
-    } catch (error) {
-      logger.error('Error loading procurement', error instanceof Error ? error : undefined);
-      toast({ title: 'Error', description: 'Failed to load procurement data', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const load = () => { void refetch(); };
 
   useEffect(() => {
-    if (userProfile?.company_id) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.company_id, projectId]);
+    if (!loadError) return;
+    logger.error('Error loading procurement', loadError instanceof Error ? loadError : undefined);
+    toast({ title: 'Error', description: 'Failed to load procurement data', variant: 'destructive' });
+  }, [loadError, toast]);
 
   const summary = useMemo(() => summarizeMaterialCosts({ lineItems, budgets, costCodes }), [lineItems, budgets, costCodes]);
 
@@ -158,9 +109,18 @@ export const ProjectProcurement: React.FC<ProjectProcurementProps> = ({ projectI
         </div>
       </div>
 
+      {loadError && (
+        <ErrorState
+          inline
+          title="Procurement data could not be loaded"
+          error={loadError as Error}
+          onRetry={load}
+        />
+      )}
+
       {/* Committed vs spent summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {loading ? (
+        {loadError ? null : loading ? (
           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)
         ) : (
           <>
@@ -176,7 +136,7 @@ export const ProjectProcurement: React.FC<ProjectProcurementProps> = ({ projectI
       <Card>
         <CardHeader><CardTitle className="text-base">Material Cost by Cost Code</CardTitle></CardHeader>
         <CardContent>
-          {loading ? (
+          {loadError ? null : loading ? (
             <Skeleton className="h-32 w-full" />
           ) : summary.rows.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">No budgets or purchase orders yet.</p>
@@ -239,7 +199,7 @@ export const ProjectProcurement: React.FC<ProjectProcurementProps> = ({ projectI
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loadError ? null : loading ? (
             <Skeleton className="h-32 w-full" />
           ) : visiblePos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -156,7 +157,8 @@ export default function PermitManagement() {
   }
 
   return (
-    <DashboardLayout title="Permit Management">
+    <AccessiblePageWrapper pageTitle="Permit Management">
+    <DashboardLayout hasAccessibleWrapper title="Permit Management">
       <ResponsiveContainer maxWidth="full" padding="md">
         <div className="flex flex-col sm:flex-row sm:justify-end mb-6">
           <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
@@ -383,5 +385,6 @@ export default function PermitManagement() {
         </div>
       </ResponsiveContainer>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

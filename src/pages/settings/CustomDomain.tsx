@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Link } from 'react-router-dom';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
@@ -228,16 +229,19 @@ export const CustomDomain = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Custom Domain">
+      <AccessiblePageWrapper pageTitle="Custom Domain">
+      <DashboardLayout hasAccessibleWrapper title="Custom Domain">
         <DataTablePageSkeleton label="Loading domain settings" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   // Permission check
   if (!hasPermission) {
     return (
-      <DashboardLayout title="Custom Domain">
+      <AccessiblePageWrapper pageTitle="Custom Domain">
+      <DashboardLayout hasAccessibleWrapper title="Custom Domain">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
@@ -246,13 +250,15 @@ export const CustomDomain = () => {
           </AlertDescription>
         </Alert>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   // Enterprise tier check
   if (!isEnterpriseTier) {
     return (
-      <DashboardLayout title="Custom Domain">
+      <AccessiblePageWrapper pageTitle="Custom Domain">
+      <DashboardLayout hasAccessibleWrapper title="Custom Domain">
         <Card className="border-construction-orange">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -309,12 +315,14 @@ export const CustomDomain = () => {
           </CardContent>
         </Card>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   // Main content for Enterprise users
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Custom Domain">
+    <DashboardLayout hasAccessibleWrapper
       title="Custom Domain"
       description="Configure your custom domain to white-label your Brikly experience"
     >
@@ -547,6 +555,7 @@ export const CustomDomain = () => {
         </Card>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

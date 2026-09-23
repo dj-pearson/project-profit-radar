@@ -16,6 +16,7 @@ import { Building2, Users, Settings, TrendingUp, AlertCircle, CheckCircle, Plus,
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface Tenant {
@@ -252,14 +253,17 @@ export const TenantManagement = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Tenant Management">
+      <AccessiblePageWrapper pageTitle="Tenant Management">
+      <DashboardLayout hasAccessibleWrapper title="Tenant Management">
         <DataTablePageSkeleton label="Loading tenants" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Tenant Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Tenant Management"
       description="Manage multi-tenant organizations and subscriptions"
       headerActions={
@@ -592,6 +596,7 @@ export const TenantManagement = () => {
         </Dialog>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

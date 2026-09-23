@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,7 +93,8 @@ const ScheduleManagement = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout title="Schedule">
+      <AccessiblePageWrapper pageTitle="Schedule">
+      <DashboardLayout hasAccessibleWrapper title="Schedule">
         <div className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -241,6 +243,7 @@ const ScheduleManagement = () => {
           )}
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

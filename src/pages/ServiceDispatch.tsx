@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -258,7 +259,8 @@ export default function ServiceDispatch() {
   };
 
   return (
-    <DashboardLayout title="Service Dispatch">
+    <AccessiblePageWrapper pageTitle="Service Dispatch">
+    <DashboardLayout hasAccessibleWrapper title="Service Dispatch">
       <div className="flex justify-end mb-6">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -645,5 +647,6 @@ export default function ServiceDispatch() {
       </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useProjectTabRecords } from '@/hooks/useProjectTabRecords';
+import { ErrorState } from '@/components/common/ErrorState';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   HelpCircle, 
@@ -24,39 +23,7 @@ export const ProjectRFIs: React.FC<ProjectRFIsProps> = ({
   projectId,
   onNavigate
 }) => {
-  const { userProfile } = useAuth();
-  const [rfis, setRFIs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadRFIs();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  const loadRFIs = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('rfis')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('company_id', userProfile?.company_id as string)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setRFIs(data || []);
-    } catch (error: any) {
-      console.error('Error loading RFIs:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load RFIs"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { records: rfis, isLoading: loading, error: loadError, refetch } = useProjectTabRecords('rfis', projectId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,6 +62,17 @@ export const ProjectRFIs: React.FC<ProjectRFIsProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="RFIs could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

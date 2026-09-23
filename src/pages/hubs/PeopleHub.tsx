@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { supabase } from "@/integrations/supabase/client";
 import { HubNavigationSection } from "@/components/hub/HubNavigationSection";
 import { hierarchicalNavigation } from "@/components/navigation/HierarchicalNavigationConfig";
@@ -79,7 +80,8 @@ const PeopleHub = () => {
   }
 
   return (
-    <DashboardLayout title={peopleArea.title}>
+    <AccessiblePageWrapper pageTitle={peopleArea.title}>
+    <DashboardLayout hasAccessibleWrapper title={peopleArea.title}>
       <div>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -185,6 +187,7 @@ const PeopleHub = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

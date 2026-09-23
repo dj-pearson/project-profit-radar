@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { PipelineAnalytics } from "@/components/crm/PipelineAnalytics";
 import { ActivityStream } from "@/components/crm/ActivityStream";
 import { RevenueForecasting } from "@/components/crm/RevenueForecasting";
@@ -9,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CRMAnalytics = () => {
   return (
-    <DashboardLayout title="CRM Analytics">
+    <AccessiblePageWrapper pageTitle="CRM Analytics">
+    <DashboardLayout hasAccessibleWrapper title="CRM Analytics">
       <div className="space-y-6">
         <Tabs defaultValue="overview" className="w-full" aria-label="CRM Analytics sections">
           <TabsList className="grid w-full grid-cols-6" aria-label="Analytics categories">
@@ -41,6 +43,7 @@ const CRMAnalytics = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

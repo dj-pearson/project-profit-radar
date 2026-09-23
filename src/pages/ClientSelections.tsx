@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -244,7 +245,8 @@ const ClientSelections = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Client Selections">
+      <DashboardLayout hasAccessibleWrapper
         title="Client Selections"
         description="Define selection categories and allowances. Approving an over-allowance pick creates a change order and updates the budget."
         headerActions={
@@ -465,6 +467,7 @@ const ClientSelections = () => {
           </DialogContent>
         </Dialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

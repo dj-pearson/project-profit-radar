@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -284,7 +285,8 @@ const ComplianceAudit = () => {
 
   return (
     <RootAdminOnly fallback={
-      <DashboardLayout title="Access Denied">
+      <AccessiblePageWrapper pageTitle="Access Denied">
+      <DashboardLayout hasAccessibleWrapper title="Access Denied">
         <div className="text-center py-8">
           <Shield className="mx-auto h-12 w-12 mb-4 text-muted-foreground" />
           <h2 className="text-xl font-semibold mb-2">System Compliance Audit</h2>
@@ -296,8 +298,10 @@ const ComplianceAudit = () => {
           </p>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     }>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="SOC 2 Compliance Audit">
+      <DashboardLayout hasAccessibleWrapper
         title="SOC 2 Compliance Audit"
         description="System-wide audit trail for compliance monitoring and reporting (Root Admin Only)"
         headerActions={
@@ -694,6 +698,7 @@ const ComplianceAudit = () => {
         </Dialog>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RootAdminOnly>
    );
   };

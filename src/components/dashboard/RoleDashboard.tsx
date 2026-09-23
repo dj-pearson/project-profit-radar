@@ -352,7 +352,7 @@ export const RoleDashboard = () => {
       </header>
 
       {/* Main Dashboard */}
-      <main className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -500,7 +500,7 @@ export const RoleDashboard = () => {
             <DashboardActivityFeed maxItems={30} />
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
 
       {/* Dashboard Customizer Modal */}
       <DashboardCustomizer

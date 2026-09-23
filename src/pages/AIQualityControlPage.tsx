@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -74,7 +75,8 @@ export default function AIQualityControlPage() {
           content="Quality inspection results, pass rates and reinspections across your projects."
         />
       </Helmet>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Quality Control">
+      <DashboardLayout hasAccessibleWrapper
         title="Quality Control"
         description="Inspection results recorded across your projects"
         headerActions={
@@ -212,6 +214,7 @@ export default function AIQualityControlPage() {
           </Card>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </>
   );
 }

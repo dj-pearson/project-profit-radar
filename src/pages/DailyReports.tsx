@@ -22,6 +22,14 @@ import {
 } from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  useDailyReportsPage,
+  fetchPreviousDailyReport,
+  insertPhotoAttachments,
+  countTimeEntriesOnDay,
+  type DailyReportsProject,
+  type DailyReportListRow,
+} from '@/hooks/useDailyReportsPage';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { logger } from '@/lib/logger';
 import { photoStoragePath } from '@/lib/dailyReportField';
@@ -34,48 +42,45 @@ import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, Camera, X,
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
 import { buildReportFromPrevious, applyTemplateDefaults } from '@/lib/dailyReports/templateFill';
 
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-}
-
-interface DailyReportTemplateOption {
-  id: string;
-  name: string;
-  default_crew_count: number | null;
-  default_weather_conditions: string | null;
-  default_safety_notes: string | null;
-}
-
-interface DailyReport {
-  id: string;
-  project_id: string;
-  date: string;
-  work_performed: string;
-  crew_count: number;
-  weather_conditions: string;
-  materials_delivered: string;
-  equipment_used: string;
-  delays_issues: string;
-  safety_incidents: string;
-  photos: string[];
-  created_at: string;
-  projects: { name: string };
-}
+type Project = DailyReportsProject;
+type DailyReport = DailyReportListRow;
 
 const DailyReports = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [loadingReports, setLoadingReports] = useState(true);
+  const canViewReports = !!userProfile && ['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role);
+  const {
+    projects: loadedProjects,
+    reports: loadedReports,
+    isLoading: queryLoading,
+    error: loadErrorObj,
+    refetch,
+    templates: loadedTemplates,
+    templatesError,
+    createReport,
+  } = useDailyReportsPage({ enabled: canViewReports });
+  const projects: Project[] = loadedProjects;
+  const dailyReports: DailyReport[] = loadedReports;
+  const templates = loadedTemplates;
+  // Before the profile arrives there is nothing to fetch yet; keep the skeleton up.
+  const loadingReports = queryLoading || !userProfile;
   // A failed load used to render "No reports have been created yet" over a
-  // toast. Keep it so the list says the load failed and offers a retry.
-  const [loadError, setLoadError] = useState(false);
+  // toast. The query keeps the failure so the list says so and offers a retry.
+  const loadError = !!loadErrorObj;
+  const loadData = () => { void refetch(); };
+
+  useEffect(() => {
+    if (!loadErrorObj) return;
+    console.error('Error loading data:', loadErrorObj);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to load daily reports data"
+    });
+  }, [loadErrorObj]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -105,7 +110,6 @@ const DailyReports = () => {
   
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [showMobileReport, setShowMobileReport] = useState(false);
-  const [templates, setTemplates] = useState<DailyReportTemplateOption[]>([]);
   const [copyingPrevious, setCopyingPrevious] = useState(false);
 
   useEffect(() => {
@@ -127,72 +131,7 @@ const DailyReports = () => {
       });
       return;
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = async () => {
-    try {
-      setLoadingReports(true);
-      setLoadError(false);
-
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, status')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load daily reports
-      const { data: reportsData, error: reportsError } = await supabase
-        .from('daily_reports')
-        .select(`
-          id,
-          project_id,
-          date,
-          work_performed,
-          crew_count,
-          weather_conditions,
-          materials_delivered,
-          equipment_used,
-          delays_issues,
-          safety_incidents,
-          photos,
-          created_at,
-          projects!inner(name, company_id)
-        `)
-        .eq('projects.company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
-
-      if (reportsError) throw reportsError;
-      setDailyReports(reportsData || []);
-
-      // Load daily report templates for quick-fill (US-074)
-      const { data: templatesData } = await supabase
-        .from('daily_report_templates')
-        .select('id, name, default_crew_count, default_weather_conditions, default_safety_notes')
-        .eq('company_id', userProfile?.company_id)
-        .eq('is_active', true)
-        .order('name');
-      setTemplates(templatesData || []);
-
-    } catch (error: any) {
-      console.error('Error loading data:', error);
-      setLoadError(true);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load daily reports data"
-      });
-    } finally {
-      setLoadingReports(false);
-    }
-  };
 
   const handleApplyTemplate = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -209,15 +148,7 @@ const DailyReports = () => {
     try {
       setCopyingPrevious(true);
       const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('daily_reports')
-        .select('work_performed, crew_count, weather_conditions, materials_delivered, equipment_used, delays_issues, safety_incidents, date')
-        .eq('project_id', newReport.project_id)
-        .lt('date', today)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
+      const data = await fetchPreviousDailyReport(newReport.project_id, today);
       if (!data) {
         toast({ title: 'No previous report', description: 'There is no earlier report for this project to copy.' });
         return;
@@ -254,13 +185,12 @@ const DailyReports = () => {
   }): Promise<string[]> => {
     const notes: string[] = [];
 
-    if (uploaded.length > 0 && userProfile?.company_id) {
-      const { error: photoError } = await supabase
-        .from('photo_attachments')
-        .insert(uploaded.map(({ path, file }) => ({
+    const companyId = userProfile?.company_id;
+    if (uploaded.length > 0 && companyId && userProfile) {
+      const photoError = await insertPhotoAttachments(uploaded.map(({ path, file }) => ({
           project_id: projectId,
           daily_report_id: reportId,
-          company_id: userProfile.company_id,
+          company_id: companyId,
           user_id: userProfile.id,
           file_name: file.name,
           file_path: path,
@@ -269,7 +199,7 @@ const DailyReports = () => {
           storage_bucket: 'project-documents',
           source: 'daily_report',
           taken_at: new Date(file.lastModified || Date.now()).toISOString(),
-        })) as never);
+        })));
 
       if (photoError) {
         logger.error('Daily report saved but its photos were not recorded', photoError);
@@ -293,13 +223,13 @@ const DailyReports = () => {
     } else {
       // Nothing clocked in on that project and day. Worth saying, because the
       // superintendent may have the wrong project selected.
-      const { count } = await supabase
-        .from('time_entries')
-        .select('id', { count: 'exact', head: true })
-        .eq('project_id', projectId)
-        .gte('start_time', `${reportDate}T00:00:00`)
-        .lte('start_time', `${reportDate}T23:59:59`);
-      if (!count) notes.push('Nobody clocked in on this job today');
+      try {
+        const count = await countTimeEntriesOnDay(projectId, reportDate);
+        if (!count) notes.push('Nobody clocked in on this job today');
+      } catch (countError) {
+        logger.error('Could not check the day\'s time entries', countError instanceof Error ? countError : undefined);
+        notes.push('Could not check whether anyone clocked in on this job today');
+      }
     }
 
     return notes;
@@ -361,19 +291,13 @@ const DailyReports = () => {
       }
 
       const reportDate = new Date().toISOString().split('T')[0];
-      const { data: report, error } = await supabase
-        .from('daily_reports')
-        .insert({
-          ...newReport,
-          crew_count: Number(newReport.crew_count),
-          date: reportDate,
-          photos: photoUrls.length > 0 ? photoUrls : null,
-          signature: newReport.signature || null
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
+      const report = await createReport.mutateAsync({
+        ...newReport,
+        crew_count: Number(newReport.crew_count),
+        date: reportDate,
+        photos: photoUrls.length > 0 ? photoUrls : null,
+        signature: newReport.signature || null
+      });
 
       const notes = await recordFieldDetail({
         reportId: report.id,
@@ -404,8 +328,6 @@ const DailyReports = () => {
         signature: ''
       });
       setSelectedPhotos([]);
-
-      loadData();
     } catch (error: any) {
       console.error('Error creating report:', error);
       toast({
@@ -438,7 +360,7 @@ const DailyReports = () => {
   return (
     <AccessiblePageWrapper pageTitle="Daily Reports">
     <DashboardLayout title="Daily Reports" hasAccessibleWrapper>
-      <main className="space-y-6" role="main" aria-label="Daily Reports Management">
+      <div className="space-y-6">
         <header className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Daily Project Reports</h2>
@@ -493,7 +415,11 @@ const DailyReports = () => {
                         <LayoutTemplate className="h-3 w-3" aria-hidden="true" />
                         Start from template
                       </Label>
-                      {templates.length > 0 ? (
+                      {templatesError ? (
+                        <p className="text-xs text-destructive" role="alert">
+                          Templates could not be loaded: {templatesError.message}
+                        </p>
+                      ) : templates.length > 0 ? (
                         <Select onValueChange={handleApplyTemplate}>
                           <SelectTrigger id="template-quickfill" aria-label="Apply a daily report template">
                             <SelectValue placeholder="Choose a template..." />
@@ -870,7 +796,7 @@ const DailyReports = () => {
             );
           })()}
         </section>
-      </main>
+      </div>
 
       {/* Mobile Report Modal */}
       {showMobileReport && (

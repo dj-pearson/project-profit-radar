@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -641,17 +642,20 @@ ${JSON.stringify(faqSchema, null, 2)}
 
   if (loading || checking) {
     return (
-      <DashboardLayout title="SEO Management">
+      <AccessiblePageWrapper pageTitle="SEO Management">
+      <DashboardLayout hasAccessibleWrapper title="SEO Management">
         <div className="flex items-center justify-center min-h-96">
           <LoadingSpinner />
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   if (!user || userProfile?.role !== 'root_admin') {
     return (
-      <DashboardLayout title="SEO Management">
+      <AccessiblePageWrapper pageTitle="SEO Management">
+      <DashboardLayout hasAccessibleWrapper title="SEO Management">
         <div className="flex items-center justify-center py-12">
           <Card className="w-96">
             <CardHeader>
@@ -668,6 +672,7 @@ ${JSON.stringify(faqSchema, null, 2)}
           </Card>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -684,7 +689,8 @@ ${JSON.stringify(faqSchema, null, 2)}
   }));
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="SEO Management">
+    <DashboardLayout hasAccessibleWrapper
       title="SEO Management"
       description="Complete SEO management dashboard with analytics, configuration, content generation, and optimization tools"
       headerActions={
@@ -1202,6 +1208,7 @@ ${JSON.stringify(faqSchema, null, 2)}
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

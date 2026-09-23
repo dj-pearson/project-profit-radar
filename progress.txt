@@ -7150,3 +7150,11 @@ baselined Math.random() values are gone: real calculations where the data
 exists, null or empty with an "unavailable" flag where it doesn't, and
 errors instead of simulated backlinks and SERP features. Workflow condition
 steps are evaluated against trigger data instead of a coin flip.
+
+## US-266 (partial) + US-221 - data hooks and page accessibility
+Fifteen screens load and write through TanStack Query hooks; failed reads
+now show ErrorState instead of an empty list or $0, and zero-row writes
+throw. A ratchet holds raw supabase.from in components at 910 (from 962).
+Every DashboardLayout page now has AccessiblePageWrapper (26 -> 110), one
+main landmark, and a skip link target; reduced motion applies from first
+paint. TS 1208 -> 1177, eslint warnings 3979 -> 3964.

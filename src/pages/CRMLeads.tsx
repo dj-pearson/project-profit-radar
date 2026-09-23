@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { LoadingRegion, TableSkeleton } from '@/components/ui/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -296,7 +297,8 @@ const CRMLeads = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Leads">
+      <AccessiblePageWrapper pageTitle="Leads">
+      <DashboardLayout hasAccessibleWrapper title="Leads">
         <LoadingRegion label="Loading leads" className="space-y-6">
           <div className="flex justify-between items-center">
             <Skeleton className="h-9 w-64" />
@@ -305,6 +307,7 @@ const CRMLeads = () => {
           <TableSkeleton rows={8} />
         </LoadingRegion>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -315,18 +318,21 @@ const CRMLeads = () => {
   // Show lead detail view if a lead is selected
   if (selectedLead) {
     return (
-      <DashboardLayout title="Lead Details">
+      <AccessiblePageWrapper pageTitle="Lead Details">
+      <DashboardLayout hasAccessibleWrapper title="Lead Details">
         <LeadDetailView 
           leadId={selectedLead} 
           onBack={() => setSelectedLead(null)}
           onUpdate={updateLead}
         />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Leads Management">
+    <AccessiblePageWrapper pageTitle="Leads Management">
+    <DashboardLayout hasAccessibleWrapper title="Leads Management">
             
             {/* Filters and Actions */}
             <Card className="mb-6">
@@ -888,6 +894,7 @@ const CRMLeads = () => {
               </TabsContent>
             </Tabs>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -25,7 +25,7 @@ import { format } from 'date-fns';
 import PaymentProcessor from '@/components/PaymentProcessor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
-import { supabase } from '@/integrations/supabase/client';
+import { useInvoiceBulkActions } from '@/hooks/useInvoiceList';
 import { toast } from '@/hooks/use-toast';
 import { filterAndSortInvoices } from './invoiceListUtils';
 import { confirmAction } from "@/components/ui/confirm-dialog";
@@ -55,7 +55,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkLoading, setBulkLoading] = useState(false);
+  const { setStatus: bulkStatus, remove: bulkRemove } = useInvoiceBulkActions();
+  const bulkLoading = bulkStatus.isPending || bulkRemove.isPending;
 
   // Filter (status + date range) then sort.
   const displayInvoices = useMemo(
@@ -72,17 +73,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const runBulkStatus = async (status: 'sent' | 'paid') => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    setBulkLoading(true);
     try {
-      const { error } = await supabase.from('invoices').update({ status }).in('id', ids);
-      if (error) throw error;
+      await bulkStatus.mutateAsync({ ids, status });
       toast({ title: 'Invoices updated', description: `${ids.length} marked as ${status}.` });
       clearSelection();
       onInvoiceUpdate();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Bulk update failed', description: err.message });
-    } finally {
-      setBulkLoading(false);
     }
   };
 
@@ -119,17 +116,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
     const ids = [...selectedIds];
     if (ids.length === 0) return;
     if (!(await confirmAction({ title: `Delete ${ids.length} invoice(s)?`, description: `This cannot be undone.`, destructive: true }))) return;
-    setBulkLoading(true);
     try {
-      const { error } = await supabase.from('invoices').delete().in('id', ids);
-      if (error) throw error;
+      await bulkRemove.mutateAsync(ids);
       toast({ title: 'Invoices deleted', description: `${ids.length} invoice(s) removed.` });
       clearSelection();
       onInvoiceUpdate();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Bulk delete failed', description: err.message });
-    } finally {
-      setBulkLoading(false);
     }
   };
 

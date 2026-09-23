@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Crown } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { supabase } from '@/integrations/supabase/client';
 import { HubNavigationSection } from '@/components/hub/HubNavigationSection';
 import { hierarchicalNavigation } from '@/components/navigation/HierarchicalNavigationConfig';
@@ -86,7 +87,8 @@ const ProjectsHub = () => {
   const projectSections = projectsArea?.sections || [];
 
   return (
-    <DashboardLayout title="Projects Hub">
+    <AccessiblePageWrapper pageTitle="Projects Hub">
+    <DashboardLayout hasAccessibleWrapper title="Projects Hub">
       <div>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -244,6 +246,7 @@ const ProjectsHub = () => {
         />
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import {
   MobileLayout,
   MobileSection,
@@ -56,7 +57,8 @@ export default function MobileShowcase() {
   ];
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Mobile Showcase">
+    <DashboardLayout hasAccessibleWrapper
       title="Mobile Showcase"
       showBottomNav={true}
     >
@@ -277,5 +279,6 @@ export default function MobileShowcase() {
         </div>
       </MobileDrawer>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

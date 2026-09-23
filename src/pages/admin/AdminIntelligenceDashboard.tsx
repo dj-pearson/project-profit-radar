@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -334,7 +335,8 @@ const AdminIntelligenceDashboard = () => {
 
   if (loading || loadingData) {
     return (
-      <DashboardLayout title="Admin Intelligence" showTrialBanner={false}>
+      <AccessiblePageWrapper pageTitle="Admin Intelligence">
+      <DashboardLayout hasAccessibleWrapper title="Admin Intelligence" showTrialBanner={false}>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -342,12 +344,14 @@ const AdminIntelligenceDashboard = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Admin Intelligence">
+      <DashboardLayout hasAccessibleWrapper
         title="Admin Intelligence" showTrialBanner={false}
         description="Proactive account management and revenue operations"
         headerActions={
@@ -517,6 +521,7 @@ const AdminIntelligenceDashboard = () => {
           </Tabs>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

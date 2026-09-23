@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,7 +113,8 @@ export default function Support() {
   };
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Support Center">
+    <DashboardLayout hasAccessibleWrapper
       title="Support Center"
       description="Manage customer support tickets and help resources"
       headerActions={
@@ -192,7 +194,7 @@ export default function Support() {
         </div>
       }
     >
-      <main aria-label="Support center" className="space-y-6">
+      <div className="space-y-6">
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
@@ -435,7 +437,8 @@ export default function Support() {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

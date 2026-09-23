@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { secureSecret } from '@/lib/security/secureRandom';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
@@ -320,9 +321,11 @@ export const WebhookManagement = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Webhooks">
+      <AccessiblePageWrapper pageTitle="Webhooks">
+      <DashboardLayout hasAccessibleWrapper title="Webhooks">
         <DataTablePageSkeleton label="Loading webhook data" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -333,7 +336,8 @@ export const WebhookManagement = () => {
   const successRate = totalDeliveries > 0 ? (successfulDeliveries / totalDeliveries * 100) : 100;
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Webhook Management">
+    <DashboardLayout hasAccessibleWrapper
       title="Webhook Management"
       description="Real-time event notifications to your applications"
       headerActions={
@@ -682,6 +686,7 @@ export const WebhookManagement = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

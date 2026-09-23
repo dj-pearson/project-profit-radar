@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -346,7 +347,8 @@ const CrewScheduling = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Crew Scheduling & Dispatch">
+      <DashboardLayout hasAccessibleWrapper
         title="Crew Scheduling & Dispatch" showTrialBanner={false}
         description="Manage crew assignments and dispatch"
         headerActions={
@@ -613,6 +615,7 @@ const CrewScheduling = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

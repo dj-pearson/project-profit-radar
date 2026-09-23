@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FunnelStepBuilder } from "@/components/funnel/FunnelStepBuilder";
 import { FunnelAnalytics } from "@/components/funnel/FunnelAnalytics";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 interface LeadFunnel {
   id: string;
@@ -132,7 +133,8 @@ export default function FunnelManager() {
 
   if (viewMode === 'builder' && selectedFunnel) {
     return (
-      <DashboardLayout title="Funnel Builder">
+      <AccessiblePageWrapper pageTitle="Funnel Builder">
+      <DashboardLayout hasAccessibleWrapper title="Funnel Builder">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -153,12 +155,14 @@ export default function FunnelManager() {
           <FunnelStepBuilder funnelId={selectedFunnel} />
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   if (viewMode === 'analytics' && selectedFunnel) {
     return (
-      <DashboardLayout title="Funnel Analytics">
+      <AccessiblePageWrapper pageTitle="Funnel Analytics">
+      <DashboardLayout hasAccessibleWrapper title="Funnel Analytics">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -179,11 +183,13 @@ export default function FunnelManager() {
           <FunnelAnalytics funnelId={selectedFunnel} />
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Lead Funnels">
+    <AccessiblePageWrapper pageTitle="Lead Funnels">
+    <DashboardLayout hasAccessibleWrapper title="Lead Funnels">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -358,5 +364,6 @@ export default function FunnelManager() {
         )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

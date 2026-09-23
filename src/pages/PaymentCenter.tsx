@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { PaymentDashboard } from '@/components/payments/PaymentDashboard';
 import { PaymentMethodManager } from '@/components/payments/PaymentMethodManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,7 +25,8 @@ const PaymentCenter = () => {
   }
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Payment Center">
+    <DashboardLayout hasAccessibleWrapper
       title="Payment Center"
       description="Comprehensive payment management for your construction business"
     >
@@ -71,6 +73,7 @@ const PaymentCenter = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -253,15 +254,18 @@ export default function SystemAdminSettings() {
 
   if (loadingData || saving) {
     return (
-      <DashboardLayout title="System Admin Settings">
+      <AccessiblePageWrapper pageTitle="System Admin Settings">
+      <DashboardLayout hasAccessibleWrapper title="System Admin Settings">
         <DataTablePageSkeleton label="Loading system settings" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="System Admin Settings">
+      <DashboardLayout hasAccessibleWrapper
         title="System Admin Settings"
         description="Configure system-wide settings for email templates, forms, reports, and document management"
         headerActions={
@@ -515,6 +519,7 @@ export default function SystemAdminSettings() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 }

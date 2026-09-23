@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { supabase } from '@/integrations/supabase/client';
 import { HubNavigationSection } from '@/components/hub/HubNavigationSection';
 import { hierarchicalNavigation } from '@/components/navigation/HierarchicalNavigationConfig';
@@ -87,7 +88,8 @@ const FinancialHub = () => {
 
 
   return (
-    <DashboardLayout title={financialArea.title}>
+    <AccessiblePageWrapper pageTitle={financialArea.title}>
+    <DashboardLayout hasAccessibleWrapper title={financialArea.title}>
       <div>
         {/* QuickBooks Sync Status - Prominent Widget */}
         <QuickBooksSyncStatus />
@@ -179,6 +181,7 @@ const FinancialHub = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

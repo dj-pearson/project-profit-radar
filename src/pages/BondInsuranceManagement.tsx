@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -166,7 +167,8 @@ export default function BondInsuranceManagement() {
   }
 
   return (
-    <DashboardLayout title="Bonds & Insurance">
+    <AccessiblePageWrapper pageTitle="Bonds & Insurance">
+    <DashboardLayout hasAccessibleWrapper title="Bonds & Insurance">
       <div className="space-y-6">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -567,5 +569,6 @@ export default function BondInsuranceManagement() {
       )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

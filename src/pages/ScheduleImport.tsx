@@ -17,6 +17,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,7 +162,8 @@ const ScheduleImport = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout title="Import a schedule">
+      <AccessiblePageWrapper pageTitle="Import a schedule">
+      <DashboardLayout hasAccessibleWrapper title="Import a schedule">
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -302,6 +304,7 @@ const ScheduleImport = () => {
           )}
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

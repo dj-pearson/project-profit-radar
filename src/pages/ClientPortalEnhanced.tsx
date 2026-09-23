@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import {
   ClientProjectOverview,
   ClientProgressTimeline,
@@ -397,15 +398,18 @@ const ClientPortalEnhanced = () => {
 
   if (loadError) {
     return (
-      <DashboardLayout title="Client Portal">
+      <AccessiblePageWrapper pageTitle="Client Portal">
+      <DashboardLayout hasAccessibleWrapper title="Client Portal">
         <ErrorState error={loadError} onRetry={loadClientData} />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <DashboardLayout title="Client Portal">
+      <AccessiblePageWrapper pageTitle="Client Portal">
+      <DashboardLayout hasAccessibleWrapper title="Client Portal">
         <Card>
           <CardContent className="text-center py-12">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -416,11 +420,13 @@ const ClientPortalEnhanced = () => {
           </CardContent>
         </Card>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Client Portal">
+    <AccessiblePageWrapper pageTitle="Client Portal">
+    <DashboardLayout hasAccessibleWrapper title="Client Portal">
       <div className="space-y-6">
         {/* Project Selector (if multiple projects) */}
         {projects.length > 1 && (
@@ -660,6 +666,7 @@ const ClientPortalEnhanced = () => {
         )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

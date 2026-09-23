@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { CompanyBillingSettings } from '@/components/settings/CompanyBillingSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -233,15 +234,18 @@ const CompanySettings = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Company Settings">
+      <AccessiblePageWrapper pageTitle="Company Settings">
+      <DashboardLayout hasAccessibleWrapper title="Company Settings">
         <DataTablePageSkeleton label="Loading settings" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout title="Company Settings">
+      <AccessiblePageWrapper pageTitle="Company Settings">
+      <DashboardLayout hasAccessibleWrapper title="Company Settings">
         <div className="space-y-6">
         {/* Tax, numbering, payment terms, licence and terms (US-332). Its own
             component because it saves against three tables, one of which is
@@ -609,6 +613,7 @@ const CompanySettings = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -349,7 +350,8 @@ const Submittals = () => {
 
   if (loading || loadingSubmittals) {
     return (
-      <DashboardLayout title="Submittals">
+      <AccessiblePageWrapper pageTitle="Submittals">
+      <DashboardLayout hasAccessibleWrapper title="Submittals">
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -357,12 +359,14 @@ const Submittals = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Submittals">
+      <DashboardLayout hasAccessibleWrapper
         title="Submittals"
         description="Submit and track drawings, product data, and samples for approval"
         headerActions={
@@ -396,7 +400,7 @@ const Submittals = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newSubmittal.project_id} onValueChange={(value) => setNewSubmittal({...newSubmittal, project_id: value})}>
-                      <SelectTrigger aria-required="true">
+                      <SelectTrigger id="project" aria-required="true">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -446,7 +450,7 @@ const Submittals = () => {
                       <div>
                         <Label htmlFor="priority">Priority</Label>
                         <Select value={newSubmittal.priority} onValueChange={(value) => setNewSubmittal({...newSubmittal, priority: value})}>
-                          <SelectTrigger>
+                          <SelectTrigger id="priority">
                             <SelectValue placeholder="Select priority" />
                           </SelectTrigger>
                           <SelectContent>
@@ -540,7 +544,7 @@ const Submittals = () => {
                   value={editingSubmittal?.priority || ''} 
                   onValueChange={(value) => setEditingSubmittal(prev => prev ? {...prev, priority: value} : null)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -590,7 +594,7 @@ const Submittals = () => {
                  <div className="flex-1">
                    <Label htmlFor="project-filter" className="text-sm sm:text-base">Filter by Project</Label>
                    <Select value={selectedProject} onValueChange={setSelectedProject}>
-                     <SelectTrigger className="w-full">
+                     <SelectTrigger id="project-filter" className="w-full">
                        <SelectValue placeholder="All projects" />
                      </SelectTrigger>
                      <SelectContent>
@@ -735,7 +739,7 @@ const Submittals = () => {
             <div>
               <Label htmlFor="review_status">Review Status *</Label>
               <Select value={reviewStatus} onValueChange={setReviewStatus}>
-                <SelectTrigger>
+                <SelectTrigger id="review_status">
                   <SelectValue placeholder="Select review status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -770,6 +774,7 @@ const Submittals = () => {
       </Dialog>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

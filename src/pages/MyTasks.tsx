@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { useMyTasks, useTasksCreatedByMe, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedProjects } from '@/hooks/useOptimizedQueries';
@@ -318,7 +319,8 @@ const MyTasks = () => {
   const isLoading = assignedTasksQuery.isLoading || createdTasksQuery.isLoading;
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="My Tasks">
+    <DashboardLayout hasAccessibleWrapper
       title="My Tasks"
       description="All your assignments in one place"
       headerActions={
@@ -540,6 +542,7 @@ const MyTasks = () => {
         )}
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

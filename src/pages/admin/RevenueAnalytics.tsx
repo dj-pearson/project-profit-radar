@@ -6,6 +6,7 @@ import { DollarSign, TrendingUp, Users, Calendar, ArrowUp, ArrowDown, Minus } fr
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
@@ -180,9 +181,11 @@ export const RevenueAnalytics = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Revenue Analytics">
+      <AccessiblePageWrapper pageTitle="Revenue Analytics">
+      <DashboardLayout hasAccessibleWrapper title="Revenue Analytics">
         <DashboardSkeleton label="Loading revenue analytics" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -190,7 +193,8 @@ export const RevenueAnalytics = () => {
   const customerGrowth = calculateGrowth(currentMetric?.active_customers, previousMetric?.active_customers);
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Revenue Analytics">
+    <DashboardLayout hasAccessibleWrapper
       title="Revenue Analytics"
       description="Track MRR, ARR, growth metrics, and customer lifetime value"
       headerActions={
@@ -610,6 +614,7 @@ export const RevenueAnalytics = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

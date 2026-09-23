@@ -7,14 +7,13 @@
  * unassigned-crew sidebar lists idle members. company_id-scoped (RLS).
  */
 import { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
+import { useCrewScheduleBoard, type MoveAssignmentInput } from '@/hooks/useCrewScheduleBoard';
 import { toast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, AlertTriangle, Users } from 'lucide-react';
 import {
@@ -22,14 +21,7 @@ import {
   startOfWeek,
   getWeekDays,
   addWeeks,
-  type BoardCrewMember,
-  type BoardAssignment,
 } from '@/lib/scheduling/crewBoard';
-
-const CREW_ROLES = [
-  'admin', 'superintendent', 'project_manager', 'foreman', 'field_supervisor',
-  'technician', 'equipment_operator', 'journeyman', 'apprentice', 'laborer',
-];
 
 // Stable color per project for the assignment blocks.
 const BLOCK_COLORS = [
@@ -53,72 +45,22 @@ function todayIso(): string {
 }
 
 export function CrewScheduleBoard() {
-  const { userProfile } = useAuth();
-  const companyId = userProfile?.company_id;
-  const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(todayIso()));
 
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['crew-board', companyId, weekStart],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const [crewRes, assignmentsRes, projectsRes] = await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('id, first_name, last_name, role')
-          .eq('company_id', companyId)
-          .in('role', CREW_ROLES)
-          .eq('is_active', true)
-          .order('first_name'),
-        supabase
-          .from('crew_assignments')
-          .select('id, crew_member_id, project_id, assigned_date, start_time, end_time, status')
-          .eq('company_id', companyId)
-          .gte('assigned_date', weekDays[0])
-          .lte('assigned_date', weekDays[6]),
-        supabase.from('projects').select('id, name').eq('company_id', companyId),
-      ]);
-      if (crewRes.error) throw crewRes.error;
+  const { data, isLoading, error, refetch, move } = useCrewScheduleBoard(weekStart, weekDays);
 
-      const projectNames = new Map(
-        ((projectsRes.data ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name])
-      );
-      const crew: BoardCrewMember[] = ((crewRes.data ?? []) as {
-        id: string; first_name: string | null; last_name: string | null; role: string | null;
-      }[]).map((m) => ({
-        id: m.id,
-        name: `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || 'Unnamed',
-        role: m.role,
-      }));
-      const assignments: BoardAssignment[] = ((assignmentsRes.data ?? []) as BoardAssignment[]).map((a) => ({
-        ...a,
-        project_name: projectNames.get(a.project_id) ?? 'Project',
-      }));
-      return { crew, assignments };
-    },
-  });
-
-  const moveMutation = useMutation({
-    mutationFn: async (vars: { id: string; crew_member_id: string; assigned_date: string }) => {
-      const { error } = await supabase
-        .from('crew_assignments')
-        .update({ crew_member_id: vars.crew_member_id, assigned_date: vars.assigned_date })
-        .eq('id', vars.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crew-board', companyId, weekStart] });
-    },
-    onError: (e: unknown) => {
-      toast({
-        variant: 'destructive',
-        title: 'Could not move assignment',
-        description: e instanceof Error ? e.message : 'Please try again.',
-      });
-    },
-  });
+  const moveAssignment = (vars: MoveAssignmentInput) =>
+    move.mutate(vars, {
+      onError: (e: unknown) => {
+        toast({
+          variant: 'destructive',
+          title: 'Could not move assignment',
+          description: e instanceof Error ? e.message : 'Please try again.',
+        });
+      },
+    });
 
   const board = useMemo(
     () => (data ? buildCrewWeek({ crew: data.crew, assignments: data.assignments, weekStart }) : null),
@@ -130,7 +72,7 @@ export function CrewScheduleBoard() {
     const [crewMemberId, assignedDate] = result.destination.droppableId.split('__');
     const [srcMember, srcDate] = result.source.droppableId.split('__');
     if (crewMemberId === srcMember && assignedDate === srcDate) return;
-    moveMutation.mutate({ id: result.draggableId, crew_member_id: crewMemberId, assigned_date: assignedDate });
+    moveAssignment({ id: result.draggableId, crew_member_id: crewMemberId, assigned_date: assignedDate });
   };
 
   if (isLoading) {
@@ -139,6 +81,17 @@ export function CrewScheduleBoard() {
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-80 w-full" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        inline
+        title="The crew schedule could not be loaded"
+        error={error as Error}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

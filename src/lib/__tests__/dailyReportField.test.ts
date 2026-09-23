@@ -143,7 +143,10 @@ describe('a photo is a record, not a string (US-330)', () => {
 
   it('writes photo_attachments rows, not just the legacy array', () => {
     const page = strip('src/pages/DailyReports.tsx');
-    expect(page).toMatch(/from\('photo_attachments'\)/);
+    // The insert moved into the page's data hook (US-266); the page calls it.
+    const hook = strip('src/hooks/useDailyReportsPage.ts');
+    expect(hook).toMatch(/from\('photo_attachments'\)/);
+    expect(page).toMatch(/insertPhotoAttachments\(/);
     // The array stays for a release: iOS at MIN_SUPPORTED_IOS_VERSION reads it.
     expect(page).toMatch(/photos: photoUrls\.length > 0 \? photoUrls : null/);
   });

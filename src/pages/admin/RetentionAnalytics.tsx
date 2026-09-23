@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface CohortData {
@@ -193,9 +194,11 @@ export const RetentionAnalytics = () => {
 
   if (loading && cohortData.length === 0) {
     return (
-      <DashboardLayout title="Retention Analytics">
+      <AccessiblePageWrapper pageTitle="Retention Analytics">
+      <DashboardLayout hasAccessibleWrapper title="Retention Analytics">
         <DashboardSkeleton label="Loading retention data" />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -204,7 +207,8 @@ export const RetentionAnalytics = () => {
     : 0;
 
   return (
-    <DashboardLayout
+    <AccessiblePageWrapper pageTitle="Retention Analytics">
+    <DashboardLayout hasAccessibleWrapper
       title="Retention Analytics"
       description="Monitor cohort retention and identify churn risks"
       headerActions={
@@ -486,6 +490,7 @@ export const RetentionAnalytics = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

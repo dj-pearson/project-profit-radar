@@ -45,6 +45,9 @@ const navigate = vi.hoisted(() => () => undefined);
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => auth }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
+vi.mock('@/components/accessibility/AccessiblePageWrapper', () => ({
+  AccessiblePageWrapper: ({ children }: { children: ReactNode }) => <main>{children}</main>,
+}));
 vi.mock('@/components/layout/DashboardLayout', () => ({
   DashboardLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

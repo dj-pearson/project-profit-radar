@@ -1,6 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import SmartClientUpdates from "@/components/workflow/SmartClientUpdates";
 
 const SmartClientUpdatesPage: React.FC = () => {
@@ -13,9 +14,11 @@ const SmartClientUpdatesPage: React.FC = () => {
           content="Automate client communications based on project events with intelligent templates and triggers."
         />
       </Helmet>
-      <DashboardLayout>
+      <AccessiblePageWrapper pageTitle="Smart Client Updates">
+      <DashboardLayout hasAccessibleWrapper>
         <SmartClientUpdates />
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </>
   );
 };

@@ -3,6 +3,7 @@ import { Plus, Link2, Save, Trash2, GitBranch, AlertTriangle } from 'lucide-reac
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -265,7 +266,8 @@ const ProjectSchedule = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
-      <DashboardLayout
+      <AccessiblePageWrapper pageTitle="Project Schedule">
+      <DashboardLayout hasAccessibleWrapper
         title="Project Schedule"
         description="Gantt with task dependencies, critical-path highlighting, drag-to-reschedule (dependents cascade), and baseline comparison."
         headerActions={
@@ -455,6 +457,7 @@ const ProjectSchedule = () => {
           </DialogContent>
         </Dialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

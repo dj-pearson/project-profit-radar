@@ -1,4 +1,5 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { WipReport } from '@/components/financial/WipReport';
 
 /**
@@ -6,10 +7,12 @@ import { WipReport } from '@/components/financial/WipReport';
  */
 export default function WipReportPage() {
   return (
-    <DashboardLayout>
+    <AccessiblePageWrapper pageTitle="Wip Report">
+    <DashboardLayout hasAccessibleWrapper>
       <div className="container mx-auto py-6 px-4">
         <WipReport />
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }
