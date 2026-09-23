@@ -59,7 +59,6 @@ import {
 
   // Knowledge & Support
   LazyKnowledgeBaseAdmin,
-  LazySupportTickets,
   LazySupportTicketsEnhanced,
 
   // Multi-Tenant & Enterprise
@@ -87,7 +86,6 @@ import {
   LazyAIModelManagerPage,
 
   // Tools
-  LazyScheduleBuilder,
   LazyAccessibilityPage,
   LazyAccessibilityStatement,
 } from '@/utils/lazyRoutes';
@@ -402,14 +400,9 @@ export const adminRoutes = (
         </SecureRoute>
       }
     />
-    <Route
-      path="/admin/support-tickets-legacy"
-      element={
-        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
-          <LazySupportTickets />
-        </SecureRoute>
-      }
-    />
+    {/* The pre-Enhanced ticket list, linked from nothing; the sidebar's Support
+        Tickets entry opens the page above (US-315). */}
+    <Route path="/admin/support-tickets-legacy" element={<Navigate to="/admin/support-tickets" replace />} />
 
     {/* ================================================================
         ADMIN - Multi-Tenant & Enterprise
@@ -581,18 +574,11 @@ export const adminRoutes = (
         TOOLS & UTILITIES
         Some are public (accessibility), others require auth
         ================================================================ */}
-    <Route
-      path="/schedule-builder"
-      element={
-        <SecureRoute
-          requireAuth
-          permissions={['schedule.write']}
-          allowedRoles={['root_admin', 'admin', 'project_manager']}
-        >
-          <LazyScheduleBuilder />
-        </SecureRoute>
-      }
-    />
+    {/* A second mount of the public free tool at /tools/schedule-builder,
+        behind a schedule.write permission the page never uses: it is
+        client-only sample data with a PDF export. Linked only from the old
+        AppSidebar, so it redirects to the public route (US-315). */}
+    <Route path="/schedule-builder" element={<Navigate to="/tools/schedule-builder" replace />} />
     {/* Accessibility pages are public - no auth required */}
     <Route path="/accessibility" element={<LazyAccessibilityPage />} />
     <Route path="/accessibility-statement" element={<LazyAccessibilityStatement />} />

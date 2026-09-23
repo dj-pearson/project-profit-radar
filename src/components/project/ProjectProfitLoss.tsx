@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Calculator
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface ProjectFinancials {
   project_id: string;
@@ -203,10 +204,7 @@ const ProjectProfitLoss: React.FC<ProjectPLProps> = ({
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center space-x-2">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <span>Loading financial data...</span>
-          </div>
+          <ListSkeleton label="Loading financial data" />
         </CardContent>
       </Card>
     );

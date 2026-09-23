@@ -173,13 +173,10 @@ export const LazyAccessibilityStatement = createLazyRoute(() => import('@/pages/
 export const LazyMyTasks = createLazyRoute(() => import('@/pages/MyTasks'));
 export const LazyUserSettings = createLazyRoute(() => import('@/pages/UserSettings'));
 export const LazySubscriptionSettings = createLazyRoute(() => import('@/pages/SubscriptionSettings'));
-export const LazyAPIMarketplace = createLazyRoute(() => import('@/pages/APIMarketplace'));
 export const LazyCollaboration = createLazyRoute(() => import('@/pages/Collaboration'));
-export const LazyMobileTesting = createLazyRoute(() => import('@/pages/MobileTesting'));
 export const LazyMobileDashboard = createLazyRoute(() => import('@/pages/MobileDashboard'));
 export const LazyFieldManagement = createLazyRoute(() => import('@/pages/FieldManagement'));
 export const LazyWorkflowManagement = createLazyRoute(() => import('@/pages/WorkflowManagement'));
-export const LazyWorkflowTesting = createLazyRoute(() => import('@/pages/WorkflowTesting'));
 export const LazyResources = createLazyRoute(() => import('@/pages/Resources'));
 export const LazyTools = createLazyRoute(() => import('@/pages/Tools'));
 export const LazyBlogPost = createLazyRoute(() => import('@/pages/BlogPost'));
@@ -249,13 +246,10 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
   { path: '/my-tasks', component: LazyMyTasks },
   { path: '/settings', component: LazyUserSettings },
   { path: '/subscription', component: LazySubscriptionSettings },
-  { path: '/marketplace', component: LazyAPIMarketplace },
   { path: '/collaboration', component: LazyCollaboration },
-  { path: '/mobile-testing', component: LazyMobileTesting },
   { path: '/mobile-dashboard', component: LazyMobileDashboard },
   { path: '/field-management', component: LazyFieldManagement },
   { path: '/workflow-management', component: LazyWorkflowManagement },
-  { path: '/workflow-testing', component: LazyWorkflowTesting },
   { path: '/resources', component: LazyResources },
   { path: '/tools', component: LazyTools },
   { path: '/blog/:slug', component: LazyBlogPost },

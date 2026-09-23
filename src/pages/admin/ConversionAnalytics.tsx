@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface FunnelMetrics {
   total_visitors: number;
@@ -298,12 +299,7 @@ export const ConversionAnalytics = () => {
   if (loading && !funnelMetrics) {
     return (
       <DashboardLayout title="Conversion Analytics">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Activity className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading analytics...</p>
-          </div>
-        </div>
+        <DashboardSkeleton label="Loading analytics" />
       </DashboardLayout>
     );
   }

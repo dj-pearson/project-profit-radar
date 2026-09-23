@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import { WarrantyClaimsManager } from '@/components/warranty/WarrantyClaimsManager';
 import { Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, FileText, Users } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DataTablePageSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Warranty {
   id: string;
@@ -148,14 +148,9 @@ const WarrantyManagement = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading warranties...</p>
-          </div>
-        </div>
-      </div>
+      <LoadingRegion label="Loading warranties" className="container mx-auto py-6">
+        <DataTablePageSkeleton />
+      </LoadingRegion>
     );
   }
 

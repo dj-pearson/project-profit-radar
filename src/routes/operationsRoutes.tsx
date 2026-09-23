@@ -29,8 +29,6 @@ const EquipmentQRLabels = createLazyRoute(() => import('@/pages/EquipmentQRLabel
 
 // Advanced Features - Lazy loaded with ErrorBoundary + Suspense
 const SmartClientUpdatesPage = createLazyRoute(() => import('@/pages/SmartClientUpdatesPage'));
-const MaterialOrchestrationPage = createLazyRoute(() => import('@/pages/MaterialOrchestrationPage'));
-const TradeHandoffPage = createLazyRoute(() => import('@/pages/TradeHandoffPage'));
 const AIQualityControlPage = createLazyRoute(() => import('@/pages/AIQualityControlPage'));
 const KnowledgeBase = createLazyRoute(() => import('@/pages/KnowledgeBase'));
 
@@ -66,8 +64,11 @@ export const operationsRoutes = (
 
     {/* Advanced Operations */}
     <Route path="/smart-client-updates" element={<RouteGuard><SmartClientUpdatesPage /></RouteGuard>} />
-    <Route path="/material-orchestration" element={<RouteGuard><MaterialOrchestrationPage /></RouteGuard>} />
-    <Route path="/trade-handoff" element={<RouteGuard><TradeHandoffPage /></RouteGuard>} />
+    {/* Both pages were a card reading "features are being updated" and
+        nothing else, reachable only from the old AppSidebar (US-315). The
+        pages are gone; the paths redirect for anyone who bookmarked them. */}
+    <Route path="/material-orchestration" element={<Navigate to="/materials" replace />} />
+    <Route path="/trade-handoff" element={<Navigate to="/projects" replace />} />
     <Route path="/ai-quality-control" element={<RouteGuard><AIQualityControlPage /></RouteGuard>} />
     <Route path="/knowledge-base" element={<RouteGuard><KnowledgeBase /></RouteGuard>} />
   </>

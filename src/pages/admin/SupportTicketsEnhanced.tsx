@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { UserContextPanel } from "@/components/admin/UserContextPanel";
 import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Sparkles, Send, Copy } from "lucide-react";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface SupportTicket {
   id: string;
@@ -311,9 +312,7 @@ const SupportTicketsEnhanced = () => {
   if (loading) {
     return (
       <DashboardLayout title="Support Tickets" showTrialBanner={false}>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading support tickets...</div>
-        </div>
+        <DataTablePageSkeleton label="Loading support tickets" />
       </DashboardLayout>
     );
   }

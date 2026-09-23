@@ -7,6 +7,7 @@ import { AlertTriangle, TrendingDown, Users, Mail, Phone, Clock, Target, CheckCi
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface ChurnPrediction {
   id: string;
@@ -195,12 +196,7 @@ export const ChurnPrediction = () => {
   if (loading) {
     return (
       <DashboardLayout title="Churn Prediction">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading churn predictions...</p>
-          </div>
-        </div>
+        <DashboardSkeleton label="Loading churn predictions" />
       </DashboardLayout>
     );
   }

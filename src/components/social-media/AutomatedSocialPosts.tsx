@@ -25,6 +25,7 @@ import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, Settings, BarChart3, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 export const AutomatedSocialPosts = () => {
   const { userProfile } = useAuth();
@@ -110,7 +111,7 @@ export const AutomatedSocialPosts = () => {
   };
 
   if (!localConfig) {
-    return <div>Loading...</div>;
+    return <ListSkeleton label="Loading" />;
   }
 
   return (

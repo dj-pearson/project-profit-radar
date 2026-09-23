@@ -8,25 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Shield,
-  Lock,
-  Users,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  AlertCircle,
-  Clock,
-  FileText,
-} from 'lucide-react';
+import { Lock, Users, CheckCircle, XCircle, Plus, Edit, Trash2, Search, AlertCircle, Clock, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 // Helper to query tables not yet in the generated Database types.
 // Returns a standard Supabase query builder for the given table name.
@@ -347,12 +335,7 @@ export const PermissionManagement = () => {
   if (loading) {
     return (
       <DashboardLayout title="Permission Management">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Shield className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading permissions...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading permissions" />
       </DashboardLayout>
     );
   }

@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { LoadingRegion, TableSkeleton } from '@/components/ui/skeletons';
+import { Skeleton } from '@/components/ui/skeleton';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
-import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -296,13 +296,13 @@ const CRMLeads = () => {
   if (loading) {
     return (
       <DashboardLayout title="Leads">
-        <div className="space-y-6">
+        <LoadingRegion label="Loading leads" className="space-y-6">
           <div className="flex justify-between items-center">
-            <div className="h-9 w-64 bg-muted animate-pulse rounded-md" />
-            <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-9 w-32" />
           </div>
           <TableSkeleton rows={8} />
-        </div>
+        </LoadingRegion>
       </DashboardLayout>
     );
   }
@@ -745,7 +745,7 @@ const CRMLeads = () => {
               <CardContent>
                 <ErrorBoundary>
                   {leadsLoading ? (
-                    <LoadingState message="Loading leads..." />
+                    <TableSkeleton rows={5} label="Loading leads" />
                   ) : leadsError ? (
                     <ErrorState 
                       error={leadsError} 

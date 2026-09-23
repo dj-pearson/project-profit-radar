@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface WorkflowData {
   id: string;
@@ -240,12 +241,7 @@ export const WorkflowAutomation = () => {
   if (loading) {
     return (
       <DashboardLayout title="Workflow Automation">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Workflow className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading workflows...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading workflows" />
       </DashboardLayout>
     );
   }

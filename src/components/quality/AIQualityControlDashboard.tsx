@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AlertTriangle, CheckCircle, XCircle, Camera, TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AIQualityControlDashboardProps {
   projectId: string;
@@ -53,10 +54,10 @@ export const AIQualityControlDashboard: React.FC<AIQualityControlDashboardProps>
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="space-y-0 pb-2">
-                <div className="h-4 bg-muted animate-pulse rounded" />
+                <Skeleton className="h-4" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-muted animate-pulse rounded" />
+                <Skeleton className="h-8" />
               </CardContent>
             </Card>
           ))}

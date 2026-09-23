@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CreateTaskDialog } from './CreateTaskDialog';
 import { TaskTemplatesDialog } from './TaskTemplatesDialog';
 import { format } from 'date-fns';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Task {
   id: string;
@@ -219,7 +220,9 @@ export const TaskManager = ({ projectId }: TaskManagerProps = {}) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading tasks...</div>;
+    return <LoadingRegion label="Loading tasks" className="py-8">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SSOConfigurationForm } from '@/components/sso/SSOConfigurationForm';
 import { TOTPSetupScreen } from '@/components/mfa/TOTPSetupScreen';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface SSOConnection {
   id: string;
@@ -375,12 +376,7 @@ export const SSOManagement = () => {
   if (loading) {
     return (
       <DashboardLayout title="SSO & Authentication">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Shield className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading authentication settings...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading authentication settings" />
       </DashboardLayout>
     );
   }

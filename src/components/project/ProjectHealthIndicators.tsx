@@ -22,6 +22,7 @@ import {
   Target
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface HealthMetric {
   name: string;
@@ -406,7 +407,9 @@ export const ProjectHealthIndicators: React.FC<ProjectHealthIndicatorsProps> = (
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center py-8">Loading project health...</div>
+          <LoadingRegion label="Loading project health" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );

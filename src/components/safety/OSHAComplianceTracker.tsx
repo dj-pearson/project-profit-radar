@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, addDays, addWeeks, addMonths, isAfter, isBefore } from 'date-fns';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface OSHARequirement {
   id: string;
@@ -239,12 +239,9 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading OSHA requirements...</p>
-        </div>
-      </div>
+      <LoadingRegion label="Loading OSHA requirements" className="py-12">
+        <DashboardSkeleton />
+      </LoadingRegion>
     );
   }
 

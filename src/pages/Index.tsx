@@ -7,6 +7,8 @@ import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, cre
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import ModernSection from "@/components/ui/ModernSection";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingRegion } from "@/components/ui/skeletons";
 import { AggregateRatingSchema } from "@/components/seo/AggregateRatingSchema";
 import { BreadcrumbsNavigation } from "@/components/BreadcrumbsNavigation";
 import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
@@ -26,9 +28,9 @@ const StickyDemoCTA = lazy(() => import("@/components/StickyDemoCTA"));
 
 // Minimal loading fallback
 const SectionFallback = ({ height = "h-64" }: { height?: string }) => (
-  <div className={`${height} bg-muted/30 animate-pulse rounded-lg flex items-center justify-center`}>
-    <span className="text-sm text-muted-foreground/50">Loading...</span>
-  </div>
+  <LoadingRegion label="Loading section">
+    <Skeleton className={`${height} w-full rounded-lg bg-muted/30`} />
+  </LoadingRegion>
 );
 
 const Index = () => {
@@ -141,7 +143,7 @@ const Index = () => {
             </Suspense>
           </ModernSection>
 
-          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+          <PerformanceLazyWrapper fallback={<Skeleton className="h-96 rounded-lg" />}>
             <ModernSection>
               <LazyFeatures />
             </ModernSection>

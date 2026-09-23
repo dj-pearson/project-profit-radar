@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { KPICard } from '@/components/dashboard/KPICard';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
 import { KPISkeleton } from '@/components/ui/skeleton-loader';
@@ -211,7 +211,7 @@ const CRMDashboard = () => {
     return matchesSearch && matchesStatus && matchesSource;
   }) || [];
 
-  if (loading) return <LoadingState message="Loading CRM dashboard..." />;
+  if (loading) return <DashboardSkeleton label="Loading CRM dashboard" />;
   if (!user) return null;
 
   return (

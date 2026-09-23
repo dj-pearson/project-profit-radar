@@ -13,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, Bug, Copy, Check, Download, RefreshCw, Search, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { AlertTriangle, Copy, Check, Download, RefreshCw, Search, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface ErrorLog {
   id: string;
@@ -398,12 +399,7 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
   if (loading && errors.length === 0) {
     return (
       <DashboardLayout title="Error Logs">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-2">
-            <Bug className="h-8 w-8 animate-pulse text-muted-foreground" />
-            <p className="text-muted-foreground">Loading error logs...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading error logs" />
       </DashboardLayout>
     );
   }

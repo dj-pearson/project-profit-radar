@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarC
 import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 /** Columns this component selects from `leads`. */
 type LeadRow = { status: string | null; created_at: string };
@@ -168,7 +169,9 @@ export const RevenueForecasting = () => {
   ];
 
   if (loading) {
-    return <div className="text-center py-8">Loading revenue data...</div>;
+    return <LoadingRegion label="Loading revenue data" className="py-8">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

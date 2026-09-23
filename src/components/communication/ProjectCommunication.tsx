@@ -11,6 +11,7 @@ import { openStorageObject } from '@/lib/storage/signedUrl';
 import { StorageImage } from '@/lib/storage/StorageImage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface Message {
   id: string;
@@ -283,10 +284,7 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading messages...</p>
-          </div>
+          <ListSkeleton label="Loading messages" />
         </CardContent>
       </Card>
     );

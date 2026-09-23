@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 export default function ServiceDispatch() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -440,9 +441,9 @@ export default function ServiceDispatch() {
 
         <TabsContent value="active-calls" className="space-y-4">
           {dataLoading ? (
-            <div className="text-center py-8">
-              <div className="text-muted-foreground">Loading service calls...</div>
-            </div>
+            <LoadingRegion label="Loading service calls" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : serviceCalls.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

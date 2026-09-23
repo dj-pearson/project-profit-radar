@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 const certificationSchema = z.object({
   employee_id: z.string().min(1, "Please select an employee"),
@@ -211,10 +211,7 @@ const TrainingCertificationManager = () => {
     return (
       <Card>
         <CardContent className="p-8">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto" />
-            <p className="text-sm text-muted-foreground mt-2">Loading training data...</p>
-          </div>
+          <ListSkeleton label="Loading training data" />
         </CardContent>
       </Card>
     );

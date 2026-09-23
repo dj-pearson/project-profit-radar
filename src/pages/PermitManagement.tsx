@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PermitForm } from '@/components/permits/PermitForm';
 import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertTriangle, Building } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface Permit {
   id: string;
@@ -151,12 +151,7 @@ export default function PermitManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <LoadingSpinner size="md" className="mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading permits...</p>
-        </div>
-      </div>
+      <DataTablePageSkeleton label="Loading permits" />
     );
   }
 

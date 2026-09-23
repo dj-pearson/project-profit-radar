@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, Mail, FileText, BarChart3, FolderOpen } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface EmailTemplate {
   enabled: boolean;
@@ -253,9 +254,7 @@ export default function SystemAdminSettings() {
   if (loadingData || saving) {
     return (
       <DashboardLayout title="System Admin Settings">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg">Loading system settings...</div>
-        </div>
+        <DataTablePageSkeleton label="Loading system settings" />
       </DashboardLayout>
     );
   }

@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { useSimpleNotifications, SimpleNotification } from '@/hooks/useSimpleNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface RealtimeNotificationCenterProps {
   trigger?: React.ReactNode;
@@ -201,9 +202,9 @@ export const RealtimeNotificationCenter: React.FC<RealtimeNotificationCenterProp
   const NotificationsList = () => (
     <div className="space-y-3">
       {isLoading ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Loading notifications...</p>
-        </div>
+        <LoadingRegion label="Loading notifications" className="py-8">
+          <ListSkeleton />
+        </LoadingRegion>
       ) : filteredNotifications.length === 0 ? (
         <div className="text-center py-8">
           <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

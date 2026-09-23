@@ -37,6 +37,7 @@ import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BillRecord {
   id: string;
@@ -618,7 +619,7 @@ export default function BillPayments() {
           </CardHeader>
           <CardContent>
             {paymentsLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : payments && payments.length > 0 ? (
               <Table aria-label="Payment history">
                 <TableHeader>

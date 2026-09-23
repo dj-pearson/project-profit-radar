@@ -9,6 +9,7 @@ import { Package, Minus, Plus, Search, AlertTriangle, CheckCircle } from 'lucide
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Material {
   id: string;
@@ -174,10 +175,9 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
       {/* Materials List */}
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {isLoading ? (
-          <div className="text-center py-8">
-            <LoadingSpinner size="md" className="mx-auto" />
-            <p className="text-sm text-muted-foreground mt-2">Loading materials...</p>
-          </div>
+          <LoadingRegion label="Loading materials" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         ) : filteredMaterials.length === 0 ? (
           <div className="text-center py-8">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-2" />

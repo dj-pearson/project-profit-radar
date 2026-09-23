@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Plus, Play, Pause, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface NurturingCampaign {
   id: string;
@@ -277,7 +278,9 @@ export const LeadNurturingCampaigns: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-6">Loading nurturing campaigns...</div>;
+    return <LoadingRegion label="Loading nurturing campaigns" className="p-6">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

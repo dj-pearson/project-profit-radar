@@ -378,7 +378,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
               className="gap-2"
             >
               {isSubmitting ? (
-                <>Loading...</>
+                <>Submitting...</>
               ) : postData.scheduledFor ? (
                 <>
                   <Calendar className="h-4 w-4" />

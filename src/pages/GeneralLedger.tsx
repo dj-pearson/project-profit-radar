@@ -30,6 +30,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface JournalEntry {
   id: string;
@@ -365,7 +366,7 @@ export default function GeneralLedger() {
                 Please select an account to view its general ledger
               </div>
             ) : isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
             <div className="space-y-6">
               {groupBy === 'month' && groupedTransactions ? (

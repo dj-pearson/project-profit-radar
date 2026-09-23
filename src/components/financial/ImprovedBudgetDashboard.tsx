@@ -18,6 +18,7 @@ import {
 import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface BudgetCategory {
   id: string;
@@ -339,7 +340,9 @@ export const ImprovedBudgetDashboard: React.FC<ImprovedBudgetDashboardProps> = (
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading budget data...</div>
+            <LoadingRegion label="Loading budget data" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : budgetData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No budget data available for this project

@@ -6,15 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import {
-  CheckCircle,
-  AlertTriangle,
-  RefreshCw,
-  Settings,
-  DollarSign,
-  XCircle,
-  Loader2
-} from 'lucide-react';
+import { CheckCircle, AlertTriangle, RefreshCw, Settings, DollarSign, XCircle } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface QuickBooksSyncStatusProps {
   compact?: boolean;
@@ -127,10 +120,7 @@ export const QuickBooksSyncStatus = ({ compact = false }: QuickBooksSyncStatusPr
     return (
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Loading QuickBooks status...</span>
-          </div>
+          <ListSkeleton label="Loading QuickBooks status" />
         </CardContent>
       </Card>
     );

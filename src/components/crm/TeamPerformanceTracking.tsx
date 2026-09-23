@@ -4,9 +4,10 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, Clock, DollarSign, Star, type LucideIcon } from "lucide-react";
+import { Trophy, Target, Clock, DollarSign, Star } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 type TeamMemberPerformance = {
   name: string;
@@ -182,7 +183,9 @@ export const TeamPerformanceTracking = () => {
   ];
 
   if (loading) {
-    return <div className="text-center py-8">Loading team performance data...</div>;
+    return <LoadingRegion label="Loading team performance data" className="py-8">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

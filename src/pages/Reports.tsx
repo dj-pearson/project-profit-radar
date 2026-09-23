@@ -17,6 +17,7 @@ import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePage
 import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/EmptyStates";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ReportProject {
   id: string;
@@ -276,9 +277,9 @@ const Reports = () => {
       <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
             </div>
-            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
       </AccessiblePageWrapper>

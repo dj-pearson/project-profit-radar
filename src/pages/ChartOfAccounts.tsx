@@ -34,6 +34,7 @@ import { Plus, Search, Edit, BookOpen } from 'lucide-react';
 import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ChartAccount {
   id: string;
@@ -433,7 +434,7 @@ export default function ChartOfAccounts() {
         {isLoading ? (
           <Card>
             <CardContent className="pt-6">
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             </CardContent>
           </Card>
         ) : accountsByType && Object.keys(accountsByType).length > 0 ? (

@@ -10,7 +10,7 @@ import { FileText, Download, Send, AlertTriangle, CheckCircle, Clock, DollarSign
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Form1099 {
   id: string;
@@ -398,10 +398,9 @@ const Form1099Manager = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">
-              <LoadingSpinner size="md" className="mx-auto" />
-              <p className="text-sm text-muted-foreground mt-2">Loading forms...</p>
-            </div>
+            <LoadingRegion label="Loading forms" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : forms.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

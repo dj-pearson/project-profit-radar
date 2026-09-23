@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, Clock, CheckCircle, Phone, Mail } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Estimate {
   id: string;
@@ -116,7 +117,9 @@ const EstimateTracking = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">Loading estimate data...</div>
+          <LoadingRegion label="Loading estimate data" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );

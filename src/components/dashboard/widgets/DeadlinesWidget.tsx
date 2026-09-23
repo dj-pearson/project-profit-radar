@@ -4,6 +4,7 @@ import { CalendarDays, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isBefore, addDays } from 'date-fns';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface Deadline {
   id: string;
@@ -107,7 +108,7 @@ export const DeadlinesWidget = () => {
   };
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading deadlines...</div>;
+    return <ListSkeleton items={3} label="Loading deadlines" />;
   }
 
   if (deadlines.length === 0) {

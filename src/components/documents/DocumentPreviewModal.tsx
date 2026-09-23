@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, Share2, Loader2, FileText } from 'lucide-react';
+import { Download, Share2, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { LoadingRegion } from '@/components/ui/skeletons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface PreviewableDocument {
   name: string;
@@ -130,9 +132,9 @@ export function DocumentPreviewModal({ open, onOpenChange, document, bucket }: D
 
         <div className="min-h-[55vh]">
           {loading ? (
-            <div className="flex h-[55vh] items-center justify-center text-muted-foreground">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading preview…
-            </div>
+            <LoadingRegion label="Loading preview">
+              <Skeleton className="h-[55vh] w-full" />
+            </LoadingRegion>
           ) : !document || !previewUrl ? (
             <div className="flex h-[55vh] flex-col items-center justify-center gap-2 text-muted-foreground">
               <FileText className="h-10 w-10" />

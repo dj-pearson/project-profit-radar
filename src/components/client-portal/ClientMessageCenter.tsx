@@ -20,6 +20,7 @@ import { StorageImage } from '@/lib/storage/StorageImage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { openStorageObject } from '@/lib/storage/signedUrl';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface Message {
   id: string;
@@ -408,10 +409,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading messages...</p>
-          </div>
+          <ListSkeleton label="Loading messages" />
         </CardContent>
       </Card>
     );

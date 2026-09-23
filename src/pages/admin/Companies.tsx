@@ -13,7 +13,8 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Building2, Users, Calendar, Search, Eye } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Company {
   id: string;
@@ -220,9 +221,9 @@ const Companies = () => {
       <DashboardLayout title="Companies" showTrialBanner={false}>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
             </div>
-            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
     );
@@ -419,10 +420,9 @@ const Companies = () => {
               <div className="border-t pt-6">
                 <h3 className="text-lg font-medium mb-4">Company Settings</h3>
                 {loadingSettings ? (
-                  <div className="text-center py-4">
-                    <LoadingSpinner size="md" className="mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Loading settings...</p>
-                  </div>
+                  <LoadingRegion label="Loading settings" className="py-4">
+                    <ListSkeleton />
+                  </LoadingRegion>
                 ) : selectedCompanySettings ? (
                   <div className="space-y-6">
                     {/* Feature Toggles */}

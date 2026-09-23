@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, Video, Phone, MapPin, CheckCircle2 } from "lucide-react";
 import { addDays, format, startOfDay, addMinutes, isBefore, isAfter, setHours, setMinutes } from "date-fns";
+import { FormSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface PublicBookingFormProps {
   slug: string;
@@ -206,7 +207,11 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <LoadingRegion label="Loading booking page" className="container mx-auto max-w-2xl p-6">
+        <FormSkeleton />
+      </LoadingRegion>
+    );
   }
 
   if (!bookingPage) {

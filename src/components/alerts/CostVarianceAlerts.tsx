@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CostAlert {
   id: string;
@@ -89,7 +90,7 @@ const CostVarianceAlerts = () => {
   };
 
   if (loading) {
-    return <div className="animate-pulse bg-muted h-32 rounded-lg"></div>;
+    return <Skeleton className="h-32 rounded-lg" />;
   }
 
   return (

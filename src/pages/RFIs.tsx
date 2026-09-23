@@ -21,6 +21,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 const untypedFrom = (table: string) =>
   (supabase as unknown as SupabaseClient).from(table);
 import { HelpCircle, PlusCircle, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, User, Calendar, Edit } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {
   id: string;
@@ -463,9 +464,9 @@ const RFIs = () => {
       <DashboardLayout title="Request for Information (RFI)">
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
             </div>
-            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
     );

@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { formatCurrency } from '@/utils/formatters';
 import { DollarSign, Calendar, Building2, Plus, MoreHorizontal } from 'lucide-react';
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface PipelineStage {
   id: string;
@@ -197,7 +198,9 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
   };
 
   if (loading) {
-    return <div className="p-6">Loading pipeline...</div>;
+    return <LoadingRegion label="Loading pipeline" className="p-6">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

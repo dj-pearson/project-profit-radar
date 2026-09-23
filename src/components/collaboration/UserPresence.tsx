@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Circle, Clock, AlertCircle, Power, MessageSquare, Video } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface UserPresenceData {
   id: string;
@@ -202,9 +203,7 @@ export const UserPresence: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-muted-foreground">Loading team status...</div>
-      </div>
+      <ListSkeleton label="Loading team status" />
     );
   }
 

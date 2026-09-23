@@ -203,25 +203,6 @@ describe('QuickBooksRouting: four fake successes on the money path', () => {
   });
 });
 
-describe('InteractiveFloorPlan: safety pins that evaporate on refresh', () => {
-  const SRC = 'src/components/visual-project/InteractiveFloorPlan.tsx';
-
-  it('does not claim a floor plan was uploaded when a FileReader read it', () => {
-    // No floor plan bucket or table exists in supabase/migrations, and the
-    // component is live-routed via appRoutes -> VisualProjectManagementPage.
-    const src = code(SRC);
-    expect(src).not.toContain('Floor plan uploaded successfully');
-    expect(src).toContain('not uploaded or saved anywhere yet');
-  });
-
-  it('and does not claim a pinned issue was added to anything durable', () => {
-    const src = code(SRC);
-    expect(src).not.toContain('"Issue added to floor plan"');
-    expect(src).toContain('lost when you leave this screen');
-    expect(src).toContain('held in this browser session only');
-  });
-});
-
 describe('useSimplePresence: three colleagues who do not exist', () => {
   const SRC = 'src/hooks/useSimplePresence.ts';
 

@@ -35,6 +35,7 @@ import { Plus, Trash2, Calculator, CheckCircle } from 'lucide-react';
 import { formatCurrency, validateJournalEntry } from '@/utils/accountingUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface JournalEntryLine {
   id: string;
@@ -481,7 +482,7 @@ export default function JournalEntries() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : journalEntries && journalEntries.length > 0 ? (
               <Table aria-label="Journal entries">
                 <TableHeader>

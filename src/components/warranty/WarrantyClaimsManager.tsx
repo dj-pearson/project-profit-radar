@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { WarrantyClaimForm } from './WarrantyClaimForm';
 import { AlertTriangle, Plus, Search, Filter, CheckCircle, Clock, FileText } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface WarrantyClaim {
   id: string;
@@ -121,12 +121,7 @@ export const WarrantyClaimsManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <LoadingSpinner size="md" className="mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading warranty claims...</p>
-        </div>
-      </div>
+      <ListSkeleton label="Loading warranty claims" />
     );
   }
 

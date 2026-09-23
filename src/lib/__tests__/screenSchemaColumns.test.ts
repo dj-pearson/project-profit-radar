@@ -26,8 +26,8 @@ const migration = stripSql(readFileSync(MIGRATION, 'utf8'));
 
 // table, column, and a file that reads or writes it
 const DEPENDENCIES: Array<[string, string, string]> = [
-  ['company_settings', 'enable_ai_features', 'src/hooks/useAIFeatures.ts'],
-  ['company_settings', 'enable_ai_data_sharing', 'src/hooks/useAIFeatures.ts'],
+  ['company_settings', 'enable_ai_features', 'src/pages/CompanySettings.tsx'],
+  ['company_settings', 'enable_ai_data_sharing', 'src/pages/CompanySettings.tsx'],
   ['data_subject_requests', 'user_id', 'src/components/legal/PrivacyControls.tsx'],
   ['data_subject_requests', 'email', 'src/components/legal/PrivacyControls.tsx'],
   ['data_subject_requests', 'source', 'src/components/legal/PrivacyControls.tsx'],

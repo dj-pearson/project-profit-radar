@@ -26,6 +26,7 @@ import {
   QUEUE_STATUS_LABELS,
   PAGE_TYPE_LABELS,
 } from '@/types/pseo';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface GenerationQueueManagerProps {
   items: PSEOGenerationQueueItem[];
@@ -136,7 +137,7 @@ export function GenerationQueueManager({
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+              <Skeleton key={i} className="h-12" />
             ))}
           </div>
         ) : (

@@ -7,7 +7,7 @@ import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { DataTablePageSkeleton, TableSkeleton } from '@/components/ui/skeletons';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
@@ -321,7 +321,7 @@ const CRMOpportunities = () => {
   const totalWeightedValue = filteredOpportunities.reduce((sum, opp) => sum + calculateWeightedValue(opp.estimated_value, opp.probability_percent), 0);
 
   if (loading) {
-    return <LoadingState message="Loading opportunities..." />;
+    return <DataTablePageSkeleton label="Loading opportunities" />;
   }
 
   if (!user) {
@@ -628,7 +628,7 @@ const CRMOpportunities = () => {
               <CardContent>
                 <ErrorBoundary>
                   {opportunitiesLoading ? (
-                    <LoadingState message="Loading opportunities..." />
+                    <TableSkeleton rows={5} label="Loading opportunities" />
                   ) : opportunitiesError ? (
                     <ErrorState 
                       error={opportunitiesError} 

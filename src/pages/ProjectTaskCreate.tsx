@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { FormSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
@@ -65,7 +65,7 @@ const ProjectTaskCreate = () => {
   };
 
   if (loading) {
-    return <LoadingState message="Loading project..." />;
+    return <LoadingRegion label="Loading project" className="container mx-auto p-6"><FormSkeleton /></LoadingRegion>;
   }
 
   if (!project) {

@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, Target, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getTemplateFields } from '@/lib/csv-import/templates';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface FieldMapping {
   id: string;
@@ -153,10 +153,9 @@ export const FieldMappingStep: React.FC<FieldMappingStepProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <LoadingSpinner size="md" />
-        <span className="ml-3">Loading field mappings...</span>
-      </div>
+      <LoadingRegion label="Loading field mappings" className="p-8">
+        <ListSkeleton />
+      </LoadingRegion>
     );
   }
 

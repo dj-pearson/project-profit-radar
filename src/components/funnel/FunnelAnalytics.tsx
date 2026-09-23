@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, Users, Mail, MousePointer, UserCheck, UserX } from "lucide-react";
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface FunnelAnalyticsProps {
   funnelId: string;
@@ -77,7 +78,7 @@ export function FunnelAnalytics({ funnelId }: FunnelAnalyticsProps) {
   });
 
   if (isLoading) {
-    return <div>Loading analytics...</div>;
+    return <DashboardSkeleton label="Loading analytics" />;
   }
 
   if (!analytics) {

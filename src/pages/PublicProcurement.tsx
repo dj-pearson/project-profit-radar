@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 export default function PublicProcurement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -371,9 +372,9 @@ export default function PublicProcurement() {
 
         <TabsContent value="opportunities" className="space-y-4">
           {dataLoading ? (
-            <div className="text-center py-8">
-              <div className="text-muted-foreground">Loading opportunities...</div>
-            </div>
+            <LoadingRegion label="Loading opportunities" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : opportunities.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

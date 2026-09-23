@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageSquare, Clock, CheckCircle, AlertCircle, User } from "lucide-react";
+import { DataTablePageSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface SupportTicket {
   id: string;
@@ -218,11 +219,9 @@ const SupportTickets = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading support tickets...</div>
-        </div>
-      </div>
+      <LoadingRegion label="Loading support tickets" className="container mx-auto p-6">
+        <DataTablePageSkeleton />
+      </LoadingRegion>
     );
   }
 

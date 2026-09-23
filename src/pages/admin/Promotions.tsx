@@ -14,8 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Promotion {
   id: string;
@@ -388,10 +388,9 @@ const Promotions = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="text-center py-12">
-            <LoadingSpinner size="xl" className="mx-auto" />
-            <p className="text-muted-foreground mt-4">Loading promotions...</p>
-          </div>
+          <LoadingRegion label="Loading promotions" className="py-12">
+            <ListSkeleton />
+          </LoadingRegion>
         ) : promotions.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">

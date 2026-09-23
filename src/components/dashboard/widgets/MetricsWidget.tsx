@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface Metric {
   label: string;
@@ -94,7 +95,7 @@ export const MetricsWidget = () => {
   };
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading metrics...</div>;
+    return <ListSkeleton items={3} label="Loading metrics" />;
   }
 
   return (

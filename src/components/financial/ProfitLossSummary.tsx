@@ -12,6 +12,7 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface FinancialData {
   revenue: number;
@@ -181,7 +182,9 @@ const ProfitLossSummary = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">Loading financial data...</div>
+          <LoadingRegion label="Loading financial data" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );

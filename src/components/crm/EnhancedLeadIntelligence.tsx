@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/formatters';
 import { Brain, Zap, AlertTriangle, CheckCircle, Clock, BarChart3 } from 'lucide-react';
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface AILeadScore {
   id: string;
@@ -206,7 +207,9 @@ export const EnhancedLeadIntelligence: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-6">Loading intelligence data...</div>;
+    return <LoadingRegion label="Loading intelligence data" className="p-6">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

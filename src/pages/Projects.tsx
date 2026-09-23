@@ -19,7 +19,8 @@ import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ProjectCardSkeleton } from "@/components/ui/loading-skeleton";
+import { LoadingRegion, ProjectCardSkeleton } from "@/components/ui/skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoProjects } from "@/components/ui/EmptyStates";
 import { ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
@@ -598,16 +599,16 @@ const Projects = () => {
     return (
       <AccessiblePageWrapper pageTitle="Projects">
         <DashboardLayout title="Projects" showTrialBanner={false} hasAccessibleWrapper>
-          <div className="space-y-6">
+          <LoadingRegion label="Loading projects" className="space-y-6">
             <div className="flex justify-end">
-              <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+              <Skeleton className="h-9 w-32" />
             </div>
             <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
               {[...Array(6)].map((_, i) => (
                 <ProjectCardSkeleton key={i} />
               ))}
             </ResponsiveGrid>
-          </div>
+          </LoadingRegion>
         </DashboardLayout>
       </AccessiblePageWrapper>
     );

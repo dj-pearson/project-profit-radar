@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Pencil, Eye, Search } from 'lucide-react';
 import type { DimensionType } from '@/types/pseo';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DimensionItem {
   id: string;
@@ -181,7 +182,7 @@ export function DimensionManager({
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+                <Skeleton key={i} className="h-12" />
               ))}
             </div>
           ) : (

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, TrendingUp, Shield, DollarSign, Clock, CheckCircle2, XCircle, Brain, Target, ArrowRight, AlertTriangle } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface RiskPrediction {
   id: string;
@@ -387,10 +388,7 @@ export function RiskPrediction() {
       {loading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <div className="text-center space-y-4">
-              <Brain className="h-12 w-12 animate-pulse text-purple-600 mx-auto" />
-              <p className="text-muted-foreground">Loading risk data...</p>
-            </div>
+            <ListSkeleton label="Loading risk data" />
           </CardContent>
         </Card>
       ) : !prediction ? (

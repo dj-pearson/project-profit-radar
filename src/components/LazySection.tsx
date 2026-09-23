@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, ReactNode } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LazySectionProps {
   children: ReactNode;
@@ -8,7 +9,7 @@ interface LazySectionProps {
 
 const LazySection: React.FC<LazySectionProps> = ({ 
   children, 
-  fallback = <div className="h-32 bg-muted/20 animate-pulse rounded" />,
+  fallback = <Skeleton className="h-32 bg-muted/20" />,
   rootMargin = "100px"
 }) => {
   const [isVisible, setIsVisible] = useState(false);

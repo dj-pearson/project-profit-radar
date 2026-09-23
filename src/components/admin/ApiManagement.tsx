@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 import { Switch } from '@/components/ui/switch';
 import { Copy, Plus, Activity } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface ApiKey {
   id: string;
@@ -282,7 +283,7 @@ const ApiManagement: React.FC = () => {
 
           <div className="grid gap-4">
             {loadingKeys ? (
-              <div>Loading API keys...</div>
+              <ListSkeleton label="Loading API keys" />
             ) : apiKeys?.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
@@ -322,7 +323,7 @@ const ApiManagement: React.FC = () => {
 
           <div className="grid gap-4">
             {loadingWebhooks ? (
-              <div>Loading webhooks...</div>
+              <ListSkeleton label="Loading webhooks" />
             ) : webhooks?.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
@@ -667,7 +668,7 @@ const ApiActivityLogs: React.FC = () => {
     }
   });
 
-  if (isLoading) return <div>Loading logs...</div>;
+  if (isLoading) return <ListSkeleton label="Loading logs" />;
 
   return (
     <Card>

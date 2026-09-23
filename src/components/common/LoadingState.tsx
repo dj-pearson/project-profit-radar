@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LoadingStateProps {
   message?: string;
@@ -73,7 +74,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
       {/* Header */}
       <div className="flex gap-4 p-4 border-b">
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="h-4 bg-muted rounded flex-1 animate-pulse" />
+          <Skeleton key={i} className="h-4 flex-1" />
         ))}
       </div>
       
@@ -81,7 +82,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
       {Array.from({ length: rows }).map((_, rowIdx) => (
         <div key={rowIdx} className="flex gap-4 p-4 border-b">
           {Array.from({ length: columns }).map((_, colIdx) => (
-            <div key={colIdx} className="h-4 bg-muted rounded flex-1 animate-pulse" style={{ animationDelay: `${rowIdx * 50}ms` }} />
+            <Skeleton key={colIdx} className="h-4 flex-1" style={{ animationDelay: `${rowIdx * 50}ms` }} />
           ))}
         </div>
       ))}

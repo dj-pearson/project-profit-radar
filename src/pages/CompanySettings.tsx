@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Building2, Bell, Shield, DollarSign, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface CompanySettings {
   // Company Profile
@@ -233,9 +234,7 @@ const CompanySettings = () => {
   if (loading) {
     return (
       <DashboardLayout title="Company Settings">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading settings...</div>
-        </div>
+        <DataTablePageSkeleton label="Loading settings" />
       </DashboardLayout>
     );
   }

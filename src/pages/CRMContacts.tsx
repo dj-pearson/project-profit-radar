@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState } from '@/components/ui/states';
 import { NoContacts } from '@/components/ui/EmptyStates';
@@ -310,7 +310,7 @@ const CRMContacts = () => {
   };
 
   if (loading) {
-    return <LoadingState message="Loading contacts..." />;
+    return <DataTablePageSkeleton label="Loading contacts" />;
   }
 
   if (!user) {

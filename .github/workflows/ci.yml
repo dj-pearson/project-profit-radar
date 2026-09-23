@@ -281,6 +281,9 @@ jobs:
       - name: Param-route trap guard (US-312 follow-up)
         run: node scripts/check-param-route-traps.mjs
 
+      - name: Orphan-route guard (US-315)
+        run: node scripts/check-orphan-routes.mjs
+
       - name: Live-schema table guard (US-311 follow-up)
         run: node scripts/check-live-schema-tables.mjs
 
@@ -292,6 +295,9 @@ jobs:
 
       - name: Direct-formatting guard (US-377)
         run: node scripts/check-direct-formatting.mjs
+
+      - name: Ad-hoc loader guard (US-285)
+        run: node scripts/check-adhoc-loaders.mjs
 
       - name: Unreferenced-module guard (US-314 follow-up)
         run: node scripts/check-unreferenced-modules.mjs

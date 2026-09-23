@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Play, CheckCircle, Clock } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface ProjectData {
   active: {
@@ -113,7 +114,9 @@ const ProjectPipeline = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">Loading pipeline data...</div>
+          <LoadingRegion label="Loading pipeline data" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );

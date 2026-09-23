@@ -37,6 +37,7 @@ const BillPayments = createLazyRoute(() => import('@/pages/BillPayments'));
 const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
 const WipReport = createLazyRoute(() => import('@/pages/WipReport'));
 const ExportCenter = createLazyRoute(() => import('@/pages/ExportCenter'));
+const PaymentCenter = createLazyRoute(() => import('@/pages/PaymentCenter'));
 
 export const financialRoutes = (
   <>
@@ -85,6 +86,10 @@ export const financialRoutes = (
     <Route path="/invoices" element={<RouteGuard><LazyInvoices /></RouteGuard>} />
     <Route path="/invoices/aging" element={<RouteGuard><LazyARAgingReport /></RouteGuard>} />
     <Route path="/expenses" element={<RouteGuard><LazyExpenses /></RouteGuard>} />
+    {/* Payment Center sat in marketingRoutes with no guard, so ROUTE_ACCESS
+        (admin and accounting) was never enforced on it. It is in the sidebar
+        now (US-315), which needs the two to agree. */}
+    <Route path="/payment-center" element={<RouteGuard><PaymentCenter /></RouteGuard>} />
 
     {/* Reports */}
     <Route path="/reports" element={<RouteGuard><LazyReports /></RouteGuard>} />

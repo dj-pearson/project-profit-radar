@@ -5,7 +5,7 @@
  * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import { RouteGuard } from '@/components/ProtectedRoute';
 import {
   createLazyRoute,
@@ -19,13 +19,10 @@ import {
   LazyAdminHub,
   LazyUserSettings,
   LazySubscriptionSettings,
-  LazyAPIMarketplace,
   LazyCollaboration,
-  LazyMobileTesting,
   LazyMobileDashboard,
   LazyFieldManagement,
   LazyWorkflowManagement,
-  LazyWorkflowTesting,
   LazyAuth,
   LazyAuthCallback,
   LazySetup,
@@ -41,14 +38,10 @@ import {
 } from '@/utils/lazyRoutes';
 
 // Lazy-loaded feature pages (with ErrorBoundary + Suspense via createLazyRoute)
-const ReferralProgram = createLazyRoute(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
 const IntegrationMarketplace = createLazyRoute(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
 const WorkflowAutomation = createLazyRoute(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
 const CommunicationPage = createLazyRoute(() => import('@/pages/CommunicationPage'));
-const AIInsights = createLazyRoute(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
 const MobileShowcase = createLazyRoute(() => import('@/pages/MobileShowcase'));
-const AdvancedMobileShowcase = createLazyRoute(() => import('@/pages/AdvancedMobileShowcase'));
-const VisualProjectManagementPage = createLazyRoute(() => import('@/pages/VisualProjectManagementPage').then(m => ({ default: m.VisualProjectManagementPage })));
 const CustomDomain = createLazyRoute(() => import('@/pages/settings/CustomDomain').then(m => ({ default: m.CustomDomain })));
 
 export const appRoutes = (
@@ -94,22 +87,32 @@ export const appRoutes = (
     <Route path="/settings/custom-domain" element={<RouteGuard><CustomDomain /></RouteGuard>} />
 
     {/* Features */}
-    <Route path="/marketplace" element={<RouteGuard><LazyAPIMarketplace /></RouteGuard>} />
     <Route path="/collaboration" element={<RouteGuard><LazyCollaboration /></RouteGuard>} />
-    <Route path="/referrals" element={<RouteGuard><ReferralProgram /></RouteGuard>} />
     <Route path="/integrations" element={<RouteGuard><IntegrationMarketplace /></RouteGuard>} />
     <Route path="/workflows" element={<RouteGuard><WorkflowAutomation /></RouteGuard>} />
-    <Route path="/ai-insights" element={<RouteGuard><AIInsights /></RouteGuard>} />
-    <Route path="/visual-project" element={<RouteGuard><VisualProjectManagementPage /></RouteGuard>} />
     <Route path="/field-management" element={<RouteGuard><LazyFieldManagement /></RouteGuard>} />
     <Route path="/workflow-management" element={<RouteGuard><LazyWorkflowManagement /></RouteGuard>} />
-    <Route path="/workflow-testing" element={<RouteGuard><LazyWorkflowTesting /></RouteGuard>} />
+    {/* Routed pages nothing linked to, triaged in US-315. Deleted rather than
+        linked because none of them was a finished feature:
+          /marketplace      a hardcoded catalog whose Install button installs
+                            nothing and points at /integrations
+          /referrals        the referral-code trigger was never created, so
+                            every user saw "Referral code not found"; the
+                            working program is the affiliate tab on
+                            /subscription-settings
+          /ai-insights      fixed "3 customers at high risk" and "MRR predicted
+                            to grow 23%" cards, whatever the data said
+          /visual-project   hardcoded tasks, placeholder photos and a weather
+                            tab reading "being updated"
+          /mobile-testing, /mobile-showcase-advanced   developer gesture demos
+        None was ever linked, so none gets a redirect. /workflow-testing was
+        (by the old AppSidebar), and was a test harness around the same four
+        components /workflow-management renders, so it redirects there. */}
+    <Route path="/workflow-testing" element={<Navigate to="/workflow-management" replace />} />
 
     {/* Mobile */}
-    <Route path="/mobile-testing" element={<RouteGuard><LazyMobileTesting /></RouteGuard>} />
     <Route path="/mobile-dashboard" element={<RouteGuard><LazyMobileDashboard /></RouteGuard>} />
     <Route path="/mobile-showcase" element={<RouteGuard><MobileShowcase /></RouteGuard>} />
-    <Route path="/mobile-showcase-advanced" element={<RouteGuard><AdvancedMobileShowcase /></RouteGuard>} />
 
     {/* Resources */}
     <Route path="/tools" element={<LazyTools />} />

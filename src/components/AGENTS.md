@@ -49,6 +49,16 @@ if (loading) return <DataTablePageSkeleton />;        // full data page (header 
   PageHeader/DataTablePage/ChartCard). Add new shared compositions here, not in
   a new `*Skeleton*` file. (`ui/skeleton-loader.tsx` and `ui/loading-skeleton.tsx`
   still exist for legacy call sites and should be migrated here over time.)
+- Pass `label` to `ListSkeleton`, `TableSkeleton`, `DashboardSkeleton` or
+  `DataTablePageSkeleton` (or wrap shapes in `LoadingRegion`) when the skeleton
+  stands in for a whole section: it renders `role="status"`, `aria-busy="true"`
+  and an sr-only label, so screen readers hear "Loading permits" and tests can
+  assert `getByRole('status')` instead of matching copy. `CardGridSkeleton`
+  covers card-grid list pages.
+- `scripts/check-adhoc-loaders.mjs` (pre-commit + CI, US-285) holds the count
+  of literal `Loading...` JSX text, `<LoadingState` blocks and hand-rolled
+  `bg-muted animate-pulse` divs to an exact baseline. Migrating one means
+  lowering the baseline in the same commit.
 - **PR guidance:** flag any literal `>Loading...<` JSX in review — replace it
   with a Skeleton where a layout placeholder fits. A bare full-screen auth/route
   gate is the one acceptable exception.

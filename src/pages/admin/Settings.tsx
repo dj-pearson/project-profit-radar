@@ -15,6 +15,7 @@ import RenewalNotificationPanel from '@/components/RenewalNotificationPanel';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import { Settings, Shield, Database, Globe, Bell, Lock, Save, RefreshCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SystemSettings {
   platformName: string;
@@ -136,9 +137,9 @@ const AdminSettings = () => {
       <div className="min-h-screen bg-background p-6">
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
           </div>
-          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+          <Skeleton className="h-[300px] rounded-lg" />
         </div>
       </div>
     );

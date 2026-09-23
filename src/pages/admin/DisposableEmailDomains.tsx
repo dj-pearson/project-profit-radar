@@ -40,6 +40,7 @@ import {
   PowerOff,
   MailX,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DisposableEmailDomain {
   id: string;
@@ -372,10 +373,10 @@ const DisposableEmailDomains: React.FC = () => {
         >
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+              <Skeleton key={i} className="h-24 rounded-lg" />
             ))}
           </div>
-          <div className="h-[400px] bg-muted animate-pulse rounded-lg" />
+          <Skeleton className="h-[400px] rounded-lg" />
         </div>
       </DashboardLayout>
     );

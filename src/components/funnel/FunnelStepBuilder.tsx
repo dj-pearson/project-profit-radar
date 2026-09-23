@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Mail, Clock, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface FunnelStep {
   id: string;
@@ -128,7 +129,7 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
   ];
 
   if (isLoading) {
-    return <div>Loading funnel steps...</div>;
+    return <ListSkeleton label="Loading funnel steps" />;
   }
 
   return (

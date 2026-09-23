@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Shield, AlertTriangle, CheckCircle, Bell, Upload, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Certification {
   id: string;
@@ -139,7 +140,7 @@ const CertificationTracker = () => {
   };
 
   if (loading) {
-    return <div className="animate-pulse bg-muted h-96 rounded-lg"></div>;
+    return <Skeleton className="h-96 rounded-lg" />;
   }
 
   return (

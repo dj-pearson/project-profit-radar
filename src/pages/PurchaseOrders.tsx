@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PurchaseOrder {
   id: string;
@@ -260,7 +261,7 @@ const PurchaseOrders = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : filteredPOs.length === 0 ? (
               <div className="text-center py-8">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

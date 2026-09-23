@@ -16,6 +16,7 @@ import {
   Clock,
   Filter
 } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Activity {
   id: string;
@@ -178,7 +179,9 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
   ];
 
   if (loading) {
-    return <div className="p-6">Loading activities...</div>;
+    return <LoadingRegion label="Loading activities" className="p-6">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

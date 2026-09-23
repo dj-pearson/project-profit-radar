@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, HelpCircle, MessageSquare, Mail, Clock, CheckCircle, AlertTriangle, User, Calendar } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Support() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -215,7 +216,7 @@ export default function Support() {
 
           <TabsContent value="tickets" className="space-y-4">
             {loading ? (
-              <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}</div>
+              <div className="space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
             ) : (
               <div className="grid gap-4">
                 {tickets.length === 0 ? (

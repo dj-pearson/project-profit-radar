@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Send, Paperclip, Hash, Users, Lock } from 'lucide-react';
 import { useRealtimeChat } from '@/hooks/useRealtimeChat';
 import { formatDistanceToNow } from 'date-fns';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface ChatMessage {
   id: string;
@@ -211,9 +212,7 @@ export const ChatInterface: React.FC = () => {
             {/* Messages - Mobile Optimized */}
             <ScrollArea className="flex-1 p-2 sm:p-4">
               {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="text-xs sm:text-sm text-muted-foreground">Loading messages...</div>
-                </div>
+                <ListSkeleton label="Loading messages" />
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center">

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,6 +14,7 @@ import {
   Calendar,
   Target
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface CashFlowData {
   projection_date: string;
@@ -159,10 +159,7 @@ export const CashFlowForecasting: React.FC = () => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading cash flow data...</p>
-          </div>
+          <ListSkeleton label="Loading cash flow data" />
         </CardContent>
       </Card>
     );

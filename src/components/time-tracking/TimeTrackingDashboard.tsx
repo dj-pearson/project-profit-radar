@@ -6,7 +6,7 @@ import { useInsertMutation, useUpdateMutation } from '@/hooks/useSupabaseMutatio
 import { useGPSLocation } from '@/hooks/useGPSLocation';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useToast } from '@/hooks/use-toast';
-import { LoadingState } from '@/components/common/LoadingState';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { ErrorState } from '@/components/common/ErrorState';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -191,7 +191,7 @@ export const TimeTrackingDashboard = () => {
   };
 
   if (entriesLoading || projectsLoading) {
-    return <LoadingState />;
+    return <DashboardSkeleton label="Loading time entries" />;
   }
 
   if (entriesError) {

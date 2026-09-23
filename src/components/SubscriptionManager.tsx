@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SubscriptionChange from './SubscriptionChange';
 import PaymentFailureAlert from './PaymentFailureAlert';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface SubscriptionData {
   subscription_tier: string;
@@ -112,10 +113,7 @@ const SubscriptionManager = () => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-muted-foreground">Loading subscription...</p>
-          </div>
+          <ListSkeleton label="Loading subscription" />
         </CardContent>
       </Card>
     );

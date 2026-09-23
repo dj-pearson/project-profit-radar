@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   FileText,
   Search,
@@ -17,6 +16,7 @@ import {
   Star,
   Sparkles
 } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface EstimateTemplate {
   id: string;
@@ -172,12 +172,9 @@ export function EstimateTemplatesLibrary({
 
             <TabsContent value={selectedCategory} className="flex-1 overflow-y-auto mt-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <LoadingSpinner size="lg" className="mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading templates...</p>
-                  </div>
-                </div>
+                <LoadingRegion label="Loading templates" className="py-12">
+                  <ListSkeleton />
+                </LoadingRegion>
               ) : filteredTemplates.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

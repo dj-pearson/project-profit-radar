@@ -231,7 +231,6 @@ describe('IntegrationService methods reachable from ContextualActions', () => {
 
 describe('screens with nothing behind them now say so', () => {
   const cases: Array<[string, RegExp]> = [
-    ['src/components/integrations/ThirdPartyMarketplace.tsx', /installed successfully|uninstalled successfully|installs: \d/],
     ['src/components/portal/WhiteLabelPortal.tsx', /Portal Settings Saved/],
     ['src/components/financial/EnhancedJobCosting.tsx', /Material pricing updated successfully/],
     ['src/components/communication/AutomatedUpdates.tsx', /Test update sent successfully/],

@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface APIKey {
   id: string;
@@ -254,9 +255,7 @@ export const APIKeyManager: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <div className="text-sm text-muted-foreground">Loading API keys...</div>
-        </div>
+        <ListSkeleton label="Loading API keys" />
       ) : apiKeys.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">

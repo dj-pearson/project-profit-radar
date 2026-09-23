@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Activity, Users, Target, Clock, type LucideIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Users, Target, Clock } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 /** Columns this component selects from `leads`. */
 type LeadRow = {
@@ -234,7 +235,9 @@ export const PerformanceMetrics = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading performance metrics...</div>;
+    return <LoadingRegion label="Loading performance metrics" className="py-8">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

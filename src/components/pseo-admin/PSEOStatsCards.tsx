@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { PSEODashboardStats } from '@/types/pseo';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PSEOStatsCardsProps {
   stats: PSEODashboardStats;
@@ -14,10 +15,10 @@ export function PSEOStatsCards({ stats, isLoading }: PSEOStatsCardsProps) {
         {Array.from({ length: 8 }).map((_, i) => (
           <Card key={i}>
             <CardHeader className="pb-2">
-              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+              <Skeleton className="h-4 w-24" />
             </CardHeader>
             <CardContent>
-              <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              <Skeleton className="h-8 w-16" />
             </CardContent>
           </Card>
         ))}

@@ -16,6 +16,7 @@ import { Building2, Users, Settings, TrendingUp, AlertCircle, CheckCircle, Plus,
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface Tenant {
   id: string;
@@ -252,12 +253,7 @@ export const TenantManagement = () => {
   if (loading) {
     return (
       <DashboardLayout title="Tenant Management">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Building2 className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading tenants...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading tenants" />
       </DashboardLayout>
     );
   }

@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface ComplimentarySubscription {
   id: string;
@@ -469,10 +469,9 @@ const ComplimentarySubscriptionManager = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">
-              <LoadingSpinner size="md" className="mx-auto mb-2" />
-              <p className="text-muted-foreground">Loading subscriptions...</p>
-            </div>
+            <LoadingRegion label="Loading subscriptions" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : complimentarySubscriptions.length === 0 ? (
             <div className="text-center py-8">
               <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

@@ -4,6 +4,7 @@ import { Building2, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface ProjectSummary {
   id: string;
@@ -48,7 +49,7 @@ export const ProjectStatusWidget = () => {
   };
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading projects...</div>;
+    return <ListSkeleton items={3} label="Loading projects" />;
   }
 
   if (projects.length === 0) {

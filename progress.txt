@@ -7046,3 +7046,11 @@ INPUT_VALIDATION_MODE=enforce once the report-mode logs are quiet. Fixed in
 this batch: twilio-calling read other tenants' call status and recordings
 with platform credentials; send-support-notification mailed any address;
 two PostgREST .or() filter injections.
+
+## US-285 + US-315 - skeletons and orphan routes
+Loading states across 165 files use the shared Skeleton compositions;
+check-adhoc-loaders.mjs holds the remainder at 5/1/3. Every static route is
+now linked from the app or exempt with a named entry point
+(check-orphan-routes.mjs). Stub pages with invented data were deleted
+(/marketplace, /referrals, /ai-insights, /visual-project and demos); the
+ones old nav could reach redirect. TS 1484 -> 1482.

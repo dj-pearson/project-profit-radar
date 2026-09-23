@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, FileText, AlertCircle, CheckCircle, XCircle, Download, Search, Clock, Users, Database, Lock, Eye } from 'lucide-react';
+import { FileText, AlertCircle, CheckCircle, XCircle, Download, Search, Clock, Users, Database, Lock, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface AuditLog {
   id: string;
@@ -322,12 +323,7 @@ export const AuditLoggingCompliance = () => {
   if (loading) {
     return (
       <DashboardLayout title="Audit & Compliance">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Shield className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading compliance data...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading compliance data" />
       </DashboardLayout>
     );
   }

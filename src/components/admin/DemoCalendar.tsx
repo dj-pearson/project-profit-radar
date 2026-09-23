@@ -41,6 +41,7 @@ import {
   parseISO,
   isToday,
 } from 'date-fns';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface DemoRequest {
   id: string;
@@ -260,7 +261,9 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
 
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading demos...</div>
+            <LoadingRegion label="Loading demos" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : loadError ? (
             <ErrorState error={loadError} onRetry={loadDemoRequests} />
           ) : (

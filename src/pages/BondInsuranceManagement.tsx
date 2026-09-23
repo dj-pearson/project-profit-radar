@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BondForm } from '@/components/bonds/BondForm';
 import { InsuranceForm } from '@/components/bonds/InsuranceForm';
 import { Plus, Search, Filter, Shield, FileCheck, DollarSign, Clock, CheckCircle } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface Bond {
   id: string;
@@ -161,12 +161,7 @@ export default function BondInsuranceManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <LoadingSpinner size="md" className="mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading bonds and insurance...</p>
-        </div>
-      </div>
+      <DataTablePageSkeleton label="Loading bonds and insurance" />
     );
   }
 

@@ -19,6 +19,7 @@ import {
 import { Users, Search, Settings, Circle, Clock, Minus } from 'lucide-react';
 import { useSimplePresence } from '@/hooks/useSimplePresence';
 import { UserPresenceIndicator } from './UserPresenceIndicator';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface TeamPresencePanelProps {
   projectId?: string;
@@ -288,9 +289,9 @@ export const TeamPresencePanel: React.FC<TeamPresencePanelProps> = ({
           {showControls && <FilterControls />}
 
           {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Loading team presence...</p>
-            </div>
+            <LoadingRegion label="Loading team presence" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : filteredPresenceData.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

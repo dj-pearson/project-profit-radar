@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Clock, Copy, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface BookingPage {
   id: string;
@@ -158,7 +159,9 @@ export function BookingPageManager() {
   };
 
   if (isLoading) {
-    return <div className="p-4">Loading booking pages...</div>;
+    return <LoadingRegion label="Loading booking pages" className="p-4">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

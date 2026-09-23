@@ -3,8 +3,42 @@
  * Improves perceived performance by showing loading placeholders
  */
 
+import type { ReactNode } from "react";
 import { Skeleton } from "./skeleton";
 import { Card, CardContent, CardHeader } from "./card";
+import { cn } from "@/lib/utils";
+
+/**
+ * Announces a loading placeholder to assistive tech. The skeleton shapes are
+ * decorative; the sr-only label is what a screen reader hears, and
+ * aria-busy lets tests and tooling find the region without matching copy.
+ */
+export function LoadingRegion({
+  label = "Loading",
+  className,
+  children,
+}: {
+  label?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div role="status" aria-busy="true" aria-live="polite" className={className}>
+      <span className="sr-only">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function maybeRegion(label: string | undefined, node: ReactNode, className?: string) {
+  return label ? (
+    <LoadingRegion label={label} className={className}>
+      {node}
+    </LoadingRegion>
+  ) : (
+    node
+  );
+}
 
 /**
  * Skeleton for a card with header and content
@@ -41,8 +75,17 @@ export function TableRowSkeleton({ columns = 4 }: { columns?: number }) {
 /**
  * Skeleton for a full table
  */
-export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
-  return (
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  label,
+}: {
+  rows?: number;
+  columns?: number;
+  /** When set, wraps the table in a LoadingRegion with this sr-only label. */
+  label?: string;
+}) {
+  return maybeRegion(label,
     <div className="space-y-2">
       {/* Table header */}
       <div className="flex items-center gap-4 pb-4 border-b font-medium">
@@ -77,13 +120,45 @@ export function ListItemSkeleton() {
 /**
  * Skeleton for a list
  */
-export function ListSkeleton({ items = 5 }: { items?: number }) {
-  return (
+export function ListSkeleton({
+  items = 5,
+  label,
+}: {
+  items?: number;
+  /** When set, wraps the list in a LoadingRegion with this sr-only label. */
+  label?: string;
+}) {
+  return maybeRegion(label,
     <div className="space-y-1">
       {Array.from({ length: items }).map((_, i) => (
         <ListItemSkeleton key={i} />
       ))}
     </div>
+  );
+}
+
+/**
+ * A grid of card placeholders, for card-based list pages. Always announced:
+ * it is meant to stand in for a whole section, never to sit inside one.
+ */
+export function CardGridSkeleton({
+  count = 6,
+  label = "Loading",
+  className,
+}: {
+  count?: number;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <LoadingRegion
+      label={label}
+      className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-3", className)}
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <CardSkeleton key={i} />
+      ))}
+    </LoadingRegion>
   );
 }
 
@@ -112,8 +187,8 @@ export function StatCardSkeleton() {
 /**
  * Skeleton for a dashboard with stats and content
  */
-export function DashboardSkeleton() {
-  return (
+export function DashboardSkeleton({ label }: { label?: string } = {}) {
+  return maybeRegion(label,
     <div className="space-y-6">
       {/* Stats grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -212,8 +287,8 @@ export function PageHeaderSkeleton() {
 /**
  * Skeleton for a data table page
  */
-export function DataTablePageSkeleton() {
-  return (
+export function DataTablePageSkeleton({ label }: { label?: string } = {}) {
+  return maybeRegion(label,
     <div className="space-y-6">
       <PageHeaderSkeleton />
       <div className="flex items-center justify-between">

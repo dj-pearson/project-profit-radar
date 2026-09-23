@@ -20,6 +20,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingRegion } from '@/components/ui/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -245,7 +247,11 @@ export default function ProjectCalendar() {
 
           {loading ? (
             <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">Loading calendar…</CardContent>
+              <CardContent className="p-4">
+                <LoadingRegion label="Loading calendar">
+                  <Skeleton className="h-[420px] w-full" />
+                </LoadingRegion>
+              </CardContent>
             </Card>
           ) : view === 'month' ? (
             <MonthGrid cursor={cursor} dayEvents={dayEvents} onDayClick={openCreate} onEventClick={openEvent} />

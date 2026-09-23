@@ -22,6 +22,7 @@ import { formatCurrency } from '@/utils/accountingUtils';
 import { downloadCsv } from '@/lib/exportCsv';
 import { balanceSheetCsv, statementFilename } from '@/lib/statementCsv';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BalanceSheet() {
   const { user } = useAuth();
@@ -201,7 +202,7 @@ export default function BalanceSheet() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : (
             <div className="space-y-8">
               {/* ASSETS */}

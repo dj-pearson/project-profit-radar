@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isToday, isTomorrow, isThisWeek, isPast } from 'date-fns';
 import { TaskCard } from '@/components/tasks/TaskCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TaskItem {
   id: string;
@@ -422,7 +423,7 @@ export const MyTasksDashboard = () => {
   if (loading) {
     return (
       <DashboardLayout title="My Tasks Dashboard">
-        <div className="space-y-4"><div className="grid gap-4 md:grid-cols-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />)}</div><div className="h-[200px] bg-muted animate-pulse rounded-lg" /></div>
+        <div className="space-y-4"><div className="grid gap-4 md:grid-cols-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}</div><Skeleton className="h-[200px] rounded-lg" /></div>
       </DashboardLayout>
     );
   }

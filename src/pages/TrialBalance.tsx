@@ -19,6 +19,7 @@ import { ClipboardList, Download, Printer, CheckCircle, AlertCircle } from 'luci
 import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
 import { downloadCsv } from '@/lib/exportCsv';
 import { trialBalanceCsv, statementFilename } from '@/lib/statementCsv';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ChartAccount {
   id: string;
@@ -201,7 +202,7 @@ export default function TrialBalance() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : (
               <Table aria-label="Trial Balance">
                 <TableHeader>

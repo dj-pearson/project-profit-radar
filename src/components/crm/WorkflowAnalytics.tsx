@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Activity, CheckCircle2, XCircle, Clock, TrendingUp, Zap } from 'lucide-react';
 import { workflowExecutionService } from '@/services/WorkflowExecutionService';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface WorkflowAnalyticsProps {
   workflowId?: string;
@@ -54,10 +55,10 @@ export function WorkflowAnalytics({ workflowId }: WorkflowAnalyticsProps) {
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
-                <div className="h-4 bg-muted animate-pulse rounded" />
+                <Skeleton className="h-4" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-muted animate-pulse rounded" />
+                <Skeleton className="h-8" />
               </CardContent>
             </Card>
           ))}

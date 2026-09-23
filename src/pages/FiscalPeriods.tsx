@@ -29,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { generateMonthlyPeriods } from '@/utils/accountingUtils';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface NewFiscalYearData {
   yearNumber: number;
@@ -397,7 +398,7 @@ export default function FiscalPeriods() {
         {isLoading ? (
           <Card>
             <CardContent className="pt-6">
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             </CardContent>
           </Card>
         ) : fiscalYears && fiscalYears.length > 0 ? (

@@ -20,6 +20,7 @@ import {
   Zap,
   Timer
 } from "lucide-react";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface WorkflowDefinition {
   id: string;
@@ -208,12 +209,7 @@ export default function WorkflowAutomation() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="text-center py-8">
-          <LoadingSpinner size="md" className="mx-auto" />
-          <p className="mt-2 text-muted-foreground">Loading workflow automation...</p>
-        </div>
-      </div>
+      <ListSkeleton label="Loading workflow automation" />
     );
   }
 

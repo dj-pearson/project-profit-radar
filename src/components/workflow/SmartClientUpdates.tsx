@@ -14,8 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, MessageSquare, FileText, Calendar, Settings, Zap, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface AutomationRule {
   id: string;
@@ -278,12 +278,7 @@ export const SmartClientUpdates: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <LoadingSpinner size="md" className="mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading automation settings...</p>
-        </div>
-      </div>
+      <ListSkeleton label="Loading automation settings" />
     );
   }
 

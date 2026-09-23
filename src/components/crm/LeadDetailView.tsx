@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ClickToCall } from "./ClickToCall";
 import { CallHistory } from "./CallHistory";
 import { useState } from "react";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface LeadDetailViewProps {
   leadId: string;
@@ -86,7 +87,9 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
   };
 
   if (isLoading) {
-    return <div className="p-8">Loading lead details...</div>;
+    return <LoadingRegion label="Loading lead details" className="p-8">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   if (!lead) {

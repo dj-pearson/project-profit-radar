@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Filter, Plus, Play, Pause, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface QualificationWorkflow {
   id: string;
@@ -243,7 +244,9 @@ export const LeadQualificationWorkflows: React.FC = () => {
   ];
 
   if (loading) {
-    return <div className="p-6">Loading qualification workflows...</div>;
+    return <LoadingRegion label="Loading qualification workflows" className="p-6">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { FormSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface EmailPrefs {
   transactional: true; // always true — cannot be disabled
@@ -144,10 +145,9 @@ const EmailPreferences = () => {
       </p>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 not-prose">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Loading your preferences…
-        </div>
+        <LoadingRegion label="Loading your preferences" className="py-6 not-prose">
+          <FormSkeleton fields={3} />
+        </LoadingRegion>
       ) : (
         <div className="space-y-5 not-prose mt-4">
           <PrefRow

@@ -21,6 +21,7 @@ import { formatCurrency, formatPercentage } from '@/utils/accountingUtils';
 import { downloadCsv } from '@/lib/exportCsv';
 import { profitAndLossCsv, statementFilename } from '@/lib/statementCsv';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfitAndLoss() {
   const { user } = useAuth();
@@ -238,7 +239,7 @@ export default function ProfitAndLoss() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : (
               <Table aria-label="Profit and Loss Statement">
                 <TableHeader>

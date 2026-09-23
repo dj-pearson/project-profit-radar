@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { secureSecret } from '@/lib/security/secureRandom';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface WebhookEndpoint {
   id: string;
@@ -320,12 +321,7 @@ export const WebhookManagement = () => {
   if (loading) {
     return (
       <DashboardLayout title="Webhooks">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Webhook className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading webhook data...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading webhook data" />
       </DashboardLayout>
     );
   }

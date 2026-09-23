@@ -148,6 +148,12 @@ node scripts/check-generated-types.mjs || exit 1
 #      answered, just by the wrong route.
 node scripts/check-param-route-traps.mjs || exit 1
 
+# 3t4. Orphan routes (US-315) - the other direction from dead links: a route
+#      nothing links to is a page reachable only by typing its URL. Entry
+#      points from outside the app (OAuth/Stripe returns, email, search) are
+#      listed in the script with where users actually come from.
+node scripts/check-orphan-routes.mjs || exit 1
+
 # 3u1. God files (US-267) - no new file crosses 1,000 lines while the backlog
 #      is being burned down. Dead and generated files are excluded: one should
 #      be deleted rather than split, the other is rewritten by npm run db:types.
@@ -156,6 +162,11 @@ node scripts/check-god-files.mjs || exit 1
 # 3u1b. Direct formatting (US-377) - dates and numbers go through @/lib/format.
 #       ESLint only warns on the ~375-call backlog; this holds the count exact.
 node scripts/check-direct-formatting.mjs || exit 1
+
+# 3u1c. Ad-hoc loaders (US-285) - loading states use Skeleton and the
+#       compositions in @/components/ui/skeletons, not literal "Loading..."
+#       text, spinner blocks or hand-rolled grey pulse divs. Exact ratchet.
+node scripts/check-adhoc-loaders.mjs || exit 1
 
 # 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
 #      looks at components/ and pages/. hooks, lib, services and utils were

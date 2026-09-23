@@ -5,21 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  AlertCircle,
-  CheckCircle,
-  Copy,
-  RefreshCw,
-  Globe,
-  Crown,
-  ArrowRight,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle, Copy, RefreshCw, Crown, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Link } from 'react-router-dom';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface TenantData {
   id: string;
@@ -236,12 +229,7 @@ export const CustomDomain = () => {
   if (loading) {
     return (
       <DashboardLayout title="Custom Domain">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Globe className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading domain settings...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading domain settings" />
       </DashboardLayout>
     );
   }

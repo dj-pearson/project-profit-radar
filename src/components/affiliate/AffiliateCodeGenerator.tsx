@@ -7,6 +7,8 @@ import { Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingRegion } from "@/components/ui/skeletons";
 
 interface AffiliateProgram {
   id: string;
@@ -116,12 +118,13 @@ const AffiliateCodeGenerator = () => {
       <Card>
         <CardHeader>
           <CardTitle>Affiliate Program</CardTitle>
-          <CardDescription>Loading your referral information...</CardDescription>
+          <Skeleton className="h-4 w-56" />
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center p-8">
-            <RefreshCw className="h-6 w-6 animate-spin" />
-          </div>
+          <LoadingRegion label="Loading your referral information" className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );

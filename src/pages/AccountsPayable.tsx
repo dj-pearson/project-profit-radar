@@ -35,6 +35,7 @@ import { Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Vendor {
   id: string;
@@ -533,7 +534,7 @@ export default function AccountsPayable() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : bills && bills.length > 0 ? (
               <Table aria-label="Vendor bills">
                 <TableHeader>

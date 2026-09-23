@@ -34,6 +34,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { formatDistanceToNow } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Lead {
   id: string;
@@ -465,7 +466,7 @@ export const LeadManagement = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+                  <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
                 ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No leads found

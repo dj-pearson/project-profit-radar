@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart3, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface BudgetItem {
   id: string;
@@ -156,10 +156,7 @@ export const BudgetVsActualTracking: React.FC = () => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <div className="text-center">
-            <LoadingSpinner size="md" className="mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading budget data...</p>
-          </div>
+          <ListSkeleton label="Loading budget data" />
         </CardContent>
       </Card>
     );

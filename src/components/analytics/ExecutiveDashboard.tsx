@@ -32,7 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface ExecutiveMetrics {
   totalRevenue: number;
@@ -354,12 +354,7 @@ const ExecutiveDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <LoadingSpinner size="xl" className="mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading analytics...</p>
-        </div>
-      </div>
+      <DashboardSkeleton label="Loading analytics" />
     );
   }
 

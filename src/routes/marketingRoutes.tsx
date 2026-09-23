@@ -6,12 +6,11 @@
  * These pages are only loaded when users navigate to them.
  */
 
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import { createLazyRoute, LazyPSEOPageRenderer, LazyBlogPost, LazyScheduleBuilder } from '@/utils/lazyRoutes';
 
 // Marketing pages - Lazy loaded with ErrorBoundary + Suspense
 const PricingPage = createLazyRoute(() => import('@/pages/Pricing'));
-const PaymentCenter = createLazyRoute(() => import('@/pages/PaymentCenter'));
 const FeaturesPage = createLazyRoute(() => import('@/pages/Features'));
 const BlogPage = createLazyRoute(() => import('@/pages/Blog'));
 const Resources = createLazyRoute(() => import('@/pages/Resources'));
@@ -27,7 +26,6 @@ const CommercialContractors = createLazyRoute(() => import('@/pages/CommercialCo
 const ResidentialContractors = createLazyRoute(() => import('@/pages/ResidentialContractors'));
 
 // Feature-specific pages - Lazy loaded with ErrorBoundary + Suspense
-const JobCostingSoftware = createLazyRoute(() => import('@/pages/JobCostingSoftware'));
 const JobCostingSoftwareDetailed = createLazyRoute(() => import('@/pages/JobCostingSoftwareDetailed'));
 const ConstructionManagementSoftwarePage = createLazyRoute(() => import('@/pages/ConstructionManagementSoftwarePage'));
 const OSHAComplianceSoftware = createLazyRoute(() => import('@/pages/OSHAComplianceSoftware'));
@@ -41,9 +39,7 @@ const RealTimeBudgetingPage = createLazyRoute(() => import('@/pages/features/Rea
 const FinancialManagementPage = createLazyRoute(() => import('@/pages/features/FinancialManagement'));
 
 // Comparison pages - Lazy loaded with ErrorBoundary + Suspense
-const ProcoreAlternative = createLazyRoute(() => import('@/pages/ProcoreAlternative'));
 const ProcoreAlternativeDetailed = createLazyRoute(() => import('@/pages/ProcoreAlternativeDetailed'));
-const BuildertrendAlternative = createLazyRoute(() => import('@/pages/BuildertrendAlternative'));
 const BuildertrendAlternativeDetailed = createLazyRoute(() => import('@/pages/BuildertrendAlternativeDetailed'));
 const BriklyVsBuildertrend = createLazyRoute(() => import('@/pages/BriklyVsBuildertrend'));
 const BriklyVsCoConstruct = createLazyRoute(() => import('@/pages/BriklyVsCoConstruct'));
@@ -112,7 +108,6 @@ export const marketingRoutes = (
   <>
     {/* Core Marketing Pages */}
     <Route path="/pricing" element={<PricingPage />} />
-    <Route path="/payment-center" element={<PaymentCenter />} />
     <Route path="/features" element={<FeaturesPage />} />
     <Route path="/blog" element={<BlogPage />} />
     {/* Alias of /resources/:slug (US-383); BlogPost sets the canonical to /resources/<slug>. */}
@@ -133,7 +128,11 @@ export const marketingRoutes = (
 
     {/* Feature-Specific Pages */}
     <Route path="/job-costing-software" element={<JobCostingSoftwareDetailed />} />
-    <Route path="/job-costing-software-simple" element={<JobCostingSoftware />} />
+    {/* The three -simple pages were older, shorter copies of the page at the
+        path without the suffix, each declaring that page as its canonical.
+        Linked from nothing and left out of the sitemap as aliases, so they
+        redirect now instead of competing with their own canonical (US-315). */}
+    <Route path="/job-costing-software-simple" element={<Navigate to="/job-costing-software" replace />} />
     <Route path="/construction-management-software" element={<ConstructionManagementSoftwarePage />} />
     <Route path="/osha-compliance-software" element={<OSHAComplianceSoftware />} />
     <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
@@ -147,10 +146,10 @@ export const marketingRoutes = (
 
     {/* Comparison Pages */}
     <Route path="/procore-alternative" element={<ProcoreAlternativeDetailed />} />
-    <Route path="/procore-alternative-simple" element={<ProcoreAlternative />} />
+    <Route path="/procore-alternative-simple" element={<Navigate to="/procore-alternative" replace />} />
     <Route path="/procore-alternative-detailed" element={<ProcoreAlternativeDetailed />} />
     <Route path="/buildertrend-alternative" element={<BuildertrendAlternativeDetailed />} />
-    <Route path="/buildertrend-alternative-simple" element={<BuildertrendAlternative />} />
+    <Route path="/buildertrend-alternative-simple" element={<Navigate to="/buildertrend-alternative" replace />} />
     <Route path="/brikly-vs-buildertrend-comparison" element={<BriklyVsBuildertrend />} />
     <Route path="/brikly-vs-coconstruct" element={<BriklyVsCoConstruct />} />
 
@@ -204,7 +203,8 @@ export const marketingRoutes = (
     <Route path="/calculator" element={<ProfitabilityCalculator />} />
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
     <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />
-    <Route path="/health-check" element={<FinancialHealthCheckPage />} />
+    {/* Unlinked alias of /financial-health-check; redirects so the page has one URL (US-315). */}
+    <Route path="/health-check" element={<Navigate to="/financial-health-check" replace />} />
 
     {/* pSEO (Programmatic SEO) Pages */}
     <Route path="/software/:dim1/:dim2" element={<LazyPSEOPageRenderer />} />

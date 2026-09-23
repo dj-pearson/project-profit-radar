@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface Todo {
   id: string;
@@ -138,7 +139,7 @@ export const TodoWidget = () => {
   };
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading tasks...</div>;
+    return <ListSkeleton items={3} label="Loading tasks" />;
   }
 
   return (

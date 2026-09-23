@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import { EmptyState } from '@/components/ui/states';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
@@ -401,7 +401,7 @@ const QuickBooksRouting = () => {
   };
 
   if (loading) {
-    return <LoadingState message="Loading QuickBooks routing..." />;
+    return <DataTablePageSkeleton label="Loading QuickBooks routing" />;
   }
 
   if (!user) {

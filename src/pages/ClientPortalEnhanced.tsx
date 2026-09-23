@@ -22,7 +22,6 @@ import {
 } from '@/components/client-portal';
 import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
 import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from '@/components/ui/states';
 import {
   Building2,
@@ -37,6 +36,7 @@ import {
   CheckCircle2,
   Clock
 } from 'lucide-react';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface Project {
   id: string;
@@ -391,12 +391,7 @@ const ClientPortalEnhanced = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="xl" className="mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your projects...</p>
-        </div>
-      </div>
+      <DataTablePageSkeleton label="Loading your projects" />
     );
   }
 

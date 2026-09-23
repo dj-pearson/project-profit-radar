@@ -33,6 +33,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { LoadingRegion } from '@/components/ui/skeletons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export type SortDirection = 'ascending' | 'descending' | 'none';
 
@@ -402,9 +404,11 @@ function AccessibleTableInner<T extends { id: string | number }>(
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  <div role="status" aria-label="Loading">
-                    Loading...
-                  </div>
+                  <LoadingRegion label="Loading" className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </LoadingRegion>
                 </td>
               </tr>
             ) : data.length === 0 ? (

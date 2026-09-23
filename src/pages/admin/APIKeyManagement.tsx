@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface APIKey {
   id: string;
@@ -277,12 +278,7 @@ export const APIKeyManagement = () => {
   if (loading) {
     return (
       <DashboardLayout title="API Keys">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Key className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading API keys...</p>
-          </div>
-        </div>
+        <DataTablePageSkeleton label="Loading API keys" />
       </DashboardLayout>
     );
   }

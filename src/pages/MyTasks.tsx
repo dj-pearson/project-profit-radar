@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MyScheduledWork } from '@/components/schedule/MyScheduledWork';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { ListSkeleton } from '@/components/ui/skeletons';
 import { TaskWithDetails } from '@/services/taskService';
 import { EditTaskDialog } from '@/components/tasks/EditTaskDialog';
 // Accessible components
@@ -378,7 +378,7 @@ const MyTasks = () => {
 
           <TabsContent value="assigned" id="assigned-panel" className="space-y-4" role="tabpanel" aria-labelledby="assigned-tab">
             {isLoading ? (
-              <LoadingState message="Loading your tasks..." />
+              <ListSkeleton label="Loading your tasks" />
             ) : filteredTasks(assignedTasks).length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
@@ -404,7 +404,7 @@ const MyTasks = () => {
 
           <TabsContent value="created" id="created-panel" className="space-y-4" role="tabpanel" aria-labelledby="created-tab">
             {isLoading ? (
-              <LoadingState message="Loading created tasks..." />
+              <ListSkeleton label="Loading created tasks" />
             ) : filteredTasks(createdTasks).length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">

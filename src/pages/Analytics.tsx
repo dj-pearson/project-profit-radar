@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { DeferredChartContainer } from '@/components/ui/DeferredChartContainer';
 import { KPICard } from '@/components/dashboard/KPICard';
-import { LoadingState } from '@/components/ui/loading-spinner';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 const PredictiveAnalytics = React.lazy(() => import('@/components/analytics/PredictiveAnalytics'));
@@ -227,11 +227,11 @@ const Analytics = () => {
   };
 
   if (loading || analyticsLoading) {
-    return <LoadingState message="Loading analytics..." />;
+    return <DashboardSkeleton label="Loading analytics" />;
   }
 
   if (!analyticsData) {
-    return <LoadingState message="Processing analytics data..." />;
+    return <DashboardSkeleton label="Processing analytics data" />;
   }
 
   return (
@@ -551,37 +551,37 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="predictive">
-            <Suspense fallback={<LoadingState message="Loading predictive analytics..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading predictive analytics" />}>
               <PredictiveAnalytics />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="risk">
-            <Suspense fallback={<LoadingState message="Loading risk assessment..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading risk assessment" />}>
               <RiskAssessment />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="optimization">
-            <Suspense fallback={<LoadingState message="Loading resource optimization..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading resource optimization" />}>
               <ResourceOptimization />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="workflow">
-            <Suspense fallback={<LoadingState message="Loading workflow automation..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading workflow automation" />}>
               <WorkflowAutomation />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="timeline">
-            <Suspense fallback={<LoadingState message="Loading timeline optimization..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading timeline optimization" />}>
               <TimelineOptimization />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="benchmarks">
-            <Suspense fallback={<LoadingState message="Loading benchmarks..." />}>
+            <Suspense fallback={<DashboardSkeleton label="Loading benchmarks" />}>
               <PerformanceBenchmarking />
             </Suspense>
           </TabsContent>

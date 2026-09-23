@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AnalyticsPlatform, AnalyticsPlatformConnection, UnifiedTrafficMetrics, MetricComparison } from '@/types/analytics';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 const COLORS = {
   primary: '#2563eb',
@@ -277,12 +277,7 @@ const SearchTrafficDashboard: React.FC = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="xl" className="mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading search traffic dashboard...</p>
-        </div>
-      </div>
+      <DashboardSkeleton label="Loading search traffic dashboard" />
     );
   }
 

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface ChargebackFee {
   id: string;
@@ -379,10 +379,9 @@ export const ChargebackManager = () => {
 
           {/* Chargebacks List */}
           {loading ? (
-            <div className="text-center py-8">
-              <LoadingSpinner size="md" className="mx-auto" />
-              <p className="text-sm text-muted-foreground mt-2">Loading chargebacks...</p>
-            </div>
+            <LoadingRegion label="Loading chargebacks" className="py-8">
+              <ListSkeleton />
+            </LoadingRegion>
           ) : filteredChargebacks.length === 0 ? (
             <div className="text-center py-8">
               <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

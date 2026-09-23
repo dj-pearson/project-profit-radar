@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import MobileMaterialScanner from '@/components/mobile/MobileMaterialScanner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Package, PlusCircle, Search, AlertTriangle, TrendingDown, Smartphone } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Material {
   id: string;
@@ -283,9 +284,9 @@ const MaterialTracking = () => {
       <div className="min-h-screen bg-background p-6">
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
           </div>
-          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+          <Skeleton className="h-[300px] rounded-lg" />
         </div>
       </div>
     );

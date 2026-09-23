@@ -6,6 +6,7 @@ import { Video, Users, Play, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface CollaborationSession {
   id: string;
@@ -83,9 +84,7 @@ export const CollaborationSessions: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <div className="text-sm text-muted-foreground">Loading sessions...</div>
-        </div>
+        <ListSkeleton label="Loading sessions" />
       ) : sessions.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">

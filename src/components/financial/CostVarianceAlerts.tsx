@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, TrendingUp, DollarSign, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface BudgetAlert {
   id: string;
@@ -120,7 +121,9 @@ export const CostVarianceAlerts: React.FC = () => {
   const visibleAlerts = alerts.filter(alert => !dismissedAlerts.has(alert.id));
 
   if (loading) {
-    return <div className="flex justify-center p-4">Loading alerts...</div>;
+    return <LoadingRegion label="Loading alerts" className="p-4">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   if (visibleAlerts.length === 0) {

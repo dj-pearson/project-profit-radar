@@ -15,6 +15,7 @@ import {
   Edit,
   UserPlus
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface ActivityItem {
   id: string;
@@ -146,9 +147,7 @@ export const ActivityFeed: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-muted-foreground">Loading activity feed...</div>
-      </div>
+      <ListSkeleton label="Loading activity feed" />
     );
   }
 

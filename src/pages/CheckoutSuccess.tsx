@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Sparkles, ArrowRight, Shield, Loader2 } from 'lucide-react';
+import { CheckCircle, Sparkles, ArrowRight, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 export const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -59,12 +60,7 @@ export const CheckoutSuccess = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-construction-blue/5 via-white to-construction-orange/5">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-construction-orange mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your subscription details...</p>
-        </div>
-      </div>
+      <DataTablePageSkeleton label="Loading your subscription details" />
     );
   }
 

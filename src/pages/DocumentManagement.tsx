@@ -35,6 +35,7 @@ import { Upload, FileText, Search, Brain, Database, Download, Trash2, Tag, Folde
 import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal';
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoDocuments } from "@/components/ui/EmptyStates";
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface Document {
   id: string;
@@ -897,10 +898,9 @@ const DocumentManagement = () => {
           {currentProcessingFile && (
             <React.Suspense
               fallback={
-                <div className="flex items-center justify-center py-12 text-muted-foreground">
-                  <Brain className="h-5 w-5 mr-2 animate-pulse" aria-hidden="true" />
-                  Loading document scanner…
-                </div>
+                <LoadingRegion label="Loading document scanner" className="py-12">
+                  <ListSkeleton />
+                </LoadingRegion>
               }
             >
               <DocumentOCRProcessor

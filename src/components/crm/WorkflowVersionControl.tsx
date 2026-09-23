@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { History, RotateCcw, Eye, GitBranch, Clock, User, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface WorkflowVersion {
   id: string;
@@ -104,7 +105,7 @@ export function WorkflowVersionControl({
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-20 bg-muted animate-pulse rounded" />
+                <Skeleton key={i} className="h-20" />
               ))}
             </div>
           ) : versions.length === 0 ? (

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface RevenueMetric {
   id: string;
@@ -180,12 +181,7 @@ export const RevenueAnalytics = () => {
   if (loading) {
     return (
       <DashboardLayout title="Revenue Analytics">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <DollarSign className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading revenue analytics...</p>
-          </div>
-        </div>
+        <DashboardSkeleton label="Loading revenue analytics" />
       </DashboardLayout>
     );
   }

@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface CohortData {
   cohort: string;
@@ -193,12 +194,7 @@ export const RetentionAnalytics = () => {
   if (loading && cohortData.length === 0) {
     return (
       <DashboardLayout title="Retention Analytics">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Activity className="w-12 h-12 text-construction-orange animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading retention data...</p>
-          </div>
-        </div>
+        <DashboardSkeleton label="Loading retention data" />
       </DashboardLayout>
     );
   }

@@ -14,6 +14,7 @@ import { Mail, RefreshCw, Trash2, CheckCircle, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface EmailAccount {
   id: string;
@@ -140,9 +141,7 @@ export const EmailSyncSetup = ({ companyId }: { companyId: string }) => {
 
             {/* Connected Accounts */}
             {isLoading && (
-              <div className="text-sm text-muted-foreground">
-                Loading accounts...
-              </div>
+              <ListSkeleton label="Loading accounts" />
             )}
 
             {accounts && accounts.length === 0 && (

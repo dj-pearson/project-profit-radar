@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/utils/formatters';
 import { Star, Target, DollarSign, Calendar, Activity, RefreshCw } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface LeadScore {
   id: string;
@@ -156,7 +157,9 @@ export const LeadScoring: React.FC<LeadScoringProps> = ({
   };
 
   if (loading) {
-    return <div className="p-6">Loading lead scores...</div>;
+    return <LoadingRegion label="Loading lead scores" className="p-6">
+      <ListSkeleton />
+    </LoadingRegion>;
   }
 
   return (

@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { filterAndSortInvoices } from './invoiceListUtils';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { ListSkeleton } from '@/components/ui/skeletons';
 
 interface InvoiceListProps {
   invoices: any[];
@@ -233,9 +234,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-pulse text-muted-foreground">Loading invoices...</div>
-          </div>
+          <ListSkeleton label="Loading invoices" />
         </CardContent>
       </Card>
     );

@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, AlertTriangle, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface CostAnalysisProps {
   projectId: string;
@@ -128,7 +129,7 @@ export const CostAnalysis: React.FC<CostAnalysisProps> = ({ projectId }) => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading analysis...</div>;
+    return <DashboardSkeleton label="Loading analysis" />;
   }
 
   return (

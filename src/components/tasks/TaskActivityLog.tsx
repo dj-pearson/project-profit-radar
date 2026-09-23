@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Activity, Edit, MessageSquare, Paperclip, CheckSquare, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface ActivityLogEntry {
   id: string;
@@ -101,9 +102,9 @@ export const TaskActivityLog: React.FC<TaskActivityLogProps> = ({ taskId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-sm text-muted-foreground">Loading activity...</div>
-      </div>
+      <LoadingRegion label="Loading activity" className="py-8">
+        <ListSkeleton />
+      </LoadingRegion>
     );
   }
 

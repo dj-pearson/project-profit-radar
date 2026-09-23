@@ -32,6 +32,7 @@ import {
   Save,
   TestTube
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AutoGenSettings {
   id?: string;
@@ -368,8 +369,8 @@ const BlogAutoGeneration = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+        <Skeleton className="h-8" />
+        <Skeleton className="h-64" />
       </div>
     );
   }

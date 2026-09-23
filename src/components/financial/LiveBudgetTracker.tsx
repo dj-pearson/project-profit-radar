@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, AlertTriangle, DollarSign } from 'lucide-reac
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/formatters';
+import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface LiveBudgetTrackerProps {
   projectId: string;
@@ -126,7 +127,9 @@ export const LiveBudgetTracker: React.FC<LiveBudgetTrackerProps> = ({ projectId 
   const totalPercentage = totalBudget > 0 ? (totalActual / totalBudget) * 100 : 0;
 
   if (loading) {
-    return <div className="flex justify-center p-4">Loading budget data...</div>;
+    return <LoadingRegion label="Loading budget data" className="p-4">
+      <DashboardSkeleton />
+    </LoadingRegion>;
   }
 
   return (

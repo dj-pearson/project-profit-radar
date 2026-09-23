@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, AlertTriangle, Clock, DollarSign, CreditCard, Users } from 'lucide-react';
+import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
 interface UpcomingPayment {
   id: string;
@@ -116,7 +117,9 @@ const UpcomingPayments = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">Loading payment data...</div>
+          <LoadingRegion label="Loading payment data" className="py-8">
+            <ListSkeleton />
+          </LoadingRegion>
         </CardContent>
       </Card>
     );
