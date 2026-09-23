@@ -13,6 +13,7 @@ import {
   type MappingContext, type Unmatched, type ImportedExpense,
 } from '../_shared/quickbooks-mapping.ts';
 import { validateBody } from '../_shared/validate-body.ts';
+import { isFlagEnabled, featureDisabledResponse } from '../_shared/feature-flags.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
@@ -147,6 +148,13 @@ serve(async (req) => {
     const parsed = await validateBody(req, SyncSchema, { name: 'quickbooks-sync' })
     if (!parsed.ok) return parsed.response
     const { company_id, sync_type = 'incremental' } = parsed.data
+
+    // Kill switch (US-281): refuse before tokens are loaded or Intuit is called.
+    const syncFlag = await isFlagEnabled(supabaseClient, 'quickbooks.sync', company_id)
+    if (!syncFlag.enabled) {
+      console.error(`[QUICKBOOKS-SYNC] refused for ${company_id}: quickbooks.sync is off (${syncFlag.source})`)
+      return featureDisabledResponse('quickbooks.sync', corsHeaders)
+    }
 
     console.log(`Starting ${sync_type} sync for company: ${company_id}`)
 

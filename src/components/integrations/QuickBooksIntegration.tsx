@@ -12,6 +12,7 @@ import { RefreshCw, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
 import { QuickBooksSyncHistory } from './QuickBooksSyncHistory';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 interface QBIntegrationStatus {
   connected: boolean;
@@ -31,6 +32,8 @@ interface SyncStats {
 
 export const QuickBooksIntegration = () => {
   const { userProfile } = useAuth();
+  // US-281 kill switch. The edge function refuses a paused sync regardless.
+  const syncFlag = useFeatureFlag('quickbooks.sync');
   const [status, setStatus] = useState<QBIntegrationStatus>({
     connected: false,
     sync_status: 'never'
@@ -283,6 +286,14 @@ export const QuickBooksIntegration = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              {!syncFlag.enabled && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    QuickBooks sync is paused while we fix a problem. Your connection and existing data are unchanged.
+                  </AlertDescription>
+                </Alert>
+              )}
               {status.sync_status === 'error' && status.error_message && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -306,7 +317,7 @@ export const QuickBooksIntegration = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => triggerSync('incremental')}
-                    disabled={syncing}
+                    disabled={syncing || !syncFlag.enabled}
                   >
                     {syncing ? (
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -319,7 +330,7 @@ export const QuickBooksIntegration = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => triggerSync('full')}
-                    disabled={syncing}
+                    disabled={syncing || !syncFlag.enabled}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Full Sync

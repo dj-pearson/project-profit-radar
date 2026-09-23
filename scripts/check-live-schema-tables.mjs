@@ -53,6 +53,11 @@ const EDGE_BASELINE = new Set([
   // domain cannot be verified until the migration is applied. Remove once it
   // is and types.ts is regenerated.
   'domain_verification_tokens',
+  // US-281: created by 20260924160000_feature_flags.sql, not yet applied.
+  // isFlagEnabled treats a read error as the flag's onReadError, which for
+  // quickbooks.sync is "on", so sync keeps working until it is. Remove from
+  // both lists once applied and types.ts is regenerated.
+  'feature_flags',
 ]);
 
 const BASELINE = new Set([
@@ -68,6 +73,8 @@ const BASELINE = new Set([
   // as `available: false` and the page says records cannot be saved here.
   // Remove both once the migration is applied and types.ts regenerated.
   'subcontractor_insurance_certificates', 'subcontractors',
+  // US-281: see EDGE_BASELINE. useFeatureFlag falls back to onReadError.
+  'feature_flags',
 ]);
 
 function walk(dir, out = []) {

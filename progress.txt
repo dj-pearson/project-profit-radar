@@ -7193,3 +7193,11 @@ four non-forms exempted with reasons). Sixteen more screens moved to query
 hooks (raw calls 859 -> 785); the mobile time tracker and equipment form
 stopped inventing projects and machines when a read failed. TS 1142 ->
 1111, eslint warnings 4091 -> 4064, customer-links 24 -> 22.
+
+## US-281 - feature flags and kill switches
+feature_flags table (audited, service-role writes) plus a shared resolver on
+the edge and the web: a global row set off is a kill switch nothing
+overrides; a failed read falls to each flag's documented safe side.
+quickbooks.sync is the first flag. Flip flags with the SQL in
+docs/FEATURE_FLAGS.md. TS 1111 -> 1112 is the order-dependent TS2589
+duplicate, now reported in ClientPortalPro.tsx; no new error.

@@ -4456,8 +4456,8 @@
         "Flag lifecycle documented so flags don't become permanent dead branches"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: LOW. Source: Ops audit."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: LOW. Source: Ops audit. || public.feature_flags (migration 20260924160000): global or per-company rows with required reason, RLS read for own company + global, service_role-only writes, every change audited via write_audit_log_internal. _shared/feature-flags.ts registry (default, onReadError, safeSide, owner, removeBy) with resolution: global-off kill switch wins, then company row, then global-on, then default; never throws. Web mirror + useFeatureFlag hook. Reference flag quickbooks.sync gates quickbooks-sync and the QuickBooks UI. docs/FEATURE_FLAGS.md has the SQL to flip flags. Owner: apply migration, db:types, drop feature_flags from check-live-schema-tables baselines, redeploy quickbooks-sync."
     },
     {
       "id": "US-282",

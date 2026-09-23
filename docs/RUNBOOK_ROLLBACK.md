@@ -120,6 +120,7 @@ Native rollbacks ride the release train — see the Branching & Release section 
 | Web prod broken by last deploy              | §1.A CF Pages deployment rollback (instant)             |
 | Bad code needs to stay out                  | §1.B `git revert` on `main` via PR                      |
 | One edge function misbehaving               | §2 redeploy previous version of that function           |
+| Integration behind a flag misbehaving       | Flip its kill switch, no deploy: `docs/FEATURE_FLAGS.md` |
 | Bad migration shipped                       | §3 forward compensating migration (never rewrite)       |
 | iOS build broken in the wild                | §4 pause phased release + server-side mitigation        |
 | Data corruption / needs point-in-time       | Page on-call DBA; Supabase PITR, not a committed dump   |
