@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageCircle, Send, Headphones, Clock, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface Message {
   id: string;
@@ -411,6 +412,10 @@ const CustomerSupportChat = () => {
                       key={ticket.id}
                       className="p-3 border rounded-lg cursor-pointer hover:bg-accent"
                       onClick={() => setCurrentTicket(ticket)}
+                      role="button"
+                      tabIndex={0}
+                      aria-current={currentTicket?.id === ticket.id ? true : undefined}
+                      onKeyDown={activateOnKey(() => setCurrentTicket(ticket))}
                     >
                       <div className="flex items-center justify-between mb-2">
                         {getStatusBadge(ticket.status)}

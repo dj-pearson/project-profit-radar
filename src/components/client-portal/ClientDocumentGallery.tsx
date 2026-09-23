@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { activateOnKey, closeOnEscape, focusOnMount } from '@/lib/accessibility';
 
 export interface Document {
   id: string;
@@ -112,6 +113,10 @@ export const ClientDocumentGallery: React.FC<ClientDocumentGalleryProps> = ({
           key={photo.id}
           className="group relative aspect-square overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all"
           onClick={() => handleImageClick(photo)}
+          role="button"
+          tabIndex={0}
+          aria-label={`View ${photo.name}`}
+          onKeyDown={activateOnKey(() => handleImageClick(photo))}
         >
           <img
             src={photo.thumbnailUrl || photo.url}
@@ -261,14 +266,20 @@ export const ClientDocumentGallery: React.FC<ClientDocumentGalleryProps> = ({
       {/* Image Lightbox */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 outline-none"
           onClick={() => setSelectedImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+          tabIndex={-1}
+          ref={focusOnMount}
+          onKeyDown={closeOnEscape(() => setSelectedImage(null))}
         >
           <div className="relative max-w-6xl max-h-[90vh] w-full h-full flex items-center justify-center">
             {/* Close Button */}
             <Button
               variant="ghost"
-              size="icon"
+              size="icon" aria-label="Close image viewer"
               className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
               onClick={(e) => {
                 e.stopPropagation();
@@ -282,7 +293,7 @@ export const ClientDocumentGallery: React.FC<ClientDocumentGalleryProps> = ({
             {imageIndex > 0 && (
               <Button
                 variant="ghost"
-                size="icon"
+                size="icon" aria-label="Previous image"
                 className="absolute left-4 text-white hover:bg-white/20"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -297,7 +308,7 @@ export const ClientDocumentGallery: React.FC<ClientDocumentGalleryProps> = ({
             {imageIndex < photos.length - 1 && (
               <Button
                 variant="ghost"
-                size="icon"
+                size="icon" aria-label="Next image"
                 className="absolute right-4 text-white hover:bg-white/20"
                 onClick={(e) => {
                   e.stopPropagation();

@@ -466,14 +466,14 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             </div>
             <Button
               variant="outline"
-              size="icon"
+              size="icon" aria-label="Scan equipment QR code"
               onClick={scanQRCode}
             >
               <QrCode className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
-              size="icon"
+              size="icon" aria-label="Refresh equipment list"
               onClick={loadEquipment}
             >
               <RefreshCw className="h-4 w-4" />

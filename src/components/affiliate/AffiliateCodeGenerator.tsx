@@ -197,7 +197,7 @@ const AffiliateCodeGenerator = () => {
                   />
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="icon" aria-label="Copy affiliate code"
                     onClick={() => copyToClipboard(affiliateCode.affiliate_code)}
                   >
                     <Copy className="h-4 w-4" />
@@ -215,14 +215,14 @@ const AffiliateCodeGenerator = () => {
                   />
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="icon" aria-label="Copy referral link"
                     onClick={() => copyToClipboard(referralUrl)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="icon" aria-label="Open referral link in new tab"
                     onClick={() => window.open(referralUrl, '_blank')}
                   >
                     <ExternalLink className="h-4 w-4" />

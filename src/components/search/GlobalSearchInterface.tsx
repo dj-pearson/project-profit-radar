@@ -9,6 +9,7 @@ import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@
 import { Search, Filter, Save, Star, Clock, Folder, FileText, Users, Calendar, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface SearchResult {
   id: string;
@@ -329,6 +330,9 @@ export const GlobalSearchInterface: React.FC<GlobalSearchInterfaceProps> = ({
                                 key={result.id}
                                 className="p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
                                 onClick={() => handleResultClick(result)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={activateOnKey(() => handleResultClick(result))}
                               >
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1 min-w-0">

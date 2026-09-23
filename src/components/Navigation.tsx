@@ -44,6 +44,7 @@ import {
   ShieldCheck,
   ClipboardCheck
 } from 'lucide-react';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface NavigationProps {
   userRole: string;
@@ -524,6 +525,10 @@ const Navigation = ({ userRole }: NavigationProps) => {
                         : 'opacity-50 cursor-not-allowed bg-muted/20'
                     }`}
                     onClick={() => hasAccess && navigate(item.path)}
+                    role="link"
+                    tabIndex={hasAccess ? 0 : -1}
+                    aria-disabled={!hasAccess}
+                    onKeyDown={activateOnKey(() => hasAccess && navigate(item.path))}
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">

@@ -346,7 +346,7 @@ export const ClientPortalManager: React.FC = () => {
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="min-h-[60px]"
                 />
-                <Button onClick={sendMessage} size="icon" className="mt-auto">
+                <Button onClick={sendMessage} size="icon" aria-label="Send message" className="mt-auto">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 // Using HTML5 Canvas instead of Fabric.js for better Vite compatibility
 import { MapPin, AlertTriangle, Clock, Plus, Download, Upload, Eye, Layers } from 'lucide-react';
 import { toast } from 'sonner';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface FloorPlanIssue {
   id: string;
@@ -430,6 +431,9 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
                 key={issue.id}
                 className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
                 onClick={() => setSelectedIssue(issue)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => setSelectedIssue(issue))}
               >
                 <div className={`p-2 rounded ${getIssueTypeColor(issue.type, issue.status)}`}>
                   {getIssueTypeIcon(issue.type)}

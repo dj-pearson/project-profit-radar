@@ -587,14 +587,14 @@ export const PipelineSettings: React.FC = () => {
                                   <div className="flex items-center space-x-2">
                                     <Button
                                       variant="ghost"
-                                      size="icon"
+                                      size="icon" aria-label={`Edit stage ${stage.name}`}
                                       onClick={() => setEditingStage(stage)}
                                     >
                                       <Edit className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       variant="ghost"
-                                      size="icon"
+                                      size="icon" aria-label={`Delete stage ${stage.name}`}
                                       onClick={() => deleteStage(stage.id)}
                                     >
                                       <Trash2 className="h-4 w-4" />

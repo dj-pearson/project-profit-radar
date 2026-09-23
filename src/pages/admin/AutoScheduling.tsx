@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { CalendarIcon, Users, Briefcase, Zap, CheckCircle2, TrendingUp, MapPin, Target, Settings } from 'lucide-react';
 import { format } from 'date-fns';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface AutoSchedule {
   id: string;
@@ -431,12 +432,13 @@ export function AutoScheduling() {
                     </p>
                   ) : (
                     projects.map((project) => (
-                      <div
+                      <label
                         key={project.id}
+                        htmlFor={`auto-schedule-project-${project.id}`}
                         className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                        onClick={() => toggleProject(project.id)}
                       >
                         <Checkbox
+                          id={`auto-schedule-project-${project.id}`}
                           checked={selectedProjects.includes(project.id)}
                           onCheckedChange={() => toggleProject(project.id)}
                         />
@@ -446,7 +448,7 @@ export function AutoScheduling() {
                             {project.status}
                           </p>
                         </div>
-                      </div>
+                      </label>
                     ))
                   )}
                 </div>
@@ -618,6 +620,12 @@ export function AutoScheduling() {
                         setCurrentSchedule(schedule);
                         setCurrentAssignments([]);
                       }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey(() => {
+                        setCurrentSchedule(schedule);
+                        setCurrentAssignments([]);
+                      })}
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">

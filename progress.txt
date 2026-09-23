@@ -6811,3 +6811,13 @@ each: the Expo chain (the real fix is removing Expo, US-278), Lighthouse CI's
 unpatched extract-zip, xlsx (no fixed release; replace it with exceljs), and
 vite, which is dev-only here. The build passes. The PDF exports on jspdf 4
 haven't been clicked through in a browser yet.
+
+## US-376: buttons have names and clickable things work from the keyboard
+
+Thirty-five icon-only buttons had no accessible name, so a screen reader
+announced "button" and nothing else. Each now names its action, and toggles
+announce their state. Thirty-three divs responded to the mouse only. Most
+became real buttons, labels or dialogs; the rest got a role, focus and key
+handling. Fixing the scheduling rows also removed a double toggle. A guard
+parses every component and fails on a new unnamed icon button, a mouse-only
+div or an image without alt.

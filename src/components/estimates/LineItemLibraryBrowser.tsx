@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, DollarSign, Package, CheckCircle2 } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { activateOnKey } from '@/lib/accessibility';
 
 interface LineItemLibraryItem {
   id: string;
@@ -228,6 +229,10 @@ export function LineItemLibraryBrowser({
                           : 'border-border hover:border-primary/50 hover:bg-muted/50'
                       }`}
                       onClick={() => toggleItemSelection(item.id)}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={selectedItems.has(item.id)}
+                      onKeyDown={activateOnKey(() => toggleItemSelection(item.id))}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">

@@ -10,6 +10,7 @@ import { Plus, Trash2, Calendar } from 'lucide-react';
 import EquipmentAssignmentForm from './EquipmentAssignmentForm';
 import { useToast } from '@/hooks/use-toast';
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { activateOnKey } from '@/lib/accessibility';
 
 interface EquipmentAssignment {
   assignment_id: string;
@@ -276,6 +277,12 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
                           setSelectedAssignment(assignment);
                           setShowForm(true);
                         }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={activateOnKey(() => {
+                          setSelectedAssignment(assignment);
+                          setShowForm(true);
+                        })}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-medium text-sm">
@@ -289,6 +296,7 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                              aria-label="Delete assignment"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDeleteAssignment(assignment.assignment_id);
@@ -357,6 +365,12 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
                             setSelectedAssignment(assignment);
                             setShowForm(true);
                           }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={activateOnKey(() => {
+                            setSelectedAssignment(assignment);
+                            setShowForm(true);
+                          })}
                           title={`${assignment.project_name || assignment.equipment_name} (${format(new Date(assignment.start_date), 'MMM d')} - ${format(new Date(assignment.end_date), 'MMM d')})`}
                         >
                           <span className="truncate flex-1">
@@ -370,6 +384,7 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                              aria-label="Delete assignment"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDeleteAssignment(assignment.assignment_id);

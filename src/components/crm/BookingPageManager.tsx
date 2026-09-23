@@ -308,7 +308,7 @@ export function BookingPageManager() {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      size="icon" aria-label="Remove availability rule"
                       onClick={() => removeAvailabilityRule(index)}
                     >
                       <Trash2 className="h-4 w-4" />

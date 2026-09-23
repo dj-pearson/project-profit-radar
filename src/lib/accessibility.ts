@@ -120,6 +120,41 @@ export const KeyboardKeys = {
   TAB: 'Tab',
 } as const;
 
+type KeyLike = { key: string; target: unknown; currentTarget: unknown; preventDefault(): void };
+
+/**
+ * onKeyDown for an element carrying role="button": Enter and Space run the
+ * click handler, as they would on a native <button>. Keys pressed on a nested
+ * control (a checkbox or link inside the card) are left to that control.
+ */
+export function activateOnKey(handler: () => void) {
+  return (e: KeyLike) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === KeyboardKeys.ENTER || e.key === KeyboardKeys.SPACE) {
+      e.preventDefault();
+      handler();
+    }
+  };
+}
+
+/**
+ * Callback ref that focuses an overlay when it mounts, so its Escape handler
+ * receives keys. Module-level, so React calls it once rather than per render.
+ */
+export function focusOnMount(el: HTMLElement | null) {
+  el?.focus();
+}
+
+/** onKeyDown that runs `handler` on Escape, for backdrops that close on click. */
+export function closeOnEscape(handler: () => void) {
+  return (e: KeyLike) => {
+    if (e.key === KeyboardKeys.ESCAPE) {
+      e.preventDefault();
+      handler();
+    }
+  };
+}
+
 /**
  * Check if an element is visible
  */

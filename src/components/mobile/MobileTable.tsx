@@ -10,6 +10,7 @@ import {
   resolveTableSurface,
   type MobileTableSurface,
 } from './mobileTableSurface';
+import { activateOnKey } from '@/lib/accessibility';
 
 export type { MobileTableSurface };
 
@@ -267,6 +268,7 @@ export function MobileList<T extends Record<string, any>>({
           onClick={() => onItemClick?.(item)}
           role={onItemClick ? 'button' : undefined}
           tabIndex={onItemClick ? 0 : undefined}
+          onKeyDown={onItemClick ? activateOnKey(() => onItemClick(item)) : undefined}
         >
           {renderItem(item, index)}
         </div>

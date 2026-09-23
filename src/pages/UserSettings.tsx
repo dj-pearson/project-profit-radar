@@ -30,6 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { activateOnKey } from '@/lib/accessibility';
 
 interface UserPreferences {
   id?: string;
@@ -363,6 +364,10 @@ const UserSettings = () => {
                             : 'hover:bg-accent'
                         }`}
                         onClick={() => toggleFavoriteShortcut(shortcut)}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={preferences.favorite_shortcuts.includes(shortcut)}
+                        onKeyDown={activateOnKey(() => toggleFavoriteShortcut(shortcut))}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-sm">{shortcut}</span>

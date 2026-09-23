@@ -12,6 +12,7 @@ import { AlertTriangle, Shield, Activity, Bell, TrendingUp, CheckCircle, XCircle
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { AdminOnly } from '@/components/PermissionGate';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface SecurityAlert {
   id: string;
@@ -337,6 +338,9 @@ export const SecurityMonitoringDashboard = () => {
                       key={alert.id}
                       className="border rounded-lg p-4 space-y-2 cursor-pointer hover:bg-muted/50"
                       onClick={() => setSelectedAlert(alert)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey(() => setSelectedAlert(alert))}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

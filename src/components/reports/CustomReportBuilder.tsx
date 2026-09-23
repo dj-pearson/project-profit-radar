@@ -416,14 +416,15 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                     <p className="text-sm text-muted-foreground mb-2">Available Fields</p>
                     <div className="border rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
                       {AVAILABLE_FIELDS[config.dataSource].map(field => (
-                        <div
+                        <button
+                          type="button"
                           key={field.id}
-                          className="flex items-center justify-between p-2 hover:bg-muted rounded cursor-pointer"
+                          className="flex w-full items-center justify-between p-2 text-left hover:bg-muted rounded cursor-pointer"
                           onClick={() => addField(field)}
                         >
                           <span className="text-sm">{field.name}</span>
-                          <Plus className="h-4 w-4" />
-                        </div>
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                        </button>
                       ))}
                     </div>
                   </div>

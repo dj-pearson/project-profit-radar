@@ -341,7 +341,7 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
                   <code className="flex-1 p-2 bg-muted rounded text-sm font-mono break-all">
                     {secret}
                   </code>
-                  <Button size="icon" variant="outline" onClick={handleCopySecret}>
+                  <Button size="icon" aria-label={copiedSecret ? "Secret key copied" : "Copy secret key"} variant="outline" onClick={handleCopySecret}>
                     {copiedSecret ? (
                       <CheckCircle className="w-4 h-4 text-green-600" />
                     ) : (

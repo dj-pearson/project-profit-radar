@@ -203,7 +203,7 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
                 </option>
               ))}
             </select>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" aria-label="Filter activities">
               <Filter className="h-4 w-4" />
             </Button>
           </div>

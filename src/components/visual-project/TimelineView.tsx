@@ -208,13 +208,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ projectId }) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('prev')}>
+            <Button variant="outline" size="icon" aria-label="Previous week" onClick={() => navigateWeek('prev')}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
               Today
             </Button>
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('next')}>
+            <Button variant="outline" size="icon" aria-label="Next week" onClick={() => navigateWeek('next')}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

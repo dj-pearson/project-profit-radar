@@ -22,6 +22,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { activateOnKey } from '@/lib/accessibility';
 
 // Supported video formats
 export const SUPPORTED_VIDEO_FORMATS = [
@@ -302,7 +303,7 @@ export function VideoUpload({
               <Button
                 type="button"
                 variant="secondary"
-                size="icon"
+                size="icon" aria-label={isPlaying ? "Pause preview" : "Play preview"}
                 onClick={togglePlay}
                 className="rounded-full"
               >
@@ -311,7 +312,7 @@ export function VideoUpload({
               <Button
                 type="button"
                 variant="secondary"
-                size="icon"
+                size="icon" aria-label={isMuted ? "Unmute preview" : "Mute preview"}
                 onClick={toggleMute}
                 className="rounded-full"
               >
@@ -320,7 +321,7 @@ export function VideoUpload({
               <Button
                 type="button"
                 variant="secondary"
-                size="icon"
+                size="icon" aria-label="View preview fullscreen"
                 onClick={handleFullscreen}
                 className="rounded-full"
               >
@@ -333,7 +334,7 @@ export function VideoUpload({
           <Button
             type="button"
             variant="destructive"
-            size="icon"
+            size="icon" aria-label="Remove video"
             className="absolute top-2 right-2"
             onClick={handleRemove}
             disabled={disabled}
@@ -370,6 +371,11 @@ export function VideoUpload({
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => !disabled && inputRef.current?.click()}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
+          aria-disabled={disabled || undefined}
+          aria-label="Upload video"
+          onKeyDown={activateOnKey(() => !disabled && inputRef.current?.click())}
         >
           <input
             ref={inputRef}

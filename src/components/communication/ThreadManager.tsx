@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, Pin, Archive, MoreVertical, Users, Hash, MessageSquare, Volume2, Star, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { activateOnKey } from '@/lib/accessibility';
 
 interface ThreadParticipant {
   id: string;
@@ -250,6 +251,10 @@ export const ThreadManager: React.FC<ThreadManagerProps> = ({
           isSelected ? 'bg-muted' : ''
         }`}
         onClick={() => onThreadSelect(thread)}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isSelected}
+        onKeyDown={activateOnKey(() => onThreadSelect(thread))}
       >
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">

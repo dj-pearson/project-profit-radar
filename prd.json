@@ -5842,8 +5842,8 @@
         "axe runs against /dashboard, /projects, /invoices, /crm/leads in the e2e suite with zero serious violations (extends US-215)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23 except src/components/SubscriptionChange.tsx (billing plan picker), the one entry in the new guard baseline. A fresh scan found 35 unnamed icon buttons, 33 mouse-only divs and 0 alt-less images (BlogPost and ChatInterface already had alt; the story counts were stale). All 35 icon buttons got aria-labels naming the action, state-aware where they toggle (Play/Pause, Mute/Unmute), plus 5 non-icon-size ones the scan missed (Gantt delete, onboarding chevrons with aria-expanded, video close, SmartFormInput favourite). 27 clickable divs fixed: CustomReportBuilder, the video play overlay and SmartFormInput suggestions became buttons; AutoScheduling project rows became labels around their checkbox (which also fixes a double toggle); lightboxes and the context menu are dialog/presentation and close on Escape; the video progress bar is a keyboard slider; the rest have role, tabIndex, onKeyDown and aria-pressed where they toggle; SimplifiedSidebar click logic moved onto its NavLink. Helpers activateOnKey, closeOnEscape and focusOnMount in src/lib/accessibility.ts. Guard: src/components/accessibility/__tests__/a11yNamesGuard.test.ts parses every .tsx with the TypeScript compiler, per-file per-rule shrink-only baseline (A11Y_GUARD_VERBOSE=1 lists offenders); it does not flag spreads, aria-hidden scrims or stopPropagation-only handlers. Full suite 219 files / 3860 passing."
     },
     {
       "id": "US-377",

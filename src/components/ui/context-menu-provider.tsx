@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { closeOnEscape, focusOnMount } from '@/lib/accessibility';
 
 interface ContextMenuItem {
   label: string;
@@ -78,8 +79,12 @@ export const ContextMenuProvider: React.FC<{ children: React.ReactNode }> = ({ c
       {/* Context Menu Overlay */}
       {menuState.isOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-transparent"
+          className="fixed inset-0 z-50 bg-transparent outline-none"
           onClick={hideContextMenu}
+          role="presentation"
+          tabIndex={-1}
+          ref={focusOnMount}
+          onKeyDown={closeOnEscape(hideContextMenu)}
         >
           <div 
             className="absolute bg-popover text-popover-foreground border rounded-md shadow-lg py-2 min-w-48"

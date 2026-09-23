@@ -16,6 +16,7 @@ import {
   CheckCircle,
   Bookmark
 } from 'lucide-react';
+import { closeOnEscape, focusOnMount } from '@/lib/accessibility';
 
 interface VideoTutorial {
   id: string;
@@ -312,8 +313,14 @@ export const VideoTutorialLibrary: React.FC = () => {
       {/* Video Player Modal (Placeholder) */}
       {selectedVideo && (
         <div
-          className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 outline-none"
           onClick={() => setSelectedVideo(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedVideo.title}
+          tabIndex={-1}
+          ref={focusOnMount}
+          onKeyDown={closeOnEscape(() => setSelectedVideo(null))}
         >
           <Card
             className="max-w-4xl w-full"
@@ -328,6 +335,7 @@ export const VideoTutorialLibrary: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Close video"
                   onClick={() => setSelectedVideo(null)}
                 >
                   ×

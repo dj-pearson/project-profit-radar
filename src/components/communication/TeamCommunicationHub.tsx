@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Users, Phone, Video, Bell, Search, Plus, Settings, Pin, Paperclip } from 'lucide-react';
+import { activateOnKey } from '@/lib/accessibility';
 
 interface Message {
   id: string;
@@ -285,6 +286,10 @@ export const TeamCommunicationHub: React.FC = () => {
           selectedChannel === channel.id ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50'
         }`}
         onClick={() => setSelectedChannel(channel.id)}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selectedChannel === channel.id}
+        onKeyDown={activateOnKey(() => setSelectedChannel(channel.id))}
       >
         <div className="flex items-center gap-3 flex-1">
           <div className="flex items-center gap-2">

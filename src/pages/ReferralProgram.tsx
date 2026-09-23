@@ -266,7 +266,7 @@ export const ReferralProgram = () => {
                   <p className="text-4xl font-bold text-construction-orange tracking-wider">
                     {referralCode.code}
                   </p>
-                  <Button size="icon" variant="ghost" onClick={copyReferralCode}>
+                  <Button size="icon" aria-label={copied ? "Referral code copied" : "Copy referral code"} variant="ghost" onClick={copyReferralCode}>
                     {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
                   </Button>
                 </div>

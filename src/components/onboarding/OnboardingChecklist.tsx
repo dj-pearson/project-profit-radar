@@ -364,7 +364,7 @@ export const OnboardingChecklist = () => {
           <div className="flex gap-1">
             <Button
               variant="ghost"
-              size="icon"
+              size="icon" aria-label="Minimize checklist"
               className="h-8 w-8"
               onClick={() => setIsMinimized(true)}
             >
@@ -372,7 +372,7 @@ export const OnboardingChecklist = () => {
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon" aria-label="Dismiss checklist"
               className="h-8 w-8"
               onClick={dismissChecklist}
             >
@@ -417,14 +417,7 @@ export const OnboardingChecklist = () => {
         {/* Recommended Tasks */}
         {recommendedTasks.length > 0 && (
           <div>
-            <div
-              className={`flex items-center justify-between mb-2 ${!recommendedUnlocked ? 'cursor-pointer' : ''}`}
-              onClick={() => {
-                if (recommendedUnlocked) {
-                  setExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }));
-                }
-              }}
-            >
+            <div className="flex items-center justify-between mb-2">
               <h4 className={`text-sm font-semibold flex items-center gap-2 ${
                 recommendedUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/50'
               }`}>
@@ -441,6 +434,8 @@ export const OnboardingChecklist = () => {
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  aria-label={expandedSections.recommended ? 'Collapse recommended tasks' : 'Expand recommended tasks'}
+                  aria-expanded={expandedSections.recommended}
                   onClick={(e) => {
                     e.stopPropagation();
                     setExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }));
@@ -484,14 +479,7 @@ export const OnboardingChecklist = () => {
         {/* Advanced Tasks */}
         {advancedTasks.length > 0 && (
           <div>
-            <div
-              className={`flex items-center justify-between mb-2 ${!advancedUnlocked ? 'cursor-pointer' : ''}`}
-              onClick={() => {
-                if (advancedUnlocked) {
-                  setExpandedSections(prev => ({ ...prev, advanced: !prev.advanced }));
-                }
-              }}
-            >
+            <div className="flex items-center justify-between mb-2">
               <h4 className={`text-sm font-semibold flex items-center gap-2 ${
                 advancedUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/50'
               }`}>
@@ -508,6 +496,8 @@ export const OnboardingChecklist = () => {
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  aria-label={expandedSections.advanced ? 'Collapse advanced tasks' : 'Expand advanced tasks'}
+                  aria-expanded={expandedSections.advanced}
                   onClick={(e) => {
                     e.stopPropagation();
                     setExpandedSections(prev => ({ ...prev, advanced: !prev.advanced }));

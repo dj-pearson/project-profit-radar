@@ -128,18 +128,18 @@ export const SimplifiedSidebar = () => {
                     <SidebarMenuButton asChild className="h-12 touch-target-44">
                       <div 
                         className={`flex items-center w-full cursor-pointer ${getNavClass({ isActive })} touch-target-44`}
-                        onClick={(e) => {
-                          // Prevent navigation when clicking to expand
-                          if (item.title !== 'Dashboard' && hasSubSections && !isMobile) {
-                            e.preventDefault();
-                            toggleSection(areaId);
-                          }
-                        }}
                       >
                         <NavLink
                           to={item.url}
                           className="flex items-center flex-1 min-w-0 p-2"
                           onClick={(e) => {
+                            // Desktop: a click on a section with sub-sections expands it
+                            // instead of navigating (Enter on the focused link does the same).
+                            if (item.title !== 'Dashboard' && hasSubSections && !isMobile) {
+                              e.preventDefault();
+                              toggleSection(areaId);
+                              return;
+                            }
                             // On mobile, allow navigation but also expand if needed
                             if (isMobile && hasSubSections && !isExpanded) {
                               toggleSection(areaId);

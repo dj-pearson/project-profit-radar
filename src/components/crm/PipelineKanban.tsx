@@ -218,7 +218,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                     <span className="text-xs text-muted-foreground">
                       {leadsByStage[stage.id]?.length || 0}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Button variant="ghost" size="icon" aria-label={`Add lead to ${stage.name}`} className="h-6 w-6">
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
@@ -257,7 +257,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                                     <h4 className="font-medium text-sm truncate">
                                       {lead.first_name} {lead.last_name}
                                     </h4>
-                                    <Button variant="ghost" size="icon" className="h-4 w-4">
+                                    <Button variant="ghost" size="icon" aria-label={`Actions for ${lead.first_name} ${lead.last_name}`} className="h-4 w-4">
                                       <MoreHorizontal className="h-3 w-3" />
                                     </Button>
                                   </div>
@@ -320,7 +320,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                       <span className="text-xs text-muted-foreground">
                         {leadsByStage[stage.id]?.length || 0}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button variant="ghost" size="icon" aria-label={`Add lead to ${stage.name}`} className="h-6 w-6">
                         <Plus className="h-3 w-3" />
                       </Button>
                     </div>
@@ -359,7 +359,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                                       <h4 className="font-medium text-sm truncate">
                                         {lead.first_name} {lead.last_name}
                                       </h4>
-                                      <Button variant="ghost" size="icon" className="h-4 w-4">
+                                      <Button variant="ghost" size="icon" aria-label={`Actions for ${lead.first_name} ${lead.last_name}`} className="h-4 w-4">
                                         <MoreHorizontal className="h-3 w-3" />
                                       </Button>
                                     </div>

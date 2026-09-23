@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Search, Building2, Clock, Users, ArrowRight } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { activateOnKey } from '@/lib/accessibility';
 
 interface Project {
   id: string;
@@ -269,6 +270,10 @@ const CommunicationHub = () => {
                               : 'hover:bg-muted/50'
                           }`}
                           onClick={() => setSelectedProject(project)}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={selectedProject?.id === project.id}
+                          onKeyDown={activateOnKey(() => setSelectedProject(project))}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">

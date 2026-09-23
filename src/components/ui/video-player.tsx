@@ -342,14 +342,16 @@ export function VideoPlayer({
 
       {/* Play Button Overlay */}
       {!isPlaying && !isLoading && (
-        <div
+        <button
+          type="button"
           className="absolute inset-0 flex items-center justify-center cursor-pointer"
           onClick={togglePlay}
+          aria-label="Play video"
         >
-          <div className="w-20 h-20 bg-primary/80 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
-            <Play className="h-10 w-10 text-white ml-1" />
-          </div>
-        </div>
+          <span className="w-20 h-20 bg-primary/80 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
+            <Play className="h-10 w-10 text-white ml-1" aria-hidden="true" />
+          </span>
+        </button>
       )}
 
       {/* Controls Overlay */}
@@ -365,6 +367,22 @@ export function VideoPlayer({
             ref={progressRef}
             className="relative h-1 bg-gray-600 rounded-full cursor-pointer mb-3 group/progress"
             onClick={handleProgressClick}
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration || 0)}
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                skip(5);
+              } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                skip(-5);
+              }
+            }}
           >
             {/* Buffered Progress */}
             <div
@@ -387,14 +405,14 @@ export function VideoPlayer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Play/Pause */}
-              <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white">
+              <Button variant="ghost" size="icon" aria-label={isPlaying ? "Pause" : "Play"} onClick={togglePlay} className="text-white">
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               </Button>
 
               {/* Skip Backward */}
               <Button
                 variant="ghost"
-                size="icon"
+                size="icon" aria-label="Skip back 10 seconds"
                 onClick={() => skip(-10)}
                 className="text-white"
               >
@@ -404,7 +422,7 @@ export function VideoPlayer({
               {/* Skip Forward */}
               <Button
                 variant="ghost"
-                size="icon"
+                size="icon" aria-label="Skip forward 10 seconds"
                 onClick={() => skip(10)}
                 className="text-white"
               >
@@ -413,7 +431,7 @@ export function VideoPlayer({
 
               {/* Volume */}
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white">
+                <Button variant="ghost" size="icon" aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"} onClick={toggleMute} className="text-white">
                   {isMuted || volume === 0 ? (
                     <VolumeX className="h-5 w-5" />
                   ) : (
@@ -439,7 +457,7 @@ export function VideoPlayer({
               {/* Playback Speed */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white">
+                  <Button variant="ghost" size="icon" aria-label="Playback speed" className="text-white">
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -458,13 +476,13 @@ export function VideoPlayer({
 
               {/* Download */}
               {allowDownload && (
-                <Button variant="ghost" size="icon" onClick={handleDownload} className="text-white">
+                <Button variant="ghost" size="icon" aria-label="Download video" onClick={handleDownload} className="text-white">
                   <Download className="h-4 w-4" />
                 </Button>
               )}
 
               {/* Fullscreen */}
-              <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white">
+              <Button variant="ghost" size="icon" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} onClick={toggleFullscreen} className="text-white">
                 {isFullscreen ? (
                   <Minimize className="h-5 w-5" />
                 ) : (

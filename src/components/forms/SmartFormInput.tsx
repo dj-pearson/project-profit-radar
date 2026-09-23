@@ -184,18 +184,23 @@ export const SmartFormInput: React.FC<SmartFormInputProps> = ({
               {filteredSuggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2 hover:bg-accent cursor-pointer"
-                  onClick={() => handleSelectSuggestion(suggestion.value)}
+                  className="flex items-center justify-between p-2 hover:bg-accent"
                 >
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{suggestion.value}</div>
-                    <div className="text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    className="flex-1 text-left cursor-pointer"
+                    onClick={() => handleSelectSuggestion(suggestion.value)}
+                  >
+                    <span className="block text-sm font-medium">{suggestion.value}</span>
+                    <span className="block text-xs text-muted-foreground">
                       Used {suggestion.count} times
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label={suggestion.isFavorite ? `Remove ${suggestion.value} from favorites` : `Add ${suggestion.value} to favorites`}
+                    aria-pressed={suggestion.isFavorite}
                     className={cn(
                       "h-8 w-8 p-0",
                       suggestion.isFavorite && "text-yellow-500"
