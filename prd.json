@@ -5707,8 +5707,8 @@
         "Global search returns documents again (test: seed one, search its title)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. DECISION: map the kind onto documents.category_id (FK to document_categories, which has company_id and name) rather than add a document_type column - no migration, no type regeneration. src/lib/documentKinds.ts finds or creates the per-company category ('Templates', 'RFI Attachments'); because RLS lets only admin/project_manager/office_staff insert categories, a client_portal writer falls back to category_id null, and every write also tags the row (documents.tags text[]), so readers match category_id OR tag. DocumentTemplates lists and uploads by that; ClientPortalRFIs inserts category_id + tags; DashboardSearchTrigger selects the category name via the FK embed and logs its query error instead of dropping it, so documents appear in global search again. Tests: DashboardSearchTrigger (seeded document found by title), DocumentTemplates, ClientPortalRFIs (6)."
     },
     {
       "id": "US-367",

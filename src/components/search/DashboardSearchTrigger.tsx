@@ -135,24 +135,34 @@ export const DashboardSearchTrigger: React.FC = () => {
           }));
         }
 
-        // Search documents
-        const { data: documents } = await supabase
+        // US-366: this selected `document_type`, which `documents` does not
+        // have, and dropped the error - so documents never showed up and it
+        // looked like "no matches". The kind lives in category_id; show the
+        // category's name via the documents_category_id_fkey embed.
+        const { data: documents, error: documentsError } = await supabase
           .from('documents')
-          .select('id, name, document_type')
+          .select('id, name, category:document_categories(name)')
           .ilike('name', searchTerm)
           .limit(5);
+
+        if (documentsError) {
+          console.error('Document search unavailable:', documentsError.message);
+        }
 
         if (documents) {
           documents.forEach(d => searchResults.push({
             id: d.id,
             type: 'document',
             title: d.name,
-            subtitle: d.document_type || undefined,
+            subtitle: d.category?.name || undefined,
             url: '/documents',
           }));
         }
-      } catch {
-        // Silently handle search errors
+      } catch (err) {
+        // postgrest resolves with { error } rather than rejecting, so this
+        // only catches network/runtime failures. Keep whatever results
+        // arrived, but don't hide the failure.
+        console.error('Global search failed:', err);
       }
 
       setResults(searchResults);

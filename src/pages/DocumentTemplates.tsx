@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { documentKindFields, documentKindFilter, findDocumentCategoryId } from '@/lib/documentKinds';
 
 interface Template {
   id: string;
@@ -66,11 +67,18 @@ export default function DocumentTemplates() {
     if (!companyId) return;
     setLoading(true);
     try {
+      // US-366: `documents` has no document_type column (types.ts Row and the
+      // migrations only have category_id), so filtering on it failed every
+      // load. A template is a document in the company's "Templates"
+      // document_category, or tagged 'template' when the category couldn't be
+      // created at upload time. Reasoning for category_id over a new column is
+      // in src/lib/documentKinds.ts.
+      const categoryId = await findDocumentCategoryId(companyId, 'template');
       const { data, error } = await supabase
         .from('documents')
-        .select('id, name, description, file_path, file_type, file_size, document_type, company_id')
+        .select('id, name, description, file_path, file_type, file_size, category_id, company_id')
         .eq('company_id', companyId)
-        .eq('document_type', 'template')
+        .or(documentKindFilter('template', categoryId))
         .order('created_at', { ascending: false });
       if (error) throw error;
       setTemplates((data as unknown as Template[]) ?? []);
@@ -107,6 +115,7 @@ export default function DocumentTemplates() {
       const path = `${companyId}/templates/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: upErr } = await supabase.storage.from(TEMPLATE_BUCKET).upload(path, file);
       if (upErr) throw upErr;
+      const kindFields = await documentKindFields(companyId, 'template');
       const { error: insErr } = await supabase.from('documents').insert([
         {
           name: uploadName.trim() || file.name,
@@ -116,7 +125,7 @@ export default function DocumentTemplates() {
           file_size: file.size,
           company_id: companyId,
           uploaded_by: user?.id,
-          document_type: 'template',
+          ...kindFields,
           is_current_version: true,
         },
       ]);
@@ -199,7 +208,7 @@ export default function DocumentTemplates() {
           company_id: companyId,
           project_id: cloneProjectId,
           uploaded_by: user?.id,
-          document_type: 'general',
+          // A clone is an ordinary project document: no template category/tag.
           is_current_version: true,
         },
       ]);

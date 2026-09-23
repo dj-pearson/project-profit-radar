@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { documentKindFields } from '@/lib/documentKinds';
 
 interface RFI {
   id: string;
@@ -137,6 +138,11 @@ export function ClientPortalRFIs({ projectId, companyId, userId }: ClientPortalR
         // is invisible to the app - orphaned storage, and an RFI that claims an
         // attachment nobody can open. supabase-js returns this error rather
         // than throwing it (US-300).
+        // US-366: kind goes in category_id + tags, not the nonexistent
+        // document_type column. Client users usually can't create the
+        // category (RLS), in which case category_id is null and the tag alone
+        // marks the row. See src/lib/documentKinds.ts.
+        const kindFields = await documentKindFields(companyId, 'rfi-attachment');
         const { error: docErr } = await supabase.from('documents').insert([
           {
             name: file.name,
@@ -147,7 +153,7 @@ export function ClientPortalRFIs({ projectId, companyId, userId }: ClientPortalR
             company_id: companyId,
             project_id: projectId,
             uploaded_by: userId,
-            document_type: 'rfi-attachment',
+            ...kindFields,
             is_current_version: true,
           },
         ]);

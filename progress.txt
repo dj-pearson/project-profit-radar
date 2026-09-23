@@ -6581,3 +6581,12 @@ which exist, so the tab always errored. It now uses `total_amount`,
 `expense_date`, and `invoice_payments` scoped to the project's invoices, with a
 retryable error state instead of figures when a query fails. The hub prefetch
 that 400'd on every visit fed a cache key nothing read, so it's gone.
+
+## US-366: documents are searchable again
+
+Templates, client RFI attachments and global search all used
+`documents.document_type`, which doesn't exist, and search dropped the error,
+so documents never appeared. The kind now maps to `category_id` (a per-company
+"Templates" or "RFI Attachments" category) plus a tag. The tag is the fallback
+for portal users, whom RLS doesn't let create a category. Search shows the
+category name and logs failures.
