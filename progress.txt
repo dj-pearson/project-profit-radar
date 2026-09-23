@@ -7016,3 +7016,13 @@ stack in responses. seo-file-generator: now root_admin only, like the save
 functions. ApiManagement create-key calls the pathname route; the Test
 Webhook button (internal-only route) and the social "Test Post Now" button
 (internal-only function) are removed.
+
+## verify-domain ownership proof (security fix)
+verify-domain was public and ran on a service-role client: anyone with the
+anon key could set any tenant's custom_domain and mark it verified, and the
+only check was an HTTP HEAD. It now needs a signed-in admin, derives the
+tenant from the caller, and verifies only when _brikly-verify.<domain> TXT
+matches a per-company token (DNS-over-HTTPS). A trigger also stops clients
+setting tenants.domain_verified = true directly through PostgREST. Owner:
+apply 20260924140000, deploy the function, allow egress to cloudflare-dns.com
+and dns.google, decide whether to reset tenants verified by the old check.

@@ -60,7 +60,11 @@ const PUBLIC_BY_DESIGN = new Set([
   'sso-oauth-callback', 'sso-saml-callback', 'sso-oauth-init', 'sso-saml-init',
   'sso-ldap-auth', 'webhook-verify', 'api-auth',
   'health-check', 'oauth-proxy', 'generate-sitemap-file', 'sitemap-generator',
-  'verify-domain', 'create-root-admin',
+  'create-root-admin',
+  // verify-domain was here and did not belong: it ran on a service-role
+  // client, took tenant_id from the body and marked the domain verified if an
+  // HTTP HEAD answered, so the anon key could attach any site to any tenant.
+  // It now requires auth.getUser + admin, and a DNS TXT proof (2026-09-24).
   // webhook-delivery was here and did not belong. The list is for functions a
   // visitor with no account must reach, each verifying what it can inside its
   // own flow - an OTP, an OAuth state, a signature. webhook-delivery is a cron

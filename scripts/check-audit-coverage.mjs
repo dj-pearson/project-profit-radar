@@ -41,6 +41,9 @@ const CRITICAL = new Map([
   ['change-subscription', 'changing what a customer pays'],
   ['manage-complimentary-subscription', 'granting a free subscription'],
   ['process-invoice-payment', 'taking a payment'],
+  // Verifying a custom domain is what lets a tenant claim an email domain for
+  // SSO. Moved off PUBLIC_BY_DESIGN on 2026-09-24 and onto a DNS TXT proof.
+  ['verify-domain', 'proving a tenant owns a domain (gates SSO domain claims)'],
 ]);
 
 const WRITES_AUDIT = /\bwriteAuditLog\s*\(|from\(\s*['"]audit_logs['"]\s*\)/;
@@ -61,7 +64,7 @@ const extra = readdirSync(FN, { withFileTypes: true })
   .filter((d) => WRITES_AUDIT.test(readFileSync(join(FN, d.name, 'index.ts'), 'utf8')))
   .map((d) => d.name);
 
-const BASELINE_COVERED = 12;
+const BASELINE_COVERED = 13;
 
 console.log('Audit-trail coverage guard (US-244)');
 console.log(`  critical functions tracked: ${CRITICAL.size}`);

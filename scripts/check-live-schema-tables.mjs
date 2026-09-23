@@ -47,6 +47,12 @@ const EDGE_BASELINE = new Set([
   'quickbooks_routing_history', 'quickbooks_routing_rules',
   'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests',
   'system_settings', 'teams', 'usage_billing_records',
+  // Created by 20260924140000_domain_verification_tokens.sql, not yet applied
+  // to the live project. verify-domain reads every error on this table and
+  // returns a 500 rather than treating a missing table as "no token", so a
+  // domain cannot be verified until the migration is applied. Remove once it
+  // is and types.ts is regenerated.
+  'domain_verification_tokens',
 ]);
 
 const BASELINE = new Set([

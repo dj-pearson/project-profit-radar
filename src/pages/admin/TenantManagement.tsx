@@ -195,12 +195,18 @@ export const TenantManagement = () => {
 
     setVerifyingDomain(true);
     try {
-      // Call edge function to verify DNS
+      // verify-domain requires a signed-in root_admin (or the tenant's own
+      // admin) and checks for the TXT record the tenant's admin was given in
+      // Settings > Custom Domain. It never marks a domain verified without it.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not signed in');
       const { data, error } = await supabase.functions.invoke('verify-domain', {
         body: {
+          action: 'verify',
           tenant_id: selectedTenant.id,
           domain: selectedTenant.custom_domain,
         },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;

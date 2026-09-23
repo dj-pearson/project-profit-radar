@@ -854,9 +854,9 @@ describe('the tail: audit trails, sessions, referral money and the last queues',
   });
 
   it('verify-domain audits a domain claim that enables SSO for a tenant', () => {
+    // writeAuditLog reports its own failures and never throws (US-244).
     const src = code(F('verify-domain'));
-    expect(src).toMatch(/const \{ error: auditError \} = await supabase/);
-    expect(src).toContain('was VERIFIED for tenant');
+    expect(src).toMatch(/await writeAuditLog\(supabase, \{[\s\S]*?action: 'domain\.verified'/);
   });
 
   it('process-blog-generation-queue claims atomically like enhanced-blog-ai', () => {

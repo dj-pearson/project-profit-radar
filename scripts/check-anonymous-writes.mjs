@@ -37,7 +37,6 @@ const EXEMPT = new Map([
   ['sso-oauth-callback', 'SSO OAuth callback, verifies the pending state row it issued. Throttling by IP would lock out an office logging in together.'],
   ['sso-saml-callback', 'SAML assertion consumer, verifies the signed assertion and the pending request. Same reasoning.'],
   ['sso-saml-init', 'Starts the SAML redirect and writes one pending-request row. Entered from the login page; throttling by IP hits shared-NAT offices first.'],
-  ['verify-domain', 'Writes the result of a DNS TXT lookup it performs itself. The work is bounded by DNS, not by the caller, and the row is keyed to a domain the caller must already control.'],
 ]);
 
 const WRITE = /\.(insert|update|upsert|delete)\s*\(/g;

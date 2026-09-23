@@ -33,6 +33,35 @@ interface TenantData {
   };
 }
 
+/** The TXT record verify-domain checks for (supabase/functions/_shared/domain-verification.ts). */
+interface VerificationRecord {
+  record_name: string;
+  record_value: string | null;
+}
+
+/**
+ * Calls verify-domain with the caller's session token. The function takes the
+ * company from the token's profile and requires admin/root_admin; tenant_id is
+ * sent only so older deployments of the function keep working.
+ */
+async function invokeVerifyDomain(body: Record<string, unknown>) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Not signed in');
+  return supabase.functions.invoke('verify-domain', {
+    body,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+}
+
+function readRecord(data: unknown): VerificationRecord | null {
+  const d = (data as { data?: { record_name?: unknown; record_value?: unknown } } | null)?.data;
+  if (!d || typeof d.record_name !== 'string') return null;
+  return {
+    record_name: d.record_name,
+    record_value: typeof d.record_value === 'string' ? d.record_value : null,
+  };
+}
+
 export const CustomDomain = () => {
   const { userProfile } = useAuth();
   const { resolveTenant } = useTenant();
@@ -43,6 +72,7 @@ export const CustomDomain = () => {
   const [customDomainInput, setCustomDomainInput] = useState('');
   const [verifyingDomain, setVerifyingDomain] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [verificationRecord, setVerificationRecord] = useState<VerificationRecord | null>(null);
 
   useEffect(() => {
     loadTenantData();
@@ -81,6 +111,11 @@ export const CustomDomain = () => {
 
       setTenantData(tenant as TenantData);
       setCustomDomainInput(tenant?.custom_domain || '');
+      if (tenant?.custom_domain && !tenant.domain_verified) {
+        await loadVerificationRecord();
+      } else {
+        setVerificationRecord(null);
+      }
     } catch (error) {
       console.error('Failed to load tenant data:', error);
       toast({
@@ -90,6 +125,19 @@ export const CustomDomain = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetches (and on first use, issues) the TXT record that proves ownership.
+  // A failure leaves the record hidden; Verify Domain still explains what to add.
+  const loadVerificationRecord = async () => {
+    try {
+      const { data, error } = await invokeVerifyDomain({ action: 'challenge' });
+      if (error) throw error;
+      setVerificationRecord(readRecord(data));
+    } catch (error) {
+      console.error('Failed to load domain verification record:', error);
+      setVerificationRecord(null);
     }
   };
 
@@ -135,14 +183,15 @@ export const CustomDomain = () => {
 
     setVerifyingDomain(true);
     try {
-      const { data, error } = await supabase.functions.invoke('verify-domain', {
-        body: {
-          tenant_id: tenantData.id,
-          domain: tenantData.custom_domain,
-        },
+      const { data, error } = await invokeVerifyDomain({
+        action: 'verify',
+        tenant_id: tenantData.id,
+        domain: tenantData.custom_domain,
       });
 
       if (error) throw error;
+      const record = readRecord(data);
+      if (record) setVerificationRecord(record);
 
       if (data?.verified) {
         toast({
@@ -299,7 +348,7 @@ export const CustomDomain = () => {
                 <AlertTitle>Awaiting Verification</AlertTitle>
                 <AlertDescription>
                   Your domain <strong>{tenantData.custom_domain}</strong> is configured but not yet verified.
-                  Please ensure DNS records are properly configured and click "Verify Domain" below.
+                  Add the TXT record below to prove you own it, then click "Verify Domain".
                 </AlertDescription>
               </>
             )}
@@ -368,6 +417,56 @@ export const CustomDomain = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {verificationRecord?.record_value &&
+                tenantData?.custom_domain === customDomainInput &&
+                !tenantData.domain_verified && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">1. Ownership record</h4>
+                  <p className="text-sm text-muted-foreground">
+                    This TXT record proves you control the domain. Brikly only marks the domain
+                    verified once it can read this exact value.
+                  </p>
+                  <div className="bg-background p-4 rounded border space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground">Type</p>
+                      <p className="font-mono text-sm">TXT</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-muted-foreground">Name</p>
+                        <p className="font-mono text-sm break-all">{verificationRecord.record_name}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label="Copy TXT record name"
+                        onClick={() => copyToClipboard(verificationRecord.record_name)}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-muted-foreground">Value</p>
+                        <p className="font-mono text-sm break-all">{verificationRecord.record_value}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label="Copy TXT record value"
+                        onClick={() => copyToClipboard(verificationRecord.record_value ?? '')}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    If your DNS provider appends your domain to names automatically, enter only the
+                    part before your root domain.
+                  </p>
+                  <h4 className="font-semibold text-sm pt-2">2. Routing record</h4>
+                </div>
+              )}
               <div className="bg-background p-4 rounded border space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -419,7 +518,7 @@ export const CustomDomain = () => {
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)</li>
                   <li>Navigate to DNS settings for your domain</li>
-                  <li>Add a new CNAME record with the values above</li>
+                  <li>Save the domain here, then add the TXT and CNAME records shown above</li>
                   <li>Wait for DNS propagation (can take 24-48 hours)</li>
                   <li>Return here and click "Verify Domain"</li>
                   <li>Once verified, your custom domain will be active</li>

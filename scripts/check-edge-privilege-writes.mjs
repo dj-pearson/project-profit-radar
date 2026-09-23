@@ -70,7 +70,6 @@ const REVIEWED = new Map([
    'user-JWT client; quickbooks_sync_logs is company-scoped'],
   ['risk-prediction:tenant_id', 'user-JWT client; risk_predictions is RLS-scoped'],
   ['twilio-calling:company_id', 'user-JWT client; call_logs is RLS-scoped'],
-  ['verify-domain:tenant_id', 'user-JWT client; audit_logs is RLS-scoped'],
   ['process-referral-signup:company_id',
    'referee_company_id is checked against the referee profile earlier in the handler and throws on mismatch (US-297) — an imperative guard the AST check cannot see'],
 ]);
