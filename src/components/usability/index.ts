@@ -32,28 +32,6 @@ export {
   type ValidationState,
 } from "../../hooks/useRealtimeValidation";
 
-// Enhanced Error Handling
-export {
-  EnhancedErrorState,
-  type ErrorCategory,
-  type RecoverySuggestion,
-} from "../common/EnhancedErrorState";
-
-// Search Highlighting
-export {
-  SearchHighlight,
-  SearchResultPreview,
-  useSearchHighlight,
-} from "../search/SearchHighlight";
-
-// Progress Indicators
-export {
-  ProgressIndicator,
-  MultiStepProgress,
-  useProgress,
-  type ProgressStatus,
-} from "../common/ProgressIndicator";
-
 // Touch Optimization
 export {
   getTouchButtonClasses,

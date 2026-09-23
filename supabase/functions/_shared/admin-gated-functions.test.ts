@@ -50,26 +50,19 @@ describe('seo-file-generator', () => {
   });
 });
 
-describe('ApiManagement.tsx calls the api-management routes that exist', () => {
-  const web = code('src/components/admin/ApiManagement.tsx');
+describe('api-management webhook/test stays internal', () => {
+  // components/admin/ApiManagement.tsx, the browser caller the rest of this
+  // block used to pin, was deleted in US-296 as an unrouted duplicate of
+  // pages/admin/APIKeyManagement.tsx. The edge-function half still holds.
   const fn = code('supabase/functions/api-management/index.ts');
 
-  it('invokes every api-management function path the edge function routes', () => {
-    const invoked = [...web.matchAll(/functions\.invoke\('(api-management[^']*)'/g)].map((m) => m[1]);
-    expect(invoked).toEqual(['api-management/create-key']);
-    for (const path of invoked) {
-      expect(fn).toContain(`pathname === '/${path}'`);
-    }
-  });
-
-  it('does not route by a body action, which the function ignores', () => {
-    expect(web).not.toMatch(/action:\s*'(create-key|test-webhook)'/);
-  });
-
-  it('has no browser caller for the internal-only webhook/test route', () => {
-    expect(web).not.toContain('webhook/test');
+  it('checks for an internal caller before it reads the body', () => {
     const testFn = fn.slice(fn.indexOf('async function testWebhook'));
     expect(testFn.slice(0, testFn.indexOf('validateBody('))).toContain('requireInternalCaller(req)');
+  });
+
+  it('has no browser caller', () => {
+    expect(code('src/pages/admin/APIKeyManagement.tsx')).not.toContain('webhook/test');
   });
 });
 

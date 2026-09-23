@@ -237,10 +237,10 @@ export const marketingRoutes = (
     {/* Contact / imprint — public */}
     <Route path="/contact" element={<Contact />} />
 
-    {/* Book a demo. /demo is what the marketing CTAs use; /demo-request is what
-        the exit-intent modal uses. Both were 404s until this page existed, and
-        both stay answered rather than picking a winner and breaking the other. */}
+    {/* Book a demo. /demo is what the marketing CTAs use. /demo-request was the
+        exit-intent modal's link; that modal was never mounted and went in
+        US-296, so the path now redirects rather than 404ing an old link. */}
     <Route path="/demo" element={<DemoRequest />} />
-    <Route path="/demo-request" element={<DemoRequest />} />
+    <Route path="/demo-request" element={<Navigate to="/demo" replace />} />
   </>
 );

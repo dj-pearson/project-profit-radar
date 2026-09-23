@@ -5,8 +5,8 @@ import LegalPageLayout from '@/components/legal/LegalPageLayout';
  * Cookie Policy.
  *
  * Required disclosure for ePrivacy / GDPR / CCPA-CPRA / state law. Pairs with
- * the existing CookieConsentManager component, which collects granular
- * opt-in consent for non-essential cookies.
+ * CookieConsentBanner, which collects granular opt-in consent for
+ * non-essential cookies.
  */
 const CookiePolicy = () => (
   <LegalPageLayout

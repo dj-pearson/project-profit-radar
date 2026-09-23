@@ -472,8 +472,8 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
       // This is computed BEFORE the upload, and the upload uses it. It used to
       // be computed after, while the upload wrote the bare `voice-notes/...`
       // shape unconditionally - so every note recorded against a project (which
-      // is all of them: InspectionConductDialog renders this with
-      // projectId={inspection.project_id}) stored a documents.file_path
+      // was all of them: the since-deleted InspectionConductDialog rendered it
+      // with projectId={inspection.project_id}) stored a documents.file_path
       // pointing at an object that did not exist. Playback 404s today, and
       // after the privacy flip the row would match the documents-table policy
       // branch while the real object matched nothing.

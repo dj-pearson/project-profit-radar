@@ -17,7 +17,7 @@ const Footer = () => {
   /**
    * This said "Thanks for subscribing!" and cleared the box without sending the
    * address anywhere, on every marketing page (US-309). It now goes through
-   * capture-lead, the same edge function LeadCaptureForm uses, and thanks the
+   * the capture-lead edge function, and thanks the
    * visitor only when that function reports success.
    */
   const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {

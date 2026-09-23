@@ -231,21 +231,11 @@ describe('IntegrationService methods reachable from ContextualActions', () => {
 
 describe('screens with nothing behind them now say so', () => {
   const cases: Array<[string, RegExp]> = [
-    ['src/components/portal/WhiteLabelPortal.tsx', /Portal Settings Saved/],
-    ['src/components/financial/EnhancedJobCosting.tsx', /Material pricing updated successfully/],
-    ['src/components/communication/AutomatedUpdates.tsx', /Test update sent successfully/],
     ['src/components/crm/WorkflowVersionControl.tsx', /John Doe|Jane Smith|New version saved/],
-    ['src/components/equipment/EquipmentMaintenanceTracking.tsx', /Downtown Office Complex|successfully scheduled|successfully logged/],
     ['src/components/mobile/MobileMaterialTracker.tsx', /ABC Supply Co|Photo captured successfully/],
     ['src/services/IntegrationEcosystemService.ts', /Math\.random\(\)/],
   ];
   it.each(cases)('%s', (file, fake) => {
     expect(code(file)).not.toMatch(fake);
-  });
-
-  it('SubcontractorDisclosureForm claims success only after an awaited onSave', () => {
-    const src = code('src/components/procurement/SubcontractorDisclosureForm.tsx');
-    expect(src).toMatch(/if \(!onSave\) \{[\s\S]*?title: "Not saved"/);
-    expect(src).toMatch(/await onSave\(formData\);\s*toast\(\{\s*title: "Subcontractor Disclosure Saved"/);
   });
 });

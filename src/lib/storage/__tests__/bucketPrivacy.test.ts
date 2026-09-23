@@ -103,7 +103,6 @@ describe('project-documents path convention', () => {
     // convention rather than on one file's spelling of it.
     ['src/pages/DailyReports.tsx', 'photoStoragePath({'],
     ['src/components/project/tabs/ProjectPunchList.tsx', '${projectId}/punch-list'],
-    ['src/components/workflow/InspectionConductDialog.tsx', '${inspection.project_id}/inspections/'],
     ['src/components/mobile/VoiceNotes.tsx', '${note.projectId}/voice-notes/'],
   ] as const;
 
@@ -208,7 +207,6 @@ describe('project-communications policy coverage', () => {
   });
 
   const WRITERS = [
-    'src/components/communication/ProjectCommunication.tsx',
     'src/components/client-portal/ClientMessageCenter.tsx',
   ] as const;
 
@@ -274,7 +272,6 @@ describe('the flip itself', () => {
 describe('company-documents path convention', () => {
   const COMPANY_FIRST = [
     ['src/pages/DocumentTemplates.tsx', '`${companyId}/templates/'],
-    ['src/components/documents/DocumentVersions.tsx', '`${companyId}/versions/'],
   ] as const;
 
   it.each(COMPANY_FIRST)('%s writes a company-first path', (file, fragment) => {

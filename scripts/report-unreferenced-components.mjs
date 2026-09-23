@@ -107,6 +107,38 @@ const reachable = new Set(
   candidates.filter((f) => reachableFiles.has(f)).map((f) => basename(f, '.tsx')),
 );
 
+/**
+ * US-296: the orphans that survived the 2026-09-23 triage, each with the reason
+ * it was kept rather than deleted. Everything else on the 205-file list was a
+ * mock, a stub that faked its writes, or a second copy of a live screen, and is
+ * gone. A file that turns up unreachable and is not in this map has had no
+ * decision yet; its row says so.
+ */
+const KEPT = {
+  'src/pages/BillingManagement.tsx':
+    'Platform billing admin; tabs over the four billing components below. /admin/billing-automation renders a different page. Route or delete as one unit.',
+  'src/components/billing/BillingAutomationRules.tsx': 'Calls the deployed billing-automation edge function. Part of the BillingManagement island.',
+  'src/components/billing/ChargebackManager.tsx': 'Calls the deployed handle-chargeback edge function. Part of the BillingManagement island.',
+  'src/components/billing/FailedPaymentRecovery.tsx': 'Calls the deployed failed-payment-recovery edge function via useDunning. Part of the BillingManagement island.',
+  'src/components/billing/RefundWorkflow.tsx': 'Calls the deployed process-refund edge function. Part of the BillingManagement island.',
+  'src/components/crm/BookingPageManager.tsx': 'Booking pages over booking_pages/availability_rules; no live twin. deadLinks.test.ts tracks the unrouted /book link.',
+  'src/components/crm/PublicBookingForm.tsx': 'Public booking form writing bookings and calling send-booking-confirmation. Rendered by PublicBookingPage.',
+  'src/pages/BookingsPage.tsx': 'Only renderer of BookingPageManager. Route it together with PublicBookingPage.',
+  'src/pages/PublicBookingPage.tsx': 'Only renderer of PublicBookingForm; the target of the /book/:slug link.',
+  'src/components/crm/EmailSyncSetup.tsx': 'Email account sync over email_accounts and the email-sync edge function; no live twin.',
+  'src/pages/EmailSyncPage.tsx': 'Only renderer of EmailSyncSetup.',
+  'src/pages/KnowledgeBaseArticle.tsx': 'Article view for /knowledge-base, which lists articles but has no route to read one. Real reads, feedback and view counts.',
+  'src/components/project/ProjectProfitLoss.tsx': 'Per-project P&L; shares the one job-profit definition in lib/jobProfit.ts (US-322).',
+  'src/components/admin/ComplimentarySubscriptionManager.tsx': 'Calls the deployed manage-complimentary-subscription edge function; AdminHub already describes the screen.',
+  'src/components/growth/ScalingGuidanceDashboard.tsx': 'Scaling assessments over three real tables and the generate-scaling-plan edge function; no live twin.',
+  'src/components/lead/ContactSalesModal.tsx': 'Only client of the handle-sales-contact edge function, which has its own input-validation tests.',
+  'src/pages/admin/SystemHealth.tsx': 'Reads the real health-check edge function (US-208); no other screen shows it.',
+  'src/components/mobile/VoiceCommandProcessor.tsx':
+    'Only client of process-voice-command and holds the US-294 crisis-intent handling crisisResources.test.ts pins. Its material-request and inspection branches still fake success: finish those before routing it.',
+  'src/components/financial/LatePaymentAlertsCollection.tsx': 'Collections workflow over collection_items (status, notes, escalation). The live AR aging report is read-only.',
+  'src/components/crm/ProjectStatusUpdates.tsx': 'Client status updates over project_status_updates; nothing live reads or writes that table.',
+};
+
 const rows = candidates.filter((f) => !reachableFiles.has(f)).map((f) => {
   const src = sources.get(f);
   const name = basename(f, '.tsx');
@@ -122,7 +154,8 @@ const rows = candidates.filter((f) => !reachableFiles.has(f)).map((f) => {
   else if (twin) verdict = 'duplicate?';
   else if (db > 0 || hooks) verdict = 'unwired feature';
   else verdict = 'review';
-  return { file: relative(root, f), name, lines, db, literalArrays, twin, verdict };
+  const file = relative(root, f);
+  return { file, name, lines, db, literalArrays, twin, verdict, kept: KEPT[file] ?? 'no decision yet' };
 });
 
 rows.sort((a, b) => b.lines - a.lines);
@@ -150,17 +183,23 @@ lines.push('  - `mock` - no database access, no query hooks, and hardcoded array
 lines.push('  - `duplicate?` - a live file of the same name exists. Which one is the product?');
 lines.push('  - `unwired feature` - reads real data, no live twin. Built and never routed.');
 lines.push('  - `review` - none of the above.');
+lines.push('- **why it is still here** - the US-296 triage reason for keeping it. 185 orphans were deleted in that pass; these are the ones judged real, finished and without a live twin.');
 lines.push('');
 lines.push('| verdict | count |');
 lines.push('| --- | --- |');
-for (const [v, n] of Object.entries(byVerdict).sort((a, b) => b[1] - a[1])) lines.push(`| ${v} | ${n} |`);
+// All four, even at zero: a verdict that drops out of the table reads as a
+// category nobody checked rather than one that was emptied.
+const VERDICTS = ['mock', 'duplicate?', 'unwired feature', 'review'];
+for (const v of VERDICTS) lines.push(`| ${v} | ${byVerdict[v] ?? 0} |`);
 lines.push('');
 lines.push('## Files');
 lines.push('');
-lines.push('| lines | file | db | arrays | live twin | verdict |');
-lines.push('| ---: | --- | ---: | ---: | --- | --- |');
+lines.push('| lines | file | db | arrays | live twin | verdict | why it is still here |');
+lines.push('| ---: | --- | ---: | ---: | --- | --- | --- |');
 for (const r of rows) {
-  lines.push(`| ${r.lines} | \`${r.file}\` | ${r.db} | ${r.literalArrays} | ${r.twin || '-'} | ${r.verdict} |`);
+  lines.push(
+    `| ${r.lines} | \`${r.file}\` | ${r.db} | ${r.literalArrays} | ${r.twin || '-'} | ${r.verdict} | ${r.kept} |`,
+  );
 }
 lines.push('');
 

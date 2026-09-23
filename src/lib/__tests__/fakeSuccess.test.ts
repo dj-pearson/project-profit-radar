@@ -203,51 +203,6 @@ describe('QuickBooksRouting: four fake successes on the money path', () => {
   });
 });
 
-describe('useSimplePresence: three colleagues who do not exist', () => {
-  const SRC = 'src/hooks/useSimplePresence.ts';
-
-  it('no longer invents teammates or the sites they are standing on', () => {
-    // TeamPresencePanel and UserPresenceIndicator rendered this straight to the
-    // screen: "John Smith - online - Job Site Alpha", "Sarah Johnson - away -
-    // Job Site Beta", "Mike Davis - busy - Main Office". On a construction
-    // platform, who is on site right now is an operational question.
-    const src = code(SRC);
-    for (const invented of ['John', 'Sarah', 'Johnson', 'Mike', 'Davis', 'Job Site Alpha', 'Job Site Beta']) {
-      expect(src, `${invented} is still hardcoded`).not.toContain(invented);
-    }
-    expect(src).not.toContain('simulatePresenceData');
-  });
-
-  it('reads the user_presence table that already existed', () => {
-    // collaboration/UserPresence.tsx has read it since migration 20250803232624.
-    const src = code(SRC);
-    expect(src).toContain("from('user_presence')");
-    expect(src).toContain("eq('company_id', userProfile.company_id)");
-  });
-
-  it('and an unreadable presence table renders empty rather than invented', () => {
-    // Asserted on the code, not the comment: code() strips comments.
-    const src = code(SRC);
-    expect(src).toContain('setPresenceData([]);');
-    expect(src).toContain('setMyPresence(null);');
-    // The empty fallback must be in the catch, not somewhere incidental.
-    const catchIndex = src.indexOf('} catch (error) {');
-    expect(catchIndex).toBeGreaterThan(-1);
-    expect(src.indexOf('setPresenceData([]);')).toBeGreaterThan(catchIndex);
-  });
-
-  it('writes your own status where other people can see it', () => {
-    // updatePresence set local state and toasted "Status Updated"; nobody else
-    // ever saw the change. The live table has no location column, so location
-    // rides in metadata and the hook's published shape is unchanged.
-    const src = code(SRC);
-    expect(src).toMatch(/const \{ error \} = await supabase\s*\n\s*\.from\('user_presence'\)\s*\n\s*\.upsert\(/);
-    expect(src).toContain("onConflict: 'user_id'");
-    expect(src).toContain('metadata: location ? { location } : {}');
-    expect(src).toContain('Status not updated');
-  });
-});
-
 describe('useSimpleNotifications: a fabricated safety incident', () => {
   const SRC = 'src/hooks/useSimpleNotifications.ts';
 

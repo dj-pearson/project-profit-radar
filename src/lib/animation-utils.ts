@@ -3,7 +3,7 @@
  *
  * Animation strategy:
  * - Framer Motion: All scroll-triggered and viewport-aware animations
- *   (ScrollSection, ModernSection, ParallaxBackground)
+ *   (ModernSection)
  * - GSAP: Complex timeline sequences only (Hero.tsx), loaded lazily
  *   via requestIdleCallback to avoid blocking initial render
  * - CSS/Tailwind: Simple transitions (hover, focus, skeleton loading)

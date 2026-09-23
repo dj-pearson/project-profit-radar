@@ -93,12 +93,11 @@ describe('ResponsiveDialog wrapping a form', () => {
 });
 
 describe('ResponsiveDialog adoption', () => {
-  // The ten most-used create/edit forms. Dropping one back to the plain
-  // Dialog puts a desktop modal on a phone again.
+  // The most-used create/edit forms. Dropping one back to the plain Dialog
+  // puts a desktop modal on a phone again. ProjectWizard, ExpenseTrackingSystem
+  // and components/project/ProjectEstimates were on this list until US-296
+  // deleted them as unrouted duplicates of live screens.
   const ADOPTERS = [
-    'src/components/ProjectWizard.tsx',
-    'src/components/financial/ExpenseTrackingSystem.tsx',
-    'src/components/project/ProjectEstimates.tsx',
     'src/components/workflow/RFISubmittalManagement.tsx',
     'src/components/crm/LeadEditDialog.tsx',
     'src/components/customers/ContactPicker.tsx',

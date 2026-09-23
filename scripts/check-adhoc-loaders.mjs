@@ -35,14 +35,15 @@ const SRC = join(root, 'src');
 /**
  * Lower these as call sites move to Skeleton. They never go up.
  * Started at 118 / 19 / 78. What is left: the ProtectedRoute and Setup auth
- * gates, MobileForm, ProjectEstimates (being reworked under US-379), the
- * lazyRoutes route fallback, and three image placeholders that sit under an
- * <img> while it decodes.
+ * gates, MobileForm and the lazyRoutes route fallback. The unrouted
+ * components/project/ProjectEstimates and the three image components whose
+ * pulse placeholders sat under an <img> while it decoded were deleted in
+ * US-296, which is what took pulsePlaceholder to zero.
  */
 const BASELINE = {
-  loadingText: 5,
+  loadingText: 4,
   LoadingState: 1,
-  pulsePlaceholder: 3,
+  pulsePlaceholder: 0,
 };
 
 function walk(dir, out = []) {

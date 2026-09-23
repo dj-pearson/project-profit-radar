@@ -1,6 +1,6 @@
 /**
  * DashboardSearchTrigger - Global search button for the dashboard header
- * Opens the GlobalSearchInterface modal via Ctrl+K or clicking the button
+ * Opens a search dialog via Ctrl+K or clicking the button
  * Provides cross-entity search across projects, documents, contacts, invoices
  */
 

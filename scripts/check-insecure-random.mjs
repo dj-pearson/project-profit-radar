@@ -56,10 +56,6 @@ const CREDENTIAL = /(secret|token|backupcode|backup_code|recoverycode|recovery_c
  */
 const ALLOWED = new Map([
   [
-    'src/components/legal/CookieConsentManager.tsx:200',
-    'analytics session id - groups consent events, grants nothing',
-  ],
-  [
     'src/lib/consent/consentStore.ts:243',
     'consent session id - correlates a consent record for an anonymous visitor, and is the value the anon RLS policy on consent_ledger keys on for grouping, not for authorisation',
   ],

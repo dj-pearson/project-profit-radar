@@ -36,7 +36,6 @@ import {
 import { UnifiedSEOSystem } from '@/components/seo/UnifiedSEOSystem';
 import { SaaSProductSchema, BriklyServiceSchema } from '@/components/seo/SaaSProductSchema';
 import { OrganizationSchema, SoftwareSchema, ProductSchema } from '@/components/seo/EnhancedSchemaMarkup';
-import { SiteSearchSchema } from '@/components/seo/SiteSearchSchema';
 import { AutoSchemaInjector } from '@/components/seo/AutoSchemaInjector';
 import { CLAIMS } from '@/config/claims';
 import { getSEOConfig } from '@/config/seoConfig';
@@ -269,12 +268,6 @@ describe('React schema emitters (US-385)', () => {
       if (!CLAIMS.aggregateRating.verified) expect(ratings).toEqual([]);
     },
   );
-
-  it('SiteSearchSchema emits no SearchAction unless given a real search URL', () => {
-    renderWithProviders(<SiteSearchSchema />);
-    const [schema] = renderedJsonLd();
-    expect(schema).not.toHaveProperty('potentialAction');
-  });
 
   it('UnifiedSEOSystem on / uses the config price and a valid applicationCategory', async () => {
     renderWithProviders(<UnifiedSEOSystem title="Brikly" description="d" />, '/');

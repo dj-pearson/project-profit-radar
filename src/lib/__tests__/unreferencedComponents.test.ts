@@ -172,7 +172,7 @@ describe('the mock-data feature shells', () => {
     expect(doc).toContain('Do not edit by hand');
   });
 
-  it('the only orphans still holding named mock data are the seven in dead islands', () => {
+  it('no orphan still holds named mock data', () => {
     // The deletion criterion was `const mockX = ...` in a file with no data
     // access that nothing imports: 34 files, 17,835 lines, holding invented
     // business records - "ABC Electrical Services", "John Smith", fake phone
@@ -191,14 +191,11 @@ describe('the mock-data feature shells', () => {
     // have left StreamlinedDataEntry and the barrel importing files that no
     // longer existed.
     //
-    // The two that remain each need a decision that is not a sweep.
-    // NotificationCenter is the more interesting one: US-076 ("build real-time
-    // notification center with event integration") is marked done, and this is a
-    // 495-line shell holding mockNotifications.
-    const KNOWN = [
-      'src/components/communication/NotificationCenter.tsx',
-      'src/components/enterprise/EnterpriseDashboard.tsx',
-    ];
+    // The last two went in US-296. NotificationCenter was a 495-line shell
+    // holding mockNotifications under a story (US-076) marked done, and
+    // EnterpriseDashboard rendered mockWorkflowStats; the live notification
+    // path is RealtimeNotificationCenter.
+    const KNOWN: string[] = [];
     // `dummy` is deliberately not in this pattern. hero/BriklyHero3D declares
     // `const dummy = useMemo(() => new THREE.Object3D(), [])`, which is the
     // standard instanced-mesh idiom and not mock data at all - matching on the
@@ -227,11 +224,21 @@ describe('the mock-data feature shells', () => {
     expect(notes).toContain('was never the fix');
   });
 
-  it('kept the orphans that read real data, because those are decisions not junk', () => {
-    // A 379-line orphan with five supabase calls and a live twin is an
-    // unanswered question about which one is the product.
-    expect(existsSync('src/components/integrations/APIKeyManager.tsx')).toBe(true);
+  it('answered the which-one-is-the-product questions (US-296)', () => {
+    // APIKeyManager was a 379-line orphan with a live twin. Read, it "simulated"
+    // creating a key; pages/admin/APIKeyManagement is the product.
+    expect(existsSync('src/components/integrations/APIKeyManager.tsx')).toBe(false);
+    expect(existsSync('src/pages/admin/APIKeyManagement.tsx')).toBe(true);
     expect(existsSync('src/components/financial/LaborBurdenCalculator.tsx')).toBe(false);
+  });
+
+  it('every orphan left carries a written reason for staying', () => {
+    // 185 of 205 went in US-296. The survivors are real data paths with no live
+    // twin, and the report says why each one is still here.
+    const doc = readFileSync(REPORT, 'utf8');
+    const rows = doc.split('\n').filter((line) => line.startsWith('| ') && line.includes('`'));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row, row).not.toContain('no decision yet');
   });
 
   it('the report separates them rather than lumping them together', () => {

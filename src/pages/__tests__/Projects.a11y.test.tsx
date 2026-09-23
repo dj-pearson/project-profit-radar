@@ -106,10 +106,6 @@ vi.mock('@/components/accessibility/AccessiblePageWrapper', () => ({
 }));
 
 // Mock complex sub-components
-vi.mock('@/components/tasks/TaskManager', () => ({
-  TaskManager: () => <div data-testid="task-manager" />,
-}));
-
 vi.mock('@/components/subscription/UpgradePrompt', () => ({
   default: () => <div data-testid="upgrade-prompt" />,
 }));

@@ -106,12 +106,11 @@ for (const file of FILES) {
     // destinations rather than navigating to them - and config/pentest.config.ts
     // documents externally reachable endpoints for security testing. Reading
     // either as navigation produces noise, and a guard that cries wolf is one
-    // people learn to skip. pages/admin/ApiDocumentation.tsx is the third: its
-    // `path:` values are api-management edge function endpoints, shown relative
-    // to the function's base URL (/validate-key, /api/projects), and no <Route>
-    // will ever answer them. Its navigate/to=/href= sites are still checked.
+    // people learn to skip. (pages/admin/ApiDocumentation.tsx was a third,
+    // listing edge function endpoints; it was deleted as an unrouted duplicate
+    // of the developer portal in US-296.)
     const declaresRatherThanLinks =
-      /src[/\\](utils[/\\]lazyRoutes\.tsx|config[/\\]pentest\.config\.ts|pages[/\\]admin[/\\]ApiDocumentation\.tsx)$/.test(file);
+      /src[/\\](utils[/\\]lazyRoutes\.tsx|config[/\\]pentest\.config\.ts)$/.test(file);
     for (const m of declaresRatherThanLinks
       ? []
       : line.matchAll(/\b(?:url|path|href|route|to)\s*:\s*['"`](\/[A-Za-z0-9/_-]*)['"`]/g)) {

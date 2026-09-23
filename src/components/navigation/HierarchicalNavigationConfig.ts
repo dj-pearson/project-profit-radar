@@ -317,6 +317,13 @@ export const hierarchicalNavigation: NavigationArea[] = [
             description: "Approve or reject submitted time",
           },
           {
+            title: "Crew Check-in",
+            url: "/crew-checkin",
+            icon: MapPin,
+            roles: ["admin", "project_manager", "field_supervisor", "root_admin"],
+            description: "GPS check-in on site",
+          },
+          {
             title: "Crew Presence",
             url: "/crew-presence",
             icon: Users,

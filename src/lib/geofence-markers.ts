@@ -3,9 +3,8 @@
  * unit-testable without rendering Leaflet, which needs a real DOM).
  *
  * US-367: the input is a `time_entries` row, because that is the table every
- * live clock-in path writes (MobileTimeClock, MobileTimeTracker,
- * AutoClockInManager, TimeTrackingDashboard, the time-tracking edge
- * function). time_entries stores one GPS fix, taken at clock-in, in
+ * live clock-in path writes (MobileTimeTracker, TimeTrackingDashboard, the
+ * time-tracking edge function). time_entries stores one GPS fix, taken at clock-in, in
  * gps_latitude/gps_longitude; it has no clock-out coordinates, so a finished
  * shift is drawn at its clock-in point rather than as a second marker.
  */

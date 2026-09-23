@@ -26,8 +26,9 @@
  * deliberately generous - the point is to catch a module with NO inbound edge
  * at all, not to police how it is reached.
  *
- * BASELINE grandfathered the modules that predated this guard. It is now empty
- * (all triaged, see below), so any unreferenced security-named module fails.
+ * BASELINE grandfathered the modules that predated this guard. All of those are
+ * triaged (see below); the one entry left is lib/security/index.ts, which the
+ * guard only saw on 2026-09-23 and which carries its reason.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -52,9 +53,9 @@ const NEVER_FLAG = [
 
 /**
  * Known-unreferenced security-named modules that predate this guard. The
- * worklist is empty: every entry has had its delete / wire-up / fail-closed
- * decision (US-302 AC3), recorded below. Keep it empty. A new entry needs a
- * comment saying why the module has no callers yet.
+ * earlier worklist is done: every entry had its delete / wire-up / fail-closed
+ * decision (US-302 AC3), recorded below. The one entry is explained at the
+ * end. A new entry needs a comment saying why the module has no callers yet.
  *
  * Triaged 2026-08-27:
  *
@@ -123,8 +124,25 @@ const NEVER_FLAG = [
  *                                       permission requests sit in
  *                                       useCameraCapture / useGeolocation /
  *                                       useNotifications.
+ *
+ * 2026-09-23, US-296. Two barrels were never imported by anything; they passed
+ * only because `referenced` matches on the specifier's last segment, and
+ * pages/ResetPassword.tsx imported '@/utils/security', whose tail is also
+ * "security". Deleting that dead page (the live reset path is the OTP flow in
+ * AuthContext) and utils/security.ts behind it exposed both:
+ *
+ *   DELETED  components/security/index.ts  re-exported SecureRoute and friends;
+ *                                          every caller imports SecureRoute
+ *                                          directly.
+ *   KEPT     lib/security/index.ts          the barrel is the only importer of
+ *                                          sriVerification.ts and
+ *                                          edgeFunctionHeaders.ts. Deleting it
+ *                                          orphans both, and whether SRI script
+ *                                          loading should be wired or dropped
+ *                                          is a US-302 decision, not a side
+ *                                          effect of a component sweep.
  */
-const BASELINE = new Set([]);
+const BASELINE = new Set(['src/lib/security/index.ts']);
 
 const files = [];
 const walk = (d) => {

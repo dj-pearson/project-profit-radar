@@ -35,8 +35,7 @@ import {
  *   - Listens for `brikly:open-cookie-preferences` so any in-app link
  *     (e.g., footer "Cookie Preferences") can re-open it.
  *
- * Mounted globally in App.tsx so it appears on every public page. The richer
- * admin-style management UI in CookieConsentManager.tsx is unchanged.
+ * Mounted globally in App.tsx so it appears on every public page.
  */
 const CookieConsentBanner: React.FC = () => {
   const [open, setOpen] = useState(false);

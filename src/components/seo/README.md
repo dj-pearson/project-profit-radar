@@ -69,110 +69,9 @@ function App() {
 - ✅ Accepted payment methods
 - ✅ Service area (United States)
 
-### 2. InteractiveFAQ
+### 2. FAQs
 
-Beautiful, accessible FAQ component with automatic Schema.org FAQPage markup.
-
-**SEO Benefits:**
-- ✅ Appears in "People also ask" boxes
-- ✅ Voice search optimization
-- ✅ Long-tail keyword capture
-- ✅ Increased time on page
-- ✅ FAQ rich snippets
-- ✅ Featured snippet eligibility
-
-**Usage:**
-
-```tsx
-import { InteractiveFAQ, constructionSoftwareFAQs, pricingFAQs } from '@/components/seo/InteractiveFAQ';
-
-// Use pre-built FAQ sets
-function HomePage() {
-  return (
-    <InteractiveFAQ
-      title="Frequently Asked Questions"
-      subtitle="Everything you need to know about Brikly"
-      faqs={constructionSoftwareFAQs}
-      theme="gradient"
-      defaultExpanded={0}
-      allowMultiple={false}
-      showNumbers={true}
-    />
-  );
-}
-
-// Or create custom FAQs
-function CustomPage() {
-  const customFAQs = [
-    {
-      question: "How does Brikly compare to Procore?",
-      answer: "Brikly is designed for small to medium contractors...",
-      keywords: ["comparison", "Procore", "alternative"],
-    },
-    // ... more FAQs
-  ];
-
-  return (
-    <InteractiveFAQ
-      faqs={customFAQs}
-      theme="bordered"
-    />
-  );
-}
-```
-
-**Props:**
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `faqs` | `FAQItem[]` | *required* | Array of FAQ items |
-| `title` | string | `'Frequently Asked Questions'` | Section title |
-| `subtitle` | string | `undefined` | Optional subtitle |
-| `theme` | `'default' \| 'minimal' \| 'bordered' \| 'gradient'` | `'default'` | Visual theme |
-| `defaultExpanded` | number \| `'all'` | `-1` | Which item(s) to expand initially |
-| `allowMultiple` | boolean | `false` | Allow multiple items open |
-| `showNumbers` | boolean | `false` | Show question numbers |
-| `includeSchema` | boolean | `true` | Include FAQPage schema |
-| `schemaPageName` | string | `undefined` | Name for FAQPage schema |
-| `className` | string | `undefined` | Custom CSS class |
-
-**FAQItem Interface:**
-
-```tsx
-interface FAQItem {
-  question: string;        // The question text
-  answer: string;          // Answer (supports HTML)
-  category?: string;       // Optional category for grouping
-  keywords?: string[];     // Optional keywords for SEO
-}
-```
-
-**Pre-built FAQ Sets:**
-
-We provide pre-built, SEO-optimized FAQ sets:
-
-1. **`constructionSoftwareFAQs`** - General product questions (8 FAQs)
-   - What is construction management software?
-   - Pricing and cost
-   - Mobile compatibility
-   - QuickBooks integration
-   - Suitability for small contractors
-   - Customer support
-   - OSHA compliance
-   - Free trial details
-
-2. **`pricingFAQs`** - Pricing-specific questions (4 FAQs)
-   - Per-user fees
-   - Hidden costs
-   - Annual billing discounts
-   - Post-trial process
-
-**Themes:**
-
-- **`default`**: Clean white cards with gray background
-- **`minimal`**: Transparent background, minimal styling
-- **`bordered`**: Border-based design
-- **`gradient`**: Modern gradient background with blur effects
+`InteractiveFAQ` was removed in US-296: it was exported from `index.ts` and rendered nowhere. For an FAQ block with FAQPage markup use `GEOOptimizedFAQ`, which the live marketing pages render.
 
 ## 🚀 Quick Start
 
@@ -181,7 +80,6 @@ We provide pre-built, SEO-optimized FAQ sets:
 ```tsx
 import { PageSEO } from '@/components/seo/PageSEO';
 import { SaaSProductSchema } from '@/components/seo/SaaSProductSchema';
-import { InteractiveFAQ, constructionSoftwareFAQs } from '@/components/seo/InteractiveFAQ';
 
 export default function LandingPage() {
   return (
@@ -205,15 +103,6 @@ export default function LandingPage() {
       <main>
         <h1>Construction Management Made Simple</h1>
         {/* ... your content ... */}
-
-        {/* FAQ Section */}
-        <section className="py-16">
-          <InteractiveFAQ
-            faqs={constructionSoftwareFAQs}
-            theme="gradient"
-            defaultExpanded={0}
-          />
-        </section>
       </main>
     </>
   );
@@ -225,7 +114,6 @@ export default function LandingPage() {
 ```tsx
 import { PageSEO } from '@/components/seo/PageSEO';
 import { SaaSProductSchema } from '@/components/seo/SaaSProductSchema';
-import { InteractiveFAQ, pricingFAQs } from '@/components/seo/InteractiveFAQ';
 
 export default function PricingPage() {
   return (
@@ -243,12 +131,6 @@ export default function PricingPage() {
 
       <main>
         {/* ... pricing content ... */}
-
-        <InteractiveFAQ
-          title="Pricing Questions"
-          faqs={pricingFAQs}
-          theme="bordered"
-        />
       </main>
     </>
   );
@@ -354,7 +236,6 @@ After implementation, track:
 - **`EnhancedSchemaMarkup`**: Additional schema types
 - **`AggregateRatingSchema`**: Customer reviews schema
 - **`HowToSchema`**: Step-by-step guides
-- **`LocalSEOSchema`**: Local business optimization
 
 ## 📚 Resources
 

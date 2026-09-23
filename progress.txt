@@ -7115,3 +7115,10 @@ components and scans every tab. It found unnamed selects and inputs on nine
 pages, a double h1 on Reports and a nested main on PurchaseOrders; all
 fixed. Wrapper adoption is 23.6% of 110 dashboard pages against a 90%
 target.
+
+## US-296 - unwired stub components
+Deleted 185 of the 205 orphan components (mock data, simulated saves,
+duplicates of live screens, queries on tables that don't exist) and the 18
+modules only they used. The 20 kept are real features waiting for a route,
+each with a reason in docs/UNREFERENCED_COMPONENTS.md. TS errors 1449 ->
+1208, eslint warnings 4370 -> 3979.
