@@ -449,22 +449,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
-        // Cast to mutable profile for role override
+        // user_profiles.role is the one source of truth for role (US-348).
+        // This used to overwrite it with get_user_primary_role(), which read
+        // user_roles, a copy frozen in 2025-10: a demoted admin kept admin in
+        // the UI, and a user created since had no row at all.
         const profile = data as UserProfile;
-
-        // SECURITY: Get authoritative role from user_roles via RPC
-        try {
-          const { data: secureRole, error: roleError } = await supabase
-            .rpc('get_user_primary_role', { _user_id: userId });
-
-          if (roleError) {
-            logger.error('Error fetching user role from user_roles:', roleError);
-          } else if (secureRole) {
-            profile.role = secureRole;
-          }
-        } catch (roleErr) {
-          logger.error('Exception fetching user role from user_roles:', roleErr);
-        }
 
         logger.debug('Profile fetched successfully:', {
           role: profile.role,

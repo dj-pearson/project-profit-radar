@@ -6374,3 +6374,22 @@ new definer function without a pinned path.
 
 Still open: the roughly 69 functions that take a company or user id as an
 argument need checking one by one.
+
+## US-348, release N: role comes from user_profiles
+
+`user_roles` was filled once in October 2025 and never written again, yet
+`has_role()` and `get_user_primary_role()` read it and `AuthContext` let it
+override `user_profiles.role`. So a user demoted since then kept their old role
+in the UI, and a user created since had none as far as `has_role` was concerned.
+
+There was also a way to escalate. The table's "Admins can assign roles" policy
+let an admin of any company insert any row, root_admin for themselves included,
+and `disable-mfa` checks `has_role(..., 'root_admin')` before switching off
+someone else's MFA.
+
+Both functions keep their signatures and now read `user_profiles`, so every
+policy using them follows without being edited. The write policies and the
+cross-company read on `user_roles` are gone, and `AuthContext` no longer
+overrides the profile role. The SQL test runs each case before and after the
+migration: the demoted user, the newer user and the self-granted root_admin.
+Dropping the table waits for a later release.

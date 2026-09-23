@@ -543,6 +543,20 @@ describe('AuthContext', () => {
         expect(result.current.userProfile?.role).toBe(role);
       });
     });
+
+    it('keeps user_profiles.role even when the frozen user_roles copy says otherwise (US-348)', async () => {
+      setupDefaultMocks({ hasSession: true, role: 'office_staff' });
+      // What get_user_primary_role returned for someone demoted since 2025-10.
+      mockRpc.mockResolvedValue({ data: 'admin', error: null });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.userProfile).not.toBeNull();
+      });
+      expect(result.current.userProfile?.role).toBe('office_staff');
+      expect(mockRpc).not.toHaveBeenCalledWith('get_user_primary_role', expect.anything());
+    });
   });
 
   // ── Auth state change handling ──────────────────────────────────────────
