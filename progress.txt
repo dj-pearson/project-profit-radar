@@ -7054,3 +7054,11 @@ now linked from the app or exempt with a named entry point
 (check-orphan-routes.mjs). Stub pages with invented data were deleted
 (/marketplace, /referrals, /ai-insights, /visual-project and demos); the
 ones old nav could reach redirect. TS 1484 -> 1482.
+
+## US-219 - context re-renders
+A token refresh used to re-render every useSubscription consumer three
+times and fire an extra check-subscription call; now zero. useAuth() keeps
+its shape; new slice hooks (useAuthState, useAuthSession, useAuthActions,
+useSubscriptionActions) let consumers opt out of session churn. Equal-data
+updates no longer replace user/profile/subscription identities. TS 1482 ->
+1480.

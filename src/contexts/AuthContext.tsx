@@ -18,6 +18,7 @@ import { setErrorLoggingUser } from "@/services/errorLoggingService";
 import { logger } from "@/lib/logger";
 import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
 import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
+import { useStructuralState } from "@/hooks/useStructuralState";
 import { checkMfaRequired, markMfaPending, readDeviceId, readMfaPending } from "@/lib/auth/mfaChallenge";
 import { LEGAL_TERMS_VERSION } from "@/lib/legal/termsVersion";
 import { PROFILE_FETCH_TIMEOUT_MS } from "@/lib/auth/timing";
@@ -138,11 +139,16 @@ export interface MfaChallenge {
   accessToken: string;
 }
 
-interface AuthContextType {
+/** The user-facing auth state, without the session (US-219). */
+interface AuthState {
   user: User | null;
-  session: Session | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  mfaChallenge: MfaChallenge | null;
+}
+
+/** Every auth action. Identities never change for the provider's lifetime. */
+interface AuthActions {
   signIn: (email: string, password: string) => Promise<{ error?: string; mfaRequired?: boolean }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
   signInWithApple: () => Promise<{ error?: string }>;
@@ -155,9 +161,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
-  // MFA challenge after password sign-in (US-346). While set, the session
-  // exists but user, session and userProfile stay null.
-  mfaChallenge: MfaChallenge | null;
+  // MFA challenge after password sign-in (US-346). While mfaChallenge is set,
+  // the session exists but user, session and userProfile stay null.
   completeMfaChallenge: () => Promise<void>;
   cancelMfaChallenge: () => Promise<void>;
   // OTP-based authentication methods
@@ -167,23 +172,48 @@ interface AuthContextType {
   resetPasswordWithOTP: (email: string, otpCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
+type AuthContextType = AuthState & AuthActions & { session: Session | null };
+
+// US-219: one context carrying everything made every useAuth() consumer
+// re-render on each token refresh. The slices below change independently;
+// AuthContext still carries the merged value so useAuth() is unchanged.
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthStateContext = createContext<AuthState | undefined>(undefined);
+const AuthSessionContext = createContext<Session | null | undefined>(undefined);
+const AuthActionsContext = createContext<AuthActions | undefined>(undefined);
 
 // Export types for use in components
-export type { OTPType, SendOTPOptions, VerifyOTPOptions, VerifyOTPResult };
+export type { OTPType, SendOTPOptions, VerifyOTPOptions, VerifyOTPResult, AuthState, AuthActions };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+function useRequired<T>(ctx: React.Context<T | undefined>, hook: string): T {
+  const context = useContext(ctx);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error(`${hook} must be used within an AuthProvider`);
   }
   return context;
-};
+}
+
+/** Everything. Re-renders on any auth change, including each token refresh. */
+export const useAuth = () => useRequired(AuthContext, "useAuth");
+
+/**
+ * user, userProfile, loading and mfaChallenge. Does not re-render on a token
+ * refresh: the user object keeps its identity while its data is unchanged.
+ */
+export const useAuthState = () => useRequired(AuthStateContext, "useAuthState");
+
+/** The current Session; changes on every token refresh. */
+export const useAuthSession = () => useRequired(AuthSessionContext, "useAuthSession");
+
+/** signIn, signOut, refreshProfile and the rest. Never re-renders. */
+export const useAuthActions = () => useRequired(AuthActionsContext, "useAuthActions");
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // user and userProfile keep their identity when a token refresh or a
+  // profile refetch hands back equal data (US-219); session always updates.
+  const [user, setUser] = useStructuralState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useStructuralState<UserProfile | null>(null);
   // Removed: siteId and siteConfig - single-tenant architecture
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
@@ -197,6 +227,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setIsProfileFetchInProgressState(v);
   }, []);
   const userProfileRef = useRef<UserProfile | null>(null);
+  // Read by updateProfile/refreshProfile so they stay stable (US-219).
+  const userRef = useRef<User | null>(null);
   const { toast } = useToast();
 
   // On Capacitor-native, refresh the Supabase session whenever the app
@@ -208,6 +240,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     userProfileRef.current = userProfile;
   }, [userProfile]);
+  // Assigned during render, not in an effect: a child's effect runs before
+  // this provider's, and must not call refreshProfile against a stale user.
+  userRef.current = user;
   // US-346: while mfaGateRef is set, auth events are stashed instead of
   // applied, so a password-only session cannot reach the app.
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
@@ -297,7 +332,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug('Already on auth page, skipping redirect');
       }
     }
-  }, [toast]);
+  }, [toast, setUser, setUserProfile]);
 
   // Monitor session validity
   const checkSessionValidity = useCallback(async () => {
@@ -813,10 +848,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   // Ensure loading remains true while profile is being fetched
   // But don't get stuck if profile fetch failed and we're not actively fetching
-  const effectiveLoading =
+  const effectiveLoading = Boolean(
     loading ||
     profileFetching ||
-    (user && !userProfile && isProfileFetchInProgress);
+    (user && !userProfile && isProfileFetchInProgress)
+  );
 
   // Log authentication state changes and update Sentry user context
   useEffect(() => {
@@ -1142,7 +1178,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setUser, setUserProfile]);
 
   // Request password reset using our custom edge function (bypasses Supabase's email)
   const resetPassword = useCallback(async (email: string): Promise<{ error?: string; expiresInMinutes?: number }> => {
@@ -1223,6 +1259,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const updateProfile = useCallback(
     async (updates: Partial<UserProfile>) => {
+      const user = userRef.current;
       if (!user) return;
 
       try {
@@ -1239,10 +1276,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         throw error;
       }
     },
-    [user]
+    [setUserProfile]
   );
 
   const refreshProfile = useCallback(async () => {
+    const user = userRef.current;
     if (!user) return;
 
     try {
@@ -1251,7 +1289,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } catch (error) {
       logger.error("FIXED AuthContext: Refresh profile error:", error);
     }
-  }, [user, fetchUserProfile]);
+  }, [fetchUserProfile, setUserProfile]);
 
   // OTP-based authentication functions
   const sendOTP = useCallback(
@@ -1339,12 +1377,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     [sendOTP]
   );
 
-  const value = useMemo(
+  const actions = useMemo<AuthActions>(
     () => ({
-      user,
-      session,
-      userProfile,
-      loading: effectiveLoading,
       signIn,
       signInWithGoogle,
       signInWithApple,
@@ -1354,7 +1388,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
-      mfaChallenge,
       completeMfaChallenge,
       cancelMfaChallenge,
       sendOTP,
@@ -1362,10 +1395,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resendOTP,
     }),
     [
-      user,
-      session,
-      userProfile,
-      effectiveLoading,
       signIn,
       signInWithGoogle,
       signInWithApple,
@@ -1375,7 +1404,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
-      mfaChallenge,
       completeMfaChallenge,
       cancelMfaChallenge,
       sendOTP,
@@ -1384,5 +1412,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     ]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const state = useMemo<AuthState>(
+    () => ({ user, userProfile, loading: effectiveLoading, mfaChallenge }),
+    [user, userProfile, effectiveLoading, mfaChallenge]
+  );
+
+  const value = useMemo<AuthContextType>(
+    () => ({ ...state, session, ...actions }),
+    [state, session, actions]
+  );
+
+  return (
+    <AuthActionsContext.Provider value={actions}>
+      <AuthSessionContext.Provider value={session}>
+        <AuthStateContext.Provider value={state}>
+          <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+        </AuthStateContext.Provider>
+      </AuthSessionContext.Provider>
+    </AuthActionsContext.Provider>
+  );
 };

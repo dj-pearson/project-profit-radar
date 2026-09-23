@@ -7,6 +7,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useSupabaseSubscription } from '@/hooks/useSupabaseSubscription';
+import { useStructuralState } from '@/hooks/useStructuralState';
 
 export interface SubscriptionTier {
   name: string;
@@ -81,12 +82,28 @@ const TIER_LIMITS: Record<string, SubscriptionTier> = Object.fromEntries(
   ])
 ) as Record<string, SubscriptionTier>;
 
+/** The refetch actions. Their identities survive every refetch (US-219). */
+export type SubscriptionActions = Pick<SubscriptionContextType, 'refreshSubscription' | 'refreshUsage'>;
+
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+const SubscriptionActionsContext = createContext<SubscriptionActions | undefined>(undefined);
 
 export const useSubscription = () => {
   const context = useContext(SubscriptionContext);
   if (!context) {
     throw new Error('useSubscription must be used within a SubscriptionProvider');
+  }
+  return context;
+};
+
+/**
+ * refreshSubscription and refreshUsage only. A component that just triggers a
+ * refetch does not re-render when the data it fetches changes.
+ */
+export const useSubscriptionActions = () => {
+  const context = useContext(SubscriptionActionsContext);
+  if (!context) {
+    throw new Error('useSubscriptionActions must be used within a SubscriptionProvider');
   }
   return context;
 };
@@ -97,61 +114,30 @@ interface SubscriptionProviderProps {
 
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
   const { user, userProfile } = useAuth();
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
-  const [usage, setUsage] = useState<UsageStats>({
+  // Keyed on ids, not objects: a token refresh used to hand over a new User
+  // object, which re-ran the load effect and re-rendered every consumer
+  // (US-219).
+  const userId = user?.id ?? null;
+  const companyId = userProfile?.company_id ?? null;
+  // A refetch that returns the same row keeps the old identity (US-219).
+  const [subscriptionData, setSubscriptionData] = useStructuralState<SubscriptionData | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useStructuralState<SubscriptionStatus | null>(null);
+  const [usage, setUsage] = useStructuralState<UsageStats>({
     teamMembers: 0,
     projects: 0,
     storage: 0
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch subscription data from check-subscription edge function
-  const fetchSubscriptionData = useCallback(async () => {
-    if (!user) {
-      setSubscriptionData(null);
-      setSubscriptionStatus(null);
-      return;
-    }
-
-    try {
-      // Use check-subscription edge function which handles complimentary logic
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-
-      if (error) {
-        console.error('Error checking subscription:', error);
-        // Fallback to direct database query
-        const { data: fallbackData } = await supabase
-          .from('subscribers')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (fallbackData) {
-          setSubscriptionData(fallbackData);
-          updateSubscriptionStatus(fallbackData);
-        }
-        return;
-      }
-
-      if (data) {
-        setSubscriptionData(data);
-        updateSubscriptionStatus(data);
-      }
-    } catch (error) {
-      console.error('Error fetching subscription data:', error);
-    }
-  }, [user]);
-
   // Update subscription status based on subscription data
-  const updateSubscriptionStatus = (data: SubscriptionData) => {
-    if (!userProfile?.company_id) return;
+  const updateSubscriptionStatus = useCallback((data: SubscriptionData) => {
+    if (!companyId) return;
 
     // Get company data for trial info
     supabase
       .from('companies')
       .select('trial_end_date, subscription_status')
-      .eq('id', userProfile.company_id)
+      .eq('id', companyId)
       .single()
       .then(({ data: companyData }) => {
         if (!companyData) return;
@@ -186,24 +172,61 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
         setSubscriptionStatus(status);
       });
-  };
+  }, [companyId, setSubscriptionStatus]);
+
+  // Fetch subscription data from check-subscription edge function
+  const fetchSubscriptionData = useCallback(async () => {
+    if (!userId) {
+      setSubscriptionData(null);
+      setSubscriptionStatus(null);
+      return;
+    }
+
+    try {
+      // Use check-subscription edge function which handles complimentary logic
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+
+      if (error) {
+        console.error('Error checking subscription:', error);
+        // Fallback to direct database query
+        const { data: fallbackData } = await supabase
+          .from('subscribers')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (fallbackData) {
+          setSubscriptionData(fallbackData);
+          updateSubscriptionStatus(fallbackData);
+        }
+        return;
+      }
+
+      if (data) {
+        setSubscriptionData(data);
+        updateSubscriptionStatus(data);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription data:', error);
+    }
+  }, [userId, updateSubscriptionStatus, setSubscriptionData, setSubscriptionStatus]);
 
   // Fetch current usage stats
   const fetchUsage = useCallback(async () => {
-    if (!userProfile?.company_id) return;
+    if (!companyId) return;
 
     try {
       // Fetch team members count
       const { count: teamMembersCount } = await supabase
         .from('user_profiles')
         .select('id', { count: 'exact', head: true })
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', companyId);
 
       // Fetch projects count
       const { count: projectsCount } = await supabase
         .from('projects')
         .select('id', { count: 'exact', head: true })
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', companyId);
 
       // TODO: Fetch storage usage from usage_metrics table
       // For now, defaulting to 0
@@ -217,7 +240,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     } catch (error) {
       console.error('Error fetching usage data:', error);
     }
-  }, [userProfile?.company_id]);
+  }, [companyId, setUsage]);
 
   // Get current tier limits
   const getCurrentLimits = useCallback((): SubscriptionTier => {
@@ -341,24 +364,29 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       setLoading(false);
     };
 
-    if (user && userProfile?.company_id) {
+    if (userId && companyId) {
       loadData();
     } else {
       setLoading(false);
     }
-  }, [user, userProfile?.company_id, fetchSubscriptionData, fetchUsage]);
+  }, [userId, companyId, fetchSubscriptionData, fetchUsage]);
 
   // Set up real-time subscription for subscription changes using centralized hook
   useSupabaseSubscription({
-    channelName: `subscription_changes_${user?.id}`,
+    channelName: `subscription_changes_${userId}`,
     table: 'subscribers',
     event: '*',
-    filter: user ? `user_id=eq.${user.id}` : undefined,
+    filter: userId ? `user_id=eq.${userId}` : undefined,
     onPayload: () => fetchSubscriptionData(),
-    enabled: !!user,
+    enabled: !!userId,
   });
 
   const limits = useMemo(() => getCurrentLimits(), [getCurrentLimits]);
+
+  const actions: SubscriptionActions = useMemo(
+    () => ({ refreshSubscription, refreshUsage }),
+    [refreshSubscription, refreshUsage]
+  );
 
   const value: SubscriptionContextType = useMemo(() => ({
     subscriptionData,
@@ -389,8 +417,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   ]);
 
   return (
-    <SubscriptionContext.Provider value={value}>
-      {children}
-    </SubscriptionContext.Provider>
+    <SubscriptionActionsContext.Provider value={actions}>
+      <SubscriptionContext.Provider value={value}>
+        {children}
+      </SubscriptionContext.Provider>
+    </SubscriptionActionsContext.Provider>
   );
 };

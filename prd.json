@@ -3573,8 +3573,8 @@
         "Public hook APIs (useAuth/useSubscription) remain backward compatible for existing call sites"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: build/perf audit. Extends US-052; AuthContext is a new target."
+      "passes": true,
+      "notes": "Source: build/perf audit. Extends US-052; AuthContext is a new target. || AuthContext split into useAuthState/useAuthSession/useAuthActions (stable action identities) alongside unchanged useAuth(); user/userProfile ignore equal updates so a token refresh no longer replaces user identity. SubscriptionContext keys on userId/companyId instead of objects (the cascade), ignores equal refetches, adds useSubscriptionActions. Token refresh: useSubscription consumers 3 renders + 1 extra check-subscription call -> 0. The ~350 useAuth() call sites are not migrated to slice hooks (each still renders once per refresh because it carries session)."
     },
     {
       "id": "US-220",
