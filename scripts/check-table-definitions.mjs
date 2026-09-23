@@ -41,16 +41,6 @@ const SCAN_ROOTS = [join(root, 'src'), join(root, 'supabase', 'functions')];
  * (regenerated types); until then the guard stops the list growing.
  */
 const BASELINE = new Map([
-  ['payments', 'Read by src/components/financial/ProjectFinancialDashboard.tsx and src/pages/FinancialOverview.tsx. Both financial screens show every project as having received nothing when the read fails. The only "payments" in any migration are contractor_payments and bill_payments.'],
-  ['stripe_keys', 'Read by supabase/functions/calculate-revenue-metrics/index.ts for a Stripe SECRET key, and written by supabase/functions/store-stripe-keys. A table holding live payment credentials with no migration also has no RLS policy anyone can review. Highest priority of this list.'],
-  ['incident_reports', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. An OSHA compliance screen showing no incidents is the worst possible way for this to fail.'],
-  ['safety_trainings', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. Same screen, same failure.'],
-  ['lead_scores', 'Read by src/components/crm/LeadScoring.tsx with a join onto leads.'],
-  ['geofence_breach_alerts', 'Written by supabase/functions/geofencing. The function answers breach_detected: true whether or not the alert row was stored.'],
-  ['intervention_logs', 'Written by supabase/functions/send-intervention-email in both the sent and the suppressed-by-opt-out paths. The opt-out record is the one that matters for consent evidence.'],
-  ['user_announcements', 'Read and written by src/components/announcements/FeatureAnnouncementSystem.tsx, which already logs "table not available" on the read and degrades. The dismissal write is the half that silently does nothing.'],
-  ['user_tour_progress', 'Written by src/components/onboarding/FeatureTour.tsx. Its try/catch never fires because supabase-js returns the error, so a finished tour is never recorded and reappears on the next visit.'],
-  ['reviews', 'Read by src/components/seo/AggregateRatingSchema.tsx, which says "if it exists" and renders no rating schema when the read fails. Deliberate and correct: emitting star ratings without review data would be deceptive. Listed for completeness, not as a bug.'],
 ]);
 
 /** Blank comment bodies, keeping line numbers. A guard must not forbid naming what it guards against. */

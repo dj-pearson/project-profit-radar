@@ -6771,3 +6771,17 @@ third-party HDR image replaced the entire homepage with the error screen.
 The homepage title and description were a race between two SEO components and
 the static `index.html` tags. The page's own `PageSEO` now owns them while it's
 mounted, and Helmet adopts the static tags instead of duplicating them.
+
+## US-311: every table the app touches now has a migration or no caller
+
+Ten tables were read or written with no migration behind them. Three are real,
+and get migrations with company-scoped policies: lead scores, geofence breach
+alerts and intervention logs. The rest lose their callers.
+`calculate-revenue-metrics` read a Stripe secret out of a `stripe_keys` table;
+it now reads `STRIPE_SECRET_KEY` from the environment like the other Stripe
+functions. Three components nothing imported are deleted, the financial
+overview reads real payment and invoice columns, and the rating schema no
+longer queries a `reviews` table nothing ever wrote. The table-definition
+guard's baseline is now empty.
+
+TypeScript errors: 1579 to 1536.

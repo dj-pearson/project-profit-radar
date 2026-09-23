@@ -39,7 +39,7 @@ serve(async (req) => {
     // Get user and prediction data
     const { data: user, error: userError } = await supabaseClient
       .from("user_profiles")
-      .select("user_id, email, first_name, last_name")
+      .select("user_id, company_id, email, first_name, last_name")
       .eq("id", userId)
       .single();
 
@@ -141,9 +141,10 @@ serve(async (req) => {
     if (!sendResult.success && sendResult.skipped === 'opted_out') {
       // This row is the consent evidence: it records that a send was suppressed
       // because the recipient opted out. supabase-js returns the error rather
-      // than throwing, so losing it was invisible, and intervention_logs is not
-      // created by any migration (US-311).
+      // than throwing, so losing it was invisible. intervention_logs is created
+      // by 20260923160000 (US-311).
       const { error: suppressionLogError } = await supabaseClient.from("intervention_logs").insert({
+        company_id: user.company_id,
         user_id: userId,
         prediction_id: predictionId,
         intervention_type: "email",
@@ -178,6 +179,7 @@ serve(async (req) => {
 
     // Log successful intervention in database
     const { error: logError } = await supabaseClient.from("intervention_logs").insert({
+      company_id: user.company_id,
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",

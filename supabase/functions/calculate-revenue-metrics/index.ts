@@ -46,17 +46,17 @@ serve(async (req) => {
 
     console.log("[CALCULATE-REVENUE-METRICS] Starting revenue metrics calculation...");
 
-    // Get Stripe key from database
-    const { data: stripeData, error: stripeError } = await supabase
-      .from("stripe_keys")
-      .select("secret_key")
-      .single();
-
-    if (stripeError || !stripeData?.secret_key) {
-      throw new Error(`No Stripe key configured: ${stripeError?.message || 'Missing key'}`);
+    // Brikly's own Stripe account, the same secret check-subscription,
+    // customer-portal and manage-subscription read. This used to select a
+    // plaintext secret_key from a `stripe_keys` table that no migration
+    // creates (US-311); a live payment credential belongs in the function's
+    // secrets, not in a table with no reviewable RLS.
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      throw new Error("No Stripe key configured: STRIPE_SECRET_KEY is not set");
     }
 
-    const stripe = new Stripe(stripeData.secret_key, {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
 

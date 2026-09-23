@@ -63,39 +63,64 @@ const FinancialOverview = () => {
       const { start } = getPeriodRange(period);
       const startStr = start.toISOString().split('T')[0];
 
+      // There is no `payments` table (US-311): recorded payments live in
+      // invoice_payments, the table ProjectFinancialDashboard already reads. It
+      // carries invoice_id and no project_id, so each payment is attributed to
+      // a project through its invoice. invoices has total_amount (not amount)
+      // and expenses has expense_date (not date); the aliases keep the shapes
+      // the summaries below were written against.
       const [invRes, expRes, payRes, projRes] = await Promise.all([
-        supabase.from('invoices').select('amount, status, created_at, project_id')
+        supabase.from('invoices').select('amount:total_amount, status, created_at, project_id')
           .eq('company_id', userProfile.company_id)
           .gte('created_at', startStr),
-        supabase.from('expenses').select('amount, date, project_id')
+        supabase.from('expenses').select('amount, date:expense_date, project_id')
           .eq('company_id', userProfile.company_id)
-          .gte('date', startStr),
-        supabase.from('payments').select('amount, payment_date, project_id')
+          .gte('expense_date', startStr),
+        supabase.from('invoice_payments').select('payment_amount, payment_date, invoice_id')
           .eq('company_id', userProfile.company_id)
           .gte('payment_date', startStr),
         supabase.from('projects').select('id, name, budget, status')
           .eq('company_id', userProfile.company_id),
       ]);
 
-      // supabase-js returns the error rather than throwing it, so the catch
-      // below never fired and `res.data || []` turned a failed read into an
-      // empty list. Total revenue is summed from `payments`, which no migration
-      // creates (US-311), so a failed read here rendered as revenue of zero
-      // rather than as a failure.
+      // supabase-js returns the error rather than throwing it, so each read is
+      // checked explicitly; `res.data || []` alone would render a failed read
+      // as revenue of zero.
       const failed = [
         ['invoices', invRes.error],
         ['expenses', expRes.error],
-        ['payments', payRes.error],
+        ['invoice_payments', payRes.error],
         ['projects', projRes.error],
       ].filter(([, error]) => error) as Array<[string, { message: string }]>;
+
+      // A payment in the period can be against an invoice issued before it, so
+      // the project lookup cannot reuse the period-filtered invoice list.
+      const paymentRows = payRes.data || [];
+      const invoiceIds = [...new Set(paymentRows.map((p) => p.invoice_id).filter(Boolean))];
+      const projectByInvoice = new Map<string, string>();
+      if (failed.length === 0 && invoiceIds.length > 0) {
+        const payInvRes = await supabase.from('invoices').select('id, project_id')
+          .eq('company_id', userProfile.company_id)
+          .in('id', invoiceIds);
+        if (payInvRes.error) failed.push(['invoices (for payments)', payInvRes.error]);
+        for (const inv of payInvRes.data || []) {
+          if (inv.project_id) projectByInvoice.set(inv.id, inv.project_id);
+        }
+      }
 
       if (failed.length > 0) {
         throw new Error(failed.map(([t, e]) => `${t}: ${e.message}`).join('; '));
       }
 
+      const payments = paymentRows.map((p) => ({
+        amount: Number(p.payment_amount) || 0,
+        payment_date: p.payment_date,
+        project_id: projectByInvoice.get(p.invoice_id) ?? '',
+      }));
+
       setInvoices(invRes.data || []);
       setExpenses(expRes.data || []);
-      setPayments(payRes.data || []);
+      setPayments(payments);
       setProjects(projRes.data || []);
     } catch (error) {
       // Clear the previous period's figures rather than leaving them on screen

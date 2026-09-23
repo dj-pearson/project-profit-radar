@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 /**
  * US-311. Fifteen tables are read or written by this codebase and created by no
@@ -61,21 +61,27 @@ describe('the financial screens', () => {
   });
 });
 
-describe('the OSHA compliance screen', () => {
-  const PATH = 'src/components/compliance/OSHACompliance.tsx';
-
-  it('reads the error on all three safety queries', () => {
-    const src = code(PATH);
-    for (const name of ['inspectionsError', 'trainingsError', 'incidentsError']) {
-      expect(src, `${name} is not read`).toContain(name);
-    }
+describe('call sites settled by removal (US-311 AC5)', () => {
+  // These components were imported by nothing and read or wrote tables no
+  // migration creates (incident_reports, safety_trainings, user_announcements,
+  // user_tour_progress). The reachable OSHA screen is OSHAComplianceManager on
+  // safety_incidents / safety_training.
+  it.each([
+    'src/components/compliance/OSHACompliance.tsx',
+    'src/components/announcements/FeatureAnnouncementSystem.tsx',
+    'src/components/onboarding/FeatureTour.tsx',
+  ])('%s is gone', (path) => {
+    expect(existsSync(path)).toBe(false);
   });
 
-  it('says the counts are not a safety record when a query failed', () => {
-    // Zero incidents because the query failed reads as a clean safety record.
-    const src = code(PATH);
-    expect(src).toContain('loadErrors');
-    expect(src).toContain('not a safety record');
+  it('the rating schema no longer queries a reviews table nothing writes', () => {
+    expect(code('src/components/seo/AggregateRatingSchema.tsx')).not.toContain("from('reviews')");
+  });
+
+  it('revenue metrics read the Stripe secret from the environment, not a table', () => {
+    const src = code('supabase/functions/calculate-revenue-metrics/index.ts');
+    expect(src).not.toContain('stripe_keys');
+    expect(src).toContain('Deno.env.get("STRIPE_SECRET_KEY")');
   });
 });
 
@@ -83,7 +89,6 @@ describe('writes to tables no migration creates', () => {
   const CASES: Array<[string, string]> = [
     ['supabase/functions/geofencing/index.ts', 'alertError'],
     ['supabase/functions/send-intervention-email/index.ts', 'suppressionLogError'],
-    ['src/components/onboarding/FeatureTour.tsx', 'user_tour_progress'],
     ['src/components/search/DashboardSearchTrigger.tsx', 'contactsError'],
   ];
 
@@ -96,13 +101,11 @@ describe('writes to tables no migration creates', () => {
     expect(code('supabase/functions/geofencing/index.ts')).toContain('alert_recorded');
   });
 
-  it('the tour no longer wraps a non-throwing call in try/catch', () => {
-    // supabase-js returns the error, so the catch never fired and a finished
-    // tour was never recorded: it reappeared on the next visit.
-    const src = code('src/components/onboarding/FeatureTour.tsx');
-    const completed = src.slice(src.indexOf('markTourAsCompleted'), src.indexOf('if (!isActive)'));
-    expect(completed).not.toMatch(/try\s*\{/);
-    expect(completed).toMatch(/const \{ error \} = await supabase/);
+  it('the remaining writers pass company_id, which the new tables require', () => {
+    // geofence_breach_alerts and intervention_logs are created by
+    // 20260923160000 with company_id NOT NULL and company-scoped insert policies.
+    expect(code('supabase/functions/geofencing/index.ts')).toContain('company_id: geofence.company_id');
+    expect(code('supabase/functions/send-intervention-email/index.ts')).toContain('company_id: user.company_id');
   });
 
   it('the estimate conversion no longer writes project_notes at all', () => {
@@ -140,9 +143,10 @@ describe('the guard itself', () => {
     // this shape has bitten: deadLinks.test.ts required >= 16 dead links and
     // fakeSuccess.test.ts pinned BASELINE = 20 exactly. A baseline that only
     // shrinks must never be asserted with a floor.
+    //
+    // US-311 AC5 emptied the baseline; zero entries with zero reasons passes.
     const all = [...baseline.matchAll(/\['([a-z_]+)',/g)];
     const reasoned = [...baseline.matchAll(/\['([a-z_]+)',\s*'([^']{40,})/g)];
-    expect(all.length).toBeGreaterThan(0);
     expect(reasoned.length, 'baseline entries without a substantial reason').toBe(all.length);
   });
 

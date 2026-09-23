@@ -209,12 +209,14 @@ async function checkGeofenceBreach(supabase: any, params: {
 
     // The response below tells the caller a breach was detected and recorded.
     // supabase-js returns the error rather than throwing, so this insert
-    // failing was invisible, and geofence_breach_alerts is not created by any
-    // migration (US-311). Log loudly rather than fail the request: the breach
+    // failing was invisible. geofence_breach_alerts is created by
+    // 20260923160000 (US-311); its insert policy requires company_id to match
+    // both the caller and the geofence. Log loudly rather than fail the request: the breach
     // is still real and the caller still needs to be told about it.
     const { error: alertError } = await supabase
       .from('geofence_breach_alerts')
       .insert({
+        company_id: geofence.company_id,
         geofence_id,
         time_entry_id: entry_id,
         breach_type: 'outside',
@@ -302,6 +304,7 @@ async function processGPSEntry(supabase: any, params: {
           const { error: alertError } = await supabase
             .from('geofence_breach_alerts')
             .insert({
+              company_id: geofence.company_id,
               geofence_id: geofence.id,
               time_entry_id: entry_id,
               breach_type: 'clock_in_outside',

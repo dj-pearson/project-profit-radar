@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { supabase } from '@/integrations/supabase/client';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { logger } from '@/lib/logger';
 import { COMPANY_INFO, SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 
 
@@ -16,7 +14,8 @@ interface AggregateRatingData {
 
 interface AggregateRatingSchemaProps {
   /**
-   * Optional static rating data. If not provided, will fetch from database
+   * Rating data with substantiation on file. Without it the component renders
+   * nothing.
    */
   staticRating?: AggregateRatingData;
 
@@ -67,10 +66,6 @@ interface AggregateRatingSchemaProps {
  * 4. Building trust with authentic review signals
  *
  * @example
- * // Basic usage with database integration
- * <AggregateRatingSchema showVisual />
- *
- * @example
  * // With static rating data
  * <AggregateRatingSchema
  *   staticRating={{ ratingValue: 4.8, reviewCount: 247, bestRating: 5, worstRating: 1 }}
@@ -88,60 +83,15 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
   itemImage = COMPANY_INFO.logo,
   itemUrl = 'https://brikly.net'
 }) => {
-  const [ratingData, setRatingData] = useState<AggregateRatingData | null>(staticRating || null);
-  const [loading, setLoading] = useState(!staticRating);
+  // Renders only from staticRating. It used to read a `reviews` table that no
+  // migration creates and nothing in the app writes (US-311), so every page
+  // view fired a query that could only fail or come back empty, and the schema
+  // never rendered. Pass staticRating only with substantiation on file (see
+  // src/config/claims.ts); without it, nothing is emitted rather than a
+  // fabricated rating.
+  const ratingData = staticRating ?? null;
 
-  useEffect(() => {
-    // Only fetch from database if no static rating provided
-    if (!staticRating) {
-      fetchRatings();
-    }
-  }, [staticRating]);
-
-  const fetchRatings = async () => {
-    try {
-      // Try to fetch from a reviews table (if it exists)
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('status', 'approved');
-
-      if (error) {
-        logger.warn('Unable to fetch reviews:', error);
-        // No fallback to hard-coded numbers — emitting unsubstantiated star
-        // ratings is deceptive under FTC §5 / Google rich-result policy. The
-        // schema simply will not render until real review data exists.
-        setRatingData(null);
-        setLoading(false);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        const ratings = data.map(r => r.rating);
-        const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-        const maxRating = Math.max(...ratings);
-        const minRating = Math.min(...ratings);
-
-        setRatingData({
-          ratingValue: Math.round(avgRating * 10) / 10, // Round to 1 decimal
-          reviewCount: data.length,
-          bestRating: maxRating,
-          worstRating: minRating
-        });
-      } else {
-        // No reviews yet — render nothing rather than fabricate a rating.
-        setRatingData(null);
-      }
-    } catch (err) {
-      console.error('Error fetching ratings:', err);
-      // Suppress the schema entirely on error rather than emit fake data.
-      setRatingData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading || !ratingData) {
+  if (!ratingData) {
     return null;
   }
 

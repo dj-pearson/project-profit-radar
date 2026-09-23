@@ -45,7 +45,7 @@ const EDGE_BASELINE = new Set([
   'oauth_pending_states', 'payment_reminder_logs', 'payment_reminder_settings',
   'project_team_assignments', 'proration_history', 'push_subscriptions',
   'quickbooks_routing_history', 'quickbooks_routing_rules',
-  'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests', 'stripe_keys',
+  'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests',
   'system_settings', 'teams', 'usage_billing_records',
 ]);
 
@@ -53,10 +53,9 @@ const BASELINE = new Set([
   'ai_environment_config', 'api_key_rate_limits', 'consent_ledger',
   'disposable_email_domains', 'estimate_templates', 'financial_records',
   'generated_content', 'image_processing_queue', 'line_item_library',
-  'payments', 'processed_images', 'project_videos',
-  'real_time_notifications', 'reviews',
+  'processed_images', 'project_videos',
+  'real_time_notifications',
   'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
-  'user_announcements', 'user_tour_progress',
 ]);
 
 function walk(dir, out = []) {
