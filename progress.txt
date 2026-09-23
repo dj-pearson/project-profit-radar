@@ -6746,3 +6746,14 @@ now a disabled "not built yet" button. A new test catches links built from
 `window.location.origin`, which the script guard can't see. It found one more:
 the public booking link, whose pages aren't routed. Whether to route them or
 delete them is a product decision.
+
+## US-298: the last permissive policies
+
+Presence data was readable across every company through a `USING (true)`
+policy, and a user could write their own presence row into another company.
+The SEO, pSEO and trades tables let any signed-in user write marketing content.
+One migration closes each of those. It drops a bad policy where a correct
+company-scoped one already exists, and otherwise adds a restrictive check,
+so legitimate same-company access doesn't change. The test shows every hole
+open before the migration and closed after. One side effect: signed-in
+non-admins no longer bump pSEO view counts.
