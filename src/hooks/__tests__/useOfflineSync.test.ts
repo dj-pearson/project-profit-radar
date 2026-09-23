@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useOfflineSync, OfflineData } from '../useOfflineSync';
+import { __setQueueStore, type QueueStore } from '@/lib/offline-queue';
+
+// happy-dom has no IndexedDB; give the queue an in-memory store per test.
+function memoryStore(): QueueStore {
+  const rows = new Map<string, OfflineData>();
+  return {
+    all: async () => [...rows.values()],
+    get: async (id) => rows.get(id),
+    put: async (item) => {
+      rows.set(item.id, item);
+    },
+    delete: async (id) => {
+      rows.delete(id);
+    },
+  };
+}
 
 // Mock Capacitor modules
 vi.mock('@capacitor/preferences', () => ({
@@ -57,6 +73,7 @@ describe('useOfflineSync', () => {
       configurable: true,
     });
     vi.clearAllMocks();
+    __setQueueStore(memoryStore());
   });
 
   afterEach(() => {

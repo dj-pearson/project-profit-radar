@@ -1,22 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Preferences } from '@capacitor/preferences';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Device } from '@capacitor/device';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { useToast } from './use-toast';
 import { logger } from '@/lib/logger';
+import {
+  listQueue,
+  putQueueItem,
+  deleteQueueItem,
+  subscribeQueue,
+  type OfflineData,
+} from '@/lib/offline-queue';
 
-export interface OfflineData {
-  id: string;
-  type: 'time_entry' | 'daily_report' | 'expense' | 'photo' | 'voice_note' | 'safety_incident';
-  data: Record<string, unknown>;
-  timestamp: string;
-  synced: boolean;
-  retryCount: number;
-  lastAttempt?: string;
-  nextRetryAt?: string;
-  error?: string;
-}
+// The queue item shape lives with the store now; re-exported so existing
+// imports from this hook keep working.
+export type { OfflineData } from '@/lib/offline-queue';
 
 // Constants for exponential backoff
 const MAX_RETRY_COUNT = 5;
@@ -40,7 +39,7 @@ function calculateBackoff(retryCount: number): number {
  * page, so two instances could read the same queued item and insert it twice -
  * two safety incidents, two time entries - with nothing to tell them apart
  * afterwards. A module-level flag is the right scope because the queue it
- * protects is also module-level: one device, one set of files.
+ * protects is also module-level: one device, one store.
  */
 let replayInFlight = false;
 
@@ -59,6 +58,92 @@ function isReadyForRetry(item: OfflineData): boolean {
   return new Date().getTime() >= new Date(item.nextRetryAt).getTime();
 }
 
+/**
+ * Insert one queued capture. The row was built by the capture screen for this
+ * table, so the cast states what the screen already promised. Photo and
+ * voice-note items have no table and fail into the dead-letter path.
+ */
+async function syncSingleItem(item: OfflineData): Promise<void> {
+  let result: { error: unknown };
+  switch (item.type) {
+    case 'time_entry':
+      result = await supabase.from('time_entries').insert(item.data as TablesInsert<'time_entries'>);
+      break;
+    case 'daily_report':
+      result = await supabase.from('daily_reports').insert(item.data as TablesInsert<'daily_reports'>);
+      break;
+    case 'expense':
+      result = await supabase.from('expenses').insert(item.data as TablesInsert<'expenses'>);
+      break;
+    case 'safety_incident':
+      result = await supabase.from('safety_incidents').insert(item.data as TablesInsert<'safety_incidents'>);
+      break;
+    default:
+      throw new Error(`Unknown sync type: ${item.type}`);
+  }
+  if (result.error) throw result.error;
+}
+
+export interface ReplayResult {
+  synced: number;
+  failed: number;
+  /** Items at MAX_RETRY_COUNT that the replay no longer attempts. */
+  deadLettered: number;
+}
+
+/**
+ * Replay every queued item that is due, reading the queue from the store
+ * rather than from React state: a handler registered on mount (the `online`
+ * listener, the 30s interval) would otherwise see the queue as it was at mount,
+ * which is usually empty, and replay nothing.
+ *
+ * Returns null when another replay holds the lock or the device is offline.
+ */
+export async function replayOfflineQueue(): Promise<ReplayResult | null> {
+  if (replayInFlight || !navigator.onLine) return null;
+  replayInFlight = true;
+  try {
+    const items = await listQueue();
+    const result: ReplayResult = { synced: 0, failed: 0, deadLettered: 0 };
+
+    for (const item of items.filter(isReadyForRetry)) {
+      try {
+        await syncSingleItem(item);
+        // On the server now; nothing left to keep.
+        await deleteQueueItem(item.id);
+        result.synced++;
+      } catch (error) {
+        logger.error(`Failed to sync item ${item.id}:`, error);
+        result.failed++;
+
+        const backoffMs = calculateBackoff(item.retryCount);
+        const updatedItem: OfflineData = {
+          ...item,
+          retryCount: item.retryCount + 1,
+          lastAttempt: new Date().toISOString(),
+          nextRetryAt: new Date(Date.now() + backoffMs).toISOString(),
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+        logger.debug(
+          `Item ${item.id} failed. Retry ${updatedItem.retryCount}/${MAX_RETRY_COUNT}. ` +
+            `Next retry in ${backoffMs / 1000}s`,
+        );
+        await putQueueItem(updatedItem);
+      }
+    }
+
+    // Counted after the loop so an item that just hit the cap is included.
+    result.deadLettered = (await listQueue()).filter(
+      (item) => !item.synced && item.retryCount >= MAX_RETRY_COUNT,
+    ).length;
+    return result;
+  } finally {
+    // Released here rather than on each exit path: a lock that leaks on a
+    // throw would wedge every future replay for the life of the page.
+    replayInFlight = false;
+  }
+}
+
 interface OfflineState {
   isOnline: boolean;
   pendingSync: OfflineData[];
@@ -74,99 +159,23 @@ export const useOfflineSync = () => {
   });
 
   const { toast } = useToast();
-    useEffect(() => {
-    // Load pending sync data on mount
-    loadPendingSyncData();
 
-    // Set up online/offline listeners
-    const handleOnline = () => {
-      setOfflineState(prev => ({ ...prev, isOnline: true }));
-      toast({
-        title: "Connection Restored",
-        description: "Syncing offline data...",
-      });
-      syncPendingData();
-    };
-
-    const handleOffline = () => {
-      setOfflineState(prev => ({ ...prev, isOnline: false }));
-      toast({
-        title: "Connection Lost",
-        description: "Data will be saved offline and synced when connection is restored",
-        variant: "destructive"
-      });
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Periodic sync attempt (every 30 seconds when online)
-    const syncInterval = setInterval(() => {
-      if (navigator.onLine && offlineState.pendingSync.length > 0) {
-        syncPendingData();
-      }
-    }, 30000);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      clearInterval(syncInterval);
-    };
-  }, []);
-
-  const loadPendingSyncData = async () => {
+  const loadPendingSyncData = useCallback(async () => {
     try {
-      // Ensure offline directory exists
-      try {
-        await Filesystem.mkdir({
-          path: 'offline-sync',
-          directory: Directory.Data,
-          recursive: true
-        });
-      } catch {
-        // Directory might already exist
-      }
-
-      // Load pending sync items
-      const { files } = await Filesystem.readdir({
-        path: 'offline-sync',
-        directory: Directory.Data
-      });
-
-      const pendingData = await Promise.all(
-        files
-          .filter(file => file.name.endsWith('.json'))
-          .map(async (file) => {
-            try {
-              const { data } = await Filesystem.readFile({
-                path: `offline-sync/${file.name}`,
-                directory: Directory.Data,
-                encoding: Encoding.UTF8
-              });
-              return JSON.parse(data as string) as OfflineData;
-            } catch {
-              return null;
-            }
-          })
-      );
-
-      const validPendingData = pendingData.filter(Boolean) as OfflineData[];
-      
+      const items = await listQueue();
       setOfflineState(prev => ({
         ...prev,
-        pendingSync: validPendingData.filter(item => !item.synced)
+        pendingSync: items.filter(item => !item.synced)
       }));
 
-      // Get last sync time
       const { value: lastSync } = await Preferences.get({ key: 'last_sync_time' });
       if (lastSync) {
         setOfflineState(prev => ({ ...prev, lastSyncTime: lastSync }));
       }
-
     } catch (error) {
       logger.error('Error loading pending sync data:', error);
     }
-  };
+  }, []);
 
   const saveOfflineData = useCallback(async (
     type: OfflineData['type'],
@@ -174,7 +183,7 @@ export const useOfflineSync = () => {
   ): Promise<string> => {
     try {
       const offlineItem: OfflineData = {
-        id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `offline_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
         type,
         data,
         timestamp: new Date().toISOString(),
@@ -182,18 +191,15 @@ export const useOfflineSync = () => {
         retryCount: 0
       };
 
-      // Save to filesystem
-      await Filesystem.writeFile({
-        path: `offline-sync/${offlineItem.id}.json`,
-        data: JSON.stringify(offlineItem) as string,
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
-      });
+      await putQueueItem(offlineItem);
 
-      // Update state
+      // The store notifies every mounted instance, including this one; the
+      // optimistic update just saves this screen a round trip.
       setOfflineState(prev => ({
         ...prev,
-        pendingSync: [...prev.pendingSync, offlineItem]
+        pendingSync: prev.pendingSync.some(p => p.id === offlineItem.id)
+          ? prev.pendingSync
+          : [...prev.pendingSync, offlineItem]
       }));
 
       toast({
@@ -210,216 +216,109 @@ export const useOfflineSync = () => {
   }, [toast]);
 
   const syncPendingData = useCallback(async () => {
-    if (replayInFlight || offlineState.syncInProgress || !navigator.onLine) return;
+    if (replayInFlight || !navigator.onLine) return;
 
-    replayInFlight = true;
-    setOfflineState(prev => ({ ...prev, syncInProgress: true }));
-
+    // The 30s interval lands here on every mounted instance. With nothing due,
+    // skip the spinner and the last-sync write rather than flicker both.
     try {
-      // Filter items that are ready for retry using exponential backoff
-      const itemsToSync = offlineState.pendingSync.filter(isReadyForRetry);
+      if (!(await listQueue()).some(isReadyForRetry)) return;
+    } catch (error) {
+      logger.error('Error reading offline queue:', error);
+      return;
+    }
 
-      if (itemsToSync.length === 0) {
-        setOfflineState(prev => ({ ...prev, syncInProgress: false }));
-        return;
-      }
+    setOfflineState(prev => ({ ...prev, syncInProgress: true }));
+    try {
+      const result = await replayOfflineQueue();
+      if (!result) return;
 
-      let syncedCount = 0;
-      let failedCount = 0;
-
-      for (const item of itemsToSync) {
-        try {
-          await syncSingleItem(item);
-          syncedCount++;
-        } catch (error) {
-          logger.error(`Failed to sync item ${item.id}:`, error);
-          failedCount++;
-
-          // Calculate next retry time using exponential backoff
-          const backoffMs = calculateBackoff(item.retryCount);
-          const nextRetryAt = new Date(Date.now() + backoffMs).toISOString();
-
-          // Update retry count, error, and next retry time
-          const updatedItem: OfflineData = {
-            ...item,
-            retryCount: item.retryCount + 1,
-            lastAttempt: new Date().toISOString(),
-            nextRetryAt,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          };
-
-          // Log backoff info
-          logger.debug(
-            `Item ${item.id} failed. Retry ${updatedItem.retryCount}/${MAX_RETRY_COUNT}. ` +
-            `Next retry in ${backoffMs / 1000}s`
-          );
-
-          // Save updated item
-          await Filesystem.writeFile({
-            path: `offline-sync/${item.id}.json`,
-            data: JSON.stringify(updatedItem),
-            directory: Directory.Data,
-            encoding: Encoding.UTF8
-          });
-
-          // Update state
-          setOfflineState(prev => ({
-            ...prev,
-            pendingSync: prev.pendingSync.map(p =>
-              p.id === item.id ? updatedItem : p
-            )
-          }));
-        }
-      }
-
-      // Update last sync time
       const lastSyncTime = new Date().toISOString();
       await Preferences.set({ key: 'last_sync_time', value: lastSyncTime });
-      
-      setOfflineState(prev => ({ 
-        ...prev, 
-        lastSyncTime,
-        syncInProgress: false 
-      }));
+      setOfflineState(prev => ({ ...prev, lastSyncTime }));
 
-      if (syncedCount > 0) {
+      if (result.synced > 0) {
         toast({
           title: "Sync Complete",
-          description: `${syncedCount} items synced successfully${failedCount ? `, ${failedCount} failed` : ''}`,
+          description: `${result.synced} items synced successfully${result.failed ? `, ${result.failed} failed` : ''}`,
         });
       }
 
-      if (failedCount > 0) {
-        const permanentlyFailed = offlineState.pendingSync.filter(
-          item => item.retryCount >= MAX_RETRY_COUNT
-        ).length;
-
+      if (result.failed > 0) {
         toast({
           title: "Sync Issues",
-          description: permanentlyFailed > 0
-            ? `${failedCount} items failed. ${permanentlyFailed} exceeded max retries.`
-            : `${failedCount} items failed and will be retried with backoff`,
+          description: result.deadLettered > 0
+            ? `${result.failed} items failed. ${result.deadLettered} exceeded max retries.`
+            : `${result.failed} items failed and will be retried with backoff`,
           variant: "destructive"
         });
       }
-
     } catch (error) {
       logger.error('Error during sync:', error);
-      setOfflineState(prev => ({ ...prev, syncInProgress: false }));
-      
       toast({
         title: "Sync Error",
         description: "Failed to sync offline data",
         variant: "destructive"
       });
     } finally {
-      // Released here rather than on each exit path: a lock that leaks on a
-      // throw would wedge every future replay for the life of the page.
-      replayInFlight = false;
+      setOfflineState(prev => ({ ...prev, syncInProgress: false }));
     }
-  }, [offlineState.pendingSync, offlineState.syncInProgress, toast]);
+  }, [toast]);
 
-  const syncSingleItem = async (item: OfflineData) => {
-    switch (item.type) {
-      case 'time_entry':
-        await syncTimeEntry(item);
-        break;
-      case 'daily_report':
-        await syncDailyReport(item);
-        break;
-      case 'expense':
-        await syncExpense(item);
-        break;
-      case 'safety_incident':
-        await syncSafetyIncident(item);
-        break;
-      default:
-        throw new Error(`Unknown sync type: ${item.type}`);
-    }
+  // Handlers registered once on mount call the latest syncPendingData and
+  // toast. Listing them as effect deps instead would re-register (and reload
+  // the queue) on every render wherever toast is not referentially stable.
+  const syncRef = useRef(syncPendingData);
+  syncRef.current = syncPendingData;
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
 
-    // Mark as synced
-    const syncedItem: OfflineData = {
-      ...item,
-      synced: true,
-      lastAttempt: new Date().toISOString()
-    };
-
-    // Update file
-    await Filesystem.writeFile({
-      path: `offline-sync/${item.id}.json`,
-      data: JSON.stringify(syncedItem),
-      directory: Directory.Data,
-      encoding: Encoding.UTF8
+  useEffect(() => {
+    void loadPendingSyncData();
+    const unsubscribe = subscribeQueue(() => {
+      void loadPendingSyncData();
     });
 
-    // Update state
-    setOfflineState(prev => ({
-      ...prev,
-      pendingSync: prev.pendingSync.map(p => 
-        p.id === item.id ? syncedItem : p
-      )
-    }));
-  };
-
-  const syncTimeEntry = async (item: OfflineData) => {
-    const { error } = await supabase
-      .from('time_entries')
-      .insert({
-        ...item.data
+    const handleOnline = () => {
+      setOfflineState(prev => ({ ...prev, isOnline: true }));
+      toastRef.current({
+        title: "Connection Restored",
+        description: "Syncing offline data...",
       });
+      void syncRef.current();
+    };
 
-    if (error) throw error;
-  };
-
-  const syncDailyReport = async (item: OfflineData) => {
-    const { error } = await supabase
-      .from('daily_reports')
-      .insert({
-        ...item.data
+    const handleOffline = () => {
+      setOfflineState(prev => ({ ...prev, isOnline: false }));
+      toastRef.current({
+        title: "Connection Lost",
+        description: "Data will be saved offline and synced when connection is restored",
+        variant: "destructive"
       });
+    };
 
-    if (error) throw error;
-  };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
-  const syncExpense = async (item: OfflineData) => {
-    const { error } = await supabase
-      .from('expenses')
-      .insert({
-        ...item.data
-      });
+    // Periodic attempt while online. replayOfflineQueue reads the store, so an
+    // empty queue costs one IndexedDB read.
+    const syncInterval = setInterval(() => {
+      if (navigator.onLine) void syncRef.current();
+    }, 30000);
 
-    if (error) throw error;
-  };
-
-  const syncSafetyIncident = async (item: OfflineData) => {
-    const { error } = await supabase
-      .from('safety_incidents')
-      .insert({
-        ...item.data
-      });
-
-    if (error) throw error;
-  };
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(syncInterval);
+    };
+  }, [loadPendingSyncData]);
 
   const clearSyncedData = useCallback(async () => {
     try {
-      const syncedItems = offlineState.pendingSync.filter(item => item.synced);
-      
-      // Delete synced files
-      await Promise.all(
-        syncedItems.map(item => 
-          Filesystem.deleteFile({
-            path: `offline-sync/${item.id}.json`,
-            directory: Directory.Data
-          })
-        )
-      );
-
-      // Update state
-      setOfflineState(prev => ({
-        ...prev,
-        pendingSync: prev.pendingSync.filter(item => !item.synced)
-      }));
+      // A successful replay deletes its item, so only items written as synced
+      // by the pre-US-412 engine can be here.
+      const syncedItems = (await listQueue()).filter(item => item.synced);
+      await Promise.all(syncedItems.map(item => deleteQueueItem(item.id)));
 
       toast({
         title: "Cleanup Complete",
@@ -429,52 +328,35 @@ export const useOfflineSync = () => {
     } catch (error) {
       logger.error('Error clearing synced data:', error);
     }
-  }, [offlineState.pendingSync, toast]);
+  }, [toast]);
 
   const retryFailedSync = useCallback(async () => {
-    const failedItems = offlineState.pendingSync.filter(item => 
+    const failedItems = (await listQueue()).filter(item =>
       !item.synced && item.error
     );
 
     // Reset retry count for failed items
     for (const item of failedItems) {
-      const resetItem: OfflineData = {
+      await putQueueItem({
         ...item,
         retryCount: 0,
+        nextRetryAt: undefined,
         error: undefined
-      };
-
-      await Filesystem.writeFile({
-        path: `offline-sync/${item.id}.json`,
-        data: JSON.stringify(resetItem),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
       });
     }
 
-    // Reload and sync
-    await loadPendingSyncData();
     if (navigator.onLine) {
       await syncPendingData();
     }
-  }, [offlineState.pendingSync, loadPendingSyncData, syncPendingData]);
+  }, [syncPendingData]);
 
   const getStorageInfo = useCallback(async () => {
     try {
       const deviceInfo = await Device.getInfo();
+      const items = await listQueue();
+      const totalSize = items.reduce((sum, item) => sum + JSON.stringify(item).length, 0);
 
-      // Get offline data size
-      const { files } = await Filesystem.readdir({
-        path: 'offline-sync',
-        directory: Directory.Data
-      });
-
-      const totalSize = files.reduce((sum, file) => {
-        // Estimate size (actual size would require reading each file)
-        return sum + (file.name.length * 100); // Rough estimate
-      }, 0);
-
-      const pendingItems = offlineState.pendingSync.filter(item => !item.synced);
+      const pendingItems = items.filter(item => !item.synced);
       const failedItems = pendingItems.filter(item => item.error);
       const awaitingRetry = pendingItems.filter(item =>
         item.nextRetryAt && new Date(item.nextRetryAt) > new Date()
@@ -498,7 +380,7 @@ export const useOfflineSync = () => {
       logger.error('Error getting storage info:', error);
       return null;
     }
-  }, [offlineState]);
+  }, [offlineState.lastSyncTime]);
 
   return {
     // State

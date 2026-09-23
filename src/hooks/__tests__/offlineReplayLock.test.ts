@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 /**
  * Structural, not behavioural, and labelled as such: driving two mounted
- * instances of a hook that reads the Capacitor Filesystem and writes to
+ * instances of a hook that reads the offline queue and writes to
  * Supabase costs more scaffolding than the assertion is worth. What matters is
  * that the guard is module-scoped and released in a finally.
  *
@@ -26,12 +26,13 @@ describe('offline replay lock', () => {
   });
 
   it('is checked before a replay starts', () => {
-    expect(source).toMatch(/if \(replayInFlight \|\| offlineState\.syncInProgress/);
+    const replay = source.slice(source.indexOf('export async function replayOfflineQueue'));
+    expect(replay).toMatch(/^\s*if \(replayInFlight \|\| !navigator\.onLine\) return null;\s*replayInFlight = true;/m);
   });
 
   it('is released in a finally, so a throw cannot wedge every later replay', () => {
-    const sync = source.slice(source.indexOf('const syncPendingData'));
-    const body = sync.slice(0, sync.indexOf('const syncSingleItem'));
+    const replay = source.slice(source.indexOf('export async function replayOfflineQueue'));
+    const body = replay.slice(0, replay.indexOf('export const useOfflineSync'));
     expect(body).toMatch(/\}\s*finally\s*\{[\s\S]*replayInFlight = false;[\s\S]*\}/);
   });
 });

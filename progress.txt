@@ -6904,3 +6904,13 @@ for users who opted out via marketing_emails; requester_email/company_id NOT
 NULL dropped on data_subject_requests (widening). Tested on a throwaway PG
 with both table layouts, twice. scripts/gen-supabase-types.mjs now uses
 SUPABASE_DB_URL. Open: owner regenerates types.ts and checks 20260414 ran.
+
+## US-412 - one offline queue
+src/lib/offline-queue.ts is the only web queue (IndexedDB brikly-offline,
+store queue). useOfflineSync replays from the store, which fixes reconnect
+syncing nothing (stale mount-time state) and captures not appearing in
+SyncQueueIndicator until reload. Old offline-sync/*.json files and the
+BriklyOffline sync_queue are moved in on first load, copy-then-delete with
+the same id. Deleted lib/offline-sync.ts and hooks/useMobileFeatures.ts.
+Modules baseline 109 -> 106, TS 1500 -> 1489. Not yet checked in a real
+browser.

@@ -144,11 +144,11 @@ export const Device = {
 // Filesystem Plugin
 //
 // Not a no-op, unlike the rest of this file. Every method here used to reject
-// with "Filesystem not available on web", and three consumers depend on it:
-// useOfflineSync (the capture queue behind the safety-incident, time,
-// equipment and daily-report screens), VoiceNotes and useCameraCapture. On
-// brikly.net that meant going offline lost the report. WebFilesystem stores
-// the same paths in IndexedDB. See src/lib/capacitor-filesystem-web.ts.
+// with "Filesystem not available on web", which lost VoiceNotes recordings
+// and useCameraCapture photos, and (before US-412 moved the capture queue to
+// src/lib/offline-queue.ts) every offline report. The queue still reads its
+// old offline-sync/ files through here once, to migrate them. WebFilesystem
+// stores the same paths in IndexedDB. See src/lib/capacitor-filesystem-web.ts.
 export const Filesystem = {
   readFile: WebFilesystem.readFile,
   writeFile: WebFilesystem.writeFile,

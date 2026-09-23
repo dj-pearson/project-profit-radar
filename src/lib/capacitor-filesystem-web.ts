@@ -8,7 +8,9 @@
  *   useOfflineSync  - the offline queue behind the safety-incident, time,
  *                     equipment and daily-report capture screens. Going
  *                     offline on brikly.net meant `Submission Error`, and the
- *                     report was gone.
+ *                     report was gone. Since US-412 the queue lives in its own
+ *                     IndexedDB store (src/lib/offline-queue.ts) and only reads
+ *                     its old offline-sync/ files from here to migrate them.
  *   VoiceNotes      - recordings and their metadata.
  *   useCameraCapture- captured photos.
  *
