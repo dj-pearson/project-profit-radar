@@ -92,7 +92,7 @@ vi.mock('@/components/dashboard/RoleDashboard', () => ({
 vi.mock('@/components/dashboard/EmptyDashboard', () => ({
   EmptyDashboard: () => <div data-testid="empty-dashboard">No data</div>,
 }));
-vi.mock('@/components/dashboard/DashboardSkeleton', () => ({
+vi.mock('@/components/ui/skeletons', () => ({
   DashboardSkeleton: () => <div data-testid="dashboard-skeleton">Loading...</div>,
 }));
 vi.mock('@/components/onboarding/OnboardingChecklist', () => ({

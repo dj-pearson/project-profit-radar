@@ -1,5 +1,4 @@
 import { Helmet } from 'react-helmet-async';
-import { PageLayout } from '@/components/layouts/PageLayout';
 import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPanel';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +31,7 @@ export default function AccessibilityPage() {
           content="Customize accessibility settings including high contrast mode, font sizes, screen reader optimization, and keyboard navigation for better usability."
         />
       </Helmet>
-      <PageLayout>
+      <main className="container mx-auto px-4 py-6">
         <div className="container mx-auto p-6 space-y-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-3">
@@ -135,7 +134,7 @@ export default function AccessibilityPage() {
             </div>
           </div>
         </div>
-      </PageLayout>
+      </main>
     </>
   );
 }

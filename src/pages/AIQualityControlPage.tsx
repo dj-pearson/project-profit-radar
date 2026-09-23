@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { PageLayout } from "@/components/layouts/PageLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -74,20 +74,19 @@ export default function AIQualityControlPage() {
           content="Quality inspection results, pass rates and reinspections across your projects."
         />
       </Helmet>
-      <PageLayout>
-        <div className="container mx-auto p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Quality Control</h1>
-              <p className="text-muted-foreground">Inspection results recorded across your projects</p>
-            </div>
-            <Button asChild>
-              <Link to="/workflow-management">
-                <ClipboardCheck className="mr-2 h-4 w-4" />
-                Manage Inspections
-              </Link>
-            </Button>
-          </div>
+      <DashboardLayout
+        title="Quality Control"
+        description="Inspection results recorded across your projects"
+        headerActions={
+          <Button asChild>
+            <Link to="/workflow-management">
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              Manage Inspections
+            </Link>
+          </Button>
+        }
+      >
+        <div className="space-y-6">
 
           {error ? (
             <Card>
@@ -212,7 +211,7 @@ export default function AIQualityControlPage() {
             </CardContent>
           </Card>
         </div>
-      </PageLayout>
+      </DashboardLayout>
     </>
   );
 }

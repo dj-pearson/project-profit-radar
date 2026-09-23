@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MobileDashboardLayout } from '@/components/layout/MobileDashboardLayout';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   MobileLayout,
   MobileSection,
@@ -56,7 +56,7 @@ export default function MobileShowcase() {
   ];
 
   return (
-    <MobileDashboardLayout
+    <DashboardLayout
       title="Mobile Showcase"
       showBottomNav={true}
     >
@@ -276,6 +276,6 @@ export default function MobileShowcase() {
           </MobileButtonGroup>
         </div>
       </MobileDrawer>
-    </MobileDashboardLayout>
+    </DashboardLayout>
   );
 }

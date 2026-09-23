@@ -13,7 +13,7 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ConfirmDialogHost } from "@/components/ui/confirm-dialog";
 import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -55,7 +55,7 @@ const AppContent = () => {
       </Suspense>
 
       {/* Main Routes */}
-      <Suspense fallback={<DashboardSkeleton />}>
+      <Suspense fallback={<DashboardSkeleton label="Loading" />}>
         <Routes>
           {allRoutes}
         </Routes>

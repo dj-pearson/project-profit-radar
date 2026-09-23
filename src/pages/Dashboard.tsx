@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { MobileDashboardHome } from "@/components/dashboard/MobileDashboardHome";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
-import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
@@ -52,7 +52,11 @@ const Dashboard = () => {
 
   // Show loading state while auth or data is loading
   if (authLoading || dataLoading || !user || !userProfile) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <DashboardSkeleton label="Loading dashboard" />
+      </div>
+    );
   }
 
   // Show error state if data failed to load

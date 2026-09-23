@@ -7062,3 +7062,10 @@ its shape; new slice hooks (useAuthState, useAuthSession, useAuthActions,
 useSubscriptionActions) let consumers opt out of session churn. Equal-data
 updates no longer replace user/profile/subscription identities. TS 1482 ->
 1480.
+
+## US-282 - one dashboard, one layout (partial)
+Three DashboardSkeletons became one; MobileDashboardLayout and PageLayout
+(older copies of DashboardLayout) are gone, so /communication,
+/ai-quality-control and /smart-client-updates now render inside the app
+sidebar. Twelve dead dashboard variants deleted. Components 217 -> 205, TS
+1480 -> 1450. Bundle-size AC not measured yet.

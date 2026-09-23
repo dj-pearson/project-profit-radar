@@ -35,8 +35,13 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ userProfile: { company_id: 'co-1' } }),
 }));
-vi.mock('@/components/layouts/PageLayout', () => ({
-  PageLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+vi.mock('@/components/layout/DashboardLayout', () => ({
+  DashboardLayout: ({ children, headerActions }: { children: ReactNode; headerActions?: ReactNode }) => (
+    <div>
+      {headerActions}
+      {children}
+    </div>
+  ),
 }));
 
 import AIQualityControlPage from '../AIQualityControlPage';
