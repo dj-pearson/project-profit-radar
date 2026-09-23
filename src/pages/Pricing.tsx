@@ -9,6 +9,8 @@ import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
 import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 import { CLAIMS, ifVerifiedSchema } from "@/config/claims";
+import { PRICING_PLANS } from "@/config/pricing";
+import { SCHEMA_PRICE, STARTING_MONTHLY_PRICE } from "@/config/seoConfig";
 
 const PricingPage = () => {
   // Structured data for pricing page
@@ -26,7 +28,9 @@ const PricingPage = () => {
   const productSchema = createProductSchema(
     "Brikly Construction Management Software",
     "Complete construction management platform for small contractors with job costing, scheduling, mobile apps, and OSHA compliance.",
-    "350",
+    // Same constant the Pricing cards and Stripe checkout amounts come from
+    // (src/config/pricing.ts via seoConfig), so schema can't drift from them.
+    SCHEMA_PRICE,
     verifiedRating
       ? {
           aggregateRating: {
@@ -43,8 +47,8 @@ const PricingPage = () => {
   return (
     <>
       <PageSEO
-        title="Brikly Pricing - $350/Month Unlimited Users | Construction Software"
-        description="Simple, transparent pricing for construction management software. $350/month with unlimited users, job costing, scheduling, mobile apps, OSHA compliance, QuickBooks sync. 14-day free trial. No setup fees."
+        title={`Brikly Pricing - Plans from $${STARTING_MONTHLY_PRICE}/Month | Construction Software`}
+        description={`Simple, transparent pricing for construction management software. Plans from $${STARTING_MONTHLY_PRICE}/month with job costing, scheduling, mobile apps, OSHA compliance and QuickBooks sync. 14-day free trial. No setup fees.`}
         keywords={[
           'construction software pricing',
           'construction management software cost',
@@ -85,13 +89,13 @@ const PricingPage = () => {
               </h1>
               <LastUpdated date="November 2025" />
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
-                $350/month with unlimited users. No per-seat fees, no setup charges, no hidden costs. Start your 14-day free trial today.
+                Plans from ${STARTING_MONTHLY_PRICE}/month. No per-seat fees, no setup charges, no hidden costs. Start your 14-day free trial today.
               </p>
             </div>
 
             <QuickAnswerSnippet
               question="How much does Brikly construction management software cost?"
-              answer="Brikly costs $350/month with unlimited users and all features included. This is 50% less than Procore ($500+/month per user) and includes no hidden fees, no per-seat charges, and no setup costs. A 14-day free trial is available with no credit card required."
+              answer={`Brikly has three plans: ${PRICING_PLANS.map((plan) => `${plan.name} at $${plan.monthlyPrice}/month`).join(", ")}. There are no setup fees and no per-seat charges, and every plan starts with a 14-day free trial.`}
             />
 
             <Pricing />

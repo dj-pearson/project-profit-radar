@@ -1,6 +1,10 @@
 # Handle auth recovery redirects properly
 /auth?error_recovery*  /auth  302
 
+# llms.txt lives at /.well-known/llms.txt; crawlers also look for it at the
+# root. A 200 rewrite serves the same file at both paths, so there is one copy.
+/llms.txt  /.well-known/llms.txt  200
+
 # SPA catch-all: serve index.html for all non-static routes with 200 status
 # Cloudflare Pages checks static files first, then falls through to this rule
 /* /index.html 200

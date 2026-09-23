@@ -1,5 +1,6 @@
 import { CLAIMS } from '@/config/claims';
 import { jsonLdSafe } from '@/lib/security/jsonLd';
+import { SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 
 /**
  * Helper that returns a JSON-LD aggregateRating block only when the rating
@@ -58,9 +59,9 @@ export const SoftwareSchema = () => (
         "description": "Construction management software for small and mid-size contractors in the U.S. with job costing, scheduling, safety logs, and time tracking.",
         "offers": {
           "@type": "Offer",
-          "price": "350",
+          "price": SCHEMA_PRICE,
           "priceCurrency": "USD",
-          "priceValidUntil": "2026-12-31"
+          "priceValidUntil": getPriceValidUntil()
         },
         ...(verifiedAggregateRating() ? { aggregateRating: verifiedAggregateRating() } : {})
       })
@@ -177,7 +178,7 @@ export const ProductSchema = ({
           "price": price,
           "priceCurrency": currency,
           "availability": availability,
-          "priceValidUntil": "2026-12-31"
+          "priceValidUntil": getPriceValidUntil()
         },
         ...(verifiedAggregateRating() ? { aggregateRating: verifiedAggregateRating() } : {})
       })

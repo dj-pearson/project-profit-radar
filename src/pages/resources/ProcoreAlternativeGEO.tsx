@@ -101,15 +101,6 @@ export default function ProcoreAlternativeGEO() {
     ]
   };
 
-  const comparisonSchema = {
-    "@context": "https://schema.org",
-    "@type": "ComparisonTable",
-    "about": {
-      "@type": "SoftwareApplication",
-      "name": "Construction Management Software Comparison: Brikly vs Procore"
-    }
-  };
-
   return (
     <>
       <Helmet>
@@ -138,9 +129,10 @@ export default function ProcoreAlternativeGEO() {
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>
-        <script type="application/ld+json">
-          {JSON.stringify(comparisonSchema)}
-        </script>
+        {/* No comparison block: schema.org has no ComparisonTable type, and the
+            old one carried nothing but a name. The Article + FAQPage above cover
+            this page; use an ItemList (createComparisonSchema in PageSEO) if a
+            structured comparison is ever needed. */}
 
         <link rel="canonical" href="https://brikly.net/resources/procore-alternative-complete-guide" />
       </Helmet>

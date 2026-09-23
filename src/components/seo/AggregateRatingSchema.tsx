@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { COMPANY_INFO, SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 
 
 interface AggregateRatingData {
@@ -84,7 +85,7 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
   schemaType = 'SoftwareApplication',
   itemName = 'Brikly - Construction Management Software',
   itemDescription = 'Comprehensive construction management platform for small to medium-sized construction businesses',
-  itemImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/brikly-logo.png',
+  itemImage = COMPANY_INFO.logo,
   itemUrl = 'https://brikly.net'
 }) => {
   const [ratingData, setRatingData] = useState<AggregateRatingData | null>(staticRating || null);
@@ -170,9 +171,9 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
         operatingSystem: 'Web, iOS, Android',
         offers: {
           '@type': 'Offer',
-          price: '350.00',
+          price: SCHEMA_PRICE,
           priceCurrency: 'USD',
-          priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+          priceValidUntil: getPriceValidUntil()
         }
       };
     }

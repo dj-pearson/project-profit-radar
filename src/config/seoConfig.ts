@@ -17,6 +17,8 @@
  * 5. Internal linking automation
  */
 
+import { PRICING_PLANS } from './pricing';
+
 export interface SEOPageConfig {
   path: string;
   title: string;
@@ -48,8 +50,30 @@ export type SEOCategory =
 // Base URL for all canonical URLs
 export const SITE_URL = 'https://brikly.net';
 
-// Default OG Image
-export const DEFAULT_OG_IMAGE = 'https://brikly.net/og-image.png';
+// Default OG image: public/og-image.png, 1200x630 (the size Facebook, LinkedIn
+// and X use for large link cards). Width/height are emitted as
+// og:image:width/height so crawlers don't have to fetch the file to lay out.
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+export const DEFAULT_OG_IMAGE_WIDTH = 1200;
+export const DEFAULT_OG_IMAGE_HEIGHT = 630;
+
+// Pricing for structured data. Read from src/config/pricing.ts, which the
+// Pricing component and the Stripe checkout amounts also use, so the price in
+// schema can't drift from the price a customer is charged. Schema advertises
+// the entry price (the cheapest monthly plan).
+const MONTHLY_PRICES = PRICING_PLANS.map((plan) => plan.monthlyPrice);
+export const STARTING_MONTHLY_PRICE = Math.min(...MONTHLY_PRICES);
+export const HIGHEST_MONTHLY_PRICE = Math.max(...MONTHLY_PRICES);
+export const SCHEMA_PRICE = String(STARTING_MONTHLY_PRICE);
+export const SCHEMA_PRICE_RANGE = `$${STARTING_MONTHLY_PRICE} - $${HIGHEST_MONTHLY_PRICE}`;
+
+/**
+ * priceValidUntil for Offer schema: 31 December of next year. Computed rather
+ * than hardcoded because a literal date silently expires (the old 2025-12-31
+ * did) and Google drops an Offer whose priceValidUntil is in the past.
+ */
+export const getPriceValidUntil = (now: Date = new Date()): string =>
+  `${now.getFullYear() + 1}-12-31`;
 
 // Company info for schema
 export const COMPANY_INFO = {
@@ -60,7 +84,7 @@ export const COMPANY_INFO = {
   url: SITE_URL,
   logo: `${SITE_URL}/BriklyLogo.png`,
   foundingDate: '2024',
-  priceRange: '$199 - $799',
+  priceRange: SCHEMA_PRICE_RANGE,
   telephone: '+1-555-BRIKLY1',
   email: 'support@brikly.net',
   address: {
@@ -81,7 +105,7 @@ export const SOFTWARE_INFO = {
   name: 'Brikly',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web, iOS, Android',
-  price: '350',
+  price: SCHEMA_PRICE,
   priceCurrency: 'USD',
   billingPeriod: 'P1M',
   features: [
@@ -150,7 +174,7 @@ export const corePages: SEOPageConfig[] = [
   {
     path: '/pricing',
     title: 'Construction Software Pricing - Transparent, No Hidden Fees | Brikly',
-    description: 'Brikly pricing: $350/month with unlimited users. No setup fees, no per-user charges. Start your 14-day free trial. Compare to Procore and Buildertrend pricing.',
+    description: `Brikly pricing: plans from $${STARTING_MONTHLY_PRICE}/month. No setup fees. Start your 14-day free trial. Compare to Procore and Buildertrend pricing.`,
     keywords: [
       'construction software pricing',
       'contractor software cost',
@@ -233,7 +257,7 @@ export const corePages: SEOPageConfig[] = [
   {
     path: '/brikly',
     title: 'Brikly — Construction Software That Actually Works for Small Contractors',
-    description: 'Brikly is purpose-built construction management software for small and mid-size contractors. Real-time job costing, mobile crews, OSHA compliance, QuickBooks sync — $350/month with unlimited users.',
+    description: `Brikly is purpose-built construction management software for small and mid-size contractors. Real-time job costing, mobile crews, OSHA compliance, QuickBooks sync — plans from $${STARTING_MONTHLY_PRICE}/month.`,
     keywords: [
       'brikly',
       'brikly construction',

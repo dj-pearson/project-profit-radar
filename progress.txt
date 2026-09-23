@@ -6698,3 +6698,14 @@ Every build now writes `public/feed.xml` from published posts, reading them the
 same way the sitemap does. `blog_posts` has no category column, so five topic
 pages match on title and slug. The index is paginated with plain links and
 `rel=prev/next`, and each page is its own canonical URL.
+
+## US-385: structured data that validates, and the real price
+
+The schema said $350 a month; Stripe charges $149, $299 and $599. Every schema
+source now reads the price from `pricing.ts`. The logo URL points at a real
+file, the SearchAction for a `/search` page that doesn't exist is gone, and so
+is an invalid schema type. An AggregateRating with no rating value, emitted on
+every route, is now gated on a verified claim. There's a 1200x630 default share
+image, and the Yandex verification file moved into `public/` where it's served.
+Still needed from you: Google and Bing verification tokens, and a decision on
+the "$350 unlimited users" copy on about 20 marketing pages.

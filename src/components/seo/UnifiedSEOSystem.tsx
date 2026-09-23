@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_HEIGHT, DEFAULT_OG_IMAGE_WIDTH, SCHEMA_PRICE, STARTING_MONTHLY_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 import { logger } from '@/lib/logger';
 import { SITE_ORIGIN, toCanonicalUrl } from '@/lib/seo/canonical';
 
@@ -49,7 +49,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   keywords,
   ogTitle,
   ogDescription,
-  ogImage = BRIKLY_LOGO_URL,
+  ogImage,
   ogUrl,
   twitterCard = 'summary_large_image',
   twitterSite = '@brikly',
@@ -169,7 +169,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ogImage,
     dbConfig?.og_image,
     enterpriseConfig?.ogImage,
-    BRIKLY_LOGO_URL
+    DEFAULT_OG_IMAGE
   );
 
   const finalOgUrl = toCanonicalUrl(
@@ -252,6 +252,12 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <meta property="og:title" content={finalOgTitle} />
       <meta property="og:description" content={finalOgDescription} />
       <meta property="og:image" content={finalOgImage} />
+      {finalOgImage === DEFAULT_OG_IMAGE && (
+        <meta property="og:image:width" content={String(DEFAULT_OG_IMAGE_WIDTH)} />
+      )}
+      {finalOgImage === DEFAULT_OG_IMAGE && (
+        <meta property="og:image:height" content={String(DEFAULT_OG_IMAGE_HEIGHT)} />
+      )}
       <meta property="og:url" content={finalOgUrl} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Brikly" />
@@ -335,7 +341,7 @@ async function generateEnterpriseEnhancements(
   // Enhanced descriptions for better conversion
   const descriptionEnhancements: Record<string, string> = {
     '/': 'Stop losing money on construction projects. Brikly delivers real-time job costing, mobile field management, and OSHA compliance. Built for small and mid-size contractors.',
-    '/pricing': 'Transparent construction management software pricing starting at $149/month. No setup fees, free 14-day trial, and migration assistance included.',
+    '/pricing': `Transparent construction management software pricing starting at $${STARTING_MONTHLY_PRICE}/month. No setup fees, free 14-day trial, and migration assistance included.`,
     '/features': 'Complete construction management features including job costing, scheduling, document management, OSHA compliance, and QuickBooks integration.'
   };
 
@@ -368,7 +374,7 @@ function generateFAQSchema(pathname: string): any {
       },
       {
         question: 'How much does Brikly cost?',
-        answer: 'Brikly pricing starts at $149/month with a 14-day free trial. No setup fees or hidden costs.'
+        answer: `Brikly pricing starts at $${STARTING_MONTHLY_PRICE}/month with a 14-day free trial. No setup fees or hidden costs.`
       },
       {
         question: 'Does Brikly integrate with QuickBooks?',
@@ -419,14 +425,14 @@ function generateEnhancedSchema(pathname: string, config: any): any {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
       name: 'Brikly Construction Management',
-      applicationCategory: 'Construction Management Software',
+      applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web, iOS, Android',
       description: config.description,
       offers: {
         '@type': 'Offer',
-        price: '149',
+        price: SCHEMA_PRICE,
         priceCurrency: 'USD',
-        priceValidUntil: '2025-12-31'
+        priceValidUntil: getPriceValidUntil()
       }
     };
   }

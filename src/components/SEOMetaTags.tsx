@@ -1,7 +1,7 @@
 // Legacy SEOMetaTags component - now uses UnifiedSEOSystem for compatibility
 // This ensures all existing pages continue to work without any code changes
 import { SEOMetaTags as CompatibleSEOMetaTags } from './seo/SEOCompatibilityLayer';
-import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { COMPANY_INFO, SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 
 export interface SEOMetaTagsProps {
   title?: string;
@@ -28,13 +28,14 @@ export const constructionSoftwareStructuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Brikly Construction Management",
-  "applicationCategory": "Construction Management Software",
+  "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web, iOS, Android",
   "description": "Construction management platform built for growing teams. Real-time project visibility without enterprise complexity.",
   "offers": {
     "@type": "Offer",
-    "price": "149",
-    "priceCurrency": "USD"
+    "price": SCHEMA_PRICE,
+    "priceCurrency": "USD",
+    "priceValidUntil": getPriceValidUntil()
   }
 };
 
@@ -43,7 +44,7 @@ export const organizationStructuredData = {
   "@type": "Organization",
   "name": "Brikly",
   "url": "https://brikly.net",
-  "logo": BRIKLY_LOGO_URL,
+  "logo": COMPANY_INFO.logo,
   "sameAs": [
     "https://linkedin.com/company/brikly",
     "https://twitter.com/brikly"

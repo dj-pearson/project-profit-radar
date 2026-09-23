@@ -5967,7 +5967,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || CODE DONE 2026-09-23; open only for the post-deploy Google Rich Results check and the owner's verification tokens. Price: Stripe (create-stripe-checkout 14900) and PRICING_PLANS both say 149/299/599; the schema's '50' was copy. seoConfig now derives SCHEMA_PRICE and getPriceValidUntil (31 Dec next year) from pricing.ts, read by Pricing, PageSEO, UnifiedSEOSystem, SEOMetaTags, SaaSProductSchema, EnhancedSchemaMarkup, AggregateRatingSchema, useAutoSchema; index.html hardcodes 149 valid to 2027-12-31 and a test fails on drift or an expired date. Organization.logo -> /BriklyLogo.png. SearchAction removed (the site has no /search). Invalid ComparisonTable type removed from ProcoreAlternativeGEO. public/og-image.png (1200x630) is the default og:image with width/height. yandex verification file moved into public/; /llms.txt served from /.well-known/llms.txt via _redirects. Extra: useAutoSchema emitted an AggregateRating with no ratingValue on every route; now gated on CLAIMS.aggregateRating.verified. Tests: structuredData.test.tsx (21). OWNER: Google/Bing verification tokens (placeholder comment in index.html), a designed OG card if wanted, run Rich Results after deploy, and a copy decision on '$350 unlimited users' still on ~20 marketing pages and posts."
     },
     {
       "id": "US-386",

@@ -2,27 +2,36 @@ import React from 'react';
 import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface SiteSearchSchemaProps {
+  /**
+   * Absolute urlTemplate for a routed search page, containing
+   * {search_term_string}. There is no default: brikly.net has no /search
+   * route, and a SearchAction pointing at one is broken structured data.
+   * Without it only the WebSite entity is emitted.
+   */
   searchUrl?: string;
   placeholder?: string;
 }
 
 export const SiteSearchSchema: React.FC<SiteSearchSchemaProps> = ({
-  searchUrl = "https://brikly.net/search?q={search_term_string}",
-  placeholder = "Search construction management resources..."
+  searchUrl,
 }) => {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Brikly",
     "url": "https://brikly.net",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": searchUrl
-      },
-      "query-input": "required name=search_term_string"
-    }
+    ...(searchUrl
+      ? {
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": searchUrl
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      : {})
   };
 
   return (

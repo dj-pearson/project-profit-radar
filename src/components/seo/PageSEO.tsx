@@ -15,7 +15,7 @@ import React from 'react';
 import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_HEIGHT, DEFAULT_OG_IMAGE_WIDTH, SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 import { toCanonicalUrl } from '@/lib/seo/canonical';
 
 export interface PageSEOProps {
@@ -50,7 +50,7 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   description,
   keywords = [],
   canonicalUrl,
-  ogImage = BRIKLY_LOGO_URL,
+  ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
   twitterCard = 'summary_large_image',
   schema = [],
@@ -96,6 +96,12 @@ export const PageSEO: React.FC<PageSEOProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={ogImage} />
+      {ogImage === DEFAULT_OG_IMAGE && (
+        <meta property="og:image:width" content={String(DEFAULT_OG_IMAGE_WIDTH)} />
+      )}
+      {ogImage === DEFAULT_OG_IMAGE && (
+        <meta property="og:image:height" content={String(DEFAULT_OG_IMAGE_HEIGHT)} />
+      )}
       <meta property="og:site_name" content="Brikly" />
 
       {/* Twitter Card Tags */}
@@ -230,7 +236,7 @@ export const createHowToSchema = (
 export const createProductSchema = (
   name: string,
   description: string,
-  price: string,
+  price: string = SCHEMA_PRICE,
   additionalProps?: object
 ) => ({
   "@context": "https://schema.org",
@@ -245,6 +251,7 @@ export const createProductSchema = (
     "@type": "Offer",
     "price": price,
     "priceCurrency": "USD",
+    "priceValidUntil": getPriceValidUntil(),
     "availability": "https://schema.org/InStock",
     "url": "https://brikly.net/pricing"
   },
@@ -295,8 +302,11 @@ export const createWebPageSchema = (
 });
 
 /**
- * WebSite Schema with SearchAction
- * Required for sitelinks search box in Google and AI search engines
+ * WebSite Schema.
+ *
+ * No SearchAction: its urlTemplate pointed at /search, which is not a route,
+ * so the sitelinks search box would have sent people to the SPA fallback.
+ * Add it back only alongside a real, routed search page.
  */
 export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
@@ -307,14 +317,6 @@ export const createWebSiteSchema = () => ({
   "publisher": {
     "@type": "Organization",
     "name": "Brikly"
-  },
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": "https://brikly.net/search?q={search_term_string}"
-    },
-    "query-input": "required name=search_term_string"
   }
 });
 

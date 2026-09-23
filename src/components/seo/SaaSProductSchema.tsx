@@ -27,6 +27,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { CLAIMS, ifVerifiedSchema } from '@/config/claims';
+import { SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 
 interface SaaSProductSchemaProps {
   /**
@@ -103,25 +104,20 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
     // Support Information
     offers: includeOffers ? {
       '@type': 'Offer',
-      price: '350',
+      price: SCHEMA_PRICE,
       priceCurrency: 'USD',
-      priceValidUntil: '2026-12-31',
+      priceValidUntil: getPriceValidUntil(),
       availability: 'https://schema.org/InStock',
       url: 'https://brikly.net/pricing',
 
       // Subscription Details
       priceSpecification: {
         '@type': 'UnitPriceSpecification',
-        price: '350',
+        price: SCHEMA_PRICE,
         priceCurrency: 'USD',
         unitText: 'MONTH',
         billingIncrement: 1,
         billingDuration: 'P1M',
-        referenceQuantity: {
-          '@type': 'QuantityValue',
-          value: 1,
-          unitText: 'Unlimited Users',
-        },
       },
 
       // Free Trial Offer
@@ -321,8 +317,9 @@ export const BriklyServiceSchema: React.FC = () => {
 
     offers: {
       '@type': 'Offer',
-      price: '350',
+      price: SCHEMA_PRICE,
       priceCurrency: 'USD',
+      priceValidUntil: getPriceValidUntil(),
       url: 'https://brikly.net/pricing',
     },
 

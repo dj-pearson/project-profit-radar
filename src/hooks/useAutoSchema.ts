@@ -14,7 +14,29 @@
 
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getSEOConfig, getBreadcrumbs, SITE_URL, COMPANY_INFO, SOFTWARE_INFO } from '@/config/seoConfig';
+import { getSEOConfig, getBreadcrumbs, SITE_URL, COMPANY_INFO, SOFTWARE_INFO, getPriceValidUntil } from '@/config/seoConfig';
+import { CLAIMS, ifVerifiedSchema } from '@/config/claims';
+
+/**
+ * aggregateRating only when the rating claim is verified (src/config/claims.ts).
+ * SOFTWARE_INFO has no ratingValue/reviewCount, so the block used to serialize
+ * as an AggregateRating with neither field, which Rich Results rejects on
+ * every page this hook runs on.
+ */
+const verifiedAggregateRating = () => {
+  const rating = ifVerifiedSchema(CLAIMS.aggregateRating);
+  return rating
+    ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: String(rating.ratingValue),
+          reviewCount: String(rating.reviewCount),
+          bestRating: String(rating.bestRating),
+          worstRating: String(rating.worstRating),
+        },
+      }
+    : {};
+};
 
 interface SchemaGraph {
   '@context': 'https://schema.org';
@@ -78,17 +100,11 @@ export function useAutoSchema(overrides?: {
             '@type': 'Offer',
             price: SOFTWARE_INFO.price,
             priceCurrency: SOFTWARE_INFO.priceCurrency,
-            priceValidUntil: '2027-12-31',
+            priceValidUntil: getPriceValidUntil(),
             availability: 'https://schema.org/InStock',
             url: `${SITE_URL}/pricing`,
           },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: SOFTWARE_INFO.ratingValue,
-            bestRating: '5',
-            worstRating: '1',
-            reviewCount: SOFTWARE_INFO.reviewCount,
-          },
+          ...verifiedAggregateRating(),
           featureList: SOFTWARE_INFO.features,
           author: { '@id': `${SITE_URL}/#organization` },
         });
@@ -165,14 +181,11 @@ export function useAutoSchema(overrides?: {
             '@type': 'Offer',
             price: SOFTWARE_INFO.price,
             priceCurrency: SOFTWARE_INFO.priceCurrency,
+            priceValidUntil: getPriceValidUntil(),
             availability: 'https://schema.org/InStock',
             url: `${SITE_URL}/pricing`,
           },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: SOFTWARE_INFO.ratingValue,
-            reviewCount: SOFTWARE_INFO.reviewCount,
-          },
+          ...verifiedAggregateRating(),
         });
         break;
 
