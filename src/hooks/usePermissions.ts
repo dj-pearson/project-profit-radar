@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { hasRouteAccess } from '@/config/routeConfig';
 
 export type UserRole = 'root_admin' | 'admin' | 'project_manager' | 'field_supervisor' | 'office_staff' | 'accounting' | 'client_portal';
 
@@ -80,44 +81,12 @@ export const usePermissions = () => {
     return roleArray.includes(userProfile.role);
   };
 
+  // Same decision RouteGuard enforces (US-302), read from ROUTE_ACCESS, so a
+  // link the sidebar shows unlocked is one the guard lets through.
   const canAccessRoute = (routePath: string): boolean => {
     if (!userProfile) return false;
-
-    // Define route permissions
-    const routePermissions: Record<string, UserRole[]> = {
-      '/dashboard': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
-      '/create-project': ['root_admin', 'admin', 'project_manager'],
-      '/time-tracking': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
-      '/daily-reports': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
-      '/change-orders': ['root_admin', 'admin', 'project_manager'],
-      '/financial': ['root_admin', 'admin', 'project_manager', 'accounting'],
-      '/reports': ['root_admin', 'admin', 'project_manager', 'accounting'],
-      '/team': ['root_admin', 'admin', 'project_manager'],
-      '/documents': ['root_admin', 'admin', 'project_manager', 'office_staff'],
-      '/materials': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
-      '/equipment': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
-      '/safety': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
-      '/compliance-audit': ['root_admin'],
-      '/gdpr-compliance': ['root_admin', 'admin'],
-      '/security-monitoring': ['root_admin'],
-      '/rate-limiting': ['root_admin'],
-      '/admin/companies': ['root_admin'],
-      '/admin/users': ['root_admin'],
-      '/admin/disposable-email-domains': ['root_admin'],
-      '/admin/billing': ['root_admin'],
-      '/admin/analytics': ['root_admin'],
-      '/admin/settings': ['root_admin'],
-      '/admin/seo-management': ['root_admin'],
-      '/blog-manager': ['root_admin'],
-      '/admin/social-media': ['root_admin'],
-      '/company-admin-settings': ['admin', 'root_admin'],
-    };
-
-    // Root admin can access everything
     if (userProfile.role === 'root_admin') return true;
-
-    const allowedRoles = routePermissions[routePath];
-    return allowedRoles ? allowedRoles.includes(userProfile.role) : true; // Default allow if no restriction
+    return hasRouteAccess(routePath, userProfile.role);
   };
 
   return {

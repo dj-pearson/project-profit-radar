@@ -6,9 +6,16 @@ import { rememberCurrentRoute } from "@/lib/routeMemory";
 import { logger } from "@/lib/logger";
 import type { ReactNode, FC } from "react";
 import { PROFILE_FETCH_TIMEOUT_MS } from '@/lib/auth/timing';
+import { toast } from "sonner";
+import {
+  getUnauthorizedRedirect,
+  hasRouteAccess,
+  type UserRole,
+} from "@/config/routeConfig";
 
 interface RouteGuardProps {
   children: ReactNode;
+  /** Path to check against ROUTE_ACCESS; defaults to the current pathname. */
   routePath?: string;
   /**
    * A route a client_portal user may open (US-350). Everything else sends
@@ -40,7 +47,7 @@ function trackRedirect(): boolean {
   return true; // redirect allowed
 }
 
-export const RouteGuard: FC<RouteGuardProps> = ({ children, portalScoped = false }) => {
+export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath, portalScoped = false }) => {
   const { user, userProfile, loading } = useAuth();
   const location = useLocation();
   const [profileWaitExpired, setProfileWaitExpired] = useState(false);
@@ -127,12 +134,43 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, portalScoped = false
     return <Navigate to="/auth" replace />;
   }
 
-  if (userProfile.role === "client_portal" && !portalScoped) {
-    return <Navigate to="/client-portal" replace />;
+  if (userProfile.role === "client_portal") {
+    if (!portalScoped) {
+      return <Navigate to="/client-portal" replace />;
+    }
+    return <>{children}</>;
+  }
+
+  // Per-route roles (US-302). ROUTE_ACCESS in src/config/routeConfig.ts is
+  // the one table; a route it does not list stays open to every signed-in
+  // role, as all RouteGuard routes were before it was enforced.
+  const role = userProfile.role as UserRole;
+  const path = routePath ?? location.pathname;
+  if (!hasRouteAccess(path, role)) {
+    if (!trackRedirect()) {
+      return <RecoveryUI message="Your role does not have access to this page." />;
+    }
+    return <AccessDenied path={path} role={role} />;
   }
 
   return <>{children}</>;
 };
+
+/**
+ * Sends a role that opened a route it may not use back to its home, and says
+ * why, so the user lands somewhere real instead of on a blank page.
+ */
+function AccessDenied({ path, role }: { path: string; role: UserRole }) {
+  const home = getUnauthorizedRedirect(role);
+  useEffect(() => {
+    logger.warn(`Route access denied: ${role} at ${path}`);
+    toast.error("You don't have access to that page", {
+      id: "route-access-denied",
+      description: `Your role (${role.replace(/_/g, " ")}) can't open ${path}. Ask a company admin if you need it.`,
+    });
+  }, [path, role]);
+  return <Navigate to={home} replace state={{ accessDenied: path }} />;
+}
 
 /** Minimal recovery UI shown when the circuit breaker trips. */
 function RecoveryUI({ message }: { message: string }) {

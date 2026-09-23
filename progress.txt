@@ -6980,3 +6980,12 @@ Two cross-tenant writes fixed outright: failed-payment-recovery and
 send-payment-reminder let a body's company_id overwrite another company's
 settings on a service-role upsert. Found, not fixed: verify-domain has no
 ownership check and no auth.
+
+## US-302 AC6 - route access by role
+Owner approved shipping. RouteGuard now enforces ROUTE_ACCESS; before, every
+signed-in role opened every page. Field supervisors, office staff and
+accounting lose 30-40 routes each (finance, CRM, admin hub and similar);
+project managers lose the finance ledger pages. Nav and dashboard quick
+actions were checked and ROUTE_ACCESS widened where they linked. A refusal
+redirects to /dashboard with a toast. Unreferenced modules 99 -> 98 because
+routeConfig.ts is now imported.
