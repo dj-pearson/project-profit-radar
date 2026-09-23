@@ -125,10 +125,7 @@ BEGIN
   END LOOP;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_data_subject_requests_user
-  ON public.data_subject_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_data_subject_requests_due_at
-  ON public.data_subject_requests(due_at) WHERE status != 'completed';
+-- The user_id and due_at indexes are built CONCURRENTLY in 20260924120001.
 
 -- ---------------------------------------------------------------------------
 -- 3. email_preferences.marketing (EmailPreferences.tsx, email-unsubscribe,
