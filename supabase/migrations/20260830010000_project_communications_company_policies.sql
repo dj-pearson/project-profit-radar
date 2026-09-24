@@ -45,7 +45,7 @@ USING (
   bucket_id = 'project-communications'
   AND EXISTS (
     SELECT 1 FROM public.projects p
-    WHERE p.id::text = (storage.foldername(name))[1]
+    WHERE p.id::text = (storage.foldername(storage.objects.name))[1]
       AND (
         (
           p.company_id = public.get_user_company(auth.uid())
@@ -67,10 +67,10 @@ WITH CHECK (
   bucket_id = 'project-communications'
   -- Same <projectId>/<userId>/<file> convention both writers use, so a user
   -- can only write under their own id.
-  AND auth.uid()::text = (storage.foldername(name))[2]
+  AND auth.uid()::text = (storage.foldername(storage.objects.name))[2]
   AND EXISTS (
     SELECT 1 FROM public.projects p
-    WHERE p.id::text = (storage.foldername(name))[1]
+    WHERE p.id::text = (storage.foldername(storage.objects.name))[1]
       AND (
         (
           p.company_id = public.get_user_company(auth.uid())

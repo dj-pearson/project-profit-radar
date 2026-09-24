@@ -41,7 +41,7 @@ USING (
     -- else that namespaces by category first and project second.
     EXISTS (
       SELECT 1 FROM public.projects p
-      WHERE p.id::text = (storage.foldername(name))[2]
+      WHERE p.id::text = (storage.foldername(storage.objects.name))[2]
         AND (
           p.company_id = public.get_user_company(auth.uid())
           OR public.get_user_role(auth.uid()) = 'root_admin'::user_role
@@ -50,12 +50,12 @@ USING (
 
     -- task-attachments/<taskId>/... : resolve the task to its project.
     OR (
-      (storage.foldername(name))[1] = 'task-attachments'
+      (storage.foldername(storage.objects.name))[1] = 'task-attachments'
       AND EXISTS (
         SELECT 1
         FROM public.tasks t
         JOIN public.projects p ON p.id = t.project_id
-        WHERE t.id::text = (storage.foldername(name))[2]
+        WHERE t.id::text = (storage.foldername(storage.objects.name))[2]
           AND (
             p.company_id = public.get_user_company(auth.uid())
             OR public.get_user_role(auth.uid()) = 'root_admin'::user_role
