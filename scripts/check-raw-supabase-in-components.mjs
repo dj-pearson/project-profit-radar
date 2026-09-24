@@ -55,8 +55,12 @@ const SRC = join(root, 'src');
  * job costing, environmental permitting, submittals, RFIs, conversation
  * participants, the bond/permit/warranty dialogs, offline sync, the custom
  * report builder, filter presets and the smart import wizard).
+ * A seventh moved 5 more (accounts payable and bill payments, onto
+ * src/hooks/useAccountingPages.ts).
+ * An eighth moved 3 more (the two mobile daily-report forms, onto
+ * useDailyReportsPage's saveDailyReport and project list).
  */
-const BASELINE = 336;
+const BASELINE = 333;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

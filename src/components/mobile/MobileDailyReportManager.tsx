@@ -10,7 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { supabase } from '@/integrations/supabase/client';
+import { useDailyReportsPage, useSaveDailyReport } from '@/hooks/useDailyReportsPage';
+import { buildDailyReportInsert } from '@/lib/validations/daily-reports';
+import { mapWizardReport, photoFileFromBase64 } from '@/lib/dailyReports/mobileReport';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -54,7 +56,6 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projects, setProjects] = useState<{ id: string; name: string; client_name: string; status: string }[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [newCrewMember, setNewCrewMember] = useState<CrewMember>({
     name: '',
@@ -81,76 +82,25 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
   });
 
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
+  // The same project list /daily-reports reads. It used to fall back to three
+  // invented projects ('proj-1'...) whose ids are not uuids, so a report filed
+  // against one could never save.
+  const { projects: allProjects } = useDailyReportsPage();
+  const projects = allProjects.filter((p) => ['active', 'in_progress'].includes(p.status));
+  const saveReport = useSaveDailyReport();
 
-  // Load projects and get position only once on mount
+  // Get position only once on mount
   useEffect(() => {
     getCurrentPosition();
-    loadProjects();
   }, []);
 
   // Recalculate total hours when crew members change
   useEffect(() => {
     calculateTotalHours();
   }, [reportData.crew_members]);
-
-  const loadProjects = async () => {
-    try {
-      if (!userProfile?.company_id) return;
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, client_name, status')
-        .eq('company_id', userProfile.company_id)
-        .in('status', ['active', 'in_progress'])
-        .order('name');
-
-      if (error) {
-        console.error('Error loading projects:', error);
-      }
-
-      // Set projects with fallback data if none exist or on error
-      if (data && data.length > 0) {
-        setProjects(data);
-      } else {
-        const fallbackProjects = [
-          {
-            id: 'proj-1',
-            name: 'Downtown Office Complex',
-            client_name: 'ABC Corporation',
-            status: 'active'
-          },
-          {
-            id: 'proj-2', 
-            name: 'Residential Towers Phase 2',
-            client_name: 'Residential Development LLC',
-            status: 'active'
-          },
-          {
-            id: 'proj-3',
-            name: 'Medical Center Renovation',
-            client_name: 'Healthcare Partners',
-            status: 'in_progress'
-          }
-        ];
-        setProjects(fallbackProjects);
-      }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      // Provide fallback data even on error
-      const fallbackProjects = [
-        {
-          id: 'proj-1',
-          name: 'Downtown Office Complex', 
-          client_name: 'ABC Corporation',
-          status: 'active'
-        }
-      ];
-      setProjects(fallbackProjects);
-    }
-  };
 
   const calculateTotalHours = () => {
     const total = reportData.crew_members.reduce((sum, member) => 
@@ -285,37 +235,47 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
     try {
       setIsSubmitting(true);
 
-      const reportPayload = {
-        ...reportData,
-        company_id: userProfile?.company_id,
-        submitted_by: user?.id,
-        gps_latitude: position?.coords?.latitude || null,
-        gps_longitude: position?.coords?.longitude || null,
-        submission_timestamp: new Date().toISOString(),
-        created_by: user?.id
-      };
+      const mapped = mapWizardReport(reportData, {
+        userId: user?.id,
+        gps: position?.coords
+          ? { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy }
+          : null,
+      });
 
       if (isOnline) {
-        const { data, error } = await supabase
-          .from('daily_reports')
-          .insert(reportPayload)
-          .select()
-          .single();
-
-        if (error) throw error;
+        // Same row and follow-up records as the desktop form: only real
+        // daily_reports columns, then material/equipment/crew/task rows,
+        // photo_attachments and the timesheet crew pull.
+        const saved = await saveReport.mutateAsync({
+          ...mapped,
+          photos: reportData.photos.map((b64, i) => photoFileFromBase64(b64, i)),
+        });
 
         toast({
           title: "Report Submitted",
-          description: "Daily progress report has been submitted successfully",
+          description: [
+            'Daily progress report has been submitted',
+            saved.photoCount > 0 ? `${saved.photoCount} photo(s)` : '',
+            ...saved.notes,
+          ].filter(Boolean).join('. '),
         });
 
-        onReportSubmitted?.(data);
+        onReportSubmitted?.({ id: saved.id });
       } else {
-        await saveOfflineData('daily_report', reportPayload);
-        
+        // The replay inserts this row as-is, so it has to be the same row.
+        // Photos and the crew/task/item rows need the report id and a
+        // connection; the text columns and crew totals still carry them.
+        await saveOfflineData('daily_report', buildDailyReportInsert(mapped.values, {
+          date: mapped.date,
+          photoPaths: [],
+          columns: mapped.columns,
+        }));
+
         toast({
           title: "Report Saved Offline",
-          description: "Report will be submitted when connection is restored",
+          description: reportData.photos.length > 0
+            ? `Report will be submitted when connection is restored. The ${reportData.photos.length} photo(s) were not kept offline; add them from Daily Reports once you are back online.`
+            : "Report will be submitted when connection is restored",
         });
       }
 
@@ -461,7 +421,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
                     <SelectContent>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
-                          {project.name} - {project.client_name}
+                          {project.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

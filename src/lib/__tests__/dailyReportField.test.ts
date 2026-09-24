@@ -146,7 +146,10 @@ describe('a photo is a record, not a string (US-330)', () => {
     // The insert moved into the page's data hook (US-266); the page calls it.
     const hook = strip('src/hooks/useDailyReportsPage.ts');
     expect(hook).toMatch(/from\('photo_attachments'\)/);
-    expect(page).toMatch(/insertPhotoAttachments\(/);
+    // The follow-up records moved into the hook too, so the mobile forms write
+    // the same ones; the page calls the shared function.
+    expect(hook).toMatch(/insertPhotoAttachments\(/);
+    expect(page).toMatch(/recordDailyReportFieldDetail\(/);
     // The array stays for a release: iOS at MIN_SUPPORTED_IOS_VERSION reads it.
     // The insert shape lives beside the form schema since US-268.
     expect(page).toMatch(/buildDailyReportInsert\(values, \{ date: reportDate, photoPaths: photoUrls \}\)/);
@@ -158,9 +161,9 @@ describe('a photo is a record, not a string (US-330)', () => {
     // The report is saved by then. Losing it because an index write failed is
     // the worse trade for somebody filing at the end of a shift - but it must
     // not be silent either.
-    const page = strip('src/pages/DailyReports.tsx');
-    expect(page).toMatch(/were not indexed/);
-    expect(page).toMatch(/logger\.error\('Daily report saved but its photos were not recorded'/);
+    const hook = strip('src/hooks/useDailyReportsPage.ts');
+    expect(hook).toMatch(/were not indexed/);
+    expect(hook).toMatch(/logger\.error\('Daily report saved but its photos were not recorded'/);
   });
 
   it('does not embed user_profiles on time_entries at all', () => {

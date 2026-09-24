@@ -32,7 +32,9 @@ const FUNCTIONS = join(root, 'supabase', 'functions');
 // 24 -> 22: InvoiceGenerator's request is built by buildInvoiceRequest (US-268),
 // which carries client_id with the name and email, and the last two
 // MobileTimeTracker client_name writes went with its move onto query hooks.
-const BASELINE = 22;
+// 22 -> 18: MobileDailyReportManager's four invented fallback projects are
+// gone; it reads the /daily-reports project list instead.
+const BASELINE = 18;
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', '__tests__', '__mocks__']);
 const SKIP_FILE = /\.(test|spec)\.[tj]sx?$|types\.ts$/;

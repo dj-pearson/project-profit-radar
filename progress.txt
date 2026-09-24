@@ -7319,3 +7319,11 @@ classify-photo function, and a report downloads as a PDF with its photos,
 crew and materials. A migration fills company_id, created_by and site_id on
 insert: site_id is NOT NULL and nothing wrote it, so daily report inserts
 were probably failing wherever the schema matches the migrations.
+
+## Mobile daily reports could not save
+MobileDailyReportManager (/mobile-dashboard) and MobileDailyReport (the
+"Mobile Report" button on /daily-reports) inserted fields daily_reports
+doesn't have, so every save failed; the second also never had a project
+id, and the first fell back to fake projects. Both now save through the
+same hook as the desktop form, including items, photos and crew. TS 879 ->
+875, eslint warnings 4243 -> 4239, customer-links 22 -> 18.

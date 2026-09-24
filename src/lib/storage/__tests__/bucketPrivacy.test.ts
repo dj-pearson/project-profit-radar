@@ -101,7 +101,8 @@ describe('project-documents path convention', () => {
     // asserted project-first below and in dailyReportField.test.ts. Naming the
     // helper here rather than the template it replaced keeps the guard on the
     // convention rather than on one file's spelling of it.
-    ['src/pages/DailyReports.tsx', 'photoStoragePath({'],
+    // The upload moved into the hook both the page and the mobile forms use.
+    ['src/hooks/useDailyReportsPage.ts', 'photoStoragePath({'],
     ['src/components/project/tabs/ProjectPunchList.tsx', '${projectId}/punch-list'],
     ['src/components/mobile/VoiceNotes.tsx', '${note.projectId}/voice-notes/'],
   ] as const;

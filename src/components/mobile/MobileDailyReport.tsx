@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MobileTextField, MobileTextArea } from '@/components/mobile/forms';
+import { MobileTextField, MobileTextArea, MobileSelectField } from '@/components/mobile/forms';
 import { Mic, MicOff, Camera, Save, Upload, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { useGeofencing } from '@/hooks/useGeofencing';
+import { useDailyReportsPage, useSaveDailyReport } from '@/hooks/useDailyReportsPage';
+import { buildDailyReportInsert } from '@/lib/validations/daily-reports';
+import { mapQuickReport, photoFileFromBase64 } from '@/lib/dailyReports/mobileReport';
 import { LocationStatusIndicator } from './LocationStatusIndicator';
 
 interface DailyReportData {
@@ -39,11 +42,18 @@ interface MobileDailyReportProps {
 }
 
 const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
-  projectId,
+  projectId: projectIdProp,
   onReportSaved
 }) => {
+  // /daily-reports opens this without a project, and the insert had no
+  // project_id to send. Pick one here when the caller did not.
+  const [pickedProjectId, setPickedProjectId] = useState('');
+  const projectId = projectIdProp || pickedProjectId || undefined;
+  const { projects: projectOptions } = useDailyReportsPage({ enabled: !projectIdProp });
+  const saveDailyReport = useSaveDailyReport();
+
   const [reportData, setReportData] = useState<DailyReportData>({
-    project_id: projectId,
+    project_id: projectIdProp ?? '',
     weather_conditions: '',
     work_performed: '',
     issues_encountered: '',
@@ -62,7 +72,7 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
 
   // Enhanced geofencing
@@ -81,8 +91,26 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
 
   useEffect(() => {
     getCurrentLocation();
-    loadProjectData();
   }, []);
+
+  // The picked project's site, for the geofence check.
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, site_latitude, site_longitude, geofence_radius_meters')
+        .eq('id', projectId)
+        .single();
+      if (error) {
+        console.error('Error loading project:', error);
+        return;
+      }
+      if (!cancelled) setProject(data);
+    })();
+    return () => { cancelled = true; };
+  }, [projectId]);
 
   // Start GPS tracking when component mounts
   useEffect(() => {
@@ -110,23 +138,6 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
       setIsInGeofence(isInside);
     }
   }, [browserLocation, projectId]);
-
-  const loadProjectData = async () => {
-    if (!projectId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, site_latitude, site_longitude, geofence_radius_meters')
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-      setProject(data);
-    } catch (error) {
-      console.error('Error loading project:', error);
-    }
-  };
 
   const getCurrentLocation = async () => {
     try {
@@ -296,52 +307,58 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
 
       // Use browser location if available, otherwise fall back to Capacitor
       const currentLoc = browserLocation || location;
-      const distance = projectId ? getDistanceFromGeofence(projectId) : null;
 
-      const reportPayload = {
-        ...reportData,
-        user_id: user?.id,
-        report_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        company_id: userProfile?.company_id,
-        // Enhanced GPS verification
-        gps_latitude: currentLoc?.latitude,
-        gps_longitude: currentLoc?.longitude,
-        gps_accuracy: currentLoc?.accuracy,
-        is_geofence_verified: isInGeofence === true,
-        geofence_distance_meters: distance,
-        location: currentLoc || reportData.location
-      };
+      if (!projectId) {
+        toast({ title: "Select a project", description: "Choose the project this report is for", variant: "destructive" });
+        return;
+      }
+      if (!reportData.work_performed.trim()) {
+        toast({ title: "Work performed is required", description: "Describe the work done today", variant: "destructive" });
+        return;
+      }
+
+      // Only real daily_reports columns. Geofence verification and the raw
+      // location object have no column; the GPS fix does.
+      const mapped = mapQuickReport({ ...reportData, project_id: projectId }, {
+        userId: user?.id,
+        gps: currentLoc && (currentLoc.latitude || currentLoc.longitude) ? currentLoc : null,
+      });
 
       if (isOnline) {
-        // Save directly to database
-        const { data, error } = await supabase
-          .from('daily_reports')
-          .insert(reportPayload)
-          .select()
-          .single();
-
-        if (error) throw error;
+        const saved = await saveDailyReport.mutateAsync({
+          ...mapped,
+          photos: reportData.photos.map((b64, i) => photoFileFromBase64(b64, i)),
+        });
 
         toast({
           title: "Report Saved",
-          description: "Daily report has been saved successfully",
+          description: [
+            'Daily report has been saved',
+            saved.photoCount > 0 ? `${saved.photoCount} photo(s)` : '',
+            ...saved.notes,
+          ].filter(Boolean).join('. '),
         });
 
-        onReportSaved?.(data);
+        onReportSaved?.({ id: saved.id });
       } else {
-        // Save offline for later sync
-        await saveOfflineData('daily_report', reportPayload);
-        
+        // The replay inserts this row as-is, so it has to be the same row.
+        await saveOfflineData('daily_report', buildDailyReportInsert(mapped.values, {
+          date: mapped.date,
+          photoPaths: [],
+          columns: mapped.columns,
+        }));
+
         toast({
           title: "Report Saved Offline",
-          description: "Report will be synced when connection is restored",
+          description: reportData.photos.length > 0
+            ? `Report will be synced when connection is restored. The ${reportData.photos.length} photo(s) were not kept offline; add them once you are back online.`
+            : "Report will be synced when connection is restored",
         });
       }
 
       // Reset form
       setReportData({
-        project_id: projectId,
+        project_id: projectIdProp ?? '',
         weather_conditions: '',
         work_performed: '',
         issues_encountered: '',
@@ -374,6 +391,17 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
           {isOnline ? "Online" : "Offline"}
         </Badge>
       </div>
+
+      {!projectIdProp && (
+        <MobileSelectField
+          label="Project"
+          required
+          value={pickedProjectId}
+          onChange={(e) => setPickedProjectId(e.target.value)}
+          placeholder="Select project"
+          options={projectOptions.map((p) => ({ value: p.id, label: p.name }))}
+        />
+      )}
 
       {/* GPS and Geofence Status */}
       {project && (

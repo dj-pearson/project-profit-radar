@@ -17,19 +17,16 @@ import {
   ResponsiveDialogDescription,
 } from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import {
   useDailyReportsPage,
   fetchPreviousDailyReport,
-  insertPhotoAttachments,
-  insertDailyReportItems,
-  countTimeEntriesOnDay,
+  uploadDailyReportPhotos,
+  recordDailyReportFieldDetail,
   type DailyReportsProject,
   type DailyReportListRow,
 } from '@/hooks/useDailyReportsPage';
-import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { logger } from '@/lib/logger';
-import { photoStoragePath, materialItemsFromText, equipmentItemsFromText } from '@/lib/dailyReportField';
+import { materialItemsFromText, equipmentItemsFromText } from '@/lib/dailyReportField';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState, NoDailyReports } from '@/components/ui/EmptyStates';
@@ -211,143 +208,32 @@ const DailyReports = () => {
     }
   };
 
-  /**
-   * Everything the report is a record OF, once the report row exists (US-330).
-   *
-   * A photo that is only a string in daily_reports.photos cannot be found by
-   * project, by date or by who took it, and crew entered as an integer is the
-   * same crew that already clocked in, typed a second time.
-   *
-   * Deliberately non-fatal, and deliberately not silent. The report itself is
-   * saved by the time this runs; losing it because a photo row failed would be
-   * the worse trade for somebody filing at the end of a shift. Every failure
-   * comes back as a sentence in the toast.
-   */
-  const recordFieldDetail = async ({
-    reportId, projectId, reportDate, uploaded, values,
-  }: {
-    reportId: string;
-    projectId: string;
-    reportDate: string;
-    uploaded: Array<{ path: string; file: File }>;
-    values: DailyReportFormValues;
-  }): Promise<string[]> => {
-    // Materials and equipment as rows; the text columns stay for iOS.
-    const notes: string[] = await insertDailyReportItems(
-      reportId,
-      materialItemsFromText(values.materials_delivered),
-      equipmentItemsFromText(values.equipment_used),
-    );
-
-    const companyId = userProfile?.company_id;
-    if (uploaded.length > 0 && companyId && userProfile) {
-      const photoError = await insertPhotoAttachments(uploaded.map(({ path, file }) => ({
-          project_id: projectId,
-          daily_report_id: reportId,
-          company_id: companyId,
-          user_id: userProfile.id,
-          file_name: file.name,
-          file_path: path,
-          file_size: file.size,
-          mime_type: file.type,
-          storage_bucket: 'project-documents',
-          source: 'daily_report',
-          taken_at: new Date(file.lastModified || Date.now()).toISOString(),
-        })));
-
-      if (photoError) {
-        logger.error('Daily report saved but its photos were not recorded', photoError);
-        notes.push(
-          `The ${uploaded.length} photo(s) uploaded but were not indexed, so they ` +
-          `will not appear on the project timeline (${photoError.message})`
-        );
-      }
-    }
-
-    // Crew from the hours already clocked. The RPC does not overwrite anyone
-    // added by hand, so it is safe whether or not the crew was typed first.
-    const { data: crewAdded, error: crewError } = await supabase
-      .rpc('sync_daily_report_crew', { p_daily_report_id: reportId });
-
-    if (crewError) {
-      logger.error('Could not pull the crew from the timesheets', crewError);
-      notes.push(`Crew could not be pulled from the timesheets (${crewError.message})`);
-    } else if ((crewAdded ?? 0) > 0) {
-      notes.push(`${crewAdded} crew member(s) pulled from the day's time entries`);
-    } else {
-      // Nothing clocked in on that project and day. Worth saying, because the
-      // superintendent may have the wrong project selected.
-      try {
-        const count = await countTimeEntriesOnDay(projectId, reportDate);
-        if (!count) notes.push('Nobody clocked in on this job today');
-      } catch (countError) {
-        logger.error('Could not check the day\'s time entries', countError instanceof Error ? countError : undefined);
-        notes.push('Could not check whether anyone clocked in on this job today');
-      }
-    }
-
-    return notes;
-  };
-
   // Runs only once the schema passes; a missing project or blank work
   // description now shows inline under the field instead of as a toast.
   const handleCreateReport = async (values: DailyReportFormValues) => {
     try {
-      // Upload photos to Supabase Storage if any.
-      // Two records come out of this: the storage path, which still goes in
-      // daily_reports.photos so iOS at MIN_SUPPORTED_IOS_VERSION keeps working,
-      // and a photo_attachments row, which is the thing anything else can find
-      // a photo by (US-330).
-      const photoUrls: string[] = [];
-      const uploaded: Array<{ path: string; file: File }> = [];
-      if (selectedPhotos.length > 0) {
-        for (const photo of selectedPhotos) {
-          // Validate file before upload
-          const validation = validateFileUpload(photo, {
-            allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-          });
-          if (!validation.valid) {
-            toast({
-              variant: "destructive",
-              title: "Invalid Photo",
-              description: validation.error || `Photo "${photo.name}" is not valid.`
-            });
-            continue;
-          }
-          const fileName = generateSecureFilename(photo.name);
-          // <projectId>/<category>/... so the project-documents SELECT
-          // policy matches on the first segment (US-289).
-          const filePath = photoStoragePath({
-            projectId: values.project_id,
-            fileName,
-          });
-
-          const { error: uploadError } = await supabase.storage
-            .from('project-documents')
-            .upload(filePath, photo);
-
-          if (uploadError) {
-            console.error('Photo upload error:', uploadError);
-            continue;
-          }
-
-          // Persist the storage path, not a permanent public URL (US-289).
-          photoUrls.push(filePath);
-          uploaded.push({ path: filePath, file: photo });
-        }
+      // Photos go to storage under a project-first path (photoStoragePath,
+      // inside the hook). A photo that fails validation is named, not fatal.
+      const { uploaded, rejected } = await uploadDailyReportPhotos(values.project_id, selectedPhotos);
+      for (const r of rejected) {
+        toast({ variant: "destructive", title: "Photo not saved", description: `${r.name}: ${r.reason}` });
       }
+      const photoUrls = uploaded.map((u) => u.path);
 
       const reportDate = new Date().toISOString().split('T')[0];
       const report = await createReport.mutateAsync(
         buildDailyReportInsert(values, { date: reportDate, photoPaths: photoUrls }),
       );
 
-      const notes = await recordFieldDetail({
+      const notes = await recordDailyReportFieldDetail({
         reportId: report.id,
         projectId: values.project_id,
         reportDate,
         uploaded,
-        values,
+        materials: materialItemsFromText(values.materials_delivered),
+        equipment: equipmentItemsFromText(values.equipment_used),
+        companyId: userProfile?.company_id,
+        userId: userProfile?.id,
       });
 
       toast({

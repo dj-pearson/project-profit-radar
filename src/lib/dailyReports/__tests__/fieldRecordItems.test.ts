@@ -71,10 +71,11 @@ describe('materials and equipment become rows (AC3)', () => {
 
   it('writes the rows from the create flow and keeps the text columns for iOS', () => {
     const page = strip('src/pages/DailyReports.tsx');
-    expect(page).toMatch(/insertDailyReportItems\(\s*reportId,\s*materialItemsFromText\(values\.materials_delivered\),\s*equipmentItemsFromText\(values\.equipment_used\)/);
+    expect(page).toMatch(/materials: materialItemsFromText\(values\.materials_delivered\),\s*equipment: equipmentItemsFromText\(values\.equipment_used\)/);
     // The text still goes into daily_reports through the same builder.
     expect(page).toMatch(/buildDailyReportInsert\(values,/);
     const hook = strip('src/hooks/useDailyReportsPage.ts');
+    expect(hook).toMatch(/insertDailyReportItems\(reportId, materials, equipment\)/);
     expect(hook).toMatch(/from\('daily_report_material_items'\)/);
     expect(hook).toMatch(/from\('daily_report_equipment_items'\)/);
   });

@@ -34,14 +34,40 @@ export const EMPTY_DAILY_REPORT: DailyReportFormValues = {
   signature: '',
 };
 
+/**
+ * Real daily_reports columns that the desktop form does not collect but the
+ * mobile forms do (all added in 20251110000003 and present in the generated Insert type).
+ * Typed as a closed set so a form field that is not a column cannot ride along
+ * into the insert; PostgREST rejects the whole row when one does.
+ */
+export interface DailyReportExtraColumns {
+  temperature?: number | null;
+  completion_percentage?: number | null;
+  quality_issues?: string | null;
+  next_day_plan?: string | null;
+  client_visitors?: string | null;
+  gps_latitude?: number | null;
+  gps_longitude?: number | null;
+  gps_accuracy?: number | null;
+  submitted_by?: string | null;
+  submission_timestamp?: string | null;
+}
+
 /** The daily_reports insert. Same shape the useState form built. */
 export function buildDailyReportInsert(
   values: DailyReportFormValues,
-  extra: { date: string; photoPaths: string[] },
+  extra: { date: string; photoPaths: string[]; columns?: DailyReportExtraColumns },
 ) {
   return {
-    ...values,
+    ...(extra.columns ?? {}),
+    project_id: values.project_id,
+    work_performed: values.work_performed,
     crew_count: Number(values.crew_count),
+    weather_conditions: values.weather_conditions,
+    materials_delivered: values.materials_delivered,
+    equipment_used: values.equipment_used,
+    delays_issues: values.delays_issues,
+    safety_incidents: values.safety_incidents,
     date: extra.date,
     photos: extra.photoPaths.length > 0 ? extra.photoPaths : null,
     signature: values.signature || null,

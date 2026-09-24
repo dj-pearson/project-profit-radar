@@ -188,11 +188,16 @@ export interface MaterialItemRow {
   material_name: string;
   quantity: number | null;
   unit: string | null;
+  /** Only the mobile wizard collects it; the text parser never sets it. */
+  waste_percentage?: number | null;
 }
 
 export interface EquipmentItemRow {
   equipment_name: string;
   hours_used: number | null;
+  /** excellent | good | fair | poor | needs_repair (column CHECK). Mobile wizard only. */
+  condition?: string | null;
+  notes?: string | null;
 }
 
 /** Units a superintendent actually writes. Anything else is part of the name. */
