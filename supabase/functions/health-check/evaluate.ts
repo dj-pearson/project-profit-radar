@@ -48,3 +48,44 @@ export function toPublicChecks(
     Object.entries(checks).map(([name, c]) => [name, { status: c.status, responseTime: c.responseTime }]),
   );
 }
+
+export interface CheckResult {
+  status: DependencyStatus;
+  responseTime: number;
+  error?: string;
+}
+
+/**
+ * Run one dependency probe with a deadline (US-280). `probe` resolves to
+ * `{ error }` the way supabase-js does: an error means "degraded" (the
+ * dependency answered, badly); a throw or the deadline means "unhealthy".
+ * Without the deadline a hung database holds the whole request open until the
+ * uptime monitor's own timeout, which reports "unreachable" instead of naming
+ * the dependency.
+ */
+export async function runCheck(
+  probe: () => PromiseLike<{ error?: { message?: string } | string | null }>,
+  timeoutMs = 5000,
+  now: () => number = Date.now,
+): Promise<CheckResult> {
+  const start = now();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+  try {
+    const { error } = await Promise.race([probe(), deadline]);
+    const responseTime = now() - start;
+    if (!error) return { status: "healthy", responseTime };
+    const message = typeof error === "string" ? error : error.message ?? "error";
+    return { status: "degraded", responseTime, error: message };
+  } catch (err) {
+    return {
+      status: "unhealthy",
+      responseTime: now() - start,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -32,3 +32,17 @@ Deno.test("no checks recorded is not treated as healthy -> 503", () => {
   const result = evaluateHealth({});
   assertEquals(result.httpStatus, 503);
 });
+
+Deno.test("runCheck: an answered error is degraded, a throw is unhealthy", async () => {
+  const { runCheck } = await import("./evaluate.ts");
+  assertEquals((await runCheck(async () => ({ error: null }))).status, "healthy");
+  assertEquals((await runCheck(async () => ({ error: { message: "relation missing" } }))).status, "degraded");
+  assertEquals((await runCheck(() => Promise.reject(new Error("ECONNREFUSED")))).status, "unhealthy");
+});
+
+Deno.test("runCheck: a hung dependency is unhealthy after the deadline", async () => {
+  const { runCheck } = await import("./evaluate.ts");
+  const r = await runCheck(() => new Promise(() => {}), 20);
+  assertEquals(r.status, "unhealthy");
+  assertEquals(r.error, "timed out after 20ms");
+});

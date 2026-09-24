@@ -7351,3 +7351,10 @@ it is deleted. Every anonymous edge function now checks the admin IP
 block/allow list (ip_access_control) and the shared per-IP limiter.
 docs/RUNBOOK_DOS_PROTECTION.md has the Cloudflare rules; the origin must
 only accept Cloudflare traffic or the client IP can be spoofed.
+
+## US-280 - uptime alerts
+The uptime workflow alerted every 10 minutes during an outage and never
+said when things recovered; it now alerts once, reminds every 6 hours and
+posts recovery. health-check's auth probe could never fail (getSession()
+only reads local storage); it now calls GoTrue's health endpoint. Owner
+sets the URL, anon key and Slack webhook in repo settings.

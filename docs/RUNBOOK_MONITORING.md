@@ -1,4 +1,4 @@
-# Runbook — Uptime Monitoring & Alerting
+# Runbook - Uptime Monitoring & Alerting
 
 How Brikly detects and escalates a production outage of its Supabase
 dependencies (database, auth, storage).
@@ -7,45 +7,79 @@ dependencies (database, auth, storage).
 
 | Piece | Location | Role |
 |-------|----------|------|
-| `health-check` edge function | `supabase/functions/health-check/` | Probes DB, auth, and storage on each request. Returns **200** only when all three are healthy; **503** when any dependency is `degraded` (returned an error) or `unhealthy` (threw). Body: `{ status, services, totalResponseTime, timestamp, version }`. |
-| Uptime workflow | `.github/workflows/uptime-health-check.yml` | GitHub Actions cron (~every 10 min) that pings the deployed health-check URL, retries 3× (15s apart) to debounce transient latency, and **fails the run** when the endpoint is not `200 healthy`. |
-| Status logic | `supabase/functions/health-check/evaluate.ts` | Pure `evaluateHealth()` mapping dependency statuses → overall status + HTTP code. Unit-tested in `evaluate.test.ts` (`deno test`). |
+| `health-check` edge function | `supabase/functions/health-check/` | Probes the database (`companies` select), auth (GoTrue `/auth/v1/health`) and storage (`listBuckets`) in parallel, each under a 5s deadline. Returns **200** only when all three are healthy; **503** when any is `degraded` (answered with an error) or `unhealthy` (threw or timed out). Body: `{ success, status, services: { name: { status, responseTime } }, totalResponseTime, timestamp, version }`. Dependency error text goes to the function log only, never the public body (US-358). |
+| Uptime workflow | `.github/workflows/uptime-health-check.yml` | GitHub Actions cron, about every 10 minutes. Runs `scripts/uptime-monitor.mjs`, carries the last up/down state between runs in the Actions cache, and fails the run only when it sends an alert or reminder. Job timeout 5 minutes. Not a required status check (it never runs on PRs). |
+| Monitor logic | `scripts/uptime-monitor.mjs` | Calls the URL (3 attempts, 15s apart, 20s timeout each), parses the envelope, decides what to send, posts to Slack. Tested in `src/lib/__tests__/uptimeMonitor.test.ts`, which also covers `evaluate.ts`. |
+| Status logic | `supabase/functions/health-check/evaluate.ts` | Pure `evaluateHealth()` (statuses to overall status + HTTP code), `runCheck()` (deadline per probe) and `toPublicChecks()` (strips error text). Also covered by `evaluate.test.ts` (`deno test`). |
 
 ## Required configuration (one-time)
 
-The workflow is inert until these are set under **Settings → Secrets and
-variables → Actions**:
+The workflow skips with a notice ("HEALTH_CHECK_URL is not set - uptime
+monitoring is inert") until these are set under **Settings > Secrets and
+variables > Actions**:
 
-- **Variable** `HEALTH_CHECK_URL` — the deployed function URL, e.g.
-  `https://<project-ref>.functions.supabase.co/health-check`.
-- **Secret** `HEALTH_CHECK_ANON_KEY` — sent as the `apikey` header (optional,
-  depending on the function's gateway config).
-- **Secret** `SLACK_WEBHOOK_URL` — routes alerts to the on-call Slack channel
-  (optional; without it, alerting falls back to the email path below).
+- **Variable** `HEALTH_CHECK_URL` (a secret of the same name also works): the
+  deployed function URL, e.g.
+  `https://<project-ref>.supabase.co/functions/v1/health-check`, or the
+  self-hosted equivalent on the Coolify stack.
+- **Secret** `HEALTH_CHECK_ANON_KEY`: the project's anon key. `health-check`
+  keeps the default `verify_jwt = true` (it is not in `supabase/config.toml`),
+  so the gateway answers 401 without it. The monitor sends it as both `apikey`
+  and `Authorization: Bearer`. It is the public anon key; it grants nothing the
+  web bundle does not already carry.
+- **Secret** `SLACK_WEBHOOK_URL`: an incoming-webhook URL for the channel
+  on-call watches. Without it, the failed run's email is the only page.
+
+Check it took: Actions > *Uptime Health Check* > *Run workflow* (leave
+`simulate_failure` off). The *Probe and alert* step should log
+`attempt 1/3: healthy` and `Health check OK`.
 
 ## Escalation path
 
-When the endpoint is unhealthy after 3 attempts, the workflow:
+The monitor compares each run with the state the previous run saved and sends
+only on a change:
 
-1. **Posts to Slack** (`:rotating_light: Brikly health check FAILING …`) if
-   `SLACK_WEBHOOK_URL` is configured — this is the channel on-call watches.
-2. **Fails the workflow run**, which GitHub emails to repo admins
-   (Actions failure notifications). Keep at least one admin subscribed.
+| Previous | This run | Slack | Run result |
+|----------|----------|-------|------------|
+| up or unknown | down | `:rotating_light: Brikly health check FAILING: HTTP 503, status=degraded (storage=degraded)` | failed (GitHub emails admins) |
+| down | down, alerted < 6h ago | nothing | green, `::error::` annotation |
+| down | down, alerted >= 6h ago | `STILL FAILING ... Down for 6h 10m` | failed |
+| down | up | `:white_check_mark: ... RECOVERED after 42m down` | green |
+| up | up | nothing | green |
 
-On alert: open the linked run, read the `services` block in the health-check
-body to see which dependency is `degraded`/`unhealthy`, then check the Supabase
-project status page and the DB/auth/storage dashboards.
+"Down" is anything other than HTTP 200 with `status: "healthy"`: a 503, a 401
+from the gateway, a body that is not the health envelope, a network error, or
+no answer inside 20s. Each Slack message links the run.
+
+State lives in the Actions cache under the key prefix `uptime-state-`; each run
+saves a new entry and deletes the one it started from. If the cache is evicted
+or deleted, the next run treats the state as unknown: a down result alerts
+again, an up result stays quiet. If a Slack post fails, the state is saved as
+"not yet delivered" and the next run tries again. The reminder interval is
+`REMIND_AFTER_MINUTES` in the workflow (360).
+
+On alert: open the linked run, read which dependency the message names, then
+the `[health-check] <name> <status>: <error>` line in the Supabase function
+logs for the detail, then the Supabase project status page and the
+DB/auth/storage dashboards. Recovery from a confirmed outage:
+`docs/RUNBOOK_ROLLBACK.md`.
 
 ## Testing it (synthetic check)
 
-- **Alert routing:** run the workflow manually — Actions → *Uptime Health
-  Check* → *Run workflow* → set `simulate_failure = true`. This forces the
-  alert path (Slack + run failure) without a real outage, verifying the
-  escalation wiring end-to-end.
-- **503-on-dependency-down logic:** `deno test supabase/functions/health-check/`
-  runs `evaluate.test.ts`, which asserts a degraded or unhealthy dependency
-  yields HTTP 503 (and all-healthy yields 200). This is the synthetic check for
-  the function's contract, runnable in CI without a live outage.
+- **Alert routing:** Actions > *Uptime Health Check* > *Run workflow* > set
+  `simulate_failure = true`. This posts a `[SIMULATED]` FAILING message to
+  Slack and fails the run, without probing and without touching the saved
+  state, so the next scheduled run behaves as if nothing happened.
+- **Alert, dedupe and recovery logic:** `npx vitest run
+  src/lib/__tests__/uptimeMonitor.test.ts` runs the monitor against a fake
+  fetch: one alert on the way down, silence while down, a reminder after 6h,
+  one recovery, a skip when `HEALTH_CHECK_URL` is unset, a clean result on
+  timeout.
+- **503-on-dependency-down:** the same file runs `runCheck` and
+  `evaluateHealth` from `evaluate.ts` and asserts that a dependency that errors,
+  throws or hangs past its deadline yields HTTP 503, and that the monitor
+  classifies that body as down. `deno test supabase/functions/health-check/`
+  runs `evaluate.test.ts` with the same cases where deno is installed.
 
 ## Edge-function error reporting (Sentry, US-251)
 
@@ -136,4 +170,4 @@ that reads it.
 
 ## See also
 
-- `docs/RUNBOOK_ROLLBACK.md` — recovering once an outage is confirmed.
+- `docs/RUNBOOK_ROLLBACK.md` - recovering once an outage is confirmed.

@@ -1,10 +1,18 @@
 name: Uptime Health Check
 
-# US-208: external synthetic monitor for the health-check edge function.
-# The function returns HTTP 200 only when fully healthy and 503 for
-# degraded/unhealthy. This job pings it on a schedule, retries to avoid
-# flapping on transient latency, and fails the run (which emails repo admins
-# and optionally posts to Slack) when the service is not healthy.
+# US-208 / US-280: external synthetic monitor for the health-check edge
+# function. The function returns HTTP 200 only when DB, auth and storage are all
+# healthy and 503 otherwise. scripts/uptime-monitor.mjs probes it (3 attempts,
+# 15s apart, 20s timeout each), compares the result with the state saved by the
+# previous run, and posts to Slack only on a change: FAILING when it goes down,
+# a reminder every 6h while it stays down, RECOVERED when it comes back.
+#
+# State is carried between runs in the Actions cache (key prefix
+# uptime-state-). If the cache is evicted the next down result alerts again,
+# which errs on the side of paging. See docs/RUNBOOK_MONITORING.md.
+#
+# Not a required status check: it runs on schedule/dispatch only, never on a
+# pull request, so it is absent from .github/rulesets on purpose.
 
 on:
   schedule:
@@ -13,80 +21,89 @@ on:
   workflow_dispatch:
     inputs:
       simulate_failure:
-        description: 'Force the alert path to test routing end-to-end'
+        description: 'Send a [SIMULATED] alert to test routing end-to-end (saved state is untouched)'
         type: boolean
         default: false
 
+# Queue rather than cancel: a cancelled run would drop its state save.
 concurrency:
   group: uptime-health-check
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write # save the state cache
 
 jobs:
   ping:
     name: Ping health endpoint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
-      # Configure these in repo settings to enable monitoring/alerting:
-      #   - Variable HEALTH_CHECK_URL       (Settings → Secrets and variables → Actions → Variables)
-      #   - Secret   HEALTH_CHECK_ANON_KEY  (optional; sent as the `apikey` header)
-      #   - Secret   SLACK_WEBHOOK_URL      (optional; routes alerts to Slack)
-      HEALTH_URL: ${{ vars.HEALTH_CHECK_URL }}
-      ANON_KEY: ${{ secrets.HEALTH_CHECK_ANON_KEY }}
+      # Configure these in repo settings to enable monitoring/alerting
+      # (Settings > Secrets and variables > Actions):
+      #   - HEALTH_CHECK_URL       variable (or secret) - the deployed function URL
+      #   - HEALTH_CHECK_ANON_KEY  secret - the project's anon key, sent as apikey
+      #                            and Bearer (the function keeps verify_jwt on)
+      #   - SLACK_WEBHOOK_URL      secret, optional - the on-call Slack channel
+      HEALTH_CHECK_URL: ${{ vars.HEALTH_CHECK_URL || secrets.HEALTH_CHECK_URL }}
+      HEALTH_CHECK_ANON_KEY: ${{ secrets.HEALTH_CHECK_ANON_KEY }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      SIMULATE: ${{ inputs.simulate_failure }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure == true && 'true' || 'false' }}
+      STATE_FILE: .uptime-state/state.json
+      REMIND_AFTER_MINUTES: '360'
     steps:
-      - name: Probe health (3 attempts, 15s apart to debounce transient latency)
+      - name: Skip notice when unconfigured
+        if: env.HEALTH_CHECK_URL == '' && env.SIMULATE_FAILURE != 'true'
+        run: echo "::notice::HEALTH_CHECK_URL is not set - uptime monitoring is inert. See docs/RUNBOOK_MONITORING.md."
+
+      - uses: actions/checkout@v4
+        if: env.HEALTH_CHECK_URL != '' || env.SIMULATE_FAILURE == 'true'
+        with:
+          sparse-checkout: |
+            scripts/uptime-monitor.mjs
+            .nvmrc
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        if: env.HEALTH_CHECK_URL != '' || env.SIMULATE_FAILURE == 'true'
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Restore last state
+        id: restore
+        if: env.HEALTH_CHECK_URL != '' || env.SIMULATE_FAILURE == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .uptime-state
+          key: uptime-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: uptime-state-
+
+      - name: Probe and alert
+        id: monitor
+        if: env.HEALTH_CHECK_URL != '' || env.SIMULATE_FAILURE == 'true'
+        timeout-minutes: 3
+        run: node scripts/uptime-monitor.mjs
+
+      - name: Save state
+        if: always() && steps.monitor.outputs.persist == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .uptime-state
+          key: uptime-state-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # One entry is enough; drop the one this run started from so the cache
+      # does not collect ~144 entries a day.
+      - name: Prune previous state entry
+        if: always() && steps.monitor.outputs.persist == 'true' && steps.restore.outputs.cache-matched-key != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD_KEY: ${{ steps.restore.outputs.cache-matched-key }}
+        run: gh cache delete "$OLD_KEY" --repo "$GITHUB_REPOSITORY"
+
+      - name: Fail the run on a new or reminded outage (emails repo admins)
+        if: steps.monitor.outputs.fail_run == 'true'
         run: |
-          set -uo pipefail
-
-          if [ "${SIMULATE}" = "true" ]; then
-            echo "::warning::Simulated failure requested — exercising the alert path."
-            echo "alert=1" >> "$GITHUB_ENV"
-            echo "detail=simulated failure" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          if [ -z "${HEALTH_URL}" ]; then
-            echo "::notice::HEALTH_CHECK_URL is not set — monitoring is inert until you configure it. Skipping."
-            exit 0
-          fi
-
-          attempt=1
-          max=3
-          ok=0
-          code=000
-          status=unknown
-          while [ "$attempt" -le "$max" ]; do
-            code=$(curl -sS --max-time 20 -o /tmp/health.json -w '%{http_code}' \
-              -H "apikey: ${ANON_KEY}" "${HEALTH_URL}" || echo 000)
-            status=$(jq -r '.status // "unknown"' /tmp/health.json 2>/dev/null || echo unknown)
-            echo "attempt ${attempt}/${max}: http=${code} status=${status}"
-            if [ "$code" = "200" ] && [ "$status" = "healthy" ]; then
-              ok=1
-              break
-            fi
-            attempt=$((attempt + 1))
-            [ "$attempt" -le "$max" ] && sleep 15
-          done
-
-          if [ "$ok" -ne 1 ]; then
-            echo "::error::Health check unhealthy after ${max} attempts (http=${code} status=${status})."
-            cat /tmp/health.json 2>/dev/null || true
-            echo "alert=1" >> "$GITHUB_ENV"
-            echo "detail=http=${code} status=${status}" >> "$GITHUB_ENV"
-          else
-            echo "Health check OK."
-          fi
-
-      - name: Route alert to Slack (optional)
-        if: env.alert == '1' && env.SLACK_WEBHOOK_URL != ''
-        run: |
-          curl -sS -X POST -H 'Content-Type: application/json' \
-            -d "{\"text\":\":rotating_light: Brikly health check FAILING (${detail}). Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
-            "${SLACK_WEBHOOK_URL}" || true
-
-      - name: Fail the run on unhealthy (notifies repo admins by email)
-        if: env.alert == '1'
-        run: |
-          echo "Health check alert: ${detail}"
+          echo "Health check alert (${{ steps.monitor.outputs.action }}). See the Probe and alert step."
           exit 1

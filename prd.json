@@ -4442,8 +4442,8 @@
         "A synthetic check verifies 503 when a dependency is down"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Observability. SEV: MEDIUM. Source: Ops audit. || AUDIT 2026-09-09: still inert. The uptime workflow run 34286957571 logs \"HEALTH_CHECK_URL is not set - monitoring is inert\"; SLACK_WEBHOOK_URL is also unset. Setting the two repository variables is the whole first step."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Observability. SEV: MEDIUM. Source: Ops audit. || AUDIT 2026-09-09: still inert. The uptime workflow run 34286957571 logs \"HEALTH_CHECK_URL is not set - monitoring is inert\"; SLACK_WEBHOOK_URL is also unset. Setting the two repository variables is the whole first step. || Uptime workflow rewritten around scripts/uptime-monitor.mjs: 3 attempts with 20s timeouts, parses the health envelope, alerts Slack on up->down, reminds every 6h while down, posts RECOVERED with duration, dedupes via Actions cache state, fails the run only when alerting, skips with a notice when HEALTH_CHECK_URL is unset, simulate_failure input. health-check bug fixed: auth probe used getSession() (never contacts GoTrue) so auth always read healthy; it now calls /auth/v1/health, and probes run in parallel with 5s deadlines each. 27 tests. Owner: set HEALTH_CHECK_URL variable, HEALTH_CHECK_ANON_KEY and SLACK_WEBHOOK_URL secrets, deploy health-check, run the workflow with simulate_failure=true then without."
     },
     {
       "id": "US-281",
