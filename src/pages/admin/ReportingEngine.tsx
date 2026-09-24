@@ -1,4 +1,6 @@
-import { useReportingEngine } from '@/hooks/useReportingEngine';
+import { useReportingEngine, useGenerateCustomReport } from '@/hooks/useReportingEngine';
+import { downloadCsv } from '@/lib/exportCsv';
+import { toast } from 'sonner';
 import { ErrorState } from '@/components/common/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,12 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText,
   Calendar,
-  Download,
   BarChart3,
   Clock,
   CheckCircle2,
   Play
 } from 'lucide-react';
+import type { CustomReport } from '@/hooks/useReportingEngine';
 
 export function ReportingEngine() {
   const engine = useReportingEngine();
@@ -20,6 +22,21 @@ export function ReportingEngine() {
   const history = engine.data?.history ?? [];
   // Figures only from a read that came back; loading or failed shows '--'.
   const shown = (n: number) => (engine.data && !engine.error ? n : '--');
+  const generate = useGenerateCustomReport();
+
+  const runReport = (report: CustomReport) => {
+    generate.mutate(report.id, {
+      onSuccess: (csv) => {
+        downloadCsv(report.report_name.replace(/[^a-z0-9]/gi, '_'), csv);
+        toast.success(`${report.report_name} generated`);
+      },
+      onError: (err) => {
+        toast.error('The report was not generated', {
+          description: err instanceof Error ? err.message : undefined,
+        });
+      },
+    });
+  };
 
   const getReportTypeIcon = (type: string) => {
     switch (type) {
@@ -118,13 +135,12 @@ export function ReportingEngine() {
                 <div>
                   <CardTitle>Custom Reports</CardTitle>
                   <CardDescription>
-                    User-defined reports with custom filters and grouping
+                    User-defined reports with custom filters and grouping.
+                    Generating one downloads it as CSV.
                   </CardDescription>
                 </div>
-                <Button>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Create Report
-                </Button>
+                {/* No screen creates custom_reports rows yet. A Create Report
+                    button that did nothing used to sit here. */}
               </div>
             </CardHeader>
             <CardContent>
@@ -157,9 +173,14 @@ export function ReportingEngine() {
                           {report.report_description || 'No description'}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runReport(report)}
+                        disabled={generate.isPending}
+                      >
                         <Play className="mr-1 h-3 w-3" />
-                        Generate
+                        {generate.isPending && generate.variables === report.id ? 'Generating...' : 'Generate'}
                       </Button>
                     </div>
                   ))
@@ -175,7 +196,7 @@ export function ReportingEngine() {
             <CardHeader>
               <CardTitle>Report Generation History</CardTitle>
               <CardDescription>
-                Previously generated reports with download links
+                Previously generated reports. Files are not stored; generate a report again to download it.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -213,9 +234,8 @@ export function ReportingEngine() {
                           <p className="text-sm text-muted-foreground">Time</p>
                           <p className="font-semibold">{item.execution_time_ms == null ? '--' : `${(item.execution_time_ms / 1000).toFixed(2)}s`}</p>
                         </div>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        {/* report_history keeps no file; there is nothing to
+                            download again. Generate the report instead. */}
                       </div>
                     </div>
                   ))

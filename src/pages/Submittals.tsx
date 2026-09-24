@@ -13,48 +13,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useSubmittals, type Submittal as SubmittalRow } from '@/hooks/useSubmittals';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, FileText, Upload, PlusCircle, CheckCircle, XCircle, AlertCircle, User, Calendar, Eye, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Project {
-  id: string;
-  name: string;
-  client_name: string;
-  status: string;
-}
-
-interface Submittal {
-  id: string;
-  project_id: string;
-  submittal_number: string;
-  title: string;
-  description: string;
-  spec_section: string;
-  status: string;
-  priority: string;
-  due_date: string;
-  submitted_date: string;
-  approved_date: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  company_id: string;
-  projects?: { name: string; client_name: string };
-  submitter?: { first_name: string; last_name: string };
-  reviewer?: { first_name: string; last_name: string };
-}
-
+type Submittal = SubmittalRow;
 
 const Submittals = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [submittals, setSubmittals] = useState<Submittal[]>([]);
+  const allowedRole = !!userProfile && ['admin', 'project_manager', 'field_supervisor', 'office_staff', 'root_admin'].includes(userProfile.role);
+  const data = useSubmittals(allowedRole);
+  const projects = data.query.data?.projects ?? [];
+  const submittals = data.query.data?.submittals ?? [];
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [loadingSubmittals, setLoadingSubmittals] = useState(true);
+  const loadingSubmittals = data.query.isLoading;
+  const errorText = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSubmittal, setSelectedSubmittal] = useState<Submittal | null>(null);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -91,59 +68,7 @@ const Submittals = () => {
       });
       return;
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = async () => {
-    try {
-      setLoadingSubmittals(true);
-      
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, status')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load submittals
-      let submittalsQuery = supabase
-        .from('submittals')
-        .select(`
-          *,
-          projects:project_id (name, client_name)
-        `)
-        .eq('company_id', userProfile?.company_id);
-
-      if (selectedProject && selectedProject !== 'all') {
-        submittalsQuery = submittalsQuery.eq('project_id', selectedProject);
-      }
-
-      const { data: submittalsData, error: submittalsError } = await submittalsQuery
-        .order('created_at', { ascending: false });
-
-      if (submittalsError) {
-        console.error('Error loading submittals:', submittalsError);
-      }
-
-      setSubmittals(submittalsData || []);
-
-    } catch (error: unknown) {
-      console.error('Error loading data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load submittals data"
-      });
-    } finally {
-      setLoadingSubmittals(false);
-    }
-  };
 
   const handleCreateSubmittal = async () => {
     if (!newSubmittal.project_id || !newSubmittal.title || !newSubmittal.description) {
@@ -156,31 +81,7 @@ const Submittals = () => {
     }
 
     try {
-      // Default SLA: 10 days if not provided
-      const defaultDue = new Date();
-      defaultDue.setDate(defaultDue.getDate() + 10);
-      const dueDateVal = newSubmittal.due_date || defaultDue.toISOString().split('T')[0];
-
-      // Generate submittal number
-      const submittalCount = submittals.length + 1;
-      const submittalNumber = `SUB-${new Date().getFullYear()}-${submittalCount.toString().padStart(3, '0')}`;
-
-      const { error } = await supabase
-        .from('submittals')
-        .insert({
-          company_id: userProfile?.company_id,
-          project_id: newSubmittal.project_id,
-          title: newSubmittal.title,
-          description: newSubmittal.description,
-          spec_section: newSubmittal.spec_section,
-          due_date: dueDateVal,
-          priority: newSubmittal.priority,
-          status: 'draft',
-          submittal_number: submittalNumber,
-          created_by: user?.id
-        });
-
-      if (error) throw error;
+      await data.create.mutateAsync(newSubmittal);
 
       toast({
         title: "Success",
@@ -196,10 +97,7 @@ const Submittals = () => {
         due_date: '',
         priority: 'medium'
       });
-      
-      loadData();
     } catch (error: unknown) {
-      console.error('Error creating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -221,26 +119,7 @@ const Submittals = () => {
     try {
       if (!selectedSubmittal) return;
 
-      const { error } = await supabase
-        .from('submittals')
-        .update({
-          status: reviewStatus,
-          approved_date: reviewStatus === 'approved' ? new Date().toISOString() : null
-        })
-        .eq('id', selectedSubmittal.id);
-
-      if (error) throw error;
-
-      // Log review entry for accountability
-      await supabase
-        .from('submittal_reviews' as 'submittals')
-        .insert({
-          submittal_id: selectedSubmittal.id,
-          reviewer_id: user?.id,
-          review_status: reviewStatus,
-          comments: reviewComments || null,
-          company_id: userProfile?.company_id
-        } as Record<string, unknown>);
+      await data.review.mutateAsync({ id: selectedSubmittal.id, status: reviewStatus, comments: reviewComments });
 
       toast({
         title: "Success",
@@ -251,10 +130,7 @@ const Submittals = () => {
       setReviewComments('');
       setReviewStatus('');
       setSelectedSubmittal(null);
-      
-      loadData();
     } catch (error: unknown) {
-      console.error('Error reviewing submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -313,18 +189,16 @@ const Submittals = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('submittals')
-        .update({
+      await data.update.mutateAsync({
+        id: editingSubmittal.id,
+        patch: {
           title: editingSubmittal.title,
           description: editingSubmittal.description,
           spec_section: editingSubmittal.spec_section,
           due_date: editingSubmittal.due_date || null,
-          priority: editingSubmittal.priority
-        })
-        .eq('id', editingSubmittal.id);
-
-      if (error) throw error;
+          priority: editingSubmittal.priority,
+        },
+      });
 
       toast({
         title: "Success",
@@ -333,9 +207,7 @@ const Submittals = () => {
 
       setIsEditDialogOpen(false);
       setEditingSubmittal(null);
-      loadData();
     } catch (error: unknown) {
-      console.error('Error updating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -613,7 +485,13 @@ const Submittals = () => {
 
         {/* Submittals List */}
         <div className="space-y-6">
-          {filteredSubmittals.length === 0 ? (
+          {data.query.error ? (
+            <ErrorState
+              title="Submittals could not be loaded"
+              error={errorText(data.query.error, 'Failed to load submittals')}
+              onRetry={() => { void data.query.refetch(); }}
+            />
+          ) : filteredSubmittals.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

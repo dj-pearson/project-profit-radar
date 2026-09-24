@@ -11,53 +11,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  useEnvironmentalPermitting,
+  type EnvironmentalPermit,
+  type NEPAAssessment,
+  type MonitoringRecord,
+} from "@/hooks/useEnvironmentalPermitting";
+import { ErrorState } from "@/components/common/ErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface EnvironmentalPermit {
-  id: string;
-  permit_number: string;
-  permit_name: string;
-  permit_type: string;
-  issuing_agency: string;
-  status: string;
-  nepa_category: string;
-  application_date: string;
-  expiration_date?: string;
-  target_decision_date?: string;
-  compliance_status: string;
-  priority: string;
-  assigned_to: string;
-}
-
-interface NEPAAssessment {
-  id: string;
-  permit_id: string;
-  assessment_type: string;
-  lead_agency: string;
-  nepa_process_stage: string;
-  finding?: string;
-  decision_date?: string;
-  scoping_period_start?: string;
-  scoping_period_end?: string;
-  prepared_by: string;
-}
-
-interface MonitoringRecord {
-  id: string;
-  permit_id: string;
-  monitoring_type: string;
-  parameter_measured: string;
-  measured_value: number;
-  permit_limit: number;
-  measurement_unit: string;
-  measurement_date: string;
-  within_limits: boolean;
-  exceedance_level?: number;
-  monitoring_location: string;
-}
 
 export default function EnvironmentalPermitting() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,8 +27,27 @@ export default function EnvironmentalPermitting() {
   const [editingAssessment, setEditingAssessment] = useState<NEPAAssessment | null>(null);
   const [editingMonitoring, setEditingMonitoring] = useState<MonitoringRecord | null>(null);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
-  const queryClient = useQueryClient();
+  const env = useEnvironmentalPermitting();
+
+  /** Runs one edit; returns false (after saying why) when it did not save. */
+  const saveRecord = async (
+    table: 'environmental_permits' | 'environmental_assessments' | 'environmental_monitoring',
+    id: string,
+    patch: Record<string, unknown>,
+    failTitle: string,
+  ) => {
+    try {
+      await env.update.mutateAsync({ table, id, patch });
+      return true;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: failTitle,
+        description: error instanceof Error ? error.message : String(error),
+      });
+      return false;
+    }
+  };
 
   const handleEditPermit = (permit: EnvironmentalPermit) => {
     setEditingPermit({ ...permit });
@@ -80,31 +60,19 @@ export default function EnvironmentalPermitting() {
   const handleSavePermit = async () => {
     if (!editingPermit?.id) return;
 
-    const { error } = await supabase
-      .from('environmental_permits')
-      .update({
-        status: editingPermit.status,
-        compliance_status: editingPermit.compliance_status,
-        priority: editingPermit.priority,
-        expiration_date: editingPermit.expiration_date || null,
-        target_decision_date: editingPermit.target_decision_date || null,
-      })
-      .eq('id', editingPermit.id);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Permit not updated",
-        description: error.message,
-      });
-      return;
-    }
+    const saved = await saveRecord('environmental_permits', editingPermit.id, {
+      status: editingPermit.status,
+      compliance_status: editingPermit.compliance_status,
+      priority: editingPermit.priority,
+      expiration_date: editingPermit.expiration_date || null,
+      target_decision_date: editingPermit.target_decision_date || null,
+    }, "Permit not updated");
+    if (!saved) return;
 
     toast({
       title: "Permit Updated",
       description: "Environmental permit has been successfully updated.",
     });
-    queryClient.invalidateQueries({ queryKey: ['environmental-permits'] });
     setEditingPermit(null);
   };
 
@@ -115,29 +83,17 @@ export default function EnvironmentalPermitting() {
   const handleSaveAssessment = async () => {
     if (!editingAssessment?.id) return;
 
-    const { error } = await supabase
-      .from('environmental_assessments')
-      .update({
-        nepa_process_stage: editingAssessment.nepa_process_stage,
-        finding: editingAssessment.finding || null,
-        decision_date: editingAssessment.decision_date || null,
-      })
-      .eq('id', editingAssessment.id);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Assessment not updated",
-        description: error.message,
-      });
-      return;
-    }
+    const saved = await saveRecord('environmental_assessments', editingAssessment.id, {
+      nepa_process_stage: editingAssessment.nepa_process_stage,
+      finding: editingAssessment.finding || null,
+      decision_date: editingAssessment.decision_date || null,
+    }, "Assessment not updated");
+    if (!saved) return;
 
     toast({
       title: "Assessment Updated",
       description: "NEPA assessment has been successfully updated.",
     });
-    queryClient.invalidateQueries({ queryKey: ['environmental-assessments'] });
     setEditingAssessment(null);
   };
 
@@ -148,30 +104,18 @@ export default function EnvironmentalPermitting() {
   const handleSaveMonitoring = async () => {
     if (!editingMonitoring?.id) return;
 
-    const { error } = await supabase
-      .from('environmental_monitoring')
-      .update({
-        measured_value: editingMonitoring.measured_value,
-        permit_limit: editingMonitoring.permit_limit,
-        within_limits: editingMonitoring.within_limits,
-        monitoring_location: editingMonitoring.monitoring_location || null,
-      })
-      .eq('id', editingMonitoring.id);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Monitoring data not updated",
-        description: error.message,
-      });
-      return;
-    }
+    const saved = await saveRecord('environmental_monitoring', editingMonitoring.id, {
+      measured_value: editingMonitoring.measured_value,
+      permit_limit: editingMonitoring.permit_limit,
+      within_limits: editingMonitoring.within_limits,
+      monitoring_location: editingMonitoring.monitoring_location || null,
+    }, "Monitoring data not updated");
+    if (!saved) return;
 
     toast({
       title: "Monitoring Updated",
       description: "Monitoring data has been successfully updated.",
     });
-    queryClient.invalidateQueries({ queryKey: ['environmental-monitoring'] });
     setEditingMonitoring(null);
   };
 
@@ -190,50 +134,13 @@ export default function EnvironmentalPermitting() {
   // created by migration 20250707142616. They are read from now, scoped to the
   // company, and an empty result renders as empty rather than as somebody else's
   // compliance history (US-309).
-  const { data: permits = [], isLoading: permitsLoading } = useQuery({
-    queryKey: ['environmental-permits', userProfile?.company_id],
-    enabled: !!userProfile?.company_id,
-    queryFn: async (): Promise<EnvironmentalPermit[]> => {
-      const { data, error } = await supabase
-        .from('environmental_permits')
-        .select('id, permit_number, permit_name, permit_type, issuing_agency, status, nepa_category, application_date, expiration_date, target_decision_date, compliance_status, priority, assigned_to')
-        .eq('company_id', userProfile!.company_id)
-        .order('application_date', { ascending: false });
-
-      if (error) throw error;
-      return (data ?? []) as EnvironmentalPermit[];
-    },
-  });
-
-  const { data: assessments = [] } = useQuery({
-    queryKey: ['environmental-assessments', userProfile?.company_id],
-    enabled: !!userProfile?.company_id,
-    queryFn: async (): Promise<NEPAAssessment[]> => {
-      const { data, error } = await supabase
-        .from('environmental_assessments')
-        .select('id, permit_id, assessment_type, lead_agency, nepa_process_stage, finding, decision_date, scoping_period_start, scoping_period_end, prepared_by')
-        .eq('company_id', userProfile!.company_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data ?? []) as NEPAAssessment[];
-    },
-  });
-
-  const { data: monitoringData = [] } = useQuery({
-    queryKey: ['environmental-monitoring', userProfile?.company_id],
-    enabled: !!userProfile?.company_id,
-    queryFn: async (): Promise<MonitoringRecord[]> => {
-      const { data, error } = await supabase
-        .from('environmental_monitoring')
-        .select('id, permit_id, monitoring_type, parameter_measured, measured_value, permit_limit, measurement_unit, measurement_date, within_limits, exceedance_level, monitoring_location')
-        .eq('company_id', userProfile!.company_id)
-        .order('measurement_date', { ascending: false });
-
-      if (error) throw error;
-      return (data ?? []) as MonitoringRecord[];
-    },
-  });
+  // They are read from now, scoped to the company, through
+  // useEnvironmentalPermitting; an empty result renders as empty rather than as
+  // somebody else's compliance history, and a failed read as an error (US-266).
+  const permits = env.permits.data ?? [];
+  const permitsLoading = env.permits.isLoading;
+  const assessments = env.assessments.data ?? [];
+  const monitoringData = env.monitoring.data ?? [];
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -351,7 +258,15 @@ export default function EnvironmentalPermitting() {
               </div>
             )}
 
-            {!permitsLoading && permits.length === 0 && (
+            {env.permits.error && (
+              <ErrorState
+                title="Permits could not be loaded"
+                error={env.permits.error as Error}
+                onRetry={() => { void env.permits.refetch(); }}
+              />
+            )}
+
+            {!permitsLoading && !env.permits.error && permits.length === 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>No environmental permits recorded</CardTitle>
@@ -555,6 +470,13 @@ export default function EnvironmentalPermitting() {
 
         <TabsContent value="assessments" className="space-y-4">
           <div className="grid gap-4">
+            {env.assessments.error && (
+              <ErrorState
+                title="Assessments could not be loaded"
+                error={env.assessments.error as Error}
+                onRetry={() => { void env.assessments.refetch(); }}
+              />
+            )}
             {assessments.map((assessment) => (
               <Card key={assessment.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
@@ -693,6 +615,13 @@ export default function EnvironmentalPermitting() {
 
         <TabsContent value="monitoring" className="space-y-4">
           <div className="grid gap-4">
+            {env.monitoring.error && (
+              <ErrorState
+                title="Monitoring records could not be loaded"
+                error={env.monitoring.error as Error}
+                onRetry={() => { void env.monitoring.refetch(); }}
+              />
+            )}
             {monitoringData.map((monitoring) => (
               <Card key={monitoring.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>

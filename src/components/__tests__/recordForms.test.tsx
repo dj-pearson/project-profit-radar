@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { buildBondData, bondFormDefaults, buildInsuranceData, insuranceFormDefaults } from '@/lib/validations/bonds';
 import { buildPermitData, permitFormDefaults } from '@/lib/validations/permits';
@@ -26,13 +28,22 @@ vi.mock('@/integrations/supabase/client', () => {
     const q: Record<string, unknown> = {};
     for (const m of ['select', 'eq', 'order', 'in']) q[m] = () => q;
     q.then = (res: (v: unknown) => unknown) => Promise.resolve({ data: h.rows[table] ?? [], error: null }).then(res);
+    // A write is read back (.select('id')), so it resolves to the row it
+    // wrote rather than to the table's rows.
+    const written = (row: unknown) => {
+      const w: Record<string, unknown> = {};
+      for (const m of ['select', 'eq']) w[m] = () => w;
+      w.then = (res: (v: unknown) => unknown) =>
+        Promise.resolve({ data: [{ id: 'new-1', ...(row as object) }], error: null }).then(res);
+      return w;
+    };
     q.insert = (row: unknown) => {
       h.insert(table, row);
-      return q;
+      return written(row);
     };
     q.update = (row: unknown) => {
       h.update(table, row);
-      return q;
+      return written(row);
     };
     return q;
   };
@@ -46,6 +57,12 @@ import { WarrantyForm } from '../warranty/WarrantyForm';
 import { WarrantyClaimForm } from '../warranty/WarrantyClaimForm';
 
 const PROFILE = { id: 'u-1', company_id: 'co-1' };
+
+// The dialogs' pickers are TanStack queries (US-266).
+const render = (ui: ReactElement) =>
+  rtlRender(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>,
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();

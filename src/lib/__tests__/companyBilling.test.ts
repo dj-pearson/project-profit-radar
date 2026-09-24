@@ -221,9 +221,10 @@ describe('the settings page (US-332)', () => {
   it('does not default a newly added tax rate to being the default', () => {
     // The partial unique index refuses a second default, so an added rate that
     // claimed it would fail the insert.
-    const card = strip('src/components/settings/CompanyBillingSettings.tsx');
-    const add = card.slice(card.indexOf('const addTaxRate'));
-    expect(add.slice(0, add.indexOf('};'))).toMatch(/is_default: false/);
+    // The insert moved into the card's hook (US-266).
+    const card = strip('src/hooks/useCompanyBillingSettings.ts');
+    const add = card.slice(card.indexOf('export async function addTaxRate'));
+    expect(add.slice(0, add.indexOf('export async function updateTaxRate'))).toMatch(/is_default: false/);
   });
 
   it('reaches the document templates page, which is routed', () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { supabase } from '@/integrations/supabase/client';
+import { useFilterPresets, type FilterPreset } from '@/hooks/useFilterPresets';
 import { useToast } from '@/hooks/use-toast';
 import {
   Save,
@@ -21,17 +21,6 @@ import {
   Share2,
   Filter
 } from 'lucide-react';
-
-interface FilterPreset {
-  id: string;
-  name: string;
-  description?: string;
-  filters: Record<string, unknown>;
-  is_shared: boolean;
-  is_default: boolean;
-  use_count: number;
-  last_used_at: string | null;
-}
 
 interface FilterPresetsManagerProps {
   context: string; // 'projects', 'estimates', etc.
@@ -49,8 +38,8 @@ export function FilterPresetsManager({
   companyId
 }: FilterPresetsManagerProps) {
   const { toast } = useToast();
-  const [presets, setPresets] = useState<FilterPreset[]>([]);
-  const [loading, setLoading] = useState(false);
+  const store = useFilterPresets(context, userId, companyId);
+  const presets = store.query.data ?? [];
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<FilterPreset | null>(null);
@@ -60,38 +49,6 @@ export function FilterPresetsManager({
   const [presetDescription, setPresetDescription] = useState('');
   const [shareWithCompany, setShareWithCompany] = useState(false);
   const [setAsDefault, setSetAsDefault] = useState(false);
-
-  useEffect(() => {
-    if (userId) {
-      loadPresets();
-    }
-  }, [userId, context]);
-
-  const loadPresets = async () => {
-    if (!userId) return;
-
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('saved_filter_presets')
-        .select('*')
-        .eq('context', context)
-        .or(`user_id.eq.${userId},and(is_shared.eq.true,company_id.eq.${companyId})`)
-        .order('is_default', { ascending: false })
-        .order('use_count', { ascending: false });
-
-      if (error) {
-        // Table may not exist yet - fail silently
-        return;
-      }
-      setPresets(data || []);
-    } catch (error: unknown) {
-      // Silently ignore - saved_filter_presets table may not exist yet
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSavePreset = async () => {
     if (!presetName.trim() || !userId) {
@@ -104,20 +61,13 @@ export function FilterPresetsManager({
     }
 
     try {
-      const { error } = await supabase
-        .from('saved_filter_presets')
-        .insert({
-          user_id: userId,
-          company_id: shareWithCompany ? companyId : null,
-          name: presetName.trim(),
-          description: presetDescription.trim() || null,
-          context,
-          filters: currentFilters,
-          is_shared: shareWithCompany,
-          is_default: setAsDefault
-        });
-
-      if (error) throw error;
+      await store.save.mutateAsync({
+        name: presetName,
+        description: presetDescription,
+        filters: currentFilters,
+        shareWithCompany,
+        isDefault: setAsDefault,
+      });
 
       toast({
         title: 'Preset Saved',
@@ -129,7 +79,6 @@ export function FilterPresetsManager({
       setPresetDescription('');
       setShareWithCompany(false);
       setSetAsDefault(false);
-      loadPresets();
     } catch (error: unknown) {
       toast({
         variant: 'destructive',
@@ -140,33 +89,20 @@ export function FilterPresetsManager({
   };
 
   const handleLoadPreset = async (preset: FilterPreset) => {
-    try {
-      // Increment use count
-      await supabase.rpc('increment_filter_preset_use_count', { preset_id: preset.id });
-
-      onLoadPreset(preset.filters);
-
-      toast({
-        title: 'Preset Loaded',
-        description: `Filters from "${preset.name}" have been applied`
-      });
-
-      loadPresets(); // Refresh to show updated use count
-    } catch (error) {
-      console.error('Error loading preset:', error);
-    }
+    onLoadPreset(preset.filters);
+    toast({
+      title: 'Preset Loaded',
+      description: `Filters from "${preset.name}" have been applied`
+    });
+    // Best effort; the list re-reads to show the new use count.
+    store.recordUse.mutate(preset.id);
   };
 
   const handleDeletePreset = async () => {
     if (!selectedPreset) return;
 
     try {
-      const { error } = await supabase
-        .from('saved_filter_presets')
-        .delete()
-        .eq('id', selectedPreset.id);
-
-      if (error) throw error;
+      await store.remove.mutateAsync(selectedPreset.id);
 
       toast({
         title: 'Preset Deleted',
@@ -175,7 +111,6 @@ export function FilterPresetsManager({
 
       setShowDeleteDialog(false);
       setSelectedPreset(null);
-      loadPresets();
     } catch (error: unknown) {
       toast({
         variant: 'destructive',
@@ -187,12 +122,7 @@ export function FilterPresetsManager({
 
   const handleSetDefault = async (preset: FilterPreset) => {
     try {
-      const { error } = await supabase
-        .from('saved_filter_presets')
-        .update({ is_default: !preset.is_default })
-        .eq('id', preset.id);
-
-      if (error) throw error;
+      await store.setDefault.mutateAsync({ id: preset.id, isDefault: !preset.is_default });
 
       toast({
         title: preset.is_default ? 'Default Removed' : 'Default Set',
@@ -200,8 +130,6 @@ export function FilterPresetsManager({
           ? `"${preset.name}" is no longer the default`
           : `"${preset.name}" set as default preset`
       });
-
-      loadPresets();
     } catch (error: unknown) {
       toast({
         variant: 'destructive',
@@ -239,7 +167,11 @@ export function FilterPresetsManager({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          {presets.length === 0 ? (
+          {store.query.error ? (
+            <div role="alert" className="p-4 text-center text-sm text-destructive">
+              Saved presets could not be loaded: {store.query.error.message}
+            </div>
+          ) : presets.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               No saved presets yet
             </div>

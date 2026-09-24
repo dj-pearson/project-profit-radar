@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, Target, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useFieldSuggestions, useImportSession } from '@/hooks/useImportSession';
 import { getTemplateFields } from '@/lib/csv-import/templates';
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
@@ -19,18 +19,23 @@ interface FieldMapping {
 
 interface FieldMappingStepProps {
   sessionId: string;
+  /** Whether an import_sessions row exists to read suggestions from and save to. */
+  persisted: boolean;
   dataType?: string;
-  onComplete: () => void;
+  onComplete: (mappings: Record<string, string>) => void;
 }
 
 export const FieldMappingStep: React.FC<FieldMappingStepProps> = ({
   sessionId,
+  persisted,
   dataType = 'projects',
   onComplete
 }) => {
   const [mappings, setMappings] = useState<FieldMapping[]>([]);
   const [selectedMappings, setSelectedMappings] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const suggestions = useFieldSuggestions(sessionId, persisted);
+  const importSession = useImportSession();
+  const loading = persisted && suggestions.isLoading;
 
   // Get available target fields from template
   const templateFields = getTemplateFields(dataType);
@@ -43,48 +48,25 @@ export const FieldMappingStep: React.FC<FieldMappingStepProps> = ({
     { value: 'skip', label: 'Skip Field', required: false },
   ];
 
+  // AI suggestions when the session has them; the template's own fields
+  // otherwise (a manual import, no suggestions, or a failed read, which is
+  // shown above the list).
   useEffect(() => {
-    loadFieldMappings();
-  }, [sessionId]);
-
-  const loadFieldMappings = async () => {
-    try {
-      // Check if sessionId is a UUID (from database) or generated (manual mode)
-      const isDbSession = !sessionId.includes('-') || sessionId.length === 36;
-
-      if (isDbSession && sessionId.length === 36) {
-        const { data, error } = await supabase
-          .from('import_field_suggestions')
-          .select('*')
-          .eq('import_session_id', sessionId)
-          .order('confidence_score', { ascending: false });
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          setMappings(data);
-
-          // Initialize selected mappings with suggestions
-          const initialMappings: Record<string, string> = {};
-          data.forEach(mapping => {
-            initialMappings[mapping.source_field] = mapping.suggested_target_field;
-          });
-          setSelectedMappings(initialMappings);
-        } else {
-          // No AI suggestions - create default mappings from template
-          createDefaultMappings();
-        }
-      } else {
-        // Manual mode - create default mappings
-        createDefaultMappings();
-      }
-    } catch (error) {
-      console.error('Error loading field mappings:', error);
+    if (loading) return;
+    const data = suggestions.data;
+    if (persisted && data && data.length > 0) {
+      setMappings(data);
+      const initialMappings: Record<string, string> = {};
+      data.forEach(mapping => {
+        initialMappings[mapping.source_field] = mapping.suggested_target_field;
+      });
+      setSelectedMappings(initialMappings);
+    } else {
       createDefaultMappings();
-    } finally {
-      setLoading(false);
     }
-  };
+    // createDefaultMappings reads only dataType-derived template fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, persisted, suggestions.data, dataType]);
 
   const createDefaultMappings = () => {
     // Create mappings based on template fields
@@ -113,29 +95,19 @@ export const FieldMappingStep: React.FC<FieldMappingStepProps> = ({
   };
 
   const handleSaveAndContinue = async () => {
-    try {
-      // Check if it's a database session
-      const isDbSession = sessionId.length === 36 && !sessionId.includes('-');
-
-      if (isDbSession) {
-        // Save the selected mappings to the import session
-        const { error } = await supabase
-          .from('import_sessions')
-          .update({
-            field_mappings: selectedMappings,
-            status: 'mapped'
-          })
-          .eq('id', sessionId);
-
-        if (error) throw error;
+    // The mappings go to the wizard directly. Saving them on the session is
+    // a record of what was chosen; a failed save does not block the import.
+    if (persisted) {
+      try {
+        await importSession.update.mutateAsync({
+          sessionId,
+          patch: { field_mappings: selectedMappings, status: 'mapped' },
+        });
+      } catch (error) {
+        console.error('Error saving mappings:', error);
       }
-
-      onComplete();
-    } catch (error) {
-      console.error('Error saving mappings:', error);
-      // Still proceed even if save fails
-      onComplete();
     }
+    onComplete(selectedMappings);
   };
 
   const getConfidenceColor = (confidence: number) => {
@@ -167,6 +139,13 @@ export const FieldMappingStep: React.FC<FieldMappingStepProps> = ({
           Review and adjust how your source fields map to our database fields.
         </p>
       </div>
+
+      {suggestions.error && (
+        <div role="alert" className="flex items-center gap-2 p-3 border border-destructive/40 rounded-lg text-sm text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          The suggested mappings could not be loaded ({suggestions.error.message}). The template fields are shown instead.
+        </div>
+      )}
 
       {missingRequired.length > 0 && (
         <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">

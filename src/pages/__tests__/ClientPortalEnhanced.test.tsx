@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 type Result = { data: unknown; error: { message: string } | null };
 type Call = { table: string; method: string; args: unknown[] };
@@ -66,7 +67,15 @@ vi.mock('@/components/client-portal', () => ({
 vi.mock('@/components/client/ClientPortalSelections', () => ({ ClientPortalSelections: () => null }));
 vi.mock('@/components/client/ClientPortalRFIs', () => ({ ClientPortalRFIs: () => null }));
 
-import ClientPortalEnhanced from '../ClientPortalEnhanced';
+import ClientPortalEnhancedPage from '../ClientPortalEnhanced';
+
+// The reads moved into TanStack Query hooks (US-266); a fresh client per
+// render keeps one test's cache out of the next.
+const ClientPortalEnhanced = () => (
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <ClientPortalEnhancedPage />
+  </QueryClientProvider>
+);
 
 const taskCalls = (method: string) => calls.filter((c) => c.table === 'tasks' && c.method === method);
 

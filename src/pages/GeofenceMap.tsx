@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Plus, Trash2, Save, X } from 'lucide-react';
@@ -9,36 +9,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useGeofenceMap, type Geofence } from '@/hooks/useGeofenceMap';
+import type { CrewMarker } from '@/lib/geofence-markers';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { ErrorState } from '@/components/ui/states';
-import { buildCrewMarkers, TIME_ENTRY_MAP_COLUMNS, type CrewMarker, type TimeEntryLite } from '@/lib/geofence-markers';
 
-interface Geofence {
-  id: string;
-  name: string;
-  center_lat: number;
-  center_lng: number;
-  radius_meters: number;
-}
+// Stable empties so the overlay effect does not redraw on every render.
+const EMPTY_GEOFENCES: Geofence[] = [];
+const EMPTY_CREW: CrewMarker[] = [];
 
 const DEFAULT_CENTER: [number, number] = [39.8283, -98.5795]; // geographic center of US
 
 export default function GeofenceMap() {
-  const { userProfile } = useAuth();
-  const companyId = userProfile?.company_id;
+  const map = useGeofenceMap();
+  const companyId = map.companyId;
+  const geofences = map.query.data?.geofences ?? EMPTY_GEOFENCES;
+  const crew = map.query.data?.crew ?? EMPTY_CREW;
+  const busy = map.create.isPending || map.update.isPending;
+  // Cover the map instead of letting an empty one read as "no crew on site".
+  const loadError = map.query.error ? 'Could not load geofences and crew locations.' : null;
+  const loadData = () => { void map.query.refetch(); };
 
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<L.LayerGroup | null>(null);
 
-  const [geofences, setGeofences] = useState<Geofence[]>([]);
-  const [crew, setCrew] = useState<CrewMarker[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Add-geofence flow
   const [adding, setAdding] = useState(false);
@@ -51,55 +48,9 @@ export default function GeofenceMap() {
   // Edit radius for selected
   const [editRadius, setEditRadius] = useState('');
 
-  const loadData = useCallback(async () => {
-    if (!companyId) return;
-    setLoadError(null);
-    try {
-      const { data: gfData, error: gfErr } = await supabase
-        .from('geofences')
-        .select('id, name, center_lat, center_lng, radius_meters')
-        .eq('company_id', companyId)
-        .eq('is_active', true);
-      if (gfErr) throw gfErr;
-      setGeofences((gfData as Geofence[]) ?? []);
-
-      // Crew markers from today's time entries (scoped to company users).
-      // Surface query failures (don't silently render an empty "no one on site").
-      const { data: members, error: membersErr } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name')
-        .eq('company_id', companyId);
-      if (membersErr) throw membersErr;
-      const nameById = new Map<string, string>();
-      (members ?? []).forEach((m) =>
-        nameById.set(m.id, `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || 'Crew')
-      );
-      const ids = Array.from(nameById.keys());
-      let markers: CrewMarker[] = [];
-      if (ids.length) {
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        // US-367: time_entries is what the clock-in paths write; its GPS fix
-        // lives in gps_latitude/gps_longitude and the shift in start_time/end_time.
-        const { data: entries, error: entriesErr } = await supabase
-          .from('time_entries')
-          .select(TIME_ENTRY_MAP_COLUMNS)
-          .in('user_id', ids)
-          .gte('start_time', startOfDay.toISOString());
-        if (entriesErr) throw entriesErr;
-        markers = buildCrewMarkers((entries ?? []) as TimeEntryLite[], nameById);
-      }
-      setCrew(markers);
-    } catch (err) {
-      logger.error('Failed to load geofence map data', err as Error);
-      setLoadError('Could not load geofences and crew locations.');
-      toast({ title: 'Could not load map data', variant: 'destructive' });
-    }
-  }, [companyId]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (map.query.error) logger.error('Failed to load geofence map data', map.query.error as Error);
+  }, [map.query.error]);
 
   // Initialize the map once.
   useEffect(() => {
@@ -200,33 +151,24 @@ export default function GeofenceMap() {
     }
     const rad = Number(newRadius);
     if (!(rad >= 10 && rad <= 10000)) {
-      toast({ title: 'Radius must be 10–10000 m', variant: 'destructive' });
+      toast({ title: 'Radius must be 10-10000 m', variant: 'destructive' });
       return;
     }
-    setBusy(true);
     try {
-      const { error } = await supabase.from('geofences').insert([
-        {
-          name: newName.trim(),
-          center_lat: pending.lat,
-          center_lng: pending.lng,
-          radius_meters: rad,
-          company_id: companyId,
-          is_active: true,
-        },
-      ]);
-      if (error) throw error;
+      await map.create.mutateAsync({
+        name: newName.trim(),
+        center_lat: pending.lat,
+        center_lng: pending.lng,
+        radius_meters: rad,
+      });
       toast({ title: 'Geofence added' });
       setAdding(false);
       setPending(null);
       setNewName('');
       setNewRadius('100');
-      await loadData();
     } catch (err) {
       logger.error('Add geofence failed', err as Error);
-      toast({ title: 'Could not add geofence', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not add geofence', description: (err as Error).message, variant: 'destructive' });
     }
   };
 
@@ -234,45 +176,27 @@ export default function GeofenceMap() {
     if (!selectedId || !companyId) return;
     const rad = Number(editRadius);
     if (!(rad >= 10 && rad <= 10000)) {
-      toast({ title: 'Radius must be 10–10000 m', variant: 'destructive' });
+      toast({ title: 'Radius must be 10-10000 m', variant: 'destructive' });
       return;
     }
-    setBusy(true);
     try {
-      const { error } = await supabase
-        .from('geofences')
-        .update({ radius_meters: rad })
-        .eq('id', selectedId)
-        .eq('company_id', companyId);
-      if (error) throw error;
+      await map.update.mutateAsync({ id: selectedId, patch: { radius_meters: rad } });
       toast({ title: 'Geofence updated' });
-      await loadData();
     } catch (err) {
       logger.error('Edit geofence failed', err as Error);
-      toast({ title: 'Could not update geofence', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not update geofence', description: (err as Error).message, variant: 'destructive' });
     }
   };
 
   const deleteSelected = async () => {
     if (!selectedId || !companyId) return;
-    setBusy(true);
     try {
-      const { error } = await supabase
-        .from('geofences')
-        .update({ is_active: false })
-        .eq('id', selectedId)
-        .eq('company_id', companyId);
-      if (error) throw error;
+      await map.update.mutateAsync({ id: selectedId, patch: { is_active: false } });
       toast({ title: 'Geofence removed' });
       setSelectedId(null);
-      await loadData();
     } catch (err) {
       logger.error('Delete geofence failed', err as Error);
-      toast({ title: 'Could not remove geofence', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not remove geofence', description: (err as Error).message, variant: 'destructive' });
     }
   };
 

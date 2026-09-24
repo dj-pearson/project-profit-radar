@@ -7296,3 +7296,11 @@ project that has budget lines, labor costs, payment applications,
 retainage, subcontractor payments or collections is now refused (owner
 approved). docs/RUNBOOK_FK_VALIDATION.md has the orphan report to run
 before validating.
+
+## US-266 pass 6
+Twenty more screens on query hooks (raw calls 445 -> 336). Billing settings
+and the estimate form could save blank defaults over real data after a
+failed load; the client portal budget card always said "$0, On Budget";
+fiscal periods, smart-import mappings and custom report filters never
+worked. Audit log entries are now read-only in the UI. TS 946 -> 879,
+eslint warnings 4379 -> 4245.

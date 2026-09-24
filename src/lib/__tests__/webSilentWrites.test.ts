@@ -42,9 +42,12 @@ describe('the writes behind a success message', () => {
   });
 
   it('an RFI response does not report success when the RFI stayed open', () => {
-    const src = code('src/pages/RFIs.tsx');
+    // The write moved into useRFIsPage (US-266); the page awaits it and
+    // shows its error.
+    const src = code('src/hooks/useRFIsPage.ts');
     expect(src).toContain('closeError');
     expect(src).toContain('could not be closed');
+    expect(code('src/pages/RFIs.tsx')).toContain('data.respond.mutateAsync');
   });
 
   it('a social post does not claim to be scheduled for a platform it was not queued to', () => {

@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 
 type Result = { data: unknown; error: { message: string } | null };
@@ -39,7 +40,14 @@ vi.mock('@/components/accessibility/AccessiblePageWrapper', () => ({
 }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 
-import DocumentTemplates from '@/pages/DocumentTemplates';
+import DocumentTemplatesPage from '@/pages/DocumentTemplates';
+
+// The reads moved into a TanStack Query hook (US-266).
+const DocumentTemplates = () => (
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <DocumentTemplatesPage />
+  </QueryClientProvider>
+);
 
 describe('DocumentTemplates query (US-366)', () => {
   beforeEach(() => {

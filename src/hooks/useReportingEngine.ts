@@ -7,8 +7,12 @@
  * RLS let through from every tenant. It is scoped through the report's tenant
  * now. "Generated" was the length of a 20-row page; it is a count. Errors
  * were caught into console.error and read as "No custom reports created".
+ *
+ * Generate used to be a button with no handler. It calls
+ * generate-custom-report now, which runs the saved report under the caller's
+ * JWT, records the run in report_history and returns the CSV.
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTenantId } from './tenantScope';
@@ -64,6 +68,32 @@ export async function fetchReportingEngine(
     history: (history.data ?? []) as unknown as ReportHistory[],
     generatedCount: generated.count ?? 0,
   };
+}
+
+/**
+ * Run a saved report through generate-custom-report and return the CSV. The
+ * function answers with the file body on success and a JSON envelope on
+ * failure, so anything that is not a non-empty string is treated as an error.
+ */
+export async function generateCustomReport(reportId: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('generate-custom-report', {
+    body: { report_id: reportId, output_format: 'csv' },
+  });
+  if (error) throw error;
+  if (typeof data !== 'string') {
+    const message = (data as { error?: string } | null)?.error;
+    throw new Error(message || 'The report was not generated.');
+  }
+  return data;
+}
+
+export function useGenerateCustomReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reportId: string) => generateCustomReport(reportId),
+    // The function writes a report_history row; re-read the history and count.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reporting-engine'] }),
+  });
 }
 
 export function useReportingEngine() {

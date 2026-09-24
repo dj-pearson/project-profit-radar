@@ -271,7 +271,8 @@ describe('the flip itself', () => {
  */
 describe('company-documents path convention', () => {
   const COMPANY_FIRST = [
-    ['src/pages/DocumentTemplates.tsx', '`${companyId}/templates/'],
+    // The upload moved into the page's hook (US-266).
+    ['src/hooks/useDocumentTemplates.ts', '`${companyId}/templates/'],
   ] as const;
 
   it.each(COMPANY_FIRST)('%s writes a company-first path', (file, fragment) => {

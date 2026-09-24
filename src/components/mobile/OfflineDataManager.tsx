@@ -5,8 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOfflineDataSync } from '@/hooks/useOfflineDataSync';
 import { Cloud, CloudOff, Download, Upload, RefreshCw, HardDrive, Wifi, WifiOff } from 'lucide-react';
 
 interface OfflineData {
@@ -45,7 +44,7 @@ export const OfflineDataManager = () => {
     inspections: []
   });
   const [syncProgress, setSyncProgress] = useState(0);
-  const { user, userProfile } = useAuth();
+  const sync = useOfflineDataSync();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -153,57 +152,19 @@ export const OfflineDataManager = () => {
   };
 
   const downloadEssentialData = async () => {
-    if (!syncStatus.isOnline || !userProfile?.company_id) return;
+    if (!syncStatus.isOnline || !sync.companyId) return;
 
     try {
       setSyncStatus(prev => ({ ...prev, syncInProgress: true }));
-      setSyncProgress(0);
-
-      // Download active projects - only essential columns for offline use
       setSyncProgress(20);
-      const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const { data: projects } = await supabase
-        .from('projects')
-        .select('id, name, status, client_name, budget, completion_percentage, start_date, end_date, site_address')
-        .eq('company_id', userProfile.company_id)
-        .eq('status', 'active')
-        .limit(50);
-
-      localStorage.setItem('offline_projects', JSON.stringify(projects || []));
-
-      // Download recent tasks - only essential columns
-      setSyncProgress(40);
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('id, name, description, status, priority, due_date, project_id, assigned_to, completion_percentage, created_at')
-        .eq('company_id', userProfile.company_id)
-        .gte('created_at', oneMonthAgo)
-        .limit(100);
-
-      localStorage.setItem('offline_tasks', JSON.stringify(tasks || []));
-
-      // Download user's recent time entries - only essential columns
-      setSyncProgress(60);
-      const { data: timeEntries } = await supabase
-        .from('time_entries')
-        .select('id, project_id, user_id, date, hours, notes, status, created_at')
-        .eq('user_id', user?.id)
-        .gte('date', oneMonthAgo)
-        .limit(50);
-
-      localStorage.setItem('offline_time_entries', JSON.stringify(timeEntries || []));
-
-      // Download recent expenses - only essential columns
-      setSyncProgress(80);
-      const { data: expenses } = await supabase
-        .from('expenses')
-        .select('id, project_id, amount, category, date, receipt_url, status, description, created_at')
-        .eq('company_id', userProfile.company_id)
-        .gte('date', oneMonthAgo)
-        .limit(50);
-
-      localStorage.setItem('offline_expenses', JSON.stringify(expenses || []));
+      // All four reads, or none: the cache is only replaced once every one
+      // came back, so a failed read never overwrites good offline data with [].
+      const data = await sync.download.mutateAsync();
+      localStorage.setItem('offline_projects', JSON.stringify(data.projects));
+      localStorage.setItem('offline_tasks', JSON.stringify(data.tasks));
+      localStorage.setItem('offline_time_entries', JSON.stringify(data.timeEntries));
+      localStorage.setItem('offline_expenses', JSON.stringify(data.expenses));
       setSyncProgress(100);
       localStorage.setItem('lastSync', new Date().toISOString());
       
@@ -220,10 +181,9 @@ export const OfflineDataManager = () => {
         description: "Essential data has been cached for offline use",
       });
     } catch (error) {
-      console.error('Error downloading data:', error);
       toast({
         title: "Download Error",
-        description: "Failed to download offline data",
+        description: `Offline data was not updated: ${error instanceof Error ? error.message : 'the download failed'}`,
         variant: "destructive"
       });
     } finally {
@@ -258,16 +218,16 @@ export const OfflineDataManager = () => {
         const pending = JSON.parse(localStorage.getItem(storageKey) || '[]');
         if (!pending.length) return;
 
-        const { error } = await supabase.from(table).insert(pending);
-
-        if (error) {
+        try {
+          // Reads the batch back; anything short of every row is a failure.
+          await sync.upload.mutateAsync({ table, rows: pending });
+          localStorage.removeItem(storageKey);
+          synced += pending.length;
+        } catch (error) {
           // Leave the queue in place so the next sync retries it.
           console.error(`[offline-sync] ${table} insert failed, keeping ${pending.length} queued`, error);
           failed += pending.length;
           failures.push(`${pending.length} ${label}`);
-        } else {
-          localStorage.removeItem(storageKey);
-          synced += pending.length;
         }
 
         if (totalPending > 0) {

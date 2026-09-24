@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { bondFormDefaults, bondFormSchema, buildBondData, type BondFormValues } from '@/lib/validations/bonds';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useSaveCompanyRecord, useProjectOptions } from '@/hooks/useRecordForms';
 
 interface BondFormProps {
   bond?: any;
@@ -16,15 +16,9 @@ interface BondFormProps {
   onSave: () => void;
 }
 
-interface Project {
-  id: string;
-  name: string;
-}
 
 export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => {
   const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
 
   const form = useForm<BondFormValues>({
     resolver: zodResolver(bondFormSchema),
@@ -32,49 +26,23 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
   });
   const claimMade = form.watch('claim_made');
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
+  const save = useSaveCompanyRecord('bonds');
+  const projectsQuery = useProjectOptions();
+  const projects = projectsQuery.data ?? [];
 
   const handleSubmit = async (values: BondFormValues) => {
-    setLoading(true);
-
     try {
       const bondData = buildBondData(values, userProfile);
 
       if (bond) {
-        const { error } = await supabase
-          .from('bonds')
-          .update(bondData)
-          .eq('id', bond.id);
-
-        if (error) throw error;
+        await save.mutateAsync({ id: bond.id, row: bondData });
 
         toast({
           title: "Bond Updated",
           description: "The bond has been updated successfully"
         });
       } else {
-        const { error } = await supabase
-          .from('bonds')
-          .insert(bondData);
-
-        if (error) throw error;
+        await save.mutateAsync({ row: bondData });
 
         toast({
           title: "Bond Created",
@@ -90,8 +58,6 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
         title: "Save Failed",
         description: error.message || "Failed to save bond"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -134,6 +100,11 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
     >
       <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Bond form">
+        {(projectsQuery.error) && (
+          <p role="alert" className="text-sm text-destructive">
+            Projects could not be loaded: {(projectsQuery.error)?.message}
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectFormField
             control={form.control}
@@ -198,8 +169,8 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Saving...' : bond ? 'Update Bond' : 'Add Bond'}
+          <Button type="submit" disabled={save.isPending}>
+            {save.isPending ? 'Saving...' : bond ? 'Update Bond' : 'Add Bond'}
           </Button>
         </div>
       </form>

@@ -19,8 +19,10 @@ interface BudgetBreakdown {
 }
 
 interface ClientBudgetSummaryProps {
-  totalBudget: number;
-  actualCost: number;
+  /** Null when the project has no budget set. */
+  totalBudget: number | null;
+  /** Null when spending to date is not known; no status is claimed then. */
+  actualCost: number | null;
   contractValue?: number;
   breakdown?: BudgetBreakdown[];
   showDetailedBreakdown?: boolean;
@@ -41,6 +43,36 @@ export const ClientBudgetSummary: React.FC<ClientBudgetSummaryProps> = ({
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Without both figures there is nothing to compare, so no "on track" or
+  // "over budget" claim is made; the portal used to pass 0 for an unknown
+  // spend and always report the budget as on track.
+  if (actualCost == null || totalBudget == null) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Summary</CardTitle>
+          <CardDescription>Overview of project budget and spending</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground">Budget</span>
+              <div className="text-2xl font-bold">{totalBudget == null ? '--' : formatCurrency(totalBudget)}</div>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground">Contract Value</span>
+              <div className="text-2xl font-bold">{contractValue == null ? '--' : formatCurrency(contractValue)}</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            <Info className="h-3 w-3 inline mr-1" />
+            Spending to date is not shown here. Ask your contractor for a cost report.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const remaining = totalBudget - actualCost;
   const percentUsed = totalBudget > 0 ? (actualCost / totalBudget) * 100 : 0;

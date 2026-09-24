@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { buildPermitData, permitFormDefaults, permitFormSchema, type PermitFormValues } from '@/lib/validations/permits';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useSaveCompanyRecord, useProjectOptions } from '@/hooks/useRecordForms';
 
 interface PermitFormProps {
   permit?: any;
@@ -17,64 +17,32 @@ interface PermitFormProps {
   onSave: () => void;
 }
 
-interface Project {
-  id: string;
-  name: string;
-}
 
 export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClose, onSave }) => {
   const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
 
   const form = useForm<PermitFormValues>({
     resolver: zodResolver(permitFormSchema),
     defaultValues: permitFormDefaults(permit, projectId),
   });
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
+  const save = useSaveCompanyRecord('permits');
+  const projectsQuery = useProjectOptions();
+  const projects = projectsQuery.data ?? [];
 
   const handleSubmit = async (values: PermitFormValues) => {
-    setLoading(true);
-
     try {
       const permitData = buildPermitData(values, userProfile);
 
       if (permit) {
-        const { error } = await supabase
-          .from('permits')
-          .update(permitData)
-          .eq('id', permit.id);
-
-        if (error) throw error;
+        await save.mutateAsync({ id: permit.id, row: permitData });
 
         toast({
           title: "Permit Updated",
           description: "The permit has been updated successfully"
         });
       } else {
-        const { error } = await supabase
-          .from('permits')
-          .insert(permitData);
-
-        if (error) throw error;
+        await save.mutateAsync({ row: permitData });
 
         toast({
           title: "Permit Created",
@@ -90,8 +58,6 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
         title: "Save Failed",
         description: error.message || "Failed to save permit"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -137,6 +103,11 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
     >
       <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Permit form">
+        {(projectsQuery.error) && (
+          <p role="alert" className="text-sm text-destructive">
+            Projects could not be loaded: {(projectsQuery.error)?.message}
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectFormField
             control={form.control}
@@ -202,8 +173,8 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Saving...' : permit ? 'Update Permit' : 'Add Permit'}
+          <Button type="submit" disabled={save.isPending}>
+            {save.isPending ? 'Saving...' : permit ? 'Update Permit' : 'Add Permit'}
           </Button>
         </div>
       </form>

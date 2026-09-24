@@ -122,17 +122,28 @@ describe('EnvironmentalPermitting: fabricated regulatory records on a live route
     expect(src).not.toMatch(/const monitoringData = \[/);
   });
 
+  // The reads and the update moved into useEnvironmentalPermitting (US-266).
+  const HOOK = 'src/hooks/useEnvironmentalPermitting.ts';
+  const fnBody = (src: string, name: string) => {
+    const at = src.indexOf(`export async function ${name}(`);
+    expect(at, name).toBeGreaterThan(-1);
+    const next = src.indexOf('\nexport ', at + 1);
+    return src.slice(at, next === -1 ? undefined : next);
+  };
+
   it('reads the three real tables, scoped to the company', () => {
-    const src = code(SRC);
-    for (const table of [
-      'environmental_permits',
-      'environmental_assessments',
-      'environmental_monitoring',
+    const src = code(HOOK);
+    for (const [fn, table] of [
+      ['fetchEnvironmentalPermits', 'environmental_permits'],
+      ['fetchEnvironmentalAssessments', 'environmental_assessments'],
+      ['fetchEnvironmentalMonitoring', 'environmental_monitoring'],
     ]) {
-      expect(src, table).toContain(`.from('${table}')`);
+      const body = fnBody(src, fn);
+      expect(body, table).toContain(`.from('${table}')`);
+      expect(body, `${table} must be company-scoped`).toContain(".eq('company_id', companyId)");
+      expect(body, `${table} read must throw`).toContain('if (error) throw error;');
     }
-    const scoped = src.match(/\.eq\('company_id', userProfile!\.company_id\)/g) ?? [];
-    expect(scoped.length, 'all three queries must be company-scoped').toBe(3);
+    expect(code(SRC)).not.toMatch(/supabase\s*\.from\(/);
   });
 
   it('and renders empty as empty rather than as somebody else records', () => {
@@ -143,11 +154,19 @@ describe('EnvironmentalPermitting: fabricated regulatory records on a live route
 
   it('its three save handlers write and report their errors', () => {
     const src = code(SRC);
-    const updates = src.match(/const \{ error \} = await supabase/g) ?? [];
-    expect(updates.length).toBe(3);
+    for (const table of ['environmental_permits', 'environmental_assessments', 'environmental_monitoring']) {
+      expect(src, table).toContain(`saveRecord('${table}'`);
+    }
     expect(src).toContain('Permit not updated');
     expect(src).toContain('Assessment not updated');
     expect(src).toContain('Monitoring data not updated');
+    // The write is company-scoped, reads its row back, and a zero-row
+    // update is an error rather than "Permit Updated".
+    const update = fnBody(code(HOOK), 'updateEnvironmentalRecord');
+    expect(update).toContain(".eq('company_id', companyId)");
+    expect(update).toContain(".select('id')");
+    expect(update).toContain('if (error) throw error;');
+    expect(update).toMatch(/data\.length === 0\) \{\s*throw/);
   });
 });
 

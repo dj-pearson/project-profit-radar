@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   data: {} as Record<string, Row[]>,
   writes: [] as Array<{ op: string; table: string; payload: unknown; filters: Array<[string, unknown]> }>,
   toast: vi.fn(),
+  failRead: null as string | null,
 }));
 
 vi.mock('@/integrations/supabase/client', () => {
@@ -25,9 +26,15 @@ vi.mock('@/integrations/supabase/client', () => {
     let payload: unknown = null;
     const rows = () => (h.data[table] ?? []).filter((r) =>
       filters.every(([c, v]) => r[c] === v));
+    // Writes are read back (.select()), so a write returns the rows it
+    // touched: the payload for insert/upsert, the matched rows otherwise.
     const settle = () => {
-      if (op) h.writes.push({ op, table, payload, filters: [...filters] });
-      return { data: op ? null : rows(), error: null };
+      if (!op) return h.failRead === table ? { data: null, error: { message: 'read failed' } } : { data: rows(), error: null };
+      h.writes.push({ op, table, payload, filters: [...filters] });
+      if (op === 'insert' || op === 'upsert') {
+        return { data: Array.isArray(payload) ? payload : [payload], error: null };
+      }
+      return { data: rows(), error: null };
     };
     const q: Record<string, unknown> = {
       select: () => q,
@@ -35,11 +42,11 @@ vi.mock('@/integrations/supabase/client', () => {
       limit: () => q,
       neq: () => q,
       eq: (c: string, v: unknown) => { filters.push([c, v]); return q; },
-      maybeSingle: () => Promise.resolve({ data: rows()[0] ?? null, error: null }),
+      maybeSingle: () => Promise.resolve(h.failRead === table ? { data: null, error: { message: 'read failed' } } : { data: rows()[0] ?? null, error: null }),
       update: (p: unknown) => { op = 'update'; payload = p; return q; },
       delete: () => { op = 'delete'; return q; },
-      insert: (p: unknown) => { op = 'insert'; payload = p; return Promise.resolve(settle()); },
-      upsert: (p: unknown) => { op = 'upsert'; payload = p; return Promise.resolve(settle()); },
+      insert: (p: unknown) => { op = 'insert'; payload = p; return q; },
+      upsert: (p: unknown) => { op = 'upsert'; payload = p; return q; },
       then: (res: (v: unknown) => unknown, rej: (e: unknown) => unknown) =>
         Promise.resolve(settle()).then(res, rej),
     };
@@ -76,6 +83,7 @@ const valueOf = (el: Element) => {
 beforeEach(() => {
   h.writes.length = 0;
   h.toast.mockClear();
+  h.failRead = null;
   h.data = {
     company_settings: [{
       company_id: COMPANY,
@@ -175,5 +183,15 @@ describe('CompanyBillingSettings', () => {
     fireEvent.blur(prefix);
     expect((await screen.findByRole('alert')).textContent).toContain('Letters, digits and - _ . / only');
     expect(h.writes.filter((w) => w.table === 'document_number_settings')).toHaveLength(0);
+  });
+
+  it('shows the error instead of a form of empty defaults when a read fails (US-266)', async () => {
+    // Saving that form would write a zero tax rate and blank terms over the
+    // company's real settings.
+    h.failRead = 'tax_rates';
+    renderCard();
+    expect(await screen.findByText('Could not load billing settings')).toBeTruthy();
+    expect(screen.queryByLabelText('Default tax rate (%)')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save billing settings' })).toBeNull();
   });
 });

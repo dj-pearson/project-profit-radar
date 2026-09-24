@@ -4,7 +4,15 @@
  * composer that RLS will refuse. Plus the manager-facing participant panel.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
+
+// The participant panel reads through TanStack Query (US-266).
+const render = (ui: ReactElement) =>
+  rtlRender(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>,
+  );
 import userEvent from '@testing-library/user-event';
 
 type Result = { data: unknown; error: unknown };
@@ -32,17 +40,29 @@ const { from, toast, state } = vi.hoisted(() => {
     const b: Record<string, unknown> = {};
     for (const m of ['select', 'eq', 'in', 'order']) b[m] = vi.fn(() => b);
     b.maybeSingle = vi.fn(async () => ({ data: state.participant, error: null }));
-    b.insert = vi.fn(async (row: unknown) => {
+    // Writes: awaited directly (ClientMessageCenter) or read back with
+    // .select() after their filters (the participant panel, US-266). Either
+    // way they resolve once, to the row they touched.
+    const write = (settle: () => Result) => {
+      const w: Record<string, unknown> = {};
+      for (const m of ['eq', 'select']) w[m] = vi.fn(() => w);
+      w.then = (resolve: (r: Result) => unknown) => Promise.resolve(settle()).then(resolve);
+      return w;
+    };
+    b.insert = vi.fn((row: unknown) => {
       state.inserts.push({ table, row });
-      return { data: null, error: state.insertError };
+      return write(() => ({ data: state.insertError ? null : [{ id: 'new-1' }], error: state.insertError }));
     });
     b.update = vi.fn((row: unknown) => {
       state.updates.push({ table, row });
-      return { eq: vi.fn(async () => ({ data: null, error: null })) };
+      return write(() => ({ data: [{ id: 'updated-1' }], error: null }));
     });
-    b.delete = vi.fn(() => ({
-      eq: vi.fn(async (_c: string, id: string) => { state.deletes.push(id); return { data: null, error: null }; }),
-    }));
+    b.delete = vi.fn(() => {
+      const w = write(() => ({ data: [{ id: 'deleted-1' }], error: null }));
+      const eq = w.eq as ReturnType<typeof vi.fn>;
+      eq.mockImplementation((c: string, v: string) => { if (c === 'id') state.deletes.push(v); return w; });
+      return w;
+    });
     b.then = (resolve: (r: Result) => unknown) => resolve(result());
     return b;
   });

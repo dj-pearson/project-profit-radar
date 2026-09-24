@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { buildWarrantyData, warrantyFormDefaults, warrantyFormSchema, type WarrantyFormValues } from '@/lib/validations/warranty';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useSaveCompanyRecord, useProjectOptions, useWarrantyFormOptions } from '@/hooks/useRecordForms';
 
 interface WarrantyFormProps {
   warranty?: any;
@@ -18,89 +18,37 @@ interface WarrantyFormProps {
   onSave: () => void;
 }
 
-interface Project {
-  id: string;
-  name: string;
-}
 
-interface Vendor {
-  id: string;
-  name: string;
-}
 
-interface PurchaseOrder {
-  id: string;
-  po_number: string;
-}
 
 export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId, onClose, onSave }) => {
   const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
   const form = useForm<WarrantyFormValues>({
     resolver: zodResolver(warrantyFormSchema),
     defaultValues: warrantyFormDefaults(warranty, projectId),
   });
 
-  useEffect(() => {
-    loadDropdownData();
-  }, []);
-
-  const loadDropdownData = async () => {
-    try {
-      // Load projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile?.company_id);
-
-      // Load vendors
-      const { data: vendorsData } = await supabase
-        .from('vendors')
-        .select('id, name')
-        .eq('company_id', userProfile?.company_id);
-
-      // Load purchase orders
-      const { data: poData } = await supabase
-        .from('purchase_orders')
-        .select('id, po_number')
-        .eq('company_id', userProfile?.company_id);
-
-      setProjects(projectsData || []);
-      setVendors(vendorsData || []);
-      setPurchaseOrders(poData || []);
-    } catch (error) {
-      console.error('Error loading dropdown data:', error);
-    }
-  };
+  const save = useSaveCompanyRecord('warranties');
+  const projectsQuery = useProjectOptions();
+  const optionsQuery = useWarrantyFormOptions();
+  const projects = projectsQuery.data ?? [];
+  const vendors = optionsQuery.data?.vendors ?? [];
+  const purchaseOrders = optionsQuery.data?.purchaseOrders ?? [];
 
   const handleSubmit = async (values: WarrantyFormValues) => {
-    setLoading(true);
-
     try {
       const warrantyData = buildWarrantyData(values, userProfile);
 
       if (warranty) {
-        const { error } = await supabase
-          .from('warranties')
-          .update(warrantyData)
-          .eq('id', warranty.id);
-
-        if (error) throw error;
+        await save.mutateAsync({ id: warranty.id, row: warrantyData });
 
         toast({
           title: "Warranty Updated",
           description: "The warranty has been updated successfully"
         });
       } else {
-        const { error } = await supabase
-          .from('warranties')
-          .insert([warrantyData]);
-
-        if (error) throw error;
+        await save.mutateAsync({ row: warrantyData });
 
         toast({
           title: "Warranty Created",
@@ -116,8 +64,6 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
         title: "Save Failed",
         description: error.message || "Failed to save warranty"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -152,6 +98,11 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
 
         <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Warranty form">
+          {(projectsQuery.error ?? optionsQuery.error) && (
+            <p role="alert" className="text-sm text-destructive">
+              Projects, vendors or purchase orders could not be loaded: {(projectsQuery.error ?? optionsQuery.error)?.message}
+            </p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SelectFormField control={form.control} name="warranty_type" label="Warranty Type *" placeholder="Select warranty type" options={warrantyTypes} />
             <InputFormField control={form.control} name="item_name" label="Item Name *" placeholder="e.g., Kitchen Sink, HVAC System" aria-required="true" />
@@ -225,8 +176,8 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : warranty ? 'Update Warranty' : 'Create Warranty'}
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending ? 'Saving...' : warranty ? 'Update Warranty' : 'Create Warranty'}
             </Button>
           </div>
         </form>

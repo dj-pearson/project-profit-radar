@@ -55,10 +55,14 @@ describe('dateRangeFilter', () => {
 
 describe('CustomReportBuilder query errors', () => {
   const src = readFileSync('src/components/reports/CustomReportBuilder.tsx', 'utf8');
+  // The query moved into useCustomReportData (US-266).
+  const hook = readFileSync('src/hooks/useCustomReportData.ts', 'utf8');
 
   it('throws the PostgREST error instead of returning mock rows', () => {
-    expect(src).toMatch(/const \{ data, error \} = await query\.limit\(1000\);\s*if \(error\) throw error;/);
+    expect(hook).toMatch(/const \{ data, error \} = await query\.limit\(REPORT_ROW_LIMIT\);\s*if \(error\) throw error;/);
     expect(src).not.toMatch(/generateMockData\(/);
+    const hookCode = hook.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(hookCode).not.toMatch(/generateMockData\(|Math\.random\(/);
   });
 
   it('shows the failure to the user', () => {
@@ -66,7 +70,11 @@ describe('CustomReportBuilder query errors', () => {
   });
 
   it('uses the shared date-range column map', () => {
-    expect(src).toContain('dateRangeFilter(config.dataSource');
-    expect(src).not.toMatch(/'time_entries' \? 'date'/);
+    expect(hook).toContain('dateRangeFilter(config.dataSource');
+    expect(hook).not.toMatch(/'time_entries' \? 'date'/);
+  });
+
+  it('scopes the report to the company', () => {
+    expect(hook).toContain(".eq('company_id', companyId)");
   });
 });

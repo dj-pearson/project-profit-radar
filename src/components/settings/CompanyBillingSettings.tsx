@@ -17,10 +17,9 @@
  * reads it for the invoice and estimate forms, the conversion and billing
  * paths, and the PDF header.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +33,8 @@ import { Separator } from '@/components/ui/separator';
 import {
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { Receipt, Plus, Trash2, FileText, AlertCircle } from 'lucide-react';
 import {
@@ -45,28 +42,12 @@ import {
   billingSettingsSchema, numberFormatSchema, EMPTY_BILLING_SETTINGS,
   DOCUMENT_TYPE_LABELS, type DocumentType, type BillingSettingsValues, type NamedTaxRate,
 } from '@/lib/companyBilling';
-import { billingDefaultsKey } from '@/hooks/useBillingDefaults';
+import {
+  useCompanyBillingSettings, documentNumberTaken, type NumberSetting, type NumberDraft,
+} from '@/hooks/useCompanyBillingSettings';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface NumberSetting {
-  doc_type: DocumentType;
-  prefix: string;
-  include_year: boolean;
-  pad_width: number;
-  next_number: number;
-}
-
-type NumberDraft = Omit<NumberSetting, 'doc_type'>;
-
 const DOC_TYPES: DocumentType[] = ['invoice', 'estimate', 'change_order', 'purchase_order'];
-
-/** Where each document type's numbers live, to check a new format against. */
-const NUMBERED: Record<DocumentType, { table: string; column: string }> = {
-  invoice: { table: 'invoices', column: 'invoice_number' },
-  estimate: { table: 'estimates', column: 'estimate_number' },
-  change_order: { table: 'change_orders', column: 'change_order_number' },
-  purchase_order: { table: 'purchase_orders', column: 'po_number' },
-};
 
 const suggestedPrefix = (docType: DocumentType) =>
   ({ invoice: 'INV-', estimate: 'EST-', change_order: 'CO-', purchase_order: 'PO-' })[docType];
@@ -78,115 +59,56 @@ const draftFrom = (docType: DocumentType, row?: NumberSetting): NumberDraft => (
   next_number: row?.next_number ?? 1,
 });
 
+const messageOf = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
 export function CompanyBillingSettings() {
-  const { userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const companyId = userProfile?.company_id;
+  const billing = useCompanyBillingSettings();
+  const companyId = billing.companyId;
 
   const form = useForm<BillingSettingsValues>({
     resolver: zodResolver(billingSettingsSchema),
     defaultValues: EMPTY_BILLING_SETTINGS,
   });
 
+  // Local copies so a name or rate can be typed before it saves on blur.
   const [taxRates, setTaxRates] = useState<NamedTaxRate[]>([]);
   const [numbering, setNumbering] = useState<NumberSetting[]>([]);
   const [drafts, setDrafts] = useState<Record<DocumentType, NumberDraft>>(
     () => Object.fromEntries(DOC_TYPES.map((t) => [t, draftFrom(t)])) as Record<DocumentType, NumberDraft>
   );
   const [numberErrors, setNumberErrors] = useState<Partial<Record<DocumentType, string>>>({});
-  const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
-  // New documents read these through useBillingDefaults; tell it they moved.
-  const refreshDefaults = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: billingDefaultsKey(companyId ?? undefined) }),
-    [queryClient, companyId]
-  );
-
-  const loadedOnce = useRef(false);
-
-  // Also called after a tax rate or numbering change. Those save on their
-  // own, so a reload must not flash the skeleton or throw away unsaved edits
-  // in the settings form above them.
-  const load = useCallback(async () => {
-    if (!companyId) return;
-    if (!loadedOnce.current) setLoading(true);
-
-    const [settingsRes, taxRes, numberRes] = await Promise.all([
-      supabase
-        .from('company_settings')
-        .select('default_tax_rate, default_payment_terms_days, license_number, insurance_carrier, insurance_policy_number, insurance_expires_on, estimate_terms, invoice_terms, change_order_terms')
-        .eq('company_id', companyId)
-        .maybeSingle(),
-      supabase
-        .from('tax_rates')
-        .select('id, name, rate, applies_to, is_default, is_active')
-        .eq('company_id', companyId)
-        .order('name'),
-      supabase
-        .from('document_number_settings')
-        .select('doc_type, prefix, include_year, pad_width, next_number')
-        .eq('company_id', companyId),
-    ]);
-
-    const failure = [settingsRes, taxRes, numberRes].find((r) => r.error)?.error;
-    if (failure) {
-      logger.error('Could not load billing settings', failure);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load billing settings',
-        description: failure.message,
-      });
-    }
-
-    if (settingsRes.data && !form.formState.isDirty) {
-      const d = settingsRes.data;
-      form.reset({
-        default_tax_rate: Number(d.default_tax_rate) || 0,
-        default_payment_terms_days: Number(d.default_payment_terms_days ?? 30),
-        license_number: d.license_number || '',
-        insurance_carrier: d.insurance_carrier || '',
-        insurance_policy_number: d.insurance_policy_number || '',
-        insurance_expires_on: d.insurance_expires_on || '',
-        estimate_terms: d.estimate_terms || '',
-        invoice_terms: d.invoice_terms || '',
-        change_order_terms: d.change_order_terms || '',
-      });
-    }
-    const rows = (numberRes.data || []) as NumberSetting[];
-    setTaxRates((taxRes.data || []) as NamedTaxRate[]);
-    setNumbering(rows);
+  // Every read (the first and each one after a write) refreshes the tax rates
+  // and numbering. The settings form is only reset while it has no unsaved
+  // edits, so saving a tax rate never throws away what is typed above it.
+  useEffect(() => {
+    const data = billing.data;
+    if (!data) return;
+    if (data.settings && !form.formState.isDirty) form.reset(data.settings);
+    setTaxRates(data.taxRates);
+    setNumbering(data.numbering);
     setDrafts(Object.fromEntries(
-      DOC_TYPES.map((t) => [t, draftFrom(t, rows.find((r) => r.doc_type === t))])
+      DOC_TYPES.map((t) => [t, draftFrom(t, data.numbering.find((r) => r.doc_type === t))])
     ) as Record<DocumentType, NumberDraft>);
-    loadedOnce.current = true;
-    setLoading(false);
-  }, [companyId, toast, form]);
+    setHydrated(true);
+  }, [billing.data, form]);
 
-  useEffect(() => { void load(); }, [load]);
+  // Put the local copies back to what was last read.
+  const resync = () => {
+    if (billing.data) setTaxRates(billing.data.taxRates);
+  };
 
   const save = async (values: BillingSettingsValues) => {
-    if (!companyId) return;
-
-    const row = {
-      company_id: companyId,
-      ...values,
-      insurance_expires_on: values.insurance_expires_on || null,
-    };
-    const { error } = await supabase
-      .from('company_settings')
-      // The generated Insert type has the Row's US-332 columns missing
-      // (types.ts predates 20260903210000; US-369). Narrowed to the columns
-      // it does know; the billing fields go through at runtime.
-      .upsert(row as { company_id: string }, { onConflict: 'company_id' });
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'Could not save', description: error.message });
+    try {
+      await billing.saveSettings.mutateAsync(values);
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not save', description: messageOf(err) });
       return;
     }
     form.reset(values);
-    void refreshDefaults();
     toast({
       title: 'Billing settings saved',
       description: `New invoices will be ${paymentTermsLabel(values.default_payment_terms_days).toLowerCase()}.`,
@@ -196,77 +118,55 @@ export function CompanyBillingSettings() {
   // --- Named tax rates ------------------------------------------------------
 
   const addTaxRate = async () => {
-    if (!companyId) return;
-    const { error } = await supabase
-      .from('tax_rates')
-      .insert({
-        company_id: companyId,
+    try {
+      // Added with is_default: false (see addTaxRate in the hook); the partial
+      // unique index refuses a second default.
+      await billing.addRate.mutateAsync({
         name: `Rate ${taxRates.length + 1}`,
         rate: Number(form.getValues('default_tax_rate')) || 0,
-        // Never default-on: the partial unique index refuses a second default,
-        // so an added rate must not claim it.
-        is_default: false,
       });
-    if (error) {
-      toast({ variant: 'destructive', title: 'Could not add that rate', description: error.message });
-      return;
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not add that rate', description: messageOf(err) });
     }
-    void load();
-    void refreshDefaults();
   };
 
   const updateTaxRate = async (id: string, patch: Partial<NamedTaxRate>) => {
     if (patch.name !== undefined && !patch.name.trim()) {
       toast({ variant: 'destructive', title: 'A tax rate needs a name' });
-      void load();
+      resync();
       return;
     }
     if (patch.rate !== undefined && !(patch.rate >= 0 && patch.rate <= 100)) {
       toast({ variant: 'destructive', title: 'A tax rate is a percentage between 0 and 100' });
-      void load();
+      resync();
       return;
     }
 
-    const previous = taxRates;
     setTaxRates((prev) => prev.map((t) => {
       if (t.id === id) return { ...t, ...patch };
       // One default at a time; the index refuses two.
       return patch.is_default ? { ...t, is_default: false } : t;
     }));
 
-    // Clear the old default first, or the partial unique index refuses the new one.
-    if (patch.is_default) {
-      const { error: clearError } = await supabase
-        .from('tax_rates')
-        .update({ is_default: false })
-        .eq('company_id', companyId as string)
-        .eq('is_default', true)
-        .neq('id', id);
-      if (clearError) {
-        setTaxRates(previous);
-        toast({ variant: 'destructive', title: 'Could not change the default rate', description: clearError.message });
-        return;
-      }
+    try {
+      await billing.updateRate.mutateAsync({ id, patch });
+    } catch (err) {
+      resync();
+      toast({
+        variant: 'destructive',
+        title: patch.is_default ? 'Could not change the default rate' : 'Could not save that rate',
+        description: messageOf(err),
+      });
     }
-
-    const { error } = await supabase.from('tax_rates').update(patch).eq('id', id);
-    if (error) {
-      setTaxRates(previous);
-      toast({ variant: 'destructive', title: 'Could not save that rate', description: error.message });
-      return;
-    }
-    void refreshDefaults();
   };
 
   const removeTaxRate = async (id: string) => {
     if (!(await confirmAction({ title: 'Remove this tax rate?', confirmLabel: 'Remove', destructive: true }))) return;
-    const { error } = await supabase.from('tax_rates').delete().eq('id', id);
-    if (error) {
-      toast({ variant: 'destructive', title: 'Could not remove that rate', description: error.message });
-      return;
+    try {
+      await billing.removeRate.mutateAsync(id);
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not remove that rate', description: messageOf(err) });
     }
-    void load();
-    void refreshDefaults();
   };
 
   // --- Numbering ------------------------------------------------------------
@@ -306,19 +206,14 @@ export function CompanyBillingSettings() {
       { prefix: next.prefix, includeYear: next.include_year, padWidth: next.pad_width },
       next.next_number
     );
-    const target = NUMBERED[docType];
-    // The table name comes from a fixed map, so the typed client cannot see
-    // which table this is; the query itself is the same shape for all four.
-    const { data: clash, error: clashError } = await (supabase.from(target.table as 'invoices'))
-      .select('id')
-      .eq('company_id', companyId)
-      .eq(target.column as 'invoice_number', preview)
-      .limit(1);
-    if (clashError) {
-      setNumberErrors((e) => ({ ...e, [docType]: `Could not check ${preview}: ${clashError.message}` }));
+    let taken: boolean;
+    try {
+      taken = await documentNumberTaken(companyId, docType, preview);
+    } catch (err) {
+      setNumberErrors((e) => ({ ...e, [docType]: `Could not check ${preview}: ${messageOf(err)}` }));
       return;
     }
-    if (clash && clash.length > 0) {
+    if (taken) {
       setNumberErrors((e) => ({
         ...e,
         [docType]: `${preview} is already on one of your ${DOCUMENT_TYPE_LABELS[docType].toLowerCase()}. Set Next above your highest existing number, or change the prefix.`,
@@ -327,36 +222,20 @@ export function CompanyBillingSettings() {
     }
 
     const patch = Object.fromEntries(changed.map((k) => [k, next[k]])) as Partial<NumberDraft>;
-    const { error } = existing
-      ? await supabase
-          .from('document_number_settings')
-          .update(patch)
-          .eq('company_id', companyId)
-          .eq('doc_type', docType)
-      : await supabase
-          .from('document_number_settings')
-          .insert({
-            company_id: companyId,
-            doc_type: docType,
-            prefix: next.prefix,
-            include_year: next.include_year,
-            pad_width: next.pad_width,
-            next_number: next.next_number,
-          });
-
-    if (error) {
+    try {
+      await billing.saveNumbering.mutateAsync({ docType, existing: !!existing, values: existing ? patch : next });
+    } catch (err) {
       // 23514 is the forward-only trigger: the counter cannot go back.
+      const code = (err as { code?: string } | null)?.code;
       setNumberErrors((e) => ({
         ...e,
-        [docType]: error.code === '23514'
+        [docType]: code === '23514'
           ? `Numbers up to ${(existing?.next_number ?? 1) - 1} have been issued; Next cannot go below ${existing?.next_number ?? 1}.`
-          : error.message,
+          : messageOf(err),
       }));
-      void load();
       return;
     }
     setNumberErrors((e) => ({ ...e, [docType]: undefined }));
-    void load();
   };
 
   const setDraft = (docType: DocumentType, patch: Partial<NumberDraft>) =>
@@ -365,7 +244,25 @@ export function CompanyBillingSettings() {
   const lapsed = insuranceExpired(form.watch('insurance_expires_on'));
   const termsDays = Number(form.watch('default_payment_terms_days')) || 0;
 
-  if (loading) {
+  if (billing.error) {
+    // No form on a failed read: saving it would write empty defaults over
+    // the company's real settings.
+    return (
+      <Card>
+        <CardHeader><CardTitle>Billing and documents</CardTitle></CardHeader>
+        <CardContent>
+          <ErrorState
+            inline
+            title="Could not load billing settings"
+            error={billing.error}
+            onRetry={() => { void billing.refetch(); }}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hydrated) {
     return (
       <Card>
         <CardHeader><CardTitle>Billing and documents</CardTitle></CardHeader>

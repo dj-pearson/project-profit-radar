@@ -13,7 +13,9 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u-1', user_metadata: { company_id: 'co-1' } } }),
+  // FiscalPeriods reads the company from the profile (US-266); ChartOfAccounts
+  // still reads user_metadata.
+  useAuth: () => ({ user: { id: 'u-1', user_metadata: { company_id: 'co-1' } }, userProfile: { id: 'u-1', company_id: 'co-1' } }),
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/integrations/supabase/client', () => {
@@ -29,8 +31,13 @@ vi.mock('@/integrations/supabase/client', () => {
         ...list(),
         insert: (row: unknown) => {
           h.insert(table, row);
+          // Writes are read back: .single() for the year, the rows for the periods.
+          const rows = (Array.isArray(row) ? row : [row]).map((r, i) => ({ ...(r as object), id: `row-${i}` }));
           return {
-            select: () => ({ single: () => Promise.resolve({ data: { id: 'fy-1' }, error: null }) }),
+            select: () => ({
+              single: () => Promise.resolve({ data: { id: 'fy-1' }, error: null }),
+              then: (res: (v: unknown) => unknown) => Promise.resolve({ data: rows, error: null }).then(res),
+            }),
             then: (res: (v: unknown) => unknown) => Promise.resolve({ error: null }).then(res),
           };
         },

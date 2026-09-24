@@ -89,12 +89,16 @@ describe('the portal is reachable and enrolment-scoped (US-319)', () => {
   it('finds projects by enrolment rather than by matching an email string', () => {
     // Comments stripped, so the note explaining the old query does not count as
     // the old query.
-    const page = read('src/pages/ClientPortalEnhanced.tsx')
+    // The read moved into useClientPortalProjects (US-266); the page calls it.
+    const strip = (path: string) => read(path)
       .split('\n')
       .filter((line) => !line.trim().startsWith('//'))
       .join('\n');
-    expect(page).toMatch(/from\('client_portal_access'\)/);
-    expect(page).not.toMatch(/\.eq\('client_email'/);
+    const hook = strip('src/hooks/useClientPortalProjects.ts');
+    const page = strip('src/pages/ClientPortalEnhanced.tsx');
+    expect(hook).toMatch(/from\('client_portal_access'\)/);
+    expect(page).toMatch(/useClientPortalProjects\(/);
+    for (const src of [hook, page]) expect(src).not.toMatch(/\.eq\('client_email'/);
   });
 
   it('has one portal page, not two', () => {

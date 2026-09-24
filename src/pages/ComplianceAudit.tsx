@@ -6,14 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 
-import { Shield, AlertTriangle, Eye, Settings, FileText, Database, Clock, TrendingUp, RefreshCw, Download, Search, Edit } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, Settings, FileText, Database, Clock, TrendingUp, RefreshCw, Download, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useComplianceAudit, type AuditEvent } from '@/hooks/useComplianceAudit';
+import { useComplianceAudit } from '@/hooks/useComplianceAudit';
 import { ErrorState } from '@/components/common/ErrorState';
 import { format } from 'date-fns';
 import { RootAdminOnly } from '@/components/PermissionGate';
@@ -27,8 +24,6 @@ const ComplianceAudit = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [editingEvent, setEditingEvent] = useState<AuditEvent | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleRefresh = async () => {
@@ -232,7 +227,8 @@ const ComplianceAudit = () => {
                  <div>
                    <CardTitle className="text-lg sm:text-xl">System Audit Log</CardTitle>
                    <CardDescription className="text-sm">
-                     Comprehensive log of all system activities and user actions
+                     Comprehensive log of all system activities and user actions.
+                     Entries are read-only: an audit log that can be edited is not evidence.
                    </CardDescription>
                  </div>
                  
@@ -316,16 +312,6 @@ const ComplianceAudit = () => {
                            <div className="text-xs text-muted-foreground">
                              {format(new Date(event.created_at), 'MMM d, HH:mm:ss')}
                            </div>
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             onClick={() => {
-                               setEditingEvent(event);
-                               setEditDialogOpen(true);
-                             }}
-                           >
-                             <Edit className="h-4 w-4" />
-                           </Button>
                          </div>
                        </div>
                      </div>
@@ -418,121 +404,6 @@ const ComplianceAudit = () => {
         </TabsContent>
        </Tabs>
 
-       {/* Edit Dialog */}
-       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-         <DialogContent className="max-w-2xl">
-           <DialogHeader>
-             <DialogTitle>Edit Audit Event</DialogTitle>
-             <DialogDescription>
-               Update the details for this compliance audit event
-             </DialogDescription>
-           </DialogHeader>
-           
-           {editingEvent && (
-             <div className="space-y-4">
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div>
-                   <Label htmlFor="edit-action-type">Action Type</Label>
-                   <Select defaultValue={editingEvent.action_type}>
-                     <SelectTrigger>
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="create">Create</SelectItem>
-                       <SelectItem value="update">Update</SelectItem>
-                       <SelectItem value="delete">Delete</SelectItem>
-                       <SelectItem value="export">Export</SelectItem>
-                       <SelectItem value="view">View</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-                 <div>
-                   <Label htmlFor="edit-resource-type">Resource Type</Label>
-                   <Input 
-                     id="edit-resource-type" 
-                     defaultValue={editingEvent.resource_type}
-                     placeholder="Resource type" 
-                   />
-                 </div>
-               </div>
-               <div>
-                 <Label htmlFor="edit-resource-name">Resource Name</Label>
-                 <Input 
-                   id="edit-resource-name" 
-                   defaultValue={editingEvent.resource_name || ''}
-                   placeholder="Resource name" 
-                 />
-               </div>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div>
-                   <Label htmlFor="edit-risk-level">Risk Level</Label>
-                   <Select defaultValue={editingEvent.risk_level}>
-                     <SelectTrigger>
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="low">Low</SelectItem>
-                       <SelectItem value="medium">Medium</SelectItem>
-                       <SelectItem value="high">High</SelectItem>
-                       <SelectItem value="critical">Critical</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-                 <div>
-                   <Label htmlFor="edit-compliance-category">Compliance Category</Label>
-                   <Select defaultValue={editingEvent.compliance_category}>
-                     <SelectTrigger>
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="data_access">Data Access</SelectItem>
-                       <SelectItem value="user_management">User Management</SelectItem>
-                       <SelectItem value="financial">Financial</SelectItem>
-                       <SelectItem value="security">Security</SelectItem>
-                       <SelectItem value="configuration_change">Configuration Change</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-               </div>
-               <div>
-                 <Label htmlFor="edit-description">Description</Label>
-                 <Textarea 
-                   id="edit-description" 
-                   defaultValue={editingEvent.description || ''}
-                   placeholder="Event description..."
-                   rows={3}
-                 />
-               </div>
-
-               <div className="flex flex-col sm:flex-row gap-2 pt-4">
-                 <Button 
-                   onClick={() => {
-                     setEditDialogOpen(false);
-                     setEditingEvent(null);
-                     toast({
-                       title: "Event Updated",
-                       description: "Audit event has been updated successfully",
-                     });
-                   }}
-                   className="w-full sm:flex-1"
-                 >
-                   Save Changes
-                 </Button>
-                 <Button 
-                   variant="outline" 
-                   onClick={() => {
-                     setEditDialogOpen(false);
-                     setEditingEvent(null);
-                   }}
-                   className="w-full sm:w-auto"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
         </div>
       </DashboardLayout>
       </AccessiblePageWrapper>

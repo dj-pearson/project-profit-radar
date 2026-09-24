@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,88 +26,20 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Wallet, Plus, Lock, Unlock, Calendar } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useFiscalYears, type FiscalYear, type FiscalPeriodRow } from '@/hooks/useFiscalYears';
+import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from 'sonner';
-import { generateMonthlyPeriods } from '@/utils/accountingUtils';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface NewFiscalYearData {
-  yearNumber: number;
-  startDate: string;
-  endDate: string;
-}
-
-interface FiscalYear {
-  id: string;
-  company_id: string;
-  year_number: number;
-  start_date: string;
-  end_date: string;
-  is_closed: boolean | null;
-  closed_at: string | null;
-  closed_by: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-interface FiscalPeriod {
-  id: string;
-  fiscal_year_id: string;
-  company_id: string;
-  period_number: number;
-  period_name: string;
-  start_date: string;
-  end_date: string;
-  is_closed: boolean | null;
-  closed_at: string | null;
-  closed_by: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-  fiscal_year?: {
-    year_number: number;
-  } | null;
-}
+type FiscalPeriod = FiscalPeriodRow;
 
 export default function FiscalPeriods() {
-  const { user } = useAuth();
-  const companyId = user?.user_metadata?.company_id;
-  const queryClient = useQueryClient();
-
+  const fiscal = useFiscalYears();
+  const fiscalYears = fiscal.years.data;
+  const allPeriods = fiscal.periods.data;
+  const loadError = fiscal.years.error ?? fiscal.periods.error;
   const [isCreateYearDialogOpen, setIsCreateYearDialogOpen] = useState(false);
-
-  // Fetch fiscal years
-  const { data: fiscalYears, isLoading: yearsLoading } = useQuery({
-    queryKey: ['fiscal-years', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('fiscal_years')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('year_number', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!companyId,
-  });
-
-  // Fetch fiscal periods
-  const { data: allPeriods, isLoading: periodsLoading } = useQuery({
-    queryKey: ['fiscal-periods-all', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('fiscal_periods')
-        .select('*, fiscal_year:fiscal_years(year_number)')
-        .eq('company_id', companyId)
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!companyId,
-  });
 
   // Form state for new fiscal year
   const yearForm = useForm<FiscalYearFormValues>({
@@ -116,122 +47,43 @@ export default function FiscalPeriods() {
     defaultValues: fiscalYearDefaults(new Date().getFullYear()),
   });
 
-  // Create fiscal year mutation
-  const createFiscalYear = useMutation({
-    mutationFn: async (yearData: NewFiscalYearData) => {
-      // Create fiscal year
-      const { data: fiscalYear, error: yearError } = await supabase
-        .from('fiscal_years')
-        .insert({
-          company_id: companyId,
-          year_number: yearData.yearNumber,
-          start_date: yearData.startDate,
-          end_date: yearData.endDate,
-        })
-        .select()
-        .single();
-
-      if (yearError) throw yearError;
-
-      // Generate monthly periods
-      const periods = generateMonthlyPeriods(
-        new Date(yearData.startDate),
-        new Date(yearData.endDate)
-      );
-
-      // Insert periods
-      const periodInserts = periods.map(period => ({
-        fiscal_year_id: fiscalYear.id,
-        company_id: companyId,
-        period_number: period.periodNumber,
-        period_name: period.periodName,
-        start_date: period.startDate.toISOString().split('T')[0],
-        end_date: period.endDate.toISOString().split('T')[0],
-      }));
-
-      const { error: periodsError } = await supabase
-        .from('fiscal_periods')
-        .insert(periodInserts);
-
-      if (periodsError) throw periodsError;
-
-      return fiscalYear;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fiscal-years'] });
-      queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
-      toast.success('Fiscal year created successfully');
-      setIsCreateYearDialogOpen(false);
-      yearForm.reset(fiscalYearDefaults(new Date().getFullYear() + 1));
-    },
-    onError: (error: unknown) => {
-      toast.error(`Failed to create fiscal year: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
-
-  // Close period mutation
-  const closePeriod = useMutation({
-    mutationFn: async (periodId: string) => {
-      const { error } = await supabase
-        .from('fiscal_periods')
-        .update({
-          is_closed: true,
-          closed_at: new Date().toISOString(),
-          closed_by: user?.id,
-        })
-        .eq('id', periodId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
-      toast.success('Period closed successfully');
-    },
-    onError: (error: unknown) => {
-      toast.error(`Failed to close period: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
-
-  // Reopen period mutation
-  const reopenPeriod = useMutation({
-    mutationFn: async (periodId: string) => {
-      const { error } = await supabase
-        .from('fiscal_periods')
-        .update({
-          is_closed: false,
-          closed_at: null,
-          closed_by: null,
-        })
-        .eq('id', periodId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
-      toast.success('Period reopened successfully');
-    },
-    onError: (error: unknown) => {
-      toast.error(`Failed to reopen period: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
+  const errorText = (error: unknown) => (error instanceof Error ? error.message : 'Unknown error');
 
   const handleCreateYear = async (values: FiscalYearFormValues) => {
-    await createFiscalYear.mutateAsync({
-      yearNumber: Number(values.yearNumber),
-      startDate: values.startDate,
-      endDate: values.endDate,
-    });
+    try {
+      await fiscal.create.mutateAsync({
+        yearNumber: Number(values.yearNumber),
+        startDate: values.startDate,
+        endDate: values.endDate,
+      });
+    } catch (error) {
+      toast.error(`Failed to create fiscal year: ${errorText(error)}`);
+      return;
+    }
+    toast.success('Fiscal year created successfully');
+    setIsCreateYearDialogOpen(false);
+    yearForm.reset(fiscalYearDefaults(new Date().getFullYear() + 1));
   };
 
   const handleClosePeriod = async (periodId: string) => {
     if (await confirmAction({ title: 'Are you sure you want to close this period?', description: 'No further transactions can be posted to it.', confirmLabel: 'Close period' })) {
-      await closePeriod.mutateAsync(periodId);
+      try {
+        await fiscal.setClosed.mutateAsync({ periodId, closed: true });
+        toast.success('Period closed successfully');
+      } catch (error) {
+        toast.error(`Failed to close period: ${errorText(error)}`);
+      }
     }
   };
 
   const handleReopenPeriod = async (periodId: string) => {
     if (await confirmAction({ title: 'Are you sure you want to reopen this period?', description: 'This will allow new transactions to be posted.', confirmLabel: 'Reopen period' })) {
-      await reopenPeriod.mutateAsync(periodId);
+      try {
+        await fiscal.setClosed.mutateAsync({ periodId, closed: false });
+        toast.success('Period reopened successfully');
+      } catch (error) {
+        toast.error(`Failed to reopen period: ${errorText(error)}`);
+      }
     }
   };
 
@@ -245,7 +97,9 @@ export default function FiscalPeriods() {
     return acc;
   }, {});
 
-  const isLoading = yearsLoading || periodsLoading;
+  const isLoading = fiscal.years.isLoading || fiscal.periods.isLoading;
+  // Counts only from reads that came back; loading or failed shows '--'.
+  const counted = !isLoading && !loadError;
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Fiscal Periods Management">
@@ -364,7 +218,7 @@ export default function FiscalPeriods() {
             <CardTitle className="text-sm font-medium">Total Fiscal Years</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fiscalYears?.length || 0}</div>
+            <div className="text-2xl font-bold">{counted ? (fiscalYears?.length ?? 0) : '--'}</div>
           </CardContent>
         </Card>
 
@@ -383,7 +237,7 @@ export default function FiscalPeriods() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allPeriods?.filter(p => !p.is_closed).length || 0}
+              {counted ? (allPeriods?.filter(p => !p.is_closed).length ?? 0) : '--'}
             </div>
             <p className="text-xs text-muted-foreground">
               Available for transactions
@@ -395,7 +249,13 @@ export default function FiscalPeriods() {
 
       {/* Fiscal Years and Periods */}
       <section aria-label="Fiscal years and periods">
-        {isLoading ? (
+        {loadError ? (
+          <ErrorState
+            title="Fiscal periods could not be loaded"
+            error={errorText(loadError)}
+            onRetry={() => { void fiscal.years.refetch(); void fiscal.periods.refetch(); }}
+          />
+        ) : isLoading ? (
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>

@@ -68,8 +68,9 @@ export function balanceSheetCsv(sheet: BalanceSheet): string {
     ...accountLines(sheet.accounts, 'liability'),
     total('Liabilities', 'Total Liabilities', sheet.liabilities),
     ...accountLines(sheet.accounts, 'equity'),
+    total('Equity', "Retained Earnings - Prior Years' Profit", sheet.priorYearsEarnings),
     total('Equity', 'Current Year Earnings', sheet.currentYearEarnings),
-    total('Equity', 'Total Equity', sheet.equity + sheet.currentYearEarnings),
+    total('Equity', 'Total Equity', sheet.equity + sheet.priorYearsEarnings + sheet.currentYearEarnings),
     total('Summary', 'Total Liabilities and Equity', sheet.liabilitiesAndEquity),
     total('Summary', 'Difference', sheet.difference),
   ];

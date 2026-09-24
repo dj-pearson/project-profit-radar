@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { FileText, Upload, Trash2, Pencil, Copy, Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
@@ -22,32 +22,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
-import { documentKindFields, documentKindFilter, findDocumentCategoryId } from '@/lib/documentKinds';
+import { ErrorState } from '@/components/ui/states';
+import { useDocumentTemplates, type DocumentTemplate } from '@/hooks/useDocumentTemplates';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface Template {
-  id: string;
-  name: string;
-  description: string | null;
-  file_path: string;
-  file_type: string | null;
-  file_size: number | null;
-}
-
-const TEMPLATE_BUCKET = 'company-documents';
+type Template = DocumentTemplate;
 
 export default function DocumentTemplates() {
-  const { user, userProfile } = useAuth();
-  const companyId = userProfile?.company_id;
-
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [busy, setBusy] = useState(false);
+  const data = useDocumentTemplates();
+  const companyId = data.companyId;
+  const templates = data.templates.data ?? [];
+  const loading = data.templates.isLoading;
+  const projects = data.projects.data ?? [];
+  const busy = data.upload.isPending || data.update.isPending || data.remove.isPending || data.clone.isPending;
+  const errorText = (err: unknown) => (err instanceof Error ? err.message : undefined);
 
   // Upload dialog
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -64,121 +54,47 @@ export default function DocumentTemplates() {
   const [cloning, setCloning] = useState<Template | null>(null);
   const [cloneProjectId, setCloneProjectId] = useState('');
 
-  const loadTemplates = useCallback(async () => {
-    if (!companyId) return;
-    setLoading(true);
-    try {
-      // US-366: `documents` has no document_type column (types.ts Row and the
-      // migrations only have category_id), so filtering on it failed every
-      // load. A template is a document in the company's "Templates"
-      // document_category, or tagged 'template' when the category couldn't be
-      // created at upload time. Reasoning for category_id over a new column is
-      // in src/lib/documentKinds.ts.
-      const categoryId = await findDocumentCategoryId(companyId, 'template');
-      const { data, error } = await supabase
-        .from('documents')
-        .select('id, name, description, file_path, file_type, file_size, category_id, company_id')
-        .eq('company_id', companyId)
-        .or(documentKindFilter('template', categoryId))
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setTemplates((data as unknown as Template[]) ?? []);
-    } catch (err) {
-      logger.error('Failed to load templates', err as Error);
-      toast({ title: 'Could not load templates', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }, [companyId]);
-
-  useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
-
-  useEffect(() => {
-    if (!companyId) return;
-    supabase
-      .from('projects')
-      .select('id, name')
-      .eq('company_id', companyId)
-      .order('name')
-      .then(({ data }) => setProjects(data ?? []));
-  }, [companyId]);
-
   const handleUpload = async () => {
     if (!file || !companyId) {
       toast({ title: 'Choose a file first', variant: 'destructive' });
       return;
     }
-    setBusy(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${companyId}/templates/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from(TEMPLATE_BUCKET).upload(path, file);
-      if (upErr) throw upErr;
-      const kindFields = await documentKindFields(companyId, 'template');
-      const { error: insErr } = await supabase.from('documents').insert([
-        {
-          name: uploadName.trim() || file.name,
-          description: uploadDesc || null,
-          file_path: path,
-          file_type: file.type || 'application/octet-stream',
-          file_size: file.size,
-          company_id: companyId,
-          uploaded_by: user?.id,
-          ...kindFields,
-          is_current_version: true,
-        },
-      ]);
-      if (insErr) throw insErr;
+      await data.upload.mutateAsync({ file, name: uploadName, description: uploadDesc });
       toast({ title: 'Template uploaded' });
       setUploadOpen(false);
       setFile(null);
       setUploadName('');
       setUploadDesc('');
-      await loadTemplates();
     } catch (err) {
       logger.error('Template upload failed', err as Error);
-      toast({ title: 'Upload failed', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Upload failed', description: errorText(err), variant: 'destructive' });
     }
   };
 
   const handleSaveEdit = async () => {
     if (!editing) return;
-    setBusy(true);
     try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ name: editName.trim() || editing.name, description: editDesc || null })
-        .eq('id', editing.id);
-      if (error) throw error;
+      await data.update.mutateAsync({
+        id: editing.id,
+        patch: { name: editName.trim() || editing.name, description: editDesc || null },
+      });
       toast({ title: 'Template updated' });
       setEditing(null);
-      await loadTemplates();
     } catch (err) {
       logger.error('Template edit failed', err as Error);
-      toast({ title: 'Could not update template', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not update template', description: errorText(err), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (t: Template) => {
     if (!(await confirmAction({ title: `Delete template "${t.name}"?`, description: 'The file is removed from storage. This cannot be undone.', destructive: true }))) return;
-    setBusy(true);
     try {
-      await supabase.storage.from(TEMPLATE_BUCKET).remove([t.file_path]);
-      const { error } = await supabase.from('documents').delete().eq('id', t.id);
-      if (error) throw error;
+      await data.remove.mutateAsync(t);
       toast({ title: 'Template deleted' });
-      await loadTemplates();
     } catch (err) {
       logger.error('Template delete failed', err as Error);
-      toast({ title: 'Could not delete template', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not delete template', description: errorText(err), variant: 'destructive' });
     }
   };
 
@@ -187,42 +103,14 @@ export default function DocumentTemplates() {
       toast({ title: 'Select a project', variant: 'destructive' });
       return;
     }
-    setBusy(true);
     try {
-      // Copy the underlying file into the project documents bucket.
-      const { data: blob, error: dlErr } = await supabase.storage
-        .from(TEMPLATE_BUCKET)
-        .download(cloning.file_path);
-      if (dlErr || !blob) throw dlErr ?? new Error('Download failed');
-
-      const ext = cloning.file_path.split('.').pop();
-      const newPath = `${cloneProjectId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('project-documents').upload(newPath, blob);
-      if (upErr) throw upErr;
-
-      const { error: insErr } = await supabase.from('documents').insert([
-        {
-          name: `Copy of ${cloning.name}`,
-          description: cloning.description,
-          file_path: newPath,
-          file_type: cloning.file_type,
-          file_size: cloning.file_size,
-          company_id: companyId,
-          project_id: cloneProjectId,
-          uploaded_by: user?.id,
-          // A clone is an ordinary project document: no template category/tag.
-          is_current_version: true,
-        },
-      ]);
-      if (insErr) throw insErr;
+      await data.clone.mutateAsync({ template: cloning, projectId: cloneProjectId });
       toast({ title: 'Template cloned', description: 'A copy was added to the project documents.' });
       setCloning(null);
       setCloneProjectId('');
     } catch (err) {
       logger.error('Template clone failed', err as Error);
-      toast({ title: 'Could not clone template', variant: 'destructive' });
-    } finally {
-      setBusy(false);
+      toast({ title: 'Could not clone template', description: errorText(err), variant: 'destructive' });
     }
   };
 
@@ -245,6 +133,11 @@ export default function DocumentTemplates() {
                 <Skeleton key={i} className="h-32 w-full" />
               ))}
             </div>
+          ) : data.templates.error ? (
+            <ErrorState
+              error={errorText(data.templates.error) ?? 'Could not load templates'}
+              onRetry={() => { void data.templates.refetch(); }}
+            />
           ) : templates.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
@@ -371,6 +264,11 @@ export default function DocumentTemplates() {
             <div className="space-y-3">
               <div>
                 <Label htmlFor="tpl-clone-project">Project</Label>
+                {data.projects.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    Projects could not be loaded: {errorText(data.projects.error)}
+                  </p>
+                )}
                 <Select value={cloneProjectId} onValueChange={setCloneProjectId}>
                   <SelectTrigger id="tpl-clone-project">
                     <SelectValue placeholder="Select a project" />

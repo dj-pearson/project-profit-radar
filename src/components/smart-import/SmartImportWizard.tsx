@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, Database, CheckCircle, AlertCircle, Download, Sparkles } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useImportSession } from '@/hooks/useImportSession';
 import { toast } from 'sonner';
 import { FieldMappingStep } from './FieldMappingStep';
 import { ImportPreview } from './ImportPreview';
@@ -52,6 +52,8 @@ interface ImportSession {
   company_id: string;
   created_by: string;
   field_mappings?: Record<string, string>;
+  /** True when an import_sessions row exists (AI mode); a manual session has none. */
+  persisted: boolean;
 }
 
 type ImportStep = 'upload' | 'analyzing' | 'mapping' | 'preview' | 'duplicates' | 'importing' | 'complete';
@@ -73,8 +75,9 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [companyId, setCompanyId] = useState<string>('');
-  const [userId, setUserId] = useState<string>('');
+  const importSession = useImportSession();
+  const companyId = importSession.companyId ?? '';
+  const userId = importSession.userId ?? '';
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -85,20 +88,8 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
     setError(null);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-      setUserId(user.id);
-
-      // Get user profile for company_id
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.company_id) throw new Error('User company not found');
-      setCompanyId(profile.company_id);
+      if (!userId) throw new Error('User not authenticated');
+      if (!companyId) throw new Error('User company not found');
 
       // Read file content
       const fileContent = await file.text();
@@ -110,47 +101,21 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
       setUploadProgress(50);
 
       if (useAI) {
-        // Create import session for AI analysis
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('import_sessions')
-          .insert({
-            file_name: file.name,
-            file_size: file.size,
-            file_type: file.type || 'text/csv',
-            status: 'analyzing',
-            company_id: profile.company_id,
-            created_by: user.id
-          })
-          .select()
-          .single();
-
-        if (sessionError) throw sessionError;
-
-        // Call smart analyzer
-        const { error: analysisError } = await supabase.functions.invoke('smart-data-analyzer', {
-          body: {
-            sessionId: sessionData.id,
-            csvData: fileContent,
-            fileName: file.name
-          }
-        });
-
-        if (analysisError) throw analysisError;
+        // Create import session for AI analysis, run the analyzer on it and
+        // read back what it found.
+        const sessionData = await importSession.create.mutateAsync({ name: file.name, size: file.size, type: file.type });
+        const updatedSession = await importSession.analyze.mutateAsync({
+          sessionId: sessionData.id,
+          csvData: fileContent,
+          fileName: file.name,
+        }) as unknown as Omit<ImportSession, 'persisted'>;
 
         setUploadProgress(100);
 
-        // Fetch updated session data
-        const { data: updatedSession, error: fetchError } = await supabase
-          .from('import_sessions')
-          .select('*')
-          .eq('id', sessionData.id)
-          .single();
-
-        if (fetchError) throw fetchError;
-
         setSession({
           ...updatedSession,
-          preview_data: Array.isArray(updatedSession.preview_data) ? updatedSession.preview_data : parsedData.slice(0, 5)
+          preview_data: Array.isArray(updatedSession.preview_data) ? updatedSession.preview_data : parsedData.slice(0, 5),
+          persisted: true,
         });
         setStep('mapping');
       } else {
@@ -168,8 +133,9 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
           total_records: parsedData.length,
           status: 'analyzed',
           preview_data: parsedData.slice(0, 5),
-          company_id: profile.company_id,
-          created_by: user.id,
+          company_id: companyId,
+          created_by: userId,
+          persisted: false,
         });
 
         setUploadProgress(100);
@@ -182,7 +148,7 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
       toast.error('Failed to analyze file');
       setStep('upload');
     }
-  }, [useAI, defaultDataType]);
+  }, [useAI, defaultDataType, companyId, userId, importSession.create, importSession.analyze]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -195,18 +161,13 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
     maxFiles: 1
   });
 
-  const handleMappingComplete = async () => {
+  // The step hands over the mappings the user chose. This used to read them
+  // back from the session row, where they had never been saved, and validate
+  // with none.
+  const handleMappingComplete = async (fieldMappings: Record<string, string>) => {
     if (!session) return;
 
     try {
-      // Fetch the updated field mappings from the session
-      const { data: updatedSession } = await supabase
-        .from('import_sessions')
-        .select('field_mappings')
-        .eq('id', session.id)
-        .single();
-
-      const fieldMappings = updatedSession?.field_mappings || {};
 
       // Validate the data
       const validation = validateImportData(
@@ -317,21 +278,21 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
       setImportResult(result);
 
       // Update import session status
-      if (session.id && !session.id.includes('-')) {
+      if (session.persisted) {
         // The records are already imported at this point, so a failure here is
-        // not a failed import - it leaves the session row saying "in progress"
-        // forever. The error was dropped (US-300); log rather than throw so the
-        // success message below still reflects what actually happened.
-        const { error: sessionError } = await supabase
-          .from('import_sessions')
-          .update({
-            status: result.success ? 'completed' : 'completed_with_errors',
-            total_records: result.inserted + result.updated + result.skipped,
-          })
-          .eq('id', session.id);
-
-        if (sessionError) {
-          console.error('Import finished but the session was not marked complete:', sessionError.message);
+        // not a failed import - it leaves the session row saying "in progress".
+        // Log rather than throw so the success message below still reflects
+        // what actually happened (US-300).
+        try {
+          await importSession.update.mutateAsync({
+            sessionId: session.id,
+            patch: {
+              status: result.success ? 'completed' : 'completed_with_errors',
+              total_records: result.inserted + result.updated + result.skipped,
+            },
+          });
+        } catch (sessionError) {
+          console.error('Import finished but the session was not marked complete:', sessionError);
         }
       }
 
@@ -566,6 +527,7 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
 
             <FieldMappingStep
               sessionId={session.id}
+              persisted={session.persisted}
               dataType={session.detected_data_type}
               onComplete={handleMappingComplete}
             />

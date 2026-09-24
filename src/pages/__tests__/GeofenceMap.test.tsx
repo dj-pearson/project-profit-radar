@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 type Result = { data: unknown; error: { message: string } | null };
 type Call = { table: string; method: string; args: unknown[] };
@@ -71,7 +72,15 @@ vi.mock('leaflet', () => {
   return { default: L, ...L };
 });
 
-import GeofenceMap from '../GeofenceMap';
+import GeofenceMapPage from '../GeofenceMap';
+
+// The reads moved into a TanStack Query hook (US-266); a fresh client per
+// render keeps one test's cache out of the next.
+const GeofenceMap = () => (
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <GeofenceMapPage />
+  </QueryClientProvider>
+);
 
 const timeEntryCalls = () => calls.filter((c) => c.table === 'time_entries');
 

@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadEstimatePDF } from "@/utils/estimatePDFGenerator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
+import { useEstimateForm, fetchEstimateForPdf } from "@/hooks/useEstimateForm";
+import { ErrorState } from "@/components/common/ErrorState";
+import { useAuth } from "@/contexts/AuthContext";
 import { ContactPicker } from "@/components/customers/ContactPicker";
 import { useToast } from "@/hooks/use-toast";
 import { EstimateTemplatesLibrary } from "./EstimateTemplatesLibrary";
@@ -40,16 +42,16 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const { toast } = useToast();
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [costCodes, setCostCodes] = useState<any[]>([]);
+  const { user } = useAuth();
+  const store = useEstimateForm(estimateId);
+  const { projects, costCodes, companyId } = store;
   const [clientId, setClientId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = store.save.isPending;
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [createdEstimate, setCreatedEstimate] = useState<any>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showLineItemLibrary, setShowLineItemLibrary] = useState(false);
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
-  const [companyId, setCompanyId] = useState<string | undefined>();
   // US-332: tax rate and terms from Company Settings > Billing and documents.
   const { defaults: billing, loaded: billingLoaded, error: billingError } = useBillingDefaults();
   const appliedBillingDefaults = useRef(false);
@@ -76,92 +78,49 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     }
   }, [estimateId, billingLoaded, billing, form]);
 
+  // Seed the form once, after the estimate and the cost codes are both in,
+  // so each line gets its default cost code.
+  const seededEstimate = useRef<string | null>(null);
   useEffect(() => {
-    fetchProjects();
-    fetchCostCodes();
-    fetchCompanyId();
-    if (estimateId) {
-      fetchEstimate();
+    const estimate = store.estimate;
+    if (!estimate || !store.pickersLoaded || seededEstimate.current === estimate.id) return;
+    seededEstimate.current = estimate.id;
+    form.reset({
+      title: estimate.title,
+      description: estimate.description || "",
+      client_name: estimate.client_name || "",
+      client_email: estimate.client_email || "",
+      client_phone: estimate.client_phone || "",
+      site_address: estimate.site_address || "",
+      project_id: estimate.project_id || "",
+      markup_percentage: estimate.markup_percentage || 20,
+      tax_percentage: estimate.tax_percentage || 0,
+      discount_amount: estimate.discount_amount || 0,
+      valid_until: estimate.valid_until ? new Date(estimate.valid_until) : undefined,
+      notes: estimate.notes || "",
+      terms_and_conditions: estimate.terms_and_conditions || "",
+    });
+
+    // Restore the linked customer so editing does not silently unlink them.
+    setClientId(estimate.client_id || null);
+
+    if (estimate.estimate_line_items) {
+      setLineItems(estimate.estimate_line_items.map((item) => ({
+        id: item.id,
+        item_name: item.item_name,
+        description: item.description || "",
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_cost: item.unit_cost,
+        category: item.category || "",
+        cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ""),
+        tax_rate: (item as unknown as LineTaxColumns).tax_rate ?? null,
+        taxable: (item as unknown as LineTaxColumns).taxable !== false,
+      })));
     }
-  }, [estimateId]);
-
-  const fetchCompanyId = async () => {
-    const { data: userProfile } = await supabase
-      .from("user_profiles")
-      .select("company_id")
-      .eq("id", (await supabase.auth.getUser()).data.user?.id)
-      .single();
-
-    if (userProfile?.company_id) {
-      setCompanyId(userProfile.company_id);
-    }
-  };
-
-  const fetchProjects = async () => {
-    const { data } = await supabase
-      .from("projects")
-      .select("id, name, client_name")
-      .eq("status", "active")
-      .order("name");
-    
-    if (data) setProjects(data);
-  };
-
-  const fetchCostCodes = async () => {
-    const { data } = await supabase
-      .from("cost_codes")
-      .select("*")
-      .eq("is_active", true)
-      .order("code");
-    
-    if (data) setCostCodes(data);
-  };
-
-  const fetchEstimate = async () => {
-    if (!estimateId) return;
-
-    const { data: estimate } = await supabase
-      .from("estimates")
-      .select("*, estimate_line_items(*)")
-      .eq("id", estimateId)
-      .single();
-
-    if (estimate) {
-      form.reset({
-        title: estimate.title,
-        description: estimate.description || "",
-        client_name: estimate.client_name || "",
-        client_email: estimate.client_email || "",
-        client_phone: estimate.client_phone || "",
-        site_address: estimate.site_address || "",
-        project_id: estimate.project_id || "",
-        markup_percentage: estimate.markup_percentage || 20,
-        tax_percentage: estimate.tax_percentage || 0,
-        discount_amount: estimate.discount_amount || 0,
-        valid_until: estimate.valid_until ? new Date(estimate.valid_until) : undefined,
-        notes: estimate.notes || "",
-        terms_and_conditions: estimate.terms_and_conditions || "",
-      });
-
-      // Restore the linked customer so editing does not silently unlink them.
-      setClientId(estimate.client_id || null);
-
-      if (estimate.estimate_line_items) {
-        setLineItems(estimate.estimate_line_items.map((item: any) => ({
-          id: item.id,
-          item_name: item.item_name,
-          description: item.description || "",
-          quantity: item.quantity,
-          unit: item.unit,
-          unit_cost: item.unit_cost,
-          category: item.category || "",
-          cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ""),
-          tax_rate: (item as LineTaxColumns).tax_rate ?? null,
-          taxable: (item as LineTaxColumns).taxable !== false,
-        })));
-      }
-    }
-  };
+    // defaultCostCodeFor reads costCodes, which pickersLoaded gates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.estimate, store.pickersLoaded, form]);
 
   /**
    * Best-effort cost code for a line, so an existing estimate opened for edit
@@ -313,19 +272,23 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       return;
     }
 
-    setIsLoading(true);
+    // With a failed read the form holds blanks (or no cost codes, which skips
+    // the check above); saving would write those over the estimate.
+    if (store.readError || (estimateId && !store.estimate)) {
+      toast({
+        variant: "destructive",
+        title: "Estimate not saved",
+        description: "The estimate or its projects and cost codes did not load. Retry before saving.",
+      });
+      return;
+    }
+
+    if (!companyId) {
+      toast({ variant: "destructive", title: "Estimate not saved", description: "Your profile is not linked to a company." });
+      return;
+    }
+
     try {
-      // Get user's company ID from user profile
-      const { data: userProfile } = await supabase
-        .from("user_profiles")
-        .select("company_id")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        throw new Error("User company not found");
-      }
-
       // Create or update estimate
       const estimateData = {
         title: data.title,
@@ -336,7 +299,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         client_phone: data.client_phone,
         site_address: data.site_address,
         project_id: data.project_id || null,
-        company_id: userProfile.company_id,
+        company_id: companyId,
         status: isDraft ? "draft" : "sent",
         total_amount: calculateTotal(),
         markup_percentage: data.markup_percentage,
@@ -357,82 +320,35 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         tax_amount: calculateTaxTotals().taxAmount,
       } as typeof estimateData;
 
-      let estimateResult;
-      if (estimateId) {
-        estimateResult = await supabase
-          .from("estimates")
-          .update(estimateWrite)
-          .eq("id", estimateId)
-          .select()
-          .single();
-      } else {
-        estimateResult = await supabase
-          .from("estimates")
-          .insert({
-            ...estimateWrite,
-            estimate_number: '', // Will be auto-generated by trigger
-          })
-          .select()
-          .single();
-      }
+      const lineItemsData = lineItems.map((item, index) => ({
+        item_name: item.item_name,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_cost: item.unit_cost,
+        category: item.category,
+        cost_code_id: item.cost_code_id || null,
+        sort_order: index,
+      }));
+      // tax_rate and taxable are US-332 columns the generated types predate.
+      const lineItemsWithTax = lineItems.map((item, index) => ({
+        ...lineItemsData[index],
+        tax_rate: item.tax_rate,
+        taxable: item.taxable,
+      })) as typeof lineItemsData;
 
-      if (estimateResult.error) throw estimateResult.error;
-
-      const estimate = estimateResult.data;
-
-      // Handle line items
-      if (estimateId) {
-        // Delete existing line items. The insert below runs regardless, so a
-        // silently failed delete leaves the old rows in place alongside the new
-        // ones and the estimate total doubles - on a document the customer
-        // sees. supabase-js returns this error rather than throwing it, so it
-        // has to be read (US-300).
-        const { error: deleteError } = await supabase
-          .from("estimate_line_items")
-          .delete()
-          .eq("estimate_id", estimateId);
-        if (deleteError) {
-          throw new Error(
-            `Could not clear the previous line items (${deleteError.message}). ` +
-              `Nothing was saved - saving now would duplicate every line and double the total.`,
-          );
-        }
-      }
-
-      // Insert new line items
-      if (lineItems.length > 0) {
-        const lineItemsData = lineItems.map((item, index) => ({
-          estimate_id: estimate.id,
-          item_name: item.item_name,
-          description: item.description,
-          quantity: item.quantity,
-          unit: item.unit,
-          unit_cost: item.unit_cost,
-          category: item.category,
-          cost_code_id: item.cost_code_id || null,
-          sort_order: index,
-        }));
-        // tax_rate and taxable are US-332 columns the generated types predate.
-        const lineItemsWithTax = lineItems.map((item, index) => ({
-          ...lineItemsData[index],
-          tax_rate: item.tax_rate,
-          taxable: item.taxable,
-        })) as typeof lineItemsData;
-
-        const { error: lineItemsError } = await supabase
-          .from("estimate_line_items")
-          .insert(lineItemsWithTax);
-
-        if (lineItemsError) throw lineItemsError;
-      }
+      const estimate = await store.save.mutateAsync({
+        estimateId,
+        estimate: estimateWrite,
+        lines: lineItemsWithTax,
+      });
 
       // US-096: capture an immutable version snapshot of this save.
       {
-        const { data: authData } = await supabase.auth.getUser();
         await createEstimateVersion({
           estimateId: estimate.id,
-          companyId: estimate.company_id ?? userProfile.company_id,
-          userId: authData.user?.id,
+          companyId: estimate.company_id ?? companyId,
+          userId: user?.id,
           snapshot: {
             title: data.title,
             status: estimateData.status,
@@ -463,14 +379,11 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       // Store created estimate for PDF generation
       setCreatedEstimate(estimate);
     } catch (error) {
-      console.error("Error saving estimate:", error);
       toast({
-        title: "Error",
-        description: "Failed to save estimate. Please try again.",
+        title: "Estimate not saved",
+        description: error instanceof Error ? error.message : "Failed to save estimate. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -480,17 +393,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     setGeneratingPDF(true);
     try {
       // Fetch complete estimate with line items
-      const { data: estimateWithDetails, error } = await supabase
-        .from('estimates')
-        .select(`
-          *,
-          line_items:estimate_line_items(*),
-          project:projects(name)
-        `)
-        .eq('id', createdEstimate.id)
-        .single();
-
-      if (error) throw error;
+      const estimateWithDetails = await fetchEstimateForPdf(createdEstimate.id);
 
       // Prepare data for PDF generator
       const detailLines = estimateWithDetails.line_items as Array<
@@ -536,7 +439,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       console.error('PDF generation error:', error);
       toast({
         title: "PDF Generation Failed",
-        description: error.message || "Failed to generate PDF",
+        description: error instanceof Error ? error.message : "Failed to generate PDF",
         variant: "destructive"
       });
     } finally {
@@ -558,6 +461,14 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   return (
     <Form {...form}>
       <form className="space-y-6">
+        {store.readError && (
+          <ErrorState
+            inline
+            title="The estimate form could not load"
+            error={store.readError}
+            onRetry={store.retry}
+          />
+        )}
         {billingError && (
           <p role="alert" className="text-sm text-destructive">
             Could not load your billing settings, so the tax rate and terms here are not your
@@ -715,7 +626,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
             type="button"
             variant="outline"
             onClick={form.handleSubmit((data) => onSubmit(data, true))}
-            disabled={isLoading}
+            disabled={isLoading || !!store.readError}
             className="gap-2"
           >
             <Save className="h-4 w-4" />
@@ -724,7 +635,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           <Button
             type="button"
             onClick={form.handleSubmit((data) => onSubmit(data, false))}
-            disabled={isLoading}
+            disabled={isLoading || !!store.readError}
             className="gap-2"
           >
             <Send className="h-4 w-4" />

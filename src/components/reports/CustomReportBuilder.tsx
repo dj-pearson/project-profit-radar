@@ -21,10 +21,9 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCustomReportData, REPORT_ROW_LIMIT } from '@/hooks/useCustomReportData';
 import { logger } from '@/lib/logger';
-import { AVAILABLE_FIELDS, dateRangeFilter, type ReportField } from './customReportSources';
+import { AVAILABLE_FIELDS, type ReportField } from './customReportSources';
 
 interface ReportFilter {
   field: string;
@@ -61,8 +60,8 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   initialConfig
 }) => {
   const { toast } = useToast();
-  const { userProfile } = useAuth();
-  
+  const reportQuery = useCustomReportData();
+
   const [config, setConfig] = useState<ReportConfig>({
     name: '',
     description: '',
@@ -80,7 +79,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   });
 
   const [reportData, setReportData] = useState<Record<string, unknown>[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const isGenerating = reportQuery.isPending;
   const [previewMode, setPreviewMode] = useState(false);
 
   const addField = (field: ReportField) => {
@@ -137,10 +136,10 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
       return;
     }
 
-    setIsGenerating(true);
     try {
-      const realData = await generateRealData(config);
-      setReportData(realData);
+      // Throws the PostgREST error; nothing here falls back to invented rows.
+      const { rows, truncated } = await reportQuery.mutateAsync(config);
+      setReportData(rows);
       setPreviewMode(true);
       
       if (onExecute) {
@@ -149,7 +148,9 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
 
       toast({
         title: "Success",
-        description: "Report generated successfully"
+        description: truncated
+          ? `Showing the first ${REPORT_ROW_LIMIT} rows. Narrow the date range or add a filter to see the rest.`
+          : "Report generated successfully"
       });
     } catch (error) {
       // Say which query failed and why. The user has to be able to tell an
@@ -163,61 +164,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
       });
       setReportData([]);
       setPreviewMode(false);
-    } finally {
-      setIsGenerating(false);
     }
-  };
-
-  // Every failure here has to reach generateReport's catch. This used to fall
-  // back to generateMockData on ANY error - an RLS denial, a missing column, a
-  // dropped connection - and hand back 10-30 rows of Math.random() dollar
-  // amounts, which the caller then announced as "Report generated
-  // successfully" and offered as an Excel export. A report a contractor sends
-  // to a client is the last place to invent numbers.
-  const generateRealData = async (config: ReportConfig): Promise<Record<string, unknown>[]> => {
-    if (!userProfile?.company_id) {
-      throw new Error('No company found');
-    }
-
-    let query;
-    switch (config.dataSource) {
-      case 'projects':
-        query = supabase.from('projects').select('*');
-        break;
-      case 'job_costs':
-        query = supabase.from('job_costs').select('*');
-        break;
-      case 'time_entries':
-        query = supabase.from('time_entries').select('*');
-        break;
-      case 'expenses':
-        query = supabase.from('expenses').select('*');
-        break;
-      case 'invoices':
-        query = supabase.from('invoices').select('*');
-        break;
-      default:
-        throw new Error('Invalid data source');
-    }
-
-    // Add company filter
-    query = query.eq('company_id', userProfile.company_id);
-
-    // Apply date range filter
-    if (config.dateRange.start && config.dateRange.end) {
-      const { field, from, to } = dateRangeFilter(config.dataSource, config.dateRange.start, config.dateRange.end);
-      query = query.gte(field, from).lte(field, to);
-    }
-
-    // Apply sorting
-    if (config.sortBy) {
-      query = query.order(config.sortBy, { ascending: config.sortOrder === 'asc' });
-    }
-
-    const { data, error } = await query.limit(1000);
-    if (error) throw error;
-
-    return data || [];
   };
 
   const exportToExcel = async () => {

@@ -6,6 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  useClientPortalProjects,
+  useClientProjectDetails,
+  type ClientPortalProject,
+  type ClientPortalInvoice,
+} from '@/hooks/useClientPortalProjects';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import {
@@ -16,10 +22,6 @@ import {
   ClientUpdatesFeed,
   ClientMessageCenter,
   ClientChangeOrderApproval,
-  type Milestone,
-  type Document,
-  type ProjectUpdate,
-  type ChangeOrder
 } from '@/components/client-portal';
 import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
 import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
@@ -39,54 +41,37 @@ import {
 } from 'lucide-react';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: string;
-  completion_percentage?: number;
-  budget_total?: number;
-  actual_cost?: number;
-  contract_value?: number;
-  start_date?: string;
-  end_date?: string;
-  estimated_completion?: string;
-  site_address?: string;
-  project_address?: any;
-  client_email?: string;
-  company_id?: string;
-}
+type Project = ClientPortalProject;
+type Invoice = ClientPortalInvoice;
 
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  issue_date: string;
-  due_date: string;
-  total_amount: number;
-  amount_paid: number;
-  amount_due: number;
-  status: string;
-  stripe_invoice_id?: string;
-  notes?: string;
-}
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const ClientPortalEnhanced = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [updates, setUpdates] = useState<ProjectUpdate[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
-  // A failed load is not an empty portal. Without these the screen said "No
-  // Projects Found" or showed an empty timeline when the query had 400'd.
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  const allowed = !loading && (userProfile?.role === 'client_portal' || userProfile?.role === 'root_admin');
+  // A failed load is not an empty portal. The page used to say "No Projects
+  // Found" or show an empty timeline when the query had 400'd.
+  const projectsQuery = useClientPortalProjects(allowed);
+  const projects = projectsQuery.data ?? [];
+  const selectedProject: Project | null =
+    projects.find((p) => p.id === selectedProjectId) ?? projects[0] ?? null;
+  const detailsQuery = useClientProjectDetails(selectedProject?.id);
+  const details = detailsQuery.data;
+  const changeOrders = details?.changeOrders ?? [];
+  const milestones = details?.milestones ?? [];
+  const documents = details?.documents ?? [];
+  const updates = details?.updates ?? [];
+  const invoices = details?.invoices ?? [];
+  const detailsError = detailsQuery.error
+    ? detailsQuery.error.message
+    : details && details.failed.length > 0
+      ? `Could not load ${details.failed.join(', ')} for this project.`
+      : null;
 
   // These two components are company-scoped. Take the id from the project the
   // client is looking at rather than from their profile: a client enrolled on
@@ -114,187 +99,11 @@ const ClientPortalEnhanced = () => {
         title: "Access Denied",
         description: "This portal is only accessible to clients."
       });
-      return;
-    }
-
-    if (userProfile?.role === 'client_portal' || userProfile?.role === 'root_admin') {
-      loadClientData();
     }
   }, [user, userProfile, loading, navigate]);
 
-  const loadClientData = async () => {
-    try {
-      setLoadingData(true);
-      setLoadError(null);
-
-      // Projects this client is ENROLLED on (US-319), not projects whose
-      // client_email string happens to match. The old .eq('client_email',
-      // user.email) was an authorisation model made of typing: it granted
-      // access to any project in any company that carried the same address,
-      // and nothing at all if the address had been entered differently.
-      // client_portal_access is the enrolment record, and RLS on projects
-      // enforces the same predicate server-side, so this query cannot return
-      // a project the client is not enrolled on even if it were wrong.
-      const { data: enrolments, error: enrolmentError } = await supabase
-        .from('client_portal_access')
-        .select('project_id')
-        .eq('is_active', true);
-
-      if (enrolmentError) throw enrolmentError;
-
-      const projectIds = (enrolments || []).map((e) => e.project_id).filter(Boolean);
-
-      if (projectIds.length === 0) {
-        setProjects([]);
-        setSelectedProject(null);
-        return;
-      }
-
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .in('id', projectIds)
-        .order('created_at', { ascending: false });
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      if (projectsData && projectsData.length > 0) {
-        setSelectedProject(projectsData[0]);
-        await loadProjectDetails(projectsData[0].id);
-      }
-    } catch (error: any) {
-      console.error('Error loading client data:', error);
-      setLoadError(error?.message || 'Failed to load project data');
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load project data"
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const loadProjectDetails = async (projectId: string) => {
-    setDetailsError(null);
-    const failed: string[] = [];
-
-    const [coRes, invoicesRes, docsRes, tasksRes, reportsRes] = await Promise.all([
-      supabase
-        .from('change_orders')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('invoices')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('documents')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false }),
-      // Milestones are tasks flagged is_milestone. tasks has no target_date,
-      // title, completed_at, progress or phase column: ordering by target_date
-      // 400'd and the timeline was always empty (US-368). The real columns are
-      // name, due_date/end_date, completion_percentage and category.
-      supabase
-        .from('tasks')
-        .select('id, name, description, status, due_date, end_date, completion_percentage, category')
-        .eq('project_id', projectId)
-        .eq('is_milestone', true)
-        .order('due_date', { ascending: true, nullsFirst: false }),
-      supabase
-        .from('daily_reports')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('date', { ascending: false })
-        .limit(20),
-    ]);
-
-    if (coRes.error) {
-      console.error('Error loading change orders:', coRes.error);
-      failed.push('change orders');
-      setChangeOrders([]);
-    } else {
-      setChangeOrders((coRes.data || []).map(co => ({
-        ...co,
-        client_approved: co.client_approved
-      })) as ChangeOrder[]);
-    }
-
-    if (invoicesRes.error) {
-      console.error('Error loading invoices:', invoicesRes.error);
-      failed.push('invoices');
-      setInvoices([]);
-    } else {
-      setInvoices((invoicesRes.data || []) as Invoice[]);
-    }
-
-    if (docsRes.error) {
-      console.error('Error loading documents:', docsRes.error);
-      failed.push('documents');
-      setDocuments([]);
-    } else {
-      setDocuments((docsRes.data || []).map((doc: any) => ({
-        id: doc.id,
-        name: doc.name || doc.file_name,
-        type: doc.category === 'photo' ? 'photo' : doc.category === 'plan' ? 'plan' : 'document',
-        url: doc.file_url || doc.url,
-        thumbnailUrl: doc.thumbnail_url,
-        uploadedBy: doc.uploaded_by_name,
-        uploadedDate: doc.created_at,
-        description: doc.description,
-        size: doc.file_size
-      })));
-    }
-
-    if (tasksRes.error) {
-      console.error('Error loading milestones:', tasksRes.error);
-      failed.push('milestones');
-      setMilestones([]);
-    } else {
-      setMilestones((tasksRes.data || []).map(task => ({
-        id: task.id,
-        title: task.name,
-        description: task.description ?? undefined,
-        status: task.status === 'completed' ? 'completed' :
-                task.status === 'in_progress' ? 'in_progress' :
-                task.status === 'blocked' ? 'blocked' : 'pending',
-        targetDate: task.due_date || task.end_date || undefined,
-        // tasks records no completion timestamp, so none is shown.
-        completedDate: undefined,
-        progress: task.completion_percentage ?? 0,
-        phase: task.category ?? undefined
-      })));
-    }
-
-    if (reportsRes.error) {
-      console.error('Error loading daily reports:', reportsRes.error);
-      failed.push('project updates');
-      setUpdates([]);
-    } else {
-      setUpdates((reportsRes.data || []).map((report: any) => ({
-        id: report.id,
-        type: 'general' as const,
-        title: `Daily Update - ${new Date(report.date).toLocaleDateString()}`,
-        description: report.work_performed || report.notes || 'No details provided',
-        timestamp: report.created_at,
-        author: report.submitted_by_name,
-        isRead: true
-      })));
-    }
-
-    if (failed.length > 0) {
-      setDetailsError(`Could not load ${failed.join(', ')} for this project.`);
-    }
-  };
-
   const handleProjectSelect = (project: Project) => {
-    setSelectedProject(project);
-    loadProjectDetails(project.id);
+    setSelectedProjectId(project.id);
   };
 
   /**
@@ -376,31 +185,33 @@ const ClientPortalEnhanced = () => {
     }
   };
 
-  // Calculate project stats
+  // Only what the project's own fields can answer. Spending to date is not
+  // readable here, so there is no budget status; days remaining comes from
+  // the end date. There is no baseline to call a job ahead or behind against.
   const getProjectStats = (project: Project) => {
-    const budgetUsed = (project.actual_cost || 0) / (project.budget_total || 1);
-    const budgetVariance = (project.budget_total || 0) - (project.actual_cost || 0);
-    const unreadUpdates = updates.filter(u => !u.isRead).length;
-
+    const daysRemaining = project.end_date
+      ? Math.max(0, Math.ceil((new Date(project.end_date).getTime() - Date.now()) / DAY_MS))
+      : undefined;
     return {
-      scheduleStatus: (project.completion_percentage || 0) >= 50 ? 'on_track' : 'behind' as 'ahead' | 'on_track' | 'behind',
-      budgetStatus: budgetUsed <= 0.9 ? 'under' : budgetUsed <= 1.0 ? 'on_budget' : 'over' as 'under' | 'on_budget' | 'over',
-      budgetVariance,
-      unreadUpdates
+      scheduleStatus: undefined,
+      budgetStatus: undefined,
+      budgetVariance: undefined,
+      unreadUpdates: updates.filter((u) => !u.isRead).length,
+      daysRemaining,
     };
   };
 
-  if (loading || loadingData) {
+  if (loading || projectsQuery.isLoading) {
     return (
       <DataTablePageSkeleton label="Loading your projects" />
     );
   }
 
-  if (loadError) {
+  if (projectsQuery.error) {
     return (
       <AccessiblePageWrapper pageTitle="Client Portal">
       <DashboardLayout hasAccessibleWrapper title="Client Portal">
-        <ErrorState error={loadError} onRetry={loadClientData} />
+        <ErrorState error={projectsQuery.error.message} onRetry={() => { void projectsQuery.refetch(); }} />
       </DashboardLayout>
       </AccessiblePageWrapper>
     );
@@ -461,7 +272,7 @@ const ClientPortalEnhanced = () => {
             {detailsError && (
               <ErrorState
                 error={detailsError}
-                onRetry={() => loadProjectDetails(selectedProject.id)}
+                onRetry={() => { void detailsQuery.refetch(); }}
               />
             )}
 
@@ -509,8 +320,8 @@ const ClientPortalEnhanced = () => {
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <ClientBudgetSummary
-                    totalBudget={selectedProject.budget_total || 0}
-                    actualCost={selectedProject.actual_cost || 0}
+                    totalBudget={selectedProject.budget_total ?? null}
+                    actualCost={selectedProject.actual_cost}
                     contractValue={selectedProject.contract_value}
                   />
                   <ClientProgressTimeline milestones={milestones.slice(0, 5)} showPhases={false} />

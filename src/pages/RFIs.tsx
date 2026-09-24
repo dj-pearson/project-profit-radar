@@ -12,96 +12,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRFIsPage, type RFI as RFIRow } from '@/hooks/useRFIsPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Helmet } from 'react-helmet-async';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
-// Helper to query tables not yet in the generated Database types.
-const untypedFrom = (table: string) =>
-  (supabase as unknown as SupabaseClient).from(table);
 import { HelpCircle, PlusCircle, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, User, Calendar, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Project {
-  id: string;
-  name: string;
-  client_name: string;
-  status: string;
-}
-
-interface RFI {
-  id: string;
-  project_id: string;
-  rfi_number: string;
-  subject: string;
-  title: string;
-  description: string;
-  priority: string;
-  status: string;
-  submitted_to?: string;
-  requested_by: string;
-  assigned_to: string;
-  due_date: string | null;
-  response_date?: string | null;
-  company_id: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  closed_at?: string | null;
-  projects: { name: string; client_name: string };
-  requester: { first_name: string; last_name: string };
-  assignee: { first_name: string; last_name: string };
-  responses: RFIResponse[];
-}
-
-interface RFIResponse {
-  id: string;
-  rfi_id: string;
-  response_text: string;
-  responded_by: string;
-  response_date: string;
-  is_final_response: boolean;
-  responder: { first_name: string; last_name: string };
-}
-
-interface RawRFIRow {
-  id: string;
-  project_id: string;
-  rfi_number: string | null;
-  subject: string | null;
-  description: string;
-  priority: string;
-  status: string;
-  submitted_to: string | null;
-  created_by: string | null;
-  due_date: string | null;
-  response_date: string | null;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-  projects: { name: string; client_name: string };
-}
-
-interface RawRFIResponseRow {
-  id: string;
-  rfi_id: string;
-  response_text: string;
-  responded_by: string;
-  response_date: string;
-  is_final_response: boolean;
-}
+type RFI = RFIRow;
 
 const RFIs = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [rfis, setRFIs] = useState<RFI[]>([]);
+  const allowedRole = !!userProfile && ['admin', 'project_manager', 'field_supervisor', 'office_staff', 'root_admin'].includes(userProfile.role);
+  const data = useRFIsPage(allowedRole);
+  const projects = data.query.data?.projects ?? [];
+  const rfis = data.query.data?.rfis ?? [];
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [loadingRFIs, setLoadingRFIs] = useState(true);
+  const loadingRFIs = data.query.isLoading;
+  const errorText = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingRFI, setEditingRFI] = useState<RFI | null>(null);
@@ -149,95 +82,11 @@ const RFIs = () => {
       return;
     }
     
-    if (userProfile?.company_id) {
-      loadData();
-    }
-    
     // Handle project filter from navigation state
     if (location.state?.projectFilter) {
       setSelectedProject(location.state.projectFilter);
     }
   }, [user, userProfile, loading, navigate, location.state]);
-
-  const loadData = async () => {
-    try {
-      setLoadingRFIs(true);
-      
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, status')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load RFIs with project details
-      const { data: rfisData, error: rfisError } = await supabase
-        .from('rfis')
-        .select(`
-          *,
-          projects:project_id (
-            name,
-            client_name
-          )
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
-
-      if (rfisError) throw rfisError;
-      
-      // Transform data to match expected interface
-      const transformedRFIs = (rfisData || []).map(rfi => ({
-        ...rfi,
-        rfi_number: rfi.rfi_number || `RFI-${rfi.id?.slice(-8)}`,
-        title: rfi.subject || '',
-        requested_by: rfi.created_by || '',
-        assigned_to: rfi.submitted_to || '',
-        closed_at: null,
-        requester: { first_name: 'User', last_name: '' },
-        assignee: { first_name: rfi.submitted_to || 'Unassigned', last_name: '' },
-        responses: []
-      }));
-
-      // Fetch responses for these RFIs
-      const rfiIds = (rfisData || []).map((r: RawRFIRow) => r.id);
-      const responsesByRfi: Record<string, RFIResponse[]> = {};
-      if (rfiIds.length > 0) {
-        const { data: responsesData } = await untypedFrom('rfi_responses')
-          .select('*')
-          .in('rfi_id', rfiIds)
-          .order('response_date', { ascending: true });
-
-        (responsesData || []).forEach((resp: RawRFIResponseRow) => {
-          const arr = responsesByRfi[resp.rfi_id] || ([] as RFIResponse[]);
-          arr.push({
-            ...resp,
-            responder: { first_name: 'User', last_name: '' }
-          } as RFIResponse);
-          responsesByRfi[resp.rfi_id] = arr;
-        });
-      }
-
-      const enrichedRFIs = transformedRFIs.map((r) => ({
-        ...r,
-        responses: responsesByRfi[r.id] || []
-      }));
-
-      setRFIs(enrichedRFIs);
-
-    } catch (error: unknown) {
-      console.error('Error loading data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load RFIs data"
-      });
-    } finally {
-      setLoadingRFIs(false);
-    }
-  };
 
   const handleCreateRFI = async () => {
     if (!newRFI.project_id || !newRFI.title || !newRFI.description) {
@@ -250,27 +99,7 @@ const RFIs = () => {
     }
 
     try {
-      // Default SLA: 7 days if not provided
-      const defaultDue = new Date();
-      defaultDue.setDate(defaultDue.getDate() + 7);
-      const dueDateVal = newRFI.due_date || defaultDue.toISOString().split('T')[0];
-
-      const { error } = await supabase
-        .from('rfis')
-        .insert({
-          project_id: newRFI.project_id,
-          subject: newRFI.title,
-          description: newRFI.description,
-          priority: newRFI.priority,
-          submitted_to: newRFI.assigned_to || null,
-          due_date: dueDateVal,
-          status: 'submitted',
-          company_id: userProfile?.company_id,
-          created_by: user?.id,
-          rfi_number: `RFI-${Date.now().toString().slice(-8)}`
-        });
-
-      if (error) throw error;
+      await data.create.mutateAsync(newRFI);
 
       toast({
         title: "Success",
@@ -286,14 +115,11 @@ const RFIs = () => {
         assigned_to: '',
         due_date: ''
       });
-      
-      loadData();
     } catch (error: unknown) {
-      console.error('Error creating RFI:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to create RFI"
+        title: "RFI not created",
+        description: errorText(error, "Failed to create RFI")
       });
     }
   };
@@ -323,20 +149,7 @@ const RFIs = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('rfis')
-        .update({
-          project_id: editedRFI.project_id,
-          subject: editedRFI.title,
-          description: editedRFI.description,
-          priority: editedRFI.priority,
-          submitted_to: editedRFI.assigned_to || null,
-          due_date: editedRFI.due_date || null,
-          status: editedRFI.status
-        })
-        .eq('id', editingRFI.id);
-
-      if (error) throw error;
+      await data.update.mutateAsync({ id: editingRFI.id, draft: editedRFI });
 
       toast({
         title: "Success",
@@ -354,14 +167,11 @@ const RFIs = () => {
         due_date: '',
         status: 'submitted'
       });
-      
-      loadData();
     } catch (error: unknown) {
-      console.error('Error updating RFI:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update RFI"
+        title: "RFI not updated",
+        description: errorText(error, "Failed to update RFI")
       });
     }
   };
@@ -379,32 +189,9 @@ const RFIs = () => {
     try {
       if (!selectedRFI || !user || !userProfile) return;
 
-      const { error: insertErr } = await untypedFrom('rfi_responses')
-        .insert({
-          rfi_id: selectedRFI.id,
-          response_text: responseText.trim(),
-          responded_by: user.id,
-          is_final_response: isFinalResponse,
-          company_id: userProfile.company_id
-        });
-
-      if (insertErr) throw insertErr;
-
-      // Close the RFI if this response was marked final. The error was dropped,
-      // so "Response added successfully" appeared whether or not the RFI closed,
-      // and it stayed open in the list (US-300).
-      if (isFinalResponse) {
-        const { error: closeError } = await supabase
-          .from('rfis')
-          .update({ status: 'closed', response_date: new Date().toISOString() })
-          .eq('id', selectedRFI.id);
-
-        if (closeError) {
-          throw new Error(
-            `The response was saved but the RFI could not be closed: ${closeError.message}`,
-          );
-        }
-      }
+      // A final response closes the RFI; the hook reports a close that fails
+      // ("could not be closed") instead of claiming success (US-300).
+      await data.respond.mutateAsync({ rfiId: selectedRFI.id, text: responseText.trim(), isFinal: isFinalResponse });
 
       toast({
         title: 'Success',
@@ -415,13 +202,11 @@ const RFIs = () => {
       setResponseText('');
       setIsFinalResponse(false);
       setSelectedRFI(null);
-      loadData();
     } catch (error: unknown) {
-      console.error('Error adding response:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add response'
+        title: 'Response not added',
+        description: errorText(error, 'Failed to add response')
       });
     }
   };
@@ -609,7 +394,13 @@ const RFIs = () => {
 
         {/* RFIs List */}
         <div className="space-y-6">
-          {filteredRFIs.length === 0 ? (
+          {data.query.error ? (
+            <ErrorState
+              title="RFIs could not be loaded"
+              error={errorText(data.query.error, 'Failed to load RFIs')}
+              onRetry={() => { void data.query.refetch(); }}
+            />
+          ) : filteredRFIs.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

@@ -50,8 +50,13 @@ const SRC = join(root, 'src');
  * support tickets, crew scheduling, materials, purchase orders and the
  * executive, WIP, budget and labor job-costing views), and removed the
  * invented figures several of them showed.
+ * A sixth moved 109 more (20 files: the estimate form, billing settings, the
+ * client portal, geofence map, document templates, fiscal periods, real-time
+ * job costing, environmental permitting, submittals, RFIs, conversation
+ * participants, the bond/permit/warranty dialogs, offline sync, the custom
+ * report builder, filter presets and the smart import wizard).
  */
-const BASELINE = 445;
+const BASELINE = 336;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

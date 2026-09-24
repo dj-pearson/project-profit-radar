@@ -21,7 +21,7 @@ interface Project {
   status: string;
   completion_percentage?: number;
   budget_total?: number;
-  actual_cost?: number;
+  actual_cost?: number | null;
   start_date?: string;
   end_date?: string;
   estimated_completion?: string;
@@ -29,10 +29,11 @@ interface Project {
   site_address?: string;
 }
 
+// A status the data cannot answer is left undefined and shown as '--'.
 interface ProjectStats {
-  scheduleStatus: 'ahead' | 'on_track' | 'behind';
-  budgetStatus: 'under' | 'on_budget' | 'over';
-  budgetVariance: number;
+  scheduleStatus?: 'ahead' | 'on_track' | 'behind';
+  budgetStatus?: 'under' | 'on_budget' | 'over';
+  budgetVariance?: number;
   unreadUpdates: number;
   daysRemaining?: number;
 }
@@ -120,11 +121,12 @@ export const ClientProjectOverview: React.FC<ClientProjectOverviewProps> = ({
       case 'behind':
         return 'Behind Schedule';
       default:
-        return 'Status Unknown';
+        return '--';
     }
   };
 
   const getBudgetStatusText = (status?: 'under' | 'on_budget' | 'over', variance?: number) => {
+    if (!status) return '--';
     if (!variance) return 'On Budget';
 
     const varianceText = formatCurrency(Math.abs(variance));
@@ -229,7 +231,9 @@ export const ClientProjectOverview: React.FC<ClientProjectOverviewProps> = ({
                     {getBudgetStatusText(stats?.budgetStatus, stats?.budgetVariance)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatCurrency(project.actual_cost)} of {formatCurrency(project.budget_total)}
+                    {project.actual_cost == null
+                      ? `Budget ${project.budget_total == null ? '--' : formatCurrency(project.budget_total)}`
+                      : `${formatCurrency(project.actual_cost)} of ${project.budget_total == null ? '--' : formatCurrency(project.budget_total)}`}
                   </p>
                 </div>
               </div>
