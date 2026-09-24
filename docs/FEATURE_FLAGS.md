@@ -22,8 +22,46 @@ Web clients cache the answer for a minute, so a flip reaches open browsers withi
 | Key | Gates | Default | On read error | Why that side |
 |---|---|---|---|---|
 | `quickbooks.sync` | `quickbooks-sync` edge function; Quick Sync / Full Sync in Settings > Integrations | on | on | Customers already depend on sync, and if the flag table can't be read the sync can't write its own rows either, so failing closed would only add an outage. |
+| `entitlements.plan_features` | `quickbooks-sync` (needs Professional), API key creation in `api-management` (needs Enterprise), and the project limit on `api-management` POST /api/projects | off | off | Starter companies sync with QuickBooks today. Off means "not enforced", so a failed read never takes a working integration away. |
+| `entitlements.trial_expiry` | Read-only mode for an expired trial or a suspended company: `projects` create/update, `invite-team-member`, `quickbooks-sync`, `api-management` project writes, and uploads (storage.objects insert policy) | off | off | Read-only stops a company working. Only the owner deciding to enforce it should switch it on, never a failed read. |
+| `entitlements.storage_quota` | Uploads once a company has used its plan's storage (storage.objects insert policy, via `storage_upload_allowed`) | off | off | Nobody has been held to a storage limit before, so companies may already be over. |
 
 A new money path (a billing flow nobody relies on yet) should normally be registered with `default: false, onReadError: false`: it stays dark until switched on, and a failed read keeps it dark.
+
+## Entitlement enforcement (US-335)
+
+The three `entitlements.*` flags are the other way round from `quickbooks.sync`: **on means enforced**. Each one refuses something a customer can do today, so each ships dark and the owner turns it on after looking at who it would affect. The server returns the refusal as a 403 in the standard envelope with a `code` (`feature_not_in_plan`, `account_read_only`, `plan_limit_reached`, `storage_quota_exceeded`) and an `entitlement` object naming the plan and the upgrade path; uploads refused by the storage policy come back as the usual storage RLS error.
+
+Always on, not flagged (these existed before or refuse nothing a real client does): the project limit in the `projects` function and the seat limit in `invite-team-member` (US-199; client_portal invitees no longer need a free seat); a user token can no longer change `companies.subscription_status`, `trial_end_date` or `stripe_subscription_id` (nothing shipped writes them); `process-dunning` and `failed-payment-recovery` now set the company to `suspended` after the last failed retry, like `stripe-webhook` does on cancel; `trial-management` now moves an unconverted trial from `grace_period` to `suspended` (it only ever looked at `trial` rows, so that step never ran).
+
+Owner steps, in this order:
+
+1. Apply `supabase/migrations/20260924170000_entitlement_enforcement.sql`, then `npm run db:types`.
+2. Resolve the Professional project limit first: the marketing copy in `SubscriptionChange.tsx` and `TrialConversion.tsx` says 25, the enforced limit in `supabase/functions/_shared/tiers.ts` is 50.
+3. See who each flag would affect before turning it on:
+
+```sql
+-- entitlements.plan_features: Starter/Professional companies using QuickBooks sync or holding API keys.
+SELECT c.id, c.name, c.subscription_tier FROM public.companies c
+WHERE c.subscription_tier = 'starter' AND EXISTS (SELECT 1 FROM public.quickbooks_integrations q WHERE q.company_id = c.id AND q.is_connected);
+SELECT c.id, c.name, c.subscription_tier FROM public.companies c
+WHERE c.subscription_tier <> 'enterprise' AND EXISTS (SELECT 1 FROM public.api_keys k WHERE k.company_id = c.id AND k.is_active);
+
+-- entitlements.trial_expiry: companies that would go read-only today.
+SELECT c.id, c.name, c.subscription_status, c.trial_end_date FROM public.companies c
+WHERE c.subscription_status = 'suspended'
+   OR (c.subscription_status = 'trial' AND c.stripe_subscription_id IS NULL
+       AND c.trial_end_date < now() - interval '7 days');
+
+-- entitlements.storage_quota: usage against plan, largest first.
+SELECT c.id, c.name, c.subscription_tier,
+       round(public.company_storage_used_bytes(c.id) / 1073741824.0, 2) AS used_gb,
+       public.tier_storage_limit_gb(c.subscription_tier::text) AS limit_gb
+FROM public.companies c ORDER BY 4 DESC LIMIT 50;
+```
+
+4. Exempt anyone you have decided to grandfather with a company row (`enabled = false`), then turn the flag on globally with the INSERT below (`enabled = true`). Or go the other way: turn it on for one company first, watch, then globally.
+5. Before turning on `entitlements.storage_quota` for a large install, consider an index on `storage.objects (owner)`; the usage sum runs on every upload while the flag is on.
 
 ## Flipping a flag
 

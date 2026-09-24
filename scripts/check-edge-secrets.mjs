@@ -74,6 +74,7 @@ const EDGE = {
   STRIPE_SECRET_KEY: ['required', S, 'Checkout, subscription changes, the billing portal and payment functions return errors.'],
   STRIPE_WEBHOOK_SECRET: ['required', S, 'stripe-webhook cannot verify signatures and rejects every event, so subscription state stops following Stripe.'],
   STRIPE_ENCRYPTION_KEY: ['required', S, 'store-stripe-keys throws; a company cannot save its own Stripe keys.'],
+  CALENDAR_TOKEN_ENCRYPTION_KEY: ['optional', S, 'Google/Outlook calendar connect and sync-calendar fail closed: tokens cannot be encrypted or read, and the OAuth state cannot be signed. At least 32 characters; separate from QUICKBOOKS_TOKEN_ENCRYPTION_KEY.'],
   CLAUDE_API_KEY: ['required', S, 'Every AI feature whose provider is Claude (the default) fails with "API key CLAUDE_API_KEY not configured".'],
   OPENAI_API_KEY: ['optional', S, 'AI features configured for OpenAI fail; the rest are unaffected.'],
   GEMINI_API_KEY: ['optional', S, 'Only models whose provider is gemini fail.'],

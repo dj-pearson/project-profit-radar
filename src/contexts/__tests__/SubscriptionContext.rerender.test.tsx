@@ -36,12 +36,16 @@ const mockInvoke = vi.fn();
 const companyRow = { trial_end_date: null, subscription_status: 'active' };
 
 function countQuery(n: number) {
-  return { eq: vi.fn(() => Promise.resolve({ count: n })) };
+  // The seat count adds .neq('role', 'client_portal') after .eq (US-335).
+  const result = Promise.resolve({ count: n });
+  return { eq: vi.fn(() => Object.assign(result, { neq: vi.fn(() => result) })) };
 }
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
+    // company_storage_used_bytes (US-335).
+    rpc: vi.fn(() => Promise.resolve({ data: 0, error: null })),
     from: vi.fn((table: string) => {
       if (table === 'companies') {
         return {

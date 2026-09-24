@@ -18,9 +18,11 @@ interface CalendarIntegration {
   company_id: string;
   provider: 'google' | 'outlook';
   account_email: string;
-  access_token: string;
-  refresh_token: string | null;
   token_expires_at: string | null;
+  // Set by sync-calendar when the provider refuses the refresh token; cleared
+  // by a successful reconnect (US-395).
+  reauth_required_at: string | null;
+  last_sync_error: string | null;
   is_active: boolean;
   sync_enabled: boolean;
   last_sync: string | null;
@@ -56,14 +58,19 @@ const CalendarIntegration = () => {
 
   const loadIntegrations = async () => {
     try {
+      // Token columns are deliberately not selected; only the edge functions
+      // read them (US-395).
       const { data: integrations, error } = await supabase
         .from('calendar_integrations')
-        .select('*')
+        .select('id, company_id, provider, account_email, token_expires_at, reauth_required_at, last_sync_error, is_active, sync_enabled, last_sync, created_at, updated_at')
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setIntegrations((integrations as CalendarIntegration[]) || []);
+      // reauth_required_at and last_sync_error come from migration
+      // 20260924170001 and are not in the generated types until `npm run
+      // db:types` runs against a database that has it; hence the cast.
+      setIntegrations((integrations as unknown as CalendarIntegration[]) || []);
     } catch (error) {
       console.error('Error loading integrations:', error);
       toast({
@@ -165,10 +172,23 @@ const CalendarIntegration = () => {
       loadIntegrations();
     } catch (error) {
       console.error('Sync error:', error);
+      // A 409 from sync-calendar means the provider refused the refresh token.
+      // Reloading picks up reauth_required_at, which shows the Reconnect button.
+      let reauth = false;
+      try {
+        const ctx = (error as { context?: Response }).context;
+        const body = ctx && typeof ctx.json === 'function' ? await ctx.json() : null;
+        reauth = !!body?.reauth_required;
+      } catch {
+        reauth = false;
+      }
+      loadIntegrations();
       toast({
         variant: "destructive",
-        title: "Sync Failed",
-        description: "Failed to sync calendar events"
+        title: reauth ? "Reconnect Required" : "Sync Failed",
+        description: reauth
+          ? "The calendar connection has expired. Reconnect it to resume syncing."
+          : "Failed to sync calendar events"
       });
     } finally {
       setSyncing(false);
@@ -342,6 +362,11 @@ const CalendarIntegration = () => {
                           Last sync: {formatDateTime(integration.last_sync)}
                         </p>
                       )}
+                      {integration.reauth_required_at ? (
+                        <Badge variant="destructive" className="mt-1">Reconnect required</Badge>
+                      ) : integration.last_sync_error ? (
+                        <p className="text-xs text-destructive">Last sync failed: {integration.last_sync_error}</p>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -355,15 +380,24 @@ const CalendarIntegration = () => {
                         onCheckedChange={(checked) => toggleIntegration(integration.id, checked)}
                       />
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSyncCalendar(integration.id)}
-                      disabled={syncing}
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                      Sync Now
-                    </Button>
+                    {integration.reauth_required_at ? (
+                      <Button
+                        size="sm"
+                        onClick={integration.provider === 'google' ? handleGoogleAuth : handleOutlookAuth}
+                      >
+                        Reconnect
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSyncCalendar(integration.id)}
+                        disabled={syncing}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                        Sync Now
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"

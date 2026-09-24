@@ -4,10 +4,13 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getCalendarTokenKey, signOAuthState, OUTLOOK_SCOPES } from '../_shared/calendar-oauth.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// company_id is still accepted (the web client sends it) but no longer
+// trusted: the company comes from the caller's own profile (US-395).
 const CalendarAuthSchema = z.object({
-  company_id: z.string().uuid(),
+  company_id: z.string().uuid().nullish(),
 }).passthrough();
 
 const logStep = (step: string, details?: any) => {
@@ -44,15 +47,27 @@ serve(async (req) => {
     if (method === "POST") {
       const parsed = await validateBody(req, CalendarAuthSchema, { name: 'outlook-calendar-auth' });
       if (!parsed.ok) return parsed.response;
-      const { company_id } = parsed.data;
-
-      if (!company_id) {
-        throw new Error("Company ID is required");
+      const { data: callerProfile, error: profileError } = await supabaseClient
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+      const company_id = callerProfile?.company_id;
+      if (profileError || !company_id) {
+        throw new Error("Could not resolve the caller company");
+      }
+      if (parsed.data.company_id && parsed.data.company_id !== company_id) {
+        logStep("Ignoring caller-supplied company_id", { claimed: parsed.data.company_id });
       }
 
-            const redirectUri = `${url.origin}/functions/v1/outlook-calendar-callback`;
-      const scope = "https://graph.microsoft.com/calendars.read";
-      const state = btoa(JSON.stringify({ company_id, }));  
+      const redirectUri = `${url.origin}/functions/v1/outlook-calendar-callback`;
+      const scope = OUTLOOK_SCOPES;
+      // Signed, expiring, and bound to this user (US-395). The callback rejects
+      // anything it did not issue.
+      const state = await signOAuthState(
+        { company_id, user_id: user.id, provider: 'outlook' },
+        getCalendarTokenKey(),
+      );
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${clientId}&` +
         `response_type=code&` +
@@ -61,7 +76,7 @@ serve(async (req) => {
         `response_mode=query&` +
         `state=${encodeURIComponent(state)}`;
 
-      logStep("Generated auth URL", { authUrl });
+      logStep("Generated auth URL", { companyId: company_id });
 
       return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), auth_url: authUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

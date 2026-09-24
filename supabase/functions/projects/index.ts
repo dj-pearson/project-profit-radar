@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
-import { handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { handleCorsPreflightRequest, getCorsHeaders } from '../_shared/secure-cors.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
 import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
-import { checkEntitlement } from '../_shared/entitlements.ts';
+import {
+  checkEntitlement, entitlementDeniedResponse, limitDenial, refuseIfReadOnly,
+} from '../_shared/entitlements.ts';
 
 /**
  * The write path used to spread the raw body into insert()/update(), so any
@@ -135,9 +137,19 @@ serve(async (req) => {
             throw new Error("Insufficient permissions to create projects");
           }
 
+          // An expired trial is read-only (US-335), behind entitlements.trial_expiry.
+          const readOnly = await refuseIfReadOnly(
+            supabase, userProfile.company_id, getCorsHeaders(req), { userId: user.id },
+          );
+          if (readOnly) {
+            logStep("Refused: account is read-only", { companyId: userProfile.company_id });
+            return readOnly;
+          }
+
           // Enforce plan limits server-side. The client checkLimit() only gates
           // the UI and is bypassable by calling this endpoint directly, so the
-          // server is the authoritative gate (US-199).
+          // server is the authoritative gate (US-199). Same 403 as before; the
+          // body now also carries `code` and `entitlement` (US-335).
           const entitlement = await checkEntitlement(
             supabase,
             userProfile.company_id,
@@ -146,11 +158,7 @@ serve(async (req) => {
           );
           if (!entitlement.allowed) {
             logStep("Project limit reached", entitlement);
-            return errorResponse(
-              entitlement.reason || 'Project limit reached for your plan',
-              403,
-              req
-            );
+            return entitlementDeniedResponse(limitDenial('projects', entitlement), getCorsHeaders(req));
           }
 
           const projectData = {
@@ -186,6 +194,11 @@ serve(async (req) => {
           if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
             throw new Error("Insufficient permissions to update projects");
           }
+
+          const readOnly = await refuseIfReadOnly(
+            supabase, userProfile.company_id, getCorsHeaders(req), { userId: user.id },
+          );
+          if (readOnly) return readOnly;
 
           const { data: updatedProject, error: updateError } = await supabase
             .from('projects')

@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { captureException } from '../_shared/observability.ts';
+import { suspendCompanyOfSubscriber } from '../_shared/entitlements.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -150,6 +151,13 @@ serve(async (req) => {
                 .eq("id", failure.subscriber_id);
               if (updateSubscribersError) {
                 console.error(`[subscribers] update failed`, updateSubscribersError);
+              }
+
+              // US-335: suspend the company too, so an unpaid company is in the
+              // same state however it got there (_shared/entitlements.ts).
+              const companySuspend = await suspendCompanyOfSubscriber(supabaseClient, failure.subscriber_id);
+              if (companySuspend.error) {
+                console.error(`[companies] suspend failed`, companySuspend.error);
               }
 
               results.suspended_accounts++;

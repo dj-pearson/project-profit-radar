@@ -78,6 +78,9 @@ class Logger {
    */
   private trackError(error: Error | string, context?: Record<string, any>) {
     if (!this.errorTrackingEnabled) return;
+    // Without a DSN initSentry() never runs, so capture is a no-op; don't
+    // fetch ~160 KB of SDK on the first logged error to do nothing (US-388).
+    if (!import.meta.env.VITE_SENTRY_DSN) return;
 
     // Integrate with Sentry error tracking
     try {

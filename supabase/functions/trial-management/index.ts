@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { GRACE_PERIOD_DAYS } from "../_shared/tiers.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -47,14 +48,24 @@ serve(async (req) => {
       grace_periods_activated: 0
     };
 
-    // Get companies with trials ending soon or expired
+    // Get companies with trials ending soon or expired.
+    //
+    // grace_period is included (US-335): this used to select only 'trial', so
+    // the run that moved a company to grace_period was the last run that ever
+    // saw it, and the "suspended a week later" branch below was unreachable.
+    // Only trials that never converted - no Stripe subscription - are picked
+    // up in grace_period: stripe-webhook also writes grace_period for a
+    // past_due payment, and a paying company's trial_end_date is long past,
+    // so without that filter this would suspend paying customers whose card
+    // failed once. Their suspension belongs to Stripe and process-dunning.
     const { data: companiesData, error: companiesError } = await supabaseClient
       .from("companies")
       .select(`
-        id, name, trial_end_date, subscription_status,
+        id, name, trial_end_date, subscription_status, stripe_subscription_id,
         user_profiles!inner(id, email, first_name, last_name, role)
       `)
-      .eq("subscription_status", "trial")
+      .in("subscription_status", ["trial", "grace_period"])
+      .is("stripe_subscription_id", null)
       .lte("trial_end_date", threeDaysFromNow.toISOString())
       .eq("user_profiles.role", "admin");
 
@@ -77,9 +88,14 @@ serve(async (req) => {
 
         if (trialEndDate <= today) {
           // Trial has expired - activate grace period or suspend
-          const gracePeriodEnd = new Date(trialEndDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+          const gracePeriodEnd = new Date(trialEndDate.getTime() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
 
           if (today <= gracePeriodEnd) {
+            // Already moved on an earlier run: nothing to write, and the grace
+            // email went out then. Without this, including grace_period in
+            // the query above would email the admin every day of the week.
+            if (company.subscription_status === "grace_period") continue;
+
             // Still in grace period
             const { error: updateCompaniesError } = await supabaseClient
               .from("companies")

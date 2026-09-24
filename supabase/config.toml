@@ -192,7 +192,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.twilio-calling]
-verify_jwt = true
+# US-395: Twilio's RecordingStatusCallback carries no Supabase JWT, so the
+# platform check rejected every one. The handler verifies X-Twilio-Signature
+# for that path and calls initializeAuthContext for every other action.
+verify_jwt = false
 
 [functions.voice-to-text]
 verify_jwt = true

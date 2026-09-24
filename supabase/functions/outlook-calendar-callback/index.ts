@@ -1,6 +1,13 @@
 // Outlook Calendar Callback Edge Function
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { escapeHtml } from "../_shared/html-escape.ts";
+import { writeAuditLog } from "../_shared/audit-log.ts";
+import {
+  calendarTokenColumnsForWrite,
+  getCalendarTokenKey,
+  verifyOAuthState,
+} from "../_shared/calendar-oauth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +46,7 @@ serve(async (req) => {
         <html>
           <body>
             <h1>Authorization Failed</h1>
-            <p>Error: ${error}</p>
+            <p>Error: ${escapeHtml(error)}</p>
             <script>window.close();</script>
           </body>
         </html>
@@ -53,9 +60,38 @@ serve(async (req) => {
       throw new Error("Missing code or state parameter");
     }
 
-    const stateData = JSON.parse(atob(state));
-    const { company_id } = stateData;
-    logStep("State decoded", { company_id });
+    // The state is HMAC-signed by outlook-calendar-auth and names the company
+    // taken from the signed-in caller's profile. It used to be unsigned
+    // base64(JSON), so anyone could attach a calendar to any company (US-395).
+    const tokenKey = getCalendarTokenKey();
+    const verifiedState = await verifyOAuthState(state, tokenKey, 'outlook');
+    if (!verifiedState) {
+      logStep("Rejected invalid or expired state");
+      return new Response(`
+        <html>
+          <body>
+            <h1>Authorization Failed</h1>
+            <p>This connection link is invalid or has expired. Start the connection again from Brikly.</p>
+            <script>window.close();</script>
+          </body>
+        </html>
+      `, {
+        headers: { "Content-Type": "text/html" },
+        status: 400,
+      });
+    }
+    const { company_id, user_id } = verifiedState;
+
+    // The user may have changed company in the 15 minutes the state is valid.
+    const { data: stateProfile, error: stateProfileError } = await supabaseClient
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user_id)
+      .maybeSingle();
+    if (stateProfileError || stateProfile?.company_id !== company_id) {
+      throw new Error("The account that started this connection no longer belongs to that company");
+    }
+    logStep("State verified", { company_id });
 
     // Exchange code for tokens
     const redirectUri = `${url.origin}/functions/v1/outlook-calendar-callback`;
@@ -78,6 +114,9 @@ serve(async (req) => {
     }
 
     const tokens = await tokenResponse.json();
+    if (typeof tokens.access_token !== "string" || !tokens.access_token) {
+      throw new Error("Token exchange returned no access token");
+    }
     logStep("Tokens received", { hasAccessToken: !!tokens.access_token });
 
     // Get user info from Microsoft Graph
@@ -94,18 +133,35 @@ serve(async (req) => {
     const userInfo = await userInfoResponse.json();
     logStep("User info received", { email: userInfo.mail || userInfo.userPrincipalName });
 
+    const accountEmail = (userInfo.mail || userInfo.userPrincipalName);
+    if (!accountEmail) {
+      throw new Error("The provider did not return an account email address");
+    }
+
+    // Tokens are stored encrypted (US-395). A missing refresh_token leaves the
+    // stored one in place rather than erasing it.
+    const expiresIn = Number(tokens.expires_in);
+    const tokenCols = await calendarTokenColumnsForWrite({
+      accessToken: tokens.access_token,
+      refreshToken: typeof tokens.refresh_token === "string" ? tokens.refresh_token : null,
+      expiresAt: new Date(Date.now() + (Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600) * 1000).toISOString(),
+    }, tokenKey);
+    if (!tokens.refresh_token) {
+      logStep("Provider returned no refresh token; sync will need a reconnect when this access token expires");
+    }
+
     // Store integration in database
     const { error: dbError } = await supabaseClient
       .from('calendar_integrations')
       .upsert({
         company_id,
         provider: 'outlook',
-        account_email: userInfo.mail || userInfo.userPrincipalName,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
+        account_email: accountEmail,
+        ...tokenCols,
         is_active: true,
         sync_enabled: true,
+        reauth_required_at: null,
+        last_sync_error: null,
       }, {
         onConflict: 'company_id,provider,account_email'
       });
@@ -116,6 +172,14 @@ serve(async (req) => {
     }
 
     logStep("Integration saved successfully");
+    await writeAuditLog(supabaseClient, {
+      actorUserId: user_id,
+      companyId: company_id,
+      action: 'calendar_integration.connected',
+      entityType: 'calendar_integration',
+      after: { provider: 'outlook', account_email: accountEmail, has_refresh_token: !!tokens.refresh_token },
+      riskLevel: 'low',
+    });
 
     return new Response(`
       <html>
@@ -142,7 +206,7 @@ serve(async (req) => {
       <html>
         <body>
           <h1>Integration Failed</h1>
-          <p>Error: ${errorMessage}</p>
+          <p>Error: ${escapeHtml(errorMessage)}</p>
           <script>window.close();</script>
         </body>
       </html>

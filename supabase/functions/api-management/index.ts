@@ -6,6 +6,11 @@ import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-colum
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
+import {
+  checkEntitlement, entitlementDeniedResponse, limitDenial,
+  refuseIfFeatureNotInPlan, refuseIfReadOnly,
+} from '../_shared/entitlements.ts';
+import { isFlagEnabled } from '../_shared/feature-flags.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request bodies (US-241), one per route that reads one; report mode by
@@ -233,6 +238,12 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
       { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+  // API access is sold as Enterprise (US-335). Behind entitlements.plan_features,
+  // default off, because companies on other plans hold keys today. Only NEW
+  // keys are refused; an existing key keeps working.
+  const notInPlan = await refuseIfFeatureNotInPlan(supabase, profile.company_id, 'api_access', corsHeaders);
+  if (notInPlan) return notInPlan;
 
   // Generate new API key
   const { data: newKey, error: keyGenError } = await supabase
@@ -532,6 +543,20 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
       const parsed = await validateBody(req, ApiProjectSchema, { name: 'api-management/api/projects' });
       if (!parsed.ok) return parsed.response;
       const projectData = parsed.data as Record<string, unknown>;
+
+      // US-335: an expired trial is read-only, and the project limit the app
+      // enforces through the projects function applies here too. This path
+      // never counted, so an API key was a way round the plan. Both are behind
+      // flags that default off.
+      const readOnly = await refuseIfReadOnly(supabase, validation.company_id!, corsHeaders);
+      if (readOnly) return readOnly;
+      const limitFlag = await isFlagEnabled(supabase, 'entitlements.plan_features', validation.company_id);
+      if (limitFlag.enabled) {
+        const entitlement = await checkEntitlement(supabase, validation.company_id!, 'projects');
+        if (!entitlement.allowed) {
+          return entitlementDeniedResponse(limitDenial('projects', entitlement), corsHeaders);
+        }
+      }
 
       // This handler runs on the SERVICE ROLE key, so RLS is not a backstop:
       // whatever the body carries reaches Postgres. Spreading it let an API-key

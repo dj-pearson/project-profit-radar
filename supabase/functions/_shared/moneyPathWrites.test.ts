@@ -283,8 +283,12 @@ describe('the third edge batch: oauth tokens, telephony and workflows', () => {
 
   it('and lets Twilio retry the recording callback instead of orphaning the recording', () => {
     const src = code(F('twilio-calling'));
-    expect(src).toMatch(/const \{ error: recordingError \} = await supabaseClient/);
+    // US-395: the callback writes with the service role after verifying
+    // X-Twilio-Signature (Twilio sends no user JWT), and answers 500 so Twilio
+    // retries.
+    expect(src).toMatch(/const \{ error: recordingError \} = await createServiceClient\(\)/);
     expect(src).toContain('could not be attached to call');
+    expect(src).toMatch(/json\(false, \{ error: "Recording could not be attached" \}, 500\)/);
   });
 
   it('and stops claiming a transcription that no service produced', () => {

@@ -33,7 +33,9 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/auth-helpers.ts";
-import { checkEntitlement } from "../_shared/entitlements.ts";
+import {
+  checkEntitlement, entitlementDeniedResponse, limitDenial, refuseIfReadOnly,
+} from "../_shared/entitlements.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { sendInviteWithSetPasswordLink, escapeHtml } from '../_shared/invite-email.ts';
@@ -232,21 +234,34 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    // 4. Enforce the seat limit server-side — the gate the UI can no longer be
-    // the only enforcer of. Counts user_profiles for the caller's company.
-    const entitlement = await checkEntitlement(
-      serviceClient,
-      inviter.company_id,
-      "teamMembers",
-      { userId: user.id },
+    // 4a. An expired trial is read-only (US-335), behind entitlements.trial_expiry.
+    const readOnly = await refuseIfReadOnly(
+      serviceClient, inviter.company_id, corsHeaders, { userId: user.id },
     );
-    if (!entitlement.allowed) {
-      logStep("Seat limit reached", entitlement);
-      return errorResponse(
-        entitlement.reason || "Team member limit reached for your plan",
-        403,
-        req,
+    if (readOnly) {
+      logStep("Refused: account is read-only", { companyId: inviter.company_id });
+      return readOnly;
+    }
+
+    // 4b. Enforce the seat limit server-side, the gate the UI can no longer be
+    // the only enforcer of. Counts user_profiles for the caller's company.
+    //
+    // A client_portal invitee is the contractor's customer, not a seat, and
+    // checkEntitlement already leaves them out of the count (US-319). Checking
+    // the limit before inviting one would refuse a customer invite at a full
+    // company for a seat the customer would never take, so skip it.
+    if (payload.role !== "client_portal") {
+      const entitlement = await checkEntitlement(
+        serviceClient,
+        inviter.company_id,
+        "teamMembers",
+        { userId: user.id },
       );
+      if (!entitlement.allowed) {
+        logStep("Seat limit reached", entitlement);
+        // Same 403 as before; `code` and `entitlement` are additive (US-335).
+        return entitlementDeniedResponse(limitDenial("teamMembers", entitlement), corsHeaders);
+      }
     }
 
     // 5. Create the auth user, with NO password. The invitee sets their own

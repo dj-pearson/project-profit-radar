@@ -47,6 +47,41 @@ export const FEATURE_FLAGS = {
     safeSide:
       'Fails open. Customers already depend on sync, and if the flag table cannot be read the sync cannot write its own rows either, so failing closed would only add an outage.',
   },
+  // US-335. Each of these turns on enforcement that would refuse something an
+  // existing customer can do today, so each is dark until the owner switches
+  // it on (docs/FEATURE_FLAGS.md, "Entitlement enforcement"). Off - no row, or
+  // an unreadable table - means "not enforced", which is the side that never
+  // locks a paying customer out.
+  'entitlements.plan_features': {
+    description: 'Plan-tier feature gates: QuickBooks sync needs Professional, creating an API key needs Enterprise, and the public API projects endpoint counts against the project limit.',
+    owner: 'djpearson',
+    addedOn: '2026-09-23',
+    removeBy: '2027-03-31',
+    default: false,
+    onReadError: false,
+    safeSide:
+      'Fails open. Starter companies use QuickBooks sync today; refusing it because the flag table could not be read would take away a working integration for an infrastructure hiccup.',
+  },
+  'entitlements.trial_expiry': {
+    description: 'An expired trial (past trial_end_date plus the grace period) or a suspended account is read-only: project create/update, team invites, API project writes and storage uploads are refused with an upgrade path.',
+    owner: 'djpearson',
+    addedOn: '2026-09-23',
+    removeBy: '2027-03-31',
+    default: false,
+    onReadError: false,
+    safeSide:
+      'Fails open. Read-only mode stops a company working; it must never be switched on by a failed read, only by the owner deciding to enforce it.',
+  },
+  'entitlements.storage_quota': {
+    description: 'Uploads to company buckets are refused once the company has used its plan storage allowance (storage.objects insert policy plus the storage_quota check in edge functions).',
+    owner: 'djpearson',
+    addedOn: '2026-09-23',
+    removeBy: '2027-03-31',
+    default: false,
+    onReadError: false,
+    safeSide:
+      'Fails open. Nobody has ever been held to a storage limit, so companies may already be over it; an unreadable flag must not start refusing their job-site photos.',
+  },
 } as const satisfies Record<string, FeatureFlagDefinition>;
 
 export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
@@ -125,6 +160,11 @@ export async function isFlagEnabled(
 export const FEATURE_DISABLED_MESSAGE: Record<FeatureFlagKey, string> = {
   'quickbooks.sync':
     'QuickBooks sync is paused while we fix a problem. Your existing data is unchanged; try again later.',
+  // Enforcement flags: "disabled" means not enforced, so these messages are
+  // never sent. The record is typed over every key, so they must exist.
+  'entitlements.plan_features': 'Plan feature gates are not enforced.',
+  'entitlements.trial_expiry': 'Trial expiry is not enforced.',
+  'entitlements.storage_quota': 'Storage quota is not enforced.',
 };
 
 /** 503 in the standard envelope for a request a switched-off flag refuses. */

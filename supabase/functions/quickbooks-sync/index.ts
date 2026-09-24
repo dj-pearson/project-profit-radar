@@ -14,6 +14,7 @@ import {
 } from '../_shared/quickbooks-mapping.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { isFlagEnabled, featureDisabledResponse } from '../_shared/feature-flags.ts';
+import { refuseIfFeatureNotInPlan, refuseIfReadOnly } from '../_shared/entitlements.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
@@ -155,6 +156,15 @@ serve(async (req) => {
       console.error(`[QUICKBOOKS-SYNC] refused for ${company_id}: quickbooks.sync is off (${syncFlag.source})`)
       return featureDisabledResponse('quickbooks.sync', corsHeaders)
     }
+
+    // US-335: QuickBooks sync is sold as Professional and up, and an expired
+    // trial is read-only. Both are behind flags that default off
+    // (entitlements.plan_features, entitlements.trial_expiry), because Starter
+    // companies sync today.
+    const notInPlan = await refuseIfFeatureNotInPlan(supabaseClient, company_id, 'quickbooks_sync', corsHeaders)
+    if (notInPlan) return notInPlan
+    const readOnly = await refuseIfReadOnly(supabaseClient, company_id, corsHeaders, { userId: user.id })
+    if (readOnly) return readOnly
 
     console.log(`Starting ${sync_type} sync for company: ${company_id}`)
 

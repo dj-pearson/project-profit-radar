@@ -10,6 +10,7 @@ import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_RECOVERY_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
 import { siteUrl } from '../_shared/app-urls.ts';
+import { suspendCompanyOfSubscriber } from '../_shared/entitlements.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Every settings field is nullable: the web client round-trips the row that
@@ -231,6 +232,13 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
           .eq('id', failure.subscriber_id);
         if (updateSubscribersError) {
           console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
+
+        // US-335: and the company, the same state every other suspension
+        // path writes (_shared/entitlements.ts).
+        const companySuspend = await suspendCompanyOfSubscriber(supabase, failure.subscriber_id);
+        if (companySuspend.error) {
+          console.error(`[companies] suspend failed`, companySuspend.error);
         }
       }
 

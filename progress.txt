@@ -7262,3 +7262,13 @@ was saved at New York City; OSHA deadlines never saved; the admin Companies
 list hid new companies. The executive dashboard and materials page stop
 showing invented dollar figures. TS 1067 -> 949, eslint warnings 4689 ->
 4390.
+
+## US-335 + US-395 - entitlements, calendar tokens, Twilio webhooks
+Plan limits now come from one source and refuse with an upgrade hint;
+client-portal users stop consuming seats; a company admin can no longer
+edit their own trial end date through the API. Stricter gates (plan
+features, trial read-only mode, storage quota) ship behind feature flags
+that default off. Calendar sync refreshes tokens, flags reconnects instead
+of failing silently, and encrypts tokens; its OAuth state was forgeable
+and is now signed. Twilio recording callbacks are signature-checked, and
+transcription is real or says it isn't available. TS 949 -> 948.

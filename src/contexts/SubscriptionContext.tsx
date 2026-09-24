@@ -2,8 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import {
   TIER_LIMITS as SHARED_TIER_LIMITS,
   TIER_DISPLAY_NAMES,
+  BYTES_PER_GB,
+  GRACE_PERIOD_DAYS,
   tierAllowsFeature,
 } from '@/lib/tiers.generated';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useSupabaseSubscription } from '@/hooks/useSupabaseSubscription';
@@ -38,6 +41,10 @@ export interface SubscriptionStatus {
   trialDaysLeft: number | null;
   graceDaysLeft: number | null;
   subscriptionEndDate: string | null;
+  /** The raw companies columns accountAccess() reads (US-335). */
+  status?: string | null;
+  trialEndDate?: string | null;
+  hasStripeSubscription?: boolean;
 }
 
 export interface UsageStats {
@@ -136,7 +143,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     // Get company data for trial info
     supabase
       .from('companies')
-      .select('trial_end_date, subscription_status')
+      .select('trial_end_date, subscription_status, stripe_subscription_id')
       .eq('id', companyId)
       .single()
       .then(({ data: companyData }) => {
@@ -153,7 +160,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
         if (companyData.subscription_status === 'grace_period' && companyData.trial_end_date) {
           const trialEnd = new Date(companyData.trial_end_date);
-          const gracePeriodEnd = new Date(trialEnd.getTime() + 7 * 24 * 60 * 60 * 1000);
+          const gracePeriodEnd = new Date(trialEnd.getTime() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
           graceDaysLeft = Math.ceil((gracePeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           graceDaysLeft = Math.max(0, graceDaysLeft);
         }
@@ -167,7 +174,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
           tier: data.subscription_tier || 'starter',
           trialDaysLeft,
           graceDaysLeft,
-          subscriptionEndDate: data.subscription_end || null
+          subscriptionEndDate: data.subscription_end || null,
+          status: companyData.subscription_status ?? null,
+          trialEndDate: companyData.trial_end_date ?? null,
+          hasStripeSubscription: !!companyData.stripe_subscription_id,
         };
 
         setSubscriptionStatus(status);
@@ -216,11 +226,15 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     if (!companyId) return;
 
     try {
-      // Fetch team members count
+      // Fetch team members count. client_portal users are the contractor's
+      // customers, not seats, and the server does not count them (US-319,
+      // US-335); counting them here showed a full plan the server would not
+      // enforce.
       const { count: teamMembersCount } = await supabase
         .from('user_profiles')
         .select('id', { count: 'exact', head: true })
-        .eq('company_id', companyId);
+        .eq('company_id', companyId)
+        .neq('role', 'client_portal');
 
       // Fetch projects count
       const { count: projectsCount } = await supabase
@@ -228,9 +242,13 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .select('id', { count: 'exact', head: true })
         .eq('company_id', companyId);
 
-      // TODO: Fetch storage usage from usage_metrics table
-      // For now, defaulting to 0
-      const storageUsage = 0;
+      // Bytes stored by this company's users, the same number the upload
+      // policy compares against the plan (US-335). The RPC is newer than the
+      // generated types. A failed read shows 0 rather than blocking anything:
+      // the server decides.
+      const { data: storageBytes } = await (supabase as unknown as SupabaseClient)
+        .rpc('company_storage_used_bytes', { p_company_id: companyId });
+      const storageUsage = Number(storageBytes ?? 0) / BYTES_PER_GB;
 
       setUsage({
         teamMembers: teamMembersCount || 0,
