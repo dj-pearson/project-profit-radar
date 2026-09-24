@@ -83,10 +83,14 @@ const RFIs = () => {
     }
     
     // Handle project filter from navigation state
+    // ?project= is how the project hub and the Communication Hub link here.
+    const projectParam = new URLSearchParams(location.search).get('project');
     if (location.state?.projectFilter) {
       setSelectedProject(location.state.projectFilter);
+    } else if (projectParam) {
+      setSelectedProject(projectParam);
     }
-  }, [user, userProfile, loading, navigate, location.state]);
+  }, [user, userProfile, loading, navigate, location.state, location.search]);
 
   const handleCreateRFI = async () => {
     if (!newRFI.project_id || !newRFI.title || !newRFI.description) {

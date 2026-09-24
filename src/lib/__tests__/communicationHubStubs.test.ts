@@ -58,18 +58,23 @@ describe('the RFI and Meetings tabs', () => {
   });
 
   it('no longer carry hardcoded people and projects that look like real data', () => {
+    const panels = ['src/components/communication/HubRFIPanel.tsx', 'src/components/communication/HubMeetingsPanel.tsx'].map(code);
     for (const fake of ['Commercial Office Build', 'David Brown', 'Alex Chen', 'Smith House']) {
-      expect(src, `${fake} is still presented as data`).not.toContain(fake);
+      for (const text of [src, ...panels]) {
+        expect(text, `${fake} is still presented as data`).not.toContain(fake);
+      }
     }
   });
 
-  it('say they are not built rather than rendering a permanently empty list', () => {
+  it('render the real RFI and meeting panels, not a permanently empty list (US-313)', () => {
     // `useState<RFI[]>([])` with no setter cannot ever be non-empty, so the
-    // list read as "you have no RFIs".
+    // list read as "you have no RFIs". US-296 swapped it for a "not built"
+    // card; US-313 built the feature on the existing rfis and
+    // project_calendar_events tables.
     expect(src).not.toMatch(/useState<RFI\[\]>|useState<Meeting\[\]>/);
-    expect(src).toContain('Not available yet.');
-    expect(src).toContain('RFI tracking is not built');
-    expect(src).toContain('Meeting scheduling is not built');
+    expect(src).not.toContain('Not available yet.');
+    expect(src).toContain('<HubRFIPanel');
+    expect(src).toContain('<HubMeetingsPanel');
   });
 
   it('do not leave dead handlers behind them', () => {

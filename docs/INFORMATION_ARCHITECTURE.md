@@ -135,6 +135,15 @@ section than they opened — `estimates` said "Financials", `tasks` said "Team".
   of `/schedule-management`; `/crew-scheduling` is
   dispatch, a different job that happens to share the word. Merging them
   changes what people see, so it is a product call, not a routing cleanup.
+- **`/communication` is the one communication page** (US-313).
+  `src/pages/CommunicationPage.tsx` renders `components/communication/CommunicationHub`,
+  whose Messages tab is the working chat. The second, unrouted
+  `src/pages/CommunicationHub.tsx` (445 lines, read project messages directly)
+  was deleted in US-372 rather than routed: it duplicated the Messages tab and
+  nothing linked to it. The hub's RFIs tab lists the same `rfis` rows as `/rfis`
+  filtered to the picked project, and its Meetings tab is `project_calendar_events`
+  rows of type `meeting`, the table `/calendar` writes, so there is no separate
+  meeting store.
 - **`/workflows` and `/workflow-management` are not duplicates** despite the
   names. `/workflows` (WorkflowAutomation) is rule-based automation and reads
   the database; `/workflow-management` is a tab shell over change orders, QC,

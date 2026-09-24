@@ -7358,3 +7358,9 @@ said when things recovered; it now alerts once, reminds every 6 hours and
 posts recovery. health-check's auth probe could never fail (getSession()
 only reads local storage); it now calls GoTrue's health endpoint. Owner
 sets the URL, anon key and Slack webhook in repo settings.
+
+## US-313 - RFIs and meetings in the Communication Hub
+The hub's RFI and meeting tabs said "Not available yet". RFIs now use the
+real rfis data (raise, assign, answer, close) shared with /rfis, and
+meetings are calendar events of type meeting, so they appear on /calendar.
+No new tables.

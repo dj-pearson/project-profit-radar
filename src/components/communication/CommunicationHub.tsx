@@ -7,6 +7,45 @@ import { ThreadManager } from "./ThreadManager";
 import { AdvancedChatInterface } from "./AdvancedChatInterface";
 import { useAdvancedChat, type ChatChannel } from "@/hooks/useAdvancedChat";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRFIsPage } from "@/hooks/useRFIsPage";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HubRFIPanel } from "./HubRFIPanel";
+import { HubMeetingsPanel } from "./HubMeetingsPanel";
+
+const ALL_PROJECTS = 'all';
+
+/** The project both the RFIs and Meetings tabs narrow to. */
+function ProjectFilter({
+  value,
+  onChange,
+  projects,
+  id,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  projects: { id: string; name: string }[];
+  id: string;
+}) {
+  return (
+    <div className="max-w-sm space-y-2">
+      <Label htmlFor={id}>Project</Label>
+      <Select value={value || ALL_PROJECTS} onValueChange={(v) => onChange(v === ALL_PROJECTS ? '' : v)}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="All projects" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_PROJECTS}>All projects</SelectItem>
+          {projects.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 
 
@@ -18,6 +57,11 @@ export const CommunicationHub: React.FC = () => {
   const chat = useAdvancedChat();
   const { userProfile } = useAuth();
   const { loadChannels } = chat;
+  // Projects come from the same query the RFI tab reads, so the picker and
+  // the list agree on what exists.
+  const rfiData = useRFIsPage();
+  const projects = rfiData.query.data?.projects ?? [];
+  const [projectId, setProjectId] = useState('');
 
   useEffect(() => {
     loadChannels();
@@ -106,55 +150,18 @@ export const CommunicationHub: React.FC = () => {
       </TabsContent>
 
       <TabsContent value="rfis" className="space-y-6">
-        {/*
-          This tab used to render a Create RFI dialog whose submit button had
-          no onClick, over a list backed by `useState<RFI[]>([])` with no
-          setter - permanently empty. The project and assignee options were
-          hardcoded names ("Commercial Office Build", "David Brown
-          (Architect)"). Someone could fill the form in, press Create RFI,
-          and have nothing at all happen, on a screen that otherwise looked
-          finished (US-296).
-
-          No RFI table exists in supabase/migrations, so there is nothing to
-          wire the form to. Saying so is the honest state until the feature
-          is built.
-        */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Request for Information (RFI) Management</CardTitle>
-            <CardDescription>Not available yet.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>
-              RFI tracking is not built. There is no RFI storage behind this tab, so nothing
-              entered here could be saved or sent.
-            </p>
-            <p>
-              Use the Messages tab to raise a question with the project team in the meantime.
-            </p>
-          </CardContent>
-        </Card>
+        {/* The rfis table /rfis and the project hub already use (US-313). This
+            tab was a mock form with no onClick over a list that could never
+            fill (US-296). */}
+        <ProjectFilter value={projectId} onChange={setProjectId} projects={projects} id="hub-project-rfis" />
+        <HubRFIPanel projectId={projectId} />
       </TabsContent>
 
       <TabsContent value="meetings" className="space-y-6">
-        {/* Same as the RFI tab: a Schedule Meeting dialog with no onClick over
-            a permanently empty list. No meeting storage exists (US-296). */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Meeting Coordination</CardTitle>
-            <CardDescription>Not available yet.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>
-              Meeting scheduling is not built. There is no meeting storage behind this tab, so
-              nothing scheduled here would reach anyone.
-            </p>
-            <p>
-              The project calendar at <span className="font-medium">/calendar</span> is the
-              working surface for dates.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Folded into /calendar: meetings are project_calendar_events rows
+            with event_type 'meeting', not a second store (US-313). */}
+        <ProjectFilter value={projectId} onChange={setProjectId} projects={projects} id="hub-project-meetings" />
+        <HubMeetingsPanel projectId={projectId} projects={projects} />
       </TabsContent>
 
       <TabsContent value="updates" className="space-y-6">

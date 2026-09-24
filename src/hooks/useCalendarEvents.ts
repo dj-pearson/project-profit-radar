@@ -178,7 +178,7 @@ export function useCalendarEvents() {
 
   const updateEvent = useCallback(
     async (id: string, input: NewCalendarEvent) => {
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('project_calendar_events')
         .update({
           title: input.title,
@@ -190,8 +190,11 @@ export function useCalendarEvents() {
           project_id: input.projectId ?? null,
           location: input.location ?? null,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (updateError) throw updateError;
+      // RLS filters an update it refuses to zero rows without an error.
+      if (!updated || updated.length === 0) throw new Error('The event was not changed. You may not have permission to edit it.');
       await loadEvents();
     },
     [loadEvents]
@@ -199,11 +202,13 @@ export function useCalendarEvents() {
 
   const deleteEvent = useCallback(
     async (id: string) => {
-      const { error: deleteError } = await supabase
+      const { data: deleted, error: deleteError } = await supabase
         .from('project_calendar_events')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
       if (deleteError) throw deleteError;
+      if (!deleted || deleted.length === 0) throw new Error('The event was not deleted. You may not have permission to delete it.');
       await loadEvents();
     },
     [loadEvents]
