@@ -1,4 +1,42 @@
-import * as Sentry from '@sentry/react';
+/**
+ * Sentry, loaded on demand (US-388).
+ *
+ * @sentry/react used to be a static import here, and main.tsx imports this
+ * file, so about 95 KB of SDK (plus replay and tracing) sat in the entry chunk
+ * that every marketing page parses before it can paint. Nothing below imports
+ * the SDK statically any more: initSentry() fetches it once the browser is
+ * idle, and every other helper waits for that init to finish.
+ *
+ * With no DSN, or before init, the helpers do nothing, which is what the
+ * static import did too (no client to send to).
+ */
+type SentryModule = typeof import('@sentry/react');
+
+let resolveReady: (sdk: SentryModule) => void = () => {};
+const ready = new Promise<SentryModule>((resolve) => {
+  resolveReady = resolve;
+});
+
+/** Run `fn` against the SDK once initSentry() has set it up. */
+const withSentry = (fn: (Sentry: SentryModule) => void) => {
+  if (!import.meta.env.VITE_SENTRY_DSN) return;
+  ready.then(fn).catch(() => {
+    /* error reporting must never throw into the app */
+  });
+};
+
+/** Defer work until the page is idle, so it never competes with first paint. */
+const whenIdle = (fn: () => void) => {
+  if (typeof window === 'undefined') {
+    fn();
+    return;
+  }
+  const ric = (window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  }).requestIdleCallback;
+  if (ric) ric(fn, { timeout: 4000 });
+  else setTimeout(fn, 2000);
+};
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -26,92 +64,101 @@ export const initSentry = () => {
     return;
   }
 
-  Sentry.init({
-    dsn,
-    environment,
-    release,
+  whenIdle(() => {
+    import('@sentry/react')
+      .then((Sentry) => {
+        Sentry.init({
+          dsn,
+          environment,
+          release,
 
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-    // We recommend adjusting this value in production
-    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+          // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+          // We recommend adjusting this value in production
+          tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
 
-    // Capture Replay for 10% of all sessions,
-    // plus 100% of sessions with an error
-    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
-    replaysOnErrorSampleRate: 1.0,
+          // Capture Replay for 10% of all sessions,
+          // plus 100% of sessions with an error
+          replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
+          replaysOnErrorSampleRate: 1.0,
 
-    integrations: [
-      // Enable performance monitoring
-      Sentry.browserTracingIntegration(),
+          integrations: [
+            // Enable performance monitoring
+            Sentry.browserTracingIntegration(),
 
-      // Enable session replay
-      Sentry.replayIntegration({
-        // Mask all text content to protect user privacy
-        maskAllText: true,
-        // Block all media (images, video, audio) to reduce bandwidth
-        blockAllMedia: true,
-      }),
-    ],
+            // Enable session replay
+            Sentry.replayIntegration({
+              // Mask all text content to protect user privacy
+              maskAllText: true,
+              // Block all media (images, video, audio) to reduce bandwidth
+              blockAllMedia: true,
+            }),
+          ],
 
-    // Filter out sensitive information before sending to Sentry
-    beforeSend(event, hint) {
-      // Remove sensitive data from breadcrumbs
-      if (event.breadcrumbs) {
-        event.breadcrumbs = event.breadcrumbs.map(breadcrumb => {
-          if (breadcrumb.data) {
-            // Remove password fields
-            if (breadcrumb.data.password) {
-              breadcrumb.data.password = '[Filtered]';
+          // Filter out sensitive information before sending to Sentry
+          beforeSend(event, hint) {
+            // Remove sensitive data from breadcrumbs
+            if (event.breadcrumbs) {
+              event.breadcrumbs = event.breadcrumbs.map(breadcrumb => {
+                if (breadcrumb.data) {
+                  // Remove password fields
+                  if (breadcrumb.data.password) {
+                    breadcrumb.data.password = '[Filtered]';
+                  }
+                  // Remove token fields
+                  if (breadcrumb.data.token) {
+                    breadcrumb.data.token = '[Filtered]';
+                  }
+                  // Remove email from sensitive contexts
+                  if (breadcrumb.category === 'auth' && breadcrumb.data.email) {
+                    breadcrumb.data.email = '[Filtered]';
+                  }
+                }
+                return breadcrumb;
+              });
             }
-            // Remove token fields
-            if (breadcrumb.data.token) {
-              breadcrumb.data.token = '[Filtered]';
+
+            // Filter sensitive data from error context
+            if (event.contexts) {
+              // Remove sensitive user data
+              if (event.contexts.user) {
+                const { email, ...safeUser } = event.contexts.user;
+                event.contexts.user = safeUser;
+              }
             }
-            // Remove email from sensitive contexts
-            if (breadcrumb.category === 'auth' && breadcrumb.data.email) {
-              breadcrumb.data.email = '[Filtered]';
-            }
-          }
-          return breadcrumb;
+
+            return event;
+          },
+
+          // Ignore certain errors that are not actionable
+          ignoreErrors: [
+            // Browser extensions
+            'top.GLOBALS',
+            // Random plugins/extensions
+            'originalCreateNotification',
+            'canvas.contentDocument',
+            'MyApp_RemoveAllHighlights',
+            // Network errors that we can't control
+            'NetworkError',
+            'Network request failed',
+            // ResizeObserver loop errors (benign)
+            'ResizeObserver loop limit exceeded',
+            'ResizeObserver loop completed with undelivered notifications',
+          ],
+
+          // Only track errors from our domain. NOTE: the production domain is
+          // brikly.net (not .com); the previous .com entries meant Sentry silently
+          // dropped every real production event.
+          allowUrls: [
+            /https?:\/\/(www\.)?brikly\.net/,
+            /https?:\/\/[a-z0-9-]+\.pages\.dev/,
+            /localhost/,
+          ],
         });
-      }
-
-      // Filter sensitive data from error context
-      if (event.contexts) {
-        // Remove sensitive user data
-        if (event.contexts.user) {
-          const { email, ...safeUser } = event.contexts.user;
-          event.contexts.user = safeUser;
-        }
-      }
-
-      return event;
-    },
-
-    // Ignore certain errors that are not actionable
-    ignoreErrors: [
-      // Browser extensions
-      'top.GLOBALS',
-      // Random plugins/extensions
-      'originalCreateNotification',
-      'canvas.contentDocument',
-      'MyApp_RemoveAllHighlights',
-      // Network errors that we can't control
-      'NetworkError',
-      'Network request failed',
-      // ResizeObserver loop errors (benign)
-      'ResizeObserver loop limit exceeded',
-      'ResizeObserver loop completed with undelivered notifications',
-    ],
-
-    // Only track errors from our domain. NOTE: the production domain is
-    // brikly.net (not .com); the previous .com entries meant Sentry silently
-    // dropped every real production event.
-    allowUrls: [
-      /https?:\/\/(www\.)?brikly\.net/,
-      /https?:\/\/[a-z0-9-]+\.pages\.dev/,
-      /localhost/,
-    ],
+        resolveReady(Sentry);
+      })
+      .catch(() => {
+        /* no error tracking this session; the app carries on */
+      });
   });
 };
 
@@ -124,7 +171,7 @@ export const setSentryUser = (user: {
   email?: string;
   role?: string;
   company_id?: string;
-}) => {
+}) => withSentry((Sentry) => {
   Sentry.setUser({
     id: user.id,
     // Only send email in development
@@ -132,24 +179,25 @@ export const setSentryUser = (user: {
     role: user.role,
     company_id: user.company_id,
   });
-};
+});
 
 /**
  * Clear user context on logout
  */
-export const clearSentryUser = () => {
+export const clearSentryUser = () => withSentry((Sentry) => {
   Sentry.setUser(null);
-};
+});
 
 /**
  * Manually capture an exception
  */
-export const captureException = (error: Error, context?: Record<string, any>) => {
-  if (context) {
-    Sentry.setContext('custom', context);
-  }
-  Sentry.captureException(error);
-};
+export const captureException = (error: Error, context?: Record<string, any>) =>
+  withSentry((Sentry) => {
+    if (context) {
+      Sentry.setContext('custom', context);
+    }
+    Sentry.captureException(error);
+  });
 
 /**
  * Manually capture a message
@@ -157,9 +205,9 @@ export const captureException = (error: Error, context?: Record<string, any>) =>
 export const captureMessage = (
   message: string,
   level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info'
-) => {
+) => withSentry((Sentry) => {
   Sentry.captureMessage(message, level);
-};
+});
 
 /**
  * Add breadcrumb for tracking user actions
@@ -168,21 +216,20 @@ export const addBreadcrumb = (
   category: string,
   message: string,
   data?: Record<string, any>
-) => {
+) => withSentry((Sentry) => {
   Sentry.addBreadcrumb({
     category,
     message,
     data,
     level: 'info',
   });
-};
+});
 
 /**
- * Start a performance span (replaces deprecated startTransaction)
+ * Start a performance span (replaces deprecated startTransaction). The SDK
+ * loads on demand, so the span is not handed back to the caller.
  */
-export const startTransaction = (name: string, op: string) => {
-  return Sentry.startSpan({
-    name,
-    op,
-  }, (span) => span);
-};
+export const startTransaction = (name: string, op: string) =>
+  withSentry((Sentry) => {
+    Sentry.startSpan({ name, op }, () => undefined);
+  });

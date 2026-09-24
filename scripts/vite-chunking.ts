@@ -14,20 +14,63 @@
  */
 
 /** Chunks that must only ever be reached through a dynamic import(). */
-export const LAZY_ONLY_CHUNKS = ['three', 'recharts', 'xlsx'] as const;
+export const LAZY_ONLY_CHUNKS = ['three', 'recharts', 'xlsx', 'ui-library'] as const;
 
 /** Manual chunk names that get a stable `assets/<name>-[hash].js` filename. */
 export const MANUAL_CHUNK_NAMES = ['framework', 'ui-library', 'query', 'xlsx', 'three', 'recharts'];
 
 // Tiny runtime helpers shared by the entry and by the lazy vendor chunks.
 // They go in `framework` (always loaded) so no lazy chunk can capture them.
+// clsx is here because `cn()` needs it on every page and recharts imports it
+// too; the old `ui-library` rule claimed it through class-variance-authority.
 const SHARED_RUNTIME_HELPERS = [
   'vite/preload-helper',
   'commonjsHelpers',
   'node_modules/@babel/runtime/',
+  'node_modules/clsx/',
 ];
 
-export function manualChunkFor(id: string): string | undefined {
+/** The part of Rollup's manualChunks `meta` argument this file reads. */
+export interface ChunkMeta {
+  getModuleInfo: (
+    id: string,
+  ) => { isEntry: boolean; importers: readonly string[] } | null;
+}
+
+const eagerCache = new WeakMap<ChunkMeta['getModuleInfo'], Map<string, boolean>>();
+
+/**
+ * True when `id` is reached from an entry through static imports only, i.e.
+ * it is part of what index.html loads before first paint.
+ */
+export function isEagerModule(id: string, meta: ChunkMeta): boolean {
+  let cache = eagerCache.get(meta.getModuleInfo);
+  if (!cache) {
+    cache = new Map();
+    eagerCache.set(meta.getModuleInfo, cache);
+  }
+  const hit = cache.get(id);
+  if (hit !== undefined) return hit;
+
+  const seen = new Set<string>([id]);
+  const queue = [id];
+  let eager = false;
+  while (queue.length > 0 && !eager) {
+    const info = meta.getModuleInfo(queue.shift() as string);
+    if (!info) continue;
+    if (info.isEntry) eager = true;
+    for (const importer of info.importers) {
+      if (!seen.has(importer)) {
+        seen.add(importer);
+        queue.push(importer);
+      }
+    }
+  }
+  cache.set(id, eager);
+  return eager;
+}
+
+export function manualChunkFor(id: string, meta?: ChunkMeta): string | undefined {
   const normalized = id.replace(/\\/g, '/');
 
   if (SHARED_RUNTIME_HELPERS.some((h) => normalized.includes(h))) {
@@ -43,15 +86,24 @@ export function manualChunkFor(id: string): string | undefined {
   ) {
     return 'framework';
   }
-  // UI library chunk: Radix UI + CVA
+  // UI library chunk: Radix UI + CVA, split by who needs it. `ui-library`
+  // used to hold every Radix primitive any page used (select, scroll-area,
+  // radio-group, accordion, ...), 54 KB gz that the entry modulepreloaded on
+  // every marketing route although the shell only renders toast and dialog.
+  // The primitives the shell imports go to `framework`; the rest stay in one
+  // lazy `ui-library` chunk, which the build guard keeps off the entry.
   if (
     normalized.includes('node_modules/@radix-ui/') ||
     normalized.includes('node_modules/class-variance-authority')
   ) {
-    return 'ui-library';
+    return meta && isEagerModule(id, meta) ? 'framework' : 'ui-library';
   }
-  // Query chunk: TanStack Query
-  if (normalized.includes('node_modules/@tanstack/')) {
+  // Query chunk: TanStack Query only. @tanstack/virtual-core and friends are
+  // used by lazy list views and would otherwise be preloaded with it.
+  if (
+    normalized.includes('node_modules/@tanstack/query-core/') ||
+    normalized.includes('node_modules/@tanstack/react-query/')
+  ) {
     return 'query';
   }
   // XLSX chunk: heavy spreadsheet library

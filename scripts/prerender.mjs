@@ -171,7 +171,7 @@ function chromiumCandidates() {
 }
 
 /** Runs in the page: drop runtime-only nodes and static-vs-Helmet duplicates. */
-function cleanDom(shellKeys) {
+function cleanDom([shellKeys, shellPreloads]) {
   const keep = new Set(shellKeys);
   // Scripts injected at runtime (analytics loaders, lazy chunks) would run a
   // second time when the prerendered file boots. Keep only the shell's own
@@ -182,6 +182,16 @@ function cleanDom(shellKeys) {
     const src = s.getAttribute('src');
     const key = src ? `src:${src}` : `inline:${s.textContent}`;
     if (!keep.has(key)) s.remove();
+  }
+  // Vite's preload helper adds a <link rel="modulepreload"> to <head> for
+  // every chunk a lazy import() pulls in. Capturing those (the page, the
+  // sections mounted by the scroll below, the routes warmed on interaction)
+  // put 227 of them in dist/index.html, and a phone fetched all of them before
+  // the prerendered hero could paint: LCP 13.7 s (US-388). Keep only the
+  // shell's own; the live app requests the rest when it needs them.
+  const preloads = new Set(shellPreloads);
+  for (const l of [...document.querySelectorAll('link[rel="modulepreload"]')]) {
+    if (!preloads.has(l.getAttribute('href'))) l.remove();
   }
   // Portals, toasts, analytics iframes and other nodes appended to <body>
   // outside #root would be duplicated by the live app. The shell's body holds
@@ -214,7 +224,7 @@ function cleanDom(shellKeys) {
   dedupe('meta[name^="twitter:"]', 'name');
 }
 
-async function renderRoute(context, base, route, shellTitle, shellKeys) {
+async function renderRoute(context, base, route, shellTitle, shellKeys, shellPreloads) {
   const page = await context.newPage();
   // Count in-flight requests so the capture can wait for lazy sections below
   // the fold. Bounded (QUIET_CAP_MS), unlike networkidle, so a page holding a
@@ -257,7 +267,7 @@ async function renderRoute(context, base, route, shellTitle, shellKeys) {
     }
     await page.waitForTimeout(300); // let trailing Helmet updates and JSON-LD flush
     const finalPath = new URL(page.url()).pathname;
-    await page.evaluate(cleanDom, shellKeys);
+    await page.evaluate(cleanDom, [shellKeys, shellPreloads]);
     const html = await page.content();
     return { html, finalPath };
   } finally {
@@ -297,6 +307,9 @@ async function main() {
 
   const shellTitle = (shell.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || '').trim();
   const shellKeys = shellScriptKeys(shell);
+  const shellPreloads = [...shell.matchAll(/<link\b[^>]*\brel="modulepreload"[^>]*>/gi)]
+    .map((m) => m[0].match(/\bhref="([^"]*)"/i)?.[1])
+    .filter(Boolean);
   const server = await startServer(shell);
   const base = `http://${HOST}:${PORT}`;
   // Service workers are blocked so a capture never comes from a SW cache.
@@ -311,7 +324,7 @@ async function main() {
     while (next < routes.length) {
       const route = routes[next++];
       try {
-        const { html, finalPath } = await renderRoute(context, base, route, shellTitle, shellKeys);
+        const { html, finalPath } = await renderRoute(context, base, route, shellTitle, shellKeys, shellPreloads);
         const verdict = validateRenderedHtml(route, html, { shellTitle, finalPath });
         results.set(route, verdict);
         if (!verdict.ok) {

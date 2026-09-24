@@ -7272,3 +7272,10 @@ that default off. Calendar sync refreshes tokens, flags reconnects instead
 of failing silently, and encrypts tokens; its OAuth state was forgeable
 and is now signed. Twilio recording callbacks are signature-checked, and
 transcription is real or says it isn't available. TS 949 -> 948.
+
+## Landing page load (US-388 pass 2)
+The home page preloaded 227 script chunks because the prerender snapshot
+copied every runtime preload tag; it now keeps the two the shell needs.
+Sentry loads at idle, most Radix code is lazy, and phones no longer fetch
+three.js for the hero. Mobile LCP on / went from 13.7 s to 6.4 s and its
+JS from 1.29 MB to 454 KB; the Lighthouse budgets now hold those numbers.

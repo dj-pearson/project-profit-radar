@@ -18,6 +18,10 @@
        same-origin, so the async dance bought almost nothing, and dropping it also
        removes the noscript duplicate. -->
   <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+  <!-- 600 also serves font-weight 700, so every hero <h1> uses it. Without the
+       preload it was found only after first paint, and the swap shifted the
+       prerendered page (CLS 0.2 on /features and /pricing, US-388). -->
+  <link rel="preload" href="/fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
   <link rel="stylesheet" href="/fonts/inter.css">
 
   <!-- Favicon and PWA meta tags -->
