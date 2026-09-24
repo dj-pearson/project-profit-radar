@@ -4401,7 +4401,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB audit."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB audit. || Migration 20260924200000 adds 170 FKs as NOT VALID (122 company_id -> companies, 44 project_id -> projects, 4 client_id -> contacts), skipping any column whose table/target is missing, non-uuid, or already keyed; rerunnable. ON DELETE: companies CASCADE except 9 money/audit tables NO ACTION; projects NOT NULL children CASCADE, nullable SET NULL, 7 money tables NO ACTION (owner approved 2026-09-24: deleting a project with budget lines, labor costs, payment applications, retainage, subcontractor payments or collections is refused, like bills/estimates/change orders already are). 20260924200001 adds 22 CONCURRENTLY project_id indexes. Real-Postgres test proves pre-existing orphans survive and every key refuses new orphans. OPEN (owner): run the orphan report in docs/RUNBOOK_FK_VALIDATION.md as postgres, resolve orphans by hand (never delete money/audit rows), then VALIDATE in a later migration."
     },
     {
       "id": "US-278",

@@ -21,7 +21,7 @@
 **Purpose**: Company/Organization management
 **Associated Pages**: Company settings, user onboarding
 **Key Fields**: name, address, settings, subscription info
-**Status**: ⚠️ Referenced but not found in schema
+**Status**: ✅ Active - created in `20250702223641_c20ac46c-...sql` and again (IF NOT EXISTS) in `20260209100000_bootstrap_foundational_schema.sql`; the earlier "referenced but not found" note was wrong. Since US-277 every table carrying `company_id` has a foreign key to it (see Required Fixes).
 
 ### `user_profiles`
 **Purpose**: Extended user information beyond auth
@@ -305,7 +305,7 @@
 1. **ProjectChangeOrders.tsx** - Fixed to use actual database queries
 2. **ProjectRFIs.tsx** - Fixed to join with user_profiles for names
 3. **ProjectSubmittals.tsx** - Fixed to join with user_profiles for names
-4. **Missing foreign key relationships** - Many tables lack proper FK constraints
+4. **Missing foreign key relationships** - Added by US-277 as `NOT VALID` keys on 170 `company_id` / `project_id` / `client_id` columns (`supabase/migrations/20260924200000_missing_foreign_keys.sql`, indexes in `20260924200001_foreign_key_column_indexes.sql`). New orphans are refused now; existing rows are validated in a later migration once the orphan report in `docs/RUNBOOK_FK_VALIDATION.md` has been run and resolved. Left out: `retention_tracking` (no migration creates it) and `bid_packages.project_id` (already covered by a composite key).
 
 ### 📈 Optimization Opportunities
 1. **Caching Strategy** - analytics_dashboard_cache is good start

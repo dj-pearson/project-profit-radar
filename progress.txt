@@ -7288,3 +7288,11 @@ first pass let any signed-in user write journal entries into any company,
 never moved account balances, and booked sales tax as revenue; all fixed.
 The five statement pages read the posted ledger, and cash flow is no
 longer hardcoded zeros. TS 948 -> 946.
+
+## US-277 - missing foreign keys
+170 foreign keys added as NOT VALID, so existing rows are untouched and new
+orphans are refused. Money and audit tables use NO ACTION: deleting a
+project that has budget lines, labor costs, payment applications,
+retainage, subcontractor payments or collections is now refused (owner
+approved). docs/RUNBOOK_FK_VALIDATION.md has the orphan report to run
+before validating.
