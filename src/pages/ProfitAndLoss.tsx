@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
 import { profitAndLoss, type LedgerActivityRow } from '@/lib/ledgerReporting';
@@ -147,8 +147,9 @@ export default function ProfitAndLoss() {
           <AlertDescription>
             Brikly is not posting to a ledger for this company, so this statement
             reflects only journal entries entered by hand - your books are in
-            QuickBooks. Turn on ledger posting in company settings to build it from
-            your invoices, payments and expenses.
+            QuickBooks. An admin can turn on ledger posting from the{' '}
+            <Link to="/finance/general-ledger" className="underline">General Ledger</Link> page
+            to build it from your invoices, payments, bills, expenses and approved time.
           </AlertDescription>
         </Alert>
       )}

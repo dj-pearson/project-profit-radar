@@ -7279,3 +7279,12 @@ copied every runtime preload tag; it now keeps the two the shell needs.
 Sentry loads at idle, most Radix code is lazy, and phones no longer fetch
 three.js for the hero. Mobile LCP on / went from 13.7 s to 6.4 s and its
 JS from 1.29 MB to 454 KB; the Lighthouse budgets now hold those numbers.
+
+## US-334 - statements from the posted ledger
+Invoices, payments, expenses, bills, bill payments and approved time now
+post double-entry journal entries (off by default per company). Changes
+post a reversal and a new entry; the backfill is safe to run twice. The
+first pass let any signed-in user write journal entries into any company,
+never moved account balances, and booked sales tax as revenue; all fixed.
+The five statement pages read the posted ledger, and cash flow is no
+longer hardcoded zeros. TS 948 -> 946.

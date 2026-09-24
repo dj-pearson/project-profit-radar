@@ -37,8 +37,11 @@ let chartOfAccounts: QueryState;
 
 vi.mock('@/hooks/useAccounting', () => ({
   useLedgerActivity: () => ledgerActivity,
+  useLedgerLines: () => ({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() }),
   useLedgerPostingEnabled: () => ({ data: true }),
   useChartOfAccounts: () => chartOfAccounts,
+  useSetLedgerPosting: () => ({ mutate: vi.fn(), isPending: false }),
+  useBackfillLedger: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 import BalanceSheet from '../BalanceSheet';
@@ -92,26 +95,27 @@ describe('ledger statements: error state', () => {
     expect(ledgerActivity.refetch).toHaveBeenCalledTimes(1);
   });
 
+  // US-334: both read the posted ledger now, not the chart's running totals.
   it('TrialBalance shows ErrorState and no "Balanced" badge', () => {
-    chartOfAccounts = failed();
+    ledgerActivity = failed();
     renderPage(TrialBalance);
 
     expect(screen.getByText('The trial balance did not load')).toBeInTheDocument();
     expect(screen.queryByText('Balanced')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Try Again' }));
-    expect(chartOfAccounts.refetch).toHaveBeenCalledTimes(1);
+    expect(ledgerActivity.refetch).toHaveBeenCalledTimes(1);
   });
 
   it('CashFlowStatement shows ErrorState', () => {
-    chartOfAccounts = failed();
+    ledgerActivity = failed();
     renderPage(CashFlowStatement);
 
     expect(screen.getByText('The cash flow statement did not load')).toBeInTheDocument();
     expect(screen.queryByLabelText('Statement of cash flows')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Try Again' }));
-    expect(chartOfAccounts.refetch).toHaveBeenCalledTimes(1);
+    expect(ledgerActivity.refetch).toHaveBeenCalledTimes(1);
   });
 
   it('GeneralLedger shows ErrorState when the accounts fail', () => {
@@ -144,16 +148,30 @@ describe('ledger statements: empty state', () => {
     expect(navigate).toHaveBeenCalledWith('/finance/journal-entries');
   });
 
-  it.each([
-    ['TrialBalance', TrialBalance],
-    ['CashFlowStatement', CashFlowStatement],
-    ['GeneralLedger', GeneralLedger],
-  ])('%s with no chart of accounts links to set one up', (_name, Page) => {
-    renderPage(Page);
+  it('GeneralLedger with no chart of accounts links to set one up', () => {
+    renderPage(GeneralLedger);
 
     expect(screen.getByText('No chart of accounts yet')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Set Up Chart of Accounts' }));
     expect(navigate).toHaveBeenCalledWith('/finance/chart-of-accounts');
+  });
+
+  it('TrialBalance with nothing posted says so instead of showing a balanced table of nothing', () => {
+    renderPage(TrialBalance);
+
+    expect(screen.getByText('Nothing is posted to this date')).toBeInTheDocument();
+    expect(screen.queryByText('Balanced')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Record Journal Entry' }));
+    expect(navigate).toHaveBeenCalledWith('/finance/journal-entries');
+  });
+
+  it('CashFlowStatement with nothing posted offers to record a journal entry', () => {
+    renderPage(CashFlowStatement);
+
+    expect(screen.getByText('Nothing has been posted to the ledger yet')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Statement of cash flows')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Record Journal Entry' }));
+    expect(navigate).toHaveBeenCalledWith('/finance/journal-entries');
   });
 
   it('still renders the statement while loading, not the empty state', () => {

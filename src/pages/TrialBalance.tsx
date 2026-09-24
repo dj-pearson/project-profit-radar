@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
-import { useChartOfAccounts } from '@/hooks/useAccounting';
+import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
+import {
+  fiscalYearStartFor,
+  trialBalanceAsAt,
+  type LedgerActivityRow,
+  type TrialBalanceRow,
+} from '@/lib/ledgerReporting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,15 +27,20 @@ import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/a
 import { downloadCsv } from '@/lib/exportCsv';
 import { trialBalanceCsv, statementFilename } from '@/lib/statementCsv';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatDate } from '@/lib/format';
 
-interface ChartAccount {
-  id: string;
-  account_name: string;
-  account_number: string;
-  account_type: AccountType;
-  account_subtype: string;
-  current_balance: number | null;
-}
+const LONG_DATE: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+
+const ACCOUNT_ORDER: AccountType[] = [
+  'asset',
+  'liability',
+  'equity',
+  'revenue',
+  'cost_of_goods_sold',
+  'expense',
+  'other_income',
+  'other_expense',
+];
 
 export default function TrialBalance() {
   const { user } = useAuth();
@@ -37,47 +49,24 @@ export default function TrialBalance() {
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Fetch accounts
-  const { data: accounts, isLoading, isError, refetch } = useChartOfAccounts(companyId);
+  // Posted ledger lines up to the as-at date (US-334). This used to sum
+  // chart_of_accounts.current_balance, which has no date, and take Math.abs of
+  // each one - so the as-at input did nothing and a contra account was added
+  // to the side it should have reduced.
+  const { data: activity, isLoading, isError, refetch } = useLedgerActivity(companyId, asOfDate);
+  const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
-  // Calculate total debits and credits
-  const totalDebits = accounts?.reduce((sum, account) => {
-    if (['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(account.account_type)) {
-      return sum + Math.abs(Number(account.current_balance) || 0);
-    }
-    return sum;
-  }, 0) || 0;
+  const tb = trialBalanceAsAt(
+    (activity ?? []) as LedgerActivityRow[],
+    asOfDate,
+    fiscalYearStartFor(asOfDate)
+  );
+  const difference = Math.abs(tb.totalDebits - tb.totalCredits);
 
-  const totalCredits = accounts?.reduce((sum, account) => {
-    if (['liability', 'equity', 'revenue', 'other_income'].includes(account.account_type)) {
-      return sum + Math.abs(Number(account.current_balance) || 0);
-    }
-    return sum;
-  }, 0) || 0;
-
-  const difference = Math.abs(totalDebits - totalCredits);
-  const isBalanced = difference < 0.01;
-
-  // Group accounts by type
-  const accountsByType = accounts?.reduce<Record<string, ChartAccount[]>>((acc, account) => {
-    const typedAccount = account as unknown as ChartAccount;
-    if (!acc[typedAccount.account_type]) {
-      acc[typedAccount.account_type] = [];
-    }
-    acc[typedAccount.account_type].push(typedAccount);
+  const rowsByType = tb.rows.reduce<Record<string, TrialBalanceRow[]>>((acc, row) => {
+    (acc[row.account_type] ??= []).push(row);
     return acc;
   }, {});
-
-  const accountOrder = [
-    'asset',
-    'liability',
-    'equity',
-    'revenue',
-    'cost_of_goods_sold',
-    'expense',
-    'other_income',
-    'other_expense',
-  ];
 
   const handlePrint = () => {
     window.print();
@@ -85,28 +74,34 @@ export default function TrialBalance() {
 
   // Same rows, same debit/credit split the table renders.
   const handleExport = () => {
-    const rows = accountOrder.flatMap((type) => {
-      const isDebitType = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(type);
-      return (accountsByType?.[type] ?? []).map((account) => {
-        const balance = Math.abs(Number(account.current_balance) || 0);
-        return {
-          account_number: account.account_number,
-          account_name: account.account_name,
-          account_type: account.account_type,
-          account_subtype: account.account_subtype,
-          debit: isDebitType ? balance : null,
-          credit: isDebitType ? null : balance,
-        };
-      });
-    });
+    const rows = ACCOUNT_ORDER.flatMap((type) =>
+      (rowsByType[type] ?? []).map((row) => ({
+        account_number: row.account_number,
+        account_name: row.account_name,
+        account_type: row.account_type,
+        account_subtype: row.account_subtype,
+        debit: row.debit || null,
+        credit: row.credit || null,
+      })));
     downloadCsv(
       statementFilename('trial-balance', asOfDate),
-      trialBalanceCsv(rows, { debits: totalDebits, credits: totalCredits })
+      trialBalanceCsv(rows, { debits: tb.totalDebits, credits: tb.totalCredits })
     );
   };
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Trial Balance">
+      {postingEnabled === false && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription>
+            Brikly is not posting to a ledger for this company, so this trial balance
+            reflects only journal entries entered by hand - your books are in
+            QuickBooks. An admin can turn on ledger posting from the{' '}
+            <Link to="/finance/general-ledger" className="underline">General Ledger</Link> page.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
@@ -115,7 +110,7 @@ export default function TrialBalance() {
             Trial Balance
           </h1>
           <p className="text-muted-foreground mt-1">
-            Verify that debits equal credits
+            Every account&apos;s posted balance, debits against credits
           </p>
         </div>
 
@@ -148,11 +143,11 @@ export default function TrialBalance() {
                 />
               </div>
 
-              {/* Balance Status: only once accounts have loaded, so a failed
+              {/* Balance status: only once the ledger has loaded, so a failed
                   read never shows as "Balanced" on zero totals. */}
-              {!isLoading && !isError && accounts && accounts.length > 0 && (
+              {!isLoading && !isError && tb.rows.length > 0 && (
               <div className="flex items-center gap-2 ml-auto">
-                {isBalanced ? (
+                {tb.isBalanced ? (
                   <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg" role="status" aria-live="polite">
                     <CheckCircle className="h-5 w-5" aria-hidden="true" />
                     <span className="font-semibold">Balanced</span>
@@ -178,12 +173,11 @@ export default function TrialBalance() {
           description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
           onRetry={() => { void refetch(); }}
         />
-      ) : accounts && accounts.length === 0 ? (
+      ) : !isLoading && tb.rows.length === 0 ? (
         <NoLedgerActivity
-          title="No chart of accounts yet"
-          description="Set up your chart of accounts before running this report."
-          actionLabel="Set Up Chart of Accounts"
-          onCreate={() => navigate('/finance/chart-of-accounts')}
+          title="Nothing is posted to this date"
+          description="The trial balance lists posted ledger balances. Record a journal entry, or turn on ledger posting from the General Ledger page to post invoices, bills and expenses automatically."
+          onCreate={() => navigate('/finance/journal-entries')}
         />
       ) : (
       <>
@@ -193,11 +187,8 @@ export default function TrialBalance() {
           <CardHeader>
             <CardTitle>Trial Balance</CardTitle>
             <CardDescription>
-              As of {new Date(asOfDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              As of {formatDate(`${asOfDate}T00:00:00`, LONG_DATE)}. Balance-sheet accounts from the start of the ledger; income and
+              expense accounts for the fiscal year to date.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -215,63 +206,49 @@ export default function TrialBalance() {
                   </TableRow>
                 </TableHeader>
               <TableBody>
-                {accountOrder.map((type) => {
-                  const typeAccounts = accountsByType?.[type] || [];
-                  if (typeAccounts.length === 0) return null;
+                {ACCOUNT_ORDER.map((type) => {
+                  const typeRows = rowsByType[type] ?? [];
+                  if (typeRows.length === 0) return null;
 
-                  // Calculate subtotals for this type
-                  const isDebitType = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(type);
-                  const subtotal = typeAccounts.reduce(
-                    (sum: number, account: ChartAccount) => sum + Math.abs(Number(account.current_balance) || 0),
-                    0
-                  );
+                  const subtotalDebit = typeRows.reduce((sum, r) => sum + r.debit, 0);
+                  const subtotalCredit = typeRows.reduce((sum, r) => sum + r.credit, 0);
 
                   return (
                     <React.Fragment key={type}>
-                      {/* Type Header */}
                       <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="font-semibold">
-                          {getAccountTypeLabel(type as AccountType)}
+                          {getAccountTypeLabel(type)}
                         </TableCell>
                       </TableRow>
 
-                      {/* Accounts */}
-                      {typeAccounts.map((account: ChartAccount) => {
-                        const balance = Math.abs(Number(account.current_balance) || 0);
+                      {typeRows.map((row) => (
+                        <TableRow key={row.account_id}>
+                          <TableCell className="font-mono">{row.account_number}</TableCell>
+                          <TableCell>{row.account_name}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {(row.account_subtype ?? '').replace(/_/g, ' ')}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {row.debit ? formatCurrency(row.debit) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {row.credit ? formatCurrency(row.credit) : '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
 
-                        return (
-                          <TableRow key={account.id}>
-                            <TableCell className="font-mono">
-                              {account.account_number}
-                            </TableCell>
-                            <TableCell>{account.account_name}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {account.account_subtype.replace(/_/g, ' ')}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
-                              {isDebitType ? formatCurrency(balance) : '-'}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
-                              {!isDebitType ? formatCurrency(balance) : '-'}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-
-                      {/* Subtotal */}
                       <TableRow className="font-semibold bg-muted/30">
                         <TableCell colSpan={3} className="text-right">
-                          Total {getAccountTypeLabel(type as AccountType)}
+                          Total {getAccountTypeLabel(type)}
                         </TableCell>
                         <TableCell className="text-right font-mono border-t">
-                          {isDebitType ? formatCurrency(subtotal) : '-'}
+                          {subtotalDebit ? formatCurrency(subtotalDebit) : '-'}
                         </TableCell>
                         <TableCell className="text-right font-mono border-t">
-                          {!isDebitType ? formatCurrency(subtotal) : '-'}
+                          {subtotalCredit ? formatCurrency(subtotalCredit) : '-'}
                         </TableCell>
                       </TableRow>
 
-                      {/* Spacer */}
                       <TableRow>
                         <TableCell colSpan={5} className="h-2"></TableCell>
                       </TableRow>
@@ -279,19 +256,17 @@ export default function TrialBalance() {
                   );
                 })}
 
-                {/* Grand Total */}
                 <TableRow className="bg-primary/10 font-bold text-lg">
                   <TableCell colSpan={3}>TOTAL</TableCell>
                   <TableCell className="text-right font-mono border-t-4 border-double">
-                    {formatCurrency(totalDebits)}
+                    {formatCurrency(tb.totalDebits)}
                   </TableCell>
                   <TableCell className="text-right font-mono border-t-4 border-double">
-                    {formatCurrency(totalCredits)}
+                    {formatCurrency(tb.totalCredits)}
                   </TableCell>
                 </TableRow>
 
-                {/* Difference (if any) */}
-                {!isBalanced && (
+                {!tb.isBalanced && (
                   <TableRow className="bg-red-50 font-semibold" role="row" aria-label="Out of balance warning">
                     <TableCell colSpan={3} className="text-red-800">
                       DIFFERENCE (OUT OF BALANCE)
@@ -319,7 +294,7 @@ export default function TrialBalance() {
             <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalDebits)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(tb.totalDebits)}</div>
           </CardContent>
         </Card>
 
@@ -328,7 +303,7 @@ export default function TrialBalance() {
             <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalCredits)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(tb.totalCredits)}</div>
           </CardContent>
         </Card>
 
@@ -337,11 +312,11 @@ export default function TrialBalance() {
             <CardTitle className="text-sm font-medium">Difference</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${isBalanced ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${tb.isBalanced ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(difference)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {isBalanced ? 'In balance' : 'Out of balance'}
+              {tb.isBalanced ? 'In balance' : 'Out of balance'}
             </p>
           </CardContent>
         </Card>

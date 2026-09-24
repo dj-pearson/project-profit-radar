@@ -27,7 +27,7 @@ const ALLOWED = new Set(['src/lib/format.ts']);
 
 /** Lower these as call sites move to @/lib/format. They never go up. */
 const BASELINE = {
-  toLocaleDateString: 248,
+  toLocaleDateString: 242,
   'new Intl.NumberFormat': 41,
 };
 

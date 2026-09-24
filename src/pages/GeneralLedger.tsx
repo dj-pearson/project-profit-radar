@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useChartOfAccounts } from '@/hooks/useAccounting';
+import { useChartOfAccounts, useLedgerActivity, useLedgerLines } from '@/hooks/useAccounting';
+import {
+  accountRegister,
+  openingBalance,
+  type AccountType,
+  type LedgerActivityRow,
+  type RegisterLine,
+} from '@/lib/ledgerReporting';
+import { sourceLabel } from '@/lib/ledgerPostingRules';
+import { LedgerPostingPanel } from '@/components/financial/LedgerPostingPanel';
+import { formatDate } from '@/lib/format';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,39 +37,19 @@ import { FileText, Download, Printer, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 import { downloadCsv } from '@/lib/exportCsv';
 import { generalLedgerCsv, statementFilename } from '@/lib/statementCsv';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface JournalEntry {
-  id: string;
-  entry_number: string;
-  entry_date: string;
-  description: string;
-  transaction_status: string;
-  memo: string;
-}
+const MONTH: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
 
-interface JournalEntryLine {
-  id: string;
-  account_id: string;
-  debit_amount: number | string | null;
-  credit_amount: number | string | null;
-  description: string | null;
-  journal_entry: JournalEntry | null;
-}
-
-interface TransactionWithBalance extends JournalEntryLine {
-  debit: number;
-  credit: number;
-  runningBalance: number;
-}
+/** A calendar date from the ledger, shown without a timezone shift. */
+const showDate = (date: string, options?: Intl.DateTimeFormatOptions) =>
+  formatDate(`${date}T00:00:00`, options);
 
 interface MonthGroup {
   label: string;
-  transactions: TransactionWithBalance[];
+  transactions: RegisterLine[];
 }
 
 export default function GeneralLedger() {
@@ -82,76 +72,43 @@ export default function GeneralLedger() {
     refetch: refetchAccounts,
   } = useChartOfAccounts(companyId);
 
-  // Fetch journal entry lines for selected account
+  // Posted lines on the account within the period (US-334). The old query
+  // filtered the embedded entry by date without !inner, which PostgREST
+  // applies to the embed and not the rows, and it started the running balance
+  // at zero, so a bank account's March "ending balance" was March's movement.
   const {
     data: transactions,
     isLoading: transactionsLoading,
     isError: transactionsError,
     refetch: refetchTransactions,
-  } = useQuery({
-    queryKey: ['general-ledger', selectedAccountId, startDate, endDate],
-    queryFn: async () => {
-      if (!selectedAccountId) return [];
+  } = useLedgerLines(companyId, selectedAccountId || undefined, startDate, endDate);
 
-      const { data, error } = await supabase
-        .from('journal_entry_lines')
-        .select(`
-          *,
-          journal_entry:journal_entries(
-            id,
-            entry_number,
-            entry_date,
-            description,
-            transaction_status,
-            memo
-          )
-        `)
-        .eq('account_id', selectedAccountId)
-        .gte('journal_entry.entry_date', startDate)
-        .lte('journal_entry.entry_date', endDate)
-        .order('journal_entry(entry_date)', { ascending: true });
-
-      if (error) throw error;
-
-      // Filter out draft entries and sort properly
-      const filtered = (data as JournalEntryLine[])
-        ?.filter((line) => line.journal_entry?.transaction_status === 'posted')
-        .sort((a, b) => {
-          const dateA = new Date(a.journal_entry!.entry_date).getTime();
-          const dateB = new Date(b.journal_entry!.entry_date).getTime();
-          return dateA - dateB;
-        });
-
-      return filtered || [];
-    },
-    enabled: !!selectedAccountId && !!companyId,
-  });
+  // Everything before the period, for the balance brought forward.
+  const {
+    data: priorActivity,
+    isLoading: priorLoading,
+    isError: priorError,
+    refetch: refetchPrior,
+  } = useLedgerActivity(selectedAccountId ? companyId : undefined, startDate);
 
   // Get selected account details
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
 
-  // Calculate running balance. This used to read transactionsWithBalance[index - 1]
-  // from inside its own initialiser, which throws for any account with two or
-  // more lines; carry the balance in a local instead.
-  const isDebitAccount = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(
-    selectedAccount?.account_type || ''
+  const broughtForward = selectedAccountId
+    ? openingBalance((priorActivity ?? []) as LedgerActivityRow[], selectedAccountId, startDate)
+    : 0;
+  const register = accountRegister(
+    transactions ?? [],
+    (selectedAccount?.account_type ?? 'asset') as AccountType,
+    broughtForward
   );
-  let carried = 0;
-  const transactionsWithBalance: TransactionWithBalance[] | undefined = (
-    transactions as JournalEntryLine[] | undefined
-  )?.map((tx) => {
-    const debit = Number(tx.debit_amount) || 0;
-    const credit = Number(tx.credit_amount) || 0;
-    carried += isDebitAccount ? debit - credit : credit - debit;
-    return { ...tx, debit, credit, runningBalance: carried };
-  });
+  const transactionsWithBalance = register.lines;
 
   // Group transactions by month if needed
   const groupedTransactions = groupBy === 'month' && transactionsWithBalance
     ? transactionsWithBalance.reduce<Record<string, MonthGroup>>((acc, tx) => {
-        const date = new Date(tx.journal_entry!.entry_date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        const monthKey = tx.entry_date.slice(0, 7);
+        const monthLabel = showDate(`${monthKey}-01`, MONTH);
 
         if (!acc[monthKey]) {
           acc[monthKey] = {
@@ -169,26 +126,40 @@ export default function GeneralLedger() {
   };
 
   const handleExport = () => {
-    const rows = (transactionsWithBalance ?? []).map((tx) => ({
-      entry_date: tx.journal_entry?.entry_date ?? '',
-      entry_number: tx.journal_entry?.entry_number ?? '',
-      description: [tx.journal_entry?.description, tx.description].filter(Boolean).join(' - '),
-      debit: tx.debit,
-      credit: tx.credit,
-      runningBalance: tx.runningBalance,
-    }));
+    const rows = [
+      {
+        entry_date: startDate,
+        entry_number: '',
+        description: 'Balance brought forward',
+        debit: 0,
+        credit: 0,
+        runningBalance: broughtForward,
+      },
+      ...transactionsWithBalance.map((tx) => ({
+        entry_date: tx.entry_date,
+        entry_number: tx.entry_number,
+        description: [sourceLabel(tx.reference_type), tx.description, tx.line_description !== tx.description ? tx.line_description : null]
+          .filter(Boolean).join(' - '),
+        debit: tx.debit,
+        credit: tx.credit,
+        runningBalance: tx.runningBalance,
+      })),
+    ];
     const stem = `general-ledger-${selectedAccount?.account_number ?? 'account'}`;
     downloadCsv(statementFilename(stem, startDate, endDate), generalLedgerCsv(rows));
   };
 
-  const isLoading = accountsLoading || transactionsLoading;
-  const isError = accountsError || transactionsError;
-  const retry = () => (accountsError ? refetchAccounts() : refetchTransactions());
+  const isLoading = accountsLoading || transactionsLoading || priorLoading;
+  const isError = accountsError || transactionsError || priorError;
+  const retry = () => {
+    if (accountsError) return refetchAccounts();
+    if (priorError) return refetchPrior();
+    return refetchTransactions();
+  };
 
-  // Calculate totals
-  const totalDebits = transactionsWithBalance?.reduce((sum: number, tx: TransactionWithBalance) => sum + tx.debit, 0) || 0;
-  const totalCredits = transactionsWithBalance?.reduce((sum: number, tx: TransactionWithBalance) => sum + tx.credit, 0) || 0;
-  const endingBalance = transactionsWithBalance?.[transactionsWithBalance.length - 1]?.runningBalance || 0;
+  const totalDebits = register.totalDebits;
+  const totalCredits = register.totalCredits;
+  const endingBalance = register.closingBalance;
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="General Ledger">
@@ -215,6 +186,10 @@ export default function GeneralLedger() {
           </Button>
         </div>
       </header>
+
+      <section aria-label="Ledger posting">
+        <LedgerPostingPanel companyId={companyId} />
+      </section>
 
       {/* Filters */}
       <section aria-label="Ledger filters">
@@ -343,7 +318,9 @@ export default function GeneralLedger() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(endingBalance)}</div>
-              <p className="text-xs text-muted-foreground">As of {endDate}</p>
+              <p className="text-xs text-muted-foreground">
+                As of {endDate}; brought forward {formatCurrency(broughtForward)}
+              </p>
             </CardContent>
           </Card>
           </div>
@@ -391,21 +368,20 @@ export default function GeneralLedger() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {monthData.transactions.map((tx: TransactionWithBalance) => (
+                        {monthData.transactions.map((tx: RegisterLine) => (
                           <TableRow key={tx.id}>
                             <TableCell>
-                              {new Date(tx.journal_entry?.entry_date).toLocaleDateString()}
+                              {showDate(tx.entry_date)}
                             </TableCell>
                             <TableCell className="font-mono">
-                              {tx.journal_entry?.entry_number}
+                              {tx.entry_number}
                             </TableCell>
                             <TableCell>
-                              <div>{tx.journal_entry?.description}</div>
-                              {tx.description && (
-                                <div className="text-sm text-muted-foreground">
-                                  {tx.description}
-                                </div>
-                              )}
+                              <div>{tx.description}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {sourceLabel(tx.reference_type)}
+                                {tx.line_description && tx.line_description !== tx.description ? ` - ${tx.line_description}` : ''}
+                              </div>
                             </TableCell>
                             <TableCell className="text-right font-mono">
                               {tx.debit > 0 ? formatCurrency(tx.debit) : '-'}
@@ -429,7 +405,7 @@ export default function GeneralLedger() {
                 <VirtualizedTable
                   aria-label="All transactions"
                   rows={transactionsWithBalance}
-                  getRowKey={(tx: TransactionWithBalance) => tx.id}
+                  getRowKey={(tx: RegisterLine) => tx.id}
                   columnCount={6}
                   estimateRowHeight={53}
                   header={
@@ -442,21 +418,20 @@ export default function GeneralLedger() {
                       <TableHead scope="col" className="text-right">Balance</TableHead>
                     </>
                   }
-                  renderCells={(tx: TransactionWithBalance) => (
+                  renderCells={(tx: RegisterLine) => (
                       <>
                         <TableCell>
-                          {new Date(tx.journal_entry?.entry_date).toLocaleDateString()}
+                          {showDate(tx.entry_date)}
                         </TableCell>
                         <TableCell className="font-mono">
-                          {tx.journal_entry?.entry_number}
+                          {tx.entry_number}
                         </TableCell>
                         <TableCell>
-                          <div>{tx.journal_entry?.description}</div>
-                          {tx.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {tx.description}
-                            </div>
-                          )}
+                          <div>{tx.description}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {sourceLabel(tx.reference_type)}
+                            {tx.line_description && tx.line_description !== tx.description ? ` - ${tx.line_description}` : ''}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right font-mono">
                           {tx.debit > 0 ? formatCurrency(tx.debit) : '-'}

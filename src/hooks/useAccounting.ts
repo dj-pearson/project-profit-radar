@@ -664,6 +664,25 @@ export default {
 // LEDGER ACTIVITY (US-334)
 // =====================================================
 
+/** PostgREST returns at most 1000 rows per request unless asked for a range. */
+const LEDGER_PAGE_SIZE = 1000;
+
+/**
+ * Read every page of a query. A statement built from the first 1000 rows of
+ * the ledger is wrong without any error, which is worse than failing.
+ */
+async function readAllPages<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += LEDGER_PAGE_SIZE) {
+    const { data, error } = await page(from, from + LEDGER_PAGE_SIZE - 1);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < LEDGER_PAGE_SIZE) return out;
+  }
+}
+
 /**
  * Posted ledger movement, per account per day.
  *
@@ -674,25 +693,82 @@ export default {
  *
  * Fetched for a wide window rather than the exact range because a balance
  * sheet needs everything up to its as-at date and a P&L needs only the period;
- * both come from the same rows, filtered in ledgerReporting.
+ * both come from the same rows, filtered in ledgerReporting. Every page is
+ * read: the view has a row per account per day per project, so a busy
+ * company passes 1000 rows in its first year.
  */
 export function useLedgerActivity(companyId?: string, throughDate?: string) {
   return useQuery({
     queryKey: ['ledger-activity', companyId, throughDate],
-    queryFn: async () => {
-      let query = supabase
-        .from('ledger_account_activity')
-        .select('account_id, account_number, account_name, account_type, account_subtype, normal_balance, entry_date, net_change')
-        .eq('company_id', companyId as string)
-        .order('account_number');
+    queryFn: () =>
+      readAllPages((from, to) => {
+        let query = supabase
+          .from('ledger_account_activity')
+          .select('account_id, account_number, account_name, account_type, account_subtype, normal_balance, entry_date, net_change, debits, credits')
+          .eq('company_id', companyId as string)
+          .order('account_number')
+          .order('entry_date')
+          .order('project_id', { nullsFirst: true });
 
-      if (throughDate) query = query.lte('entry_date', throughDate);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
-    },
+        if (throughDate) query = query.lte('entry_date', throughDate);
+        return query.range(from, to);
+      }),
     enabled: !!companyId,
+  });
+}
+
+/** One posted journal line with its entry, as the general ledger lists it. */
+interface PostedLineRow {
+  id: string;
+  debit_amount: number | string | null;
+  credit_amount: number | string | null;
+  description: string | null;
+  journal_entries: {
+    entry_date: string;
+    entry_number: string;
+    description: string | null;
+    reference_type: string | null;
+  } | null;
+}
+
+/**
+ * Posted lines on one account within a period (US-334).
+ *
+ * The page used to filter the embedded entry by date without !inner, which
+ * PostgREST applies to the embed rather than the rows: every line on the
+ * account came back, with a null entry for the ones outside the range, and
+ * only the first 1000 of them.
+ */
+export function useLedgerLines(companyId?: string, accountId?: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: ['ledger-lines', companyId, accountId, from, to],
+    queryFn: async () => {
+      const rows = await readAllPages<PostedLineRow>((start, end) =>
+        supabase
+          .from('journal_entry_lines')
+          .select('id, debit_amount, credit_amount, description, journal_entries!inner(entry_date, entry_number, description, reference_type, transaction_status)')
+          .eq('company_id', companyId as string)
+          .eq('account_id', accountId as string)
+          .eq('journal_entries.transaction_status', 'posted')
+          .gte('journal_entries.entry_date', from as string)
+          .lte('journal_entries.entry_date', to as string)
+          .order('id')
+          .range(start, end) as unknown as PromiseLike<{ data: PostedLineRow[] | null; error: unknown }>
+      );
+      return rows
+        .filter((r) => r.journal_entries)
+        .map((r) => ({
+          id: r.id,
+          entry_date: r.journal_entries!.entry_date,
+          entry_number: r.journal_entries!.entry_number,
+          description: r.journal_entries!.description,
+          line_description: r.description,
+          reference_type: r.journal_entries!.reference_type,
+          debit: Number(r.debit_amount) || 0,
+          credit: Number(r.credit_amount) || 0,
+        }));
+    },
+    enabled: !!companyId && !!accountId && !!from && !!to,
   });
 }
 
@@ -710,5 +786,70 @@ export function useLedgerPostingEnabled(companyId?: string) {
       return Boolean(data?.auto_post_to_ledger);
     },
     enabled: !!companyId,
+  });
+}
+
+// set_ledger_posting comes from 20260924180000 and is not in the generated
+// types until that migration is applied and `npm run db:types` is re-run.
+type UntypedRpc = (
+  fn: string,
+  args: Record<string, unknown>
+) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+
+/**
+ * Turn Brikly's ledger on or off for the company (US-334 AC3). The database
+ * allows only admin and accounting users and writes the audit log.
+ */
+export function useSetLedgerPosting(companyId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await (supabase.rpc as unknown as UntypedRpc)('set_ledger_posting', {
+        p_company_id: companyId,
+        p_enabled: enabled,
+      });
+      if (error) throw error;
+      return enabled;
+    },
+    onSuccess: (enabled) => {
+      queryClient.invalidateQueries({ queryKey: ['ledger-posting-enabled', companyId] });
+      toast.success(enabled
+        ? 'Ledger posting is on. New invoices, payments, bills, expenses and approved time now post.'
+        : 'Ledger posting is off. Nothing new will post; entries already posted stay.');
+    },
+    onError: (error: Error) => {
+      toast.error(`Ledger posting was not changed: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * Post the company's unposted history from a date (US-334 AC4). Safe to run
+ * again: a second run posts nothing.
+ */
+export function useBackfillLedger(companyId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (fromDate: string) => {
+      const { data, error } = await supabase.rpc('backfill_ledger', {
+        p_company_id: companyId as string,
+        p_from_date: fromDate,
+      });
+      if (error) throw error;
+      return data ?? [];
+    },
+    onSuccess: (rows) => {
+      queryClient.invalidateQueries({ queryKey: ['ledger-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['ledger-lines'] });
+      const posted = rows.reduce((s, r) => s + (r.posted ?? 0), 0);
+      const skipped = rows.reduce((s, r) => s + (r.skipped ?? 0), 0);
+      toast.success(
+        `Posted ${posted} document${posted === 1 ? '' : 's'} to the ledger` +
+        (skipped > 0 ? `; ${skipped} could not be posted (an account is missing or a bill has no lines).` : '.')
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(`History was not posted: ${error.message}`);
+    },
   });
 }

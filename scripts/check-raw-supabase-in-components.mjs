@@ -51,7 +51,7 @@ const SRC = join(root, 'src');
  * executive, WIP, budget and labor job-costing views), and removed the
  * invented figures several of them showed.
  */
-const BASELINE = 446;
+const BASELINE = 445;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

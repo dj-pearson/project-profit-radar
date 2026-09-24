@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
 import { balanceSheet, fiscalYearStartFor, hasSubtype, type LedgerActivityRow } from '@/lib/ledgerReporting';
@@ -56,6 +56,7 @@ export default function BalanceSheet() {
   // Was `= 0; // Placeholder`, which is why the sheet was out by exactly the
   // year's profit and never balanced.
   const currentYearEarnings = sheet.currentYearEarnings;
+  const priorYearsEarnings = sheet.priorYearsEarnings;
 
   const totalLiabilitiesAndEquity = sheet.liabilitiesAndEquity;
   const isBalanced = sheet.isBalanced;
@@ -127,8 +128,9 @@ export default function BalanceSheet() {
           <AlertDescription>
             Brikly is not posting to a ledger for this company, so this statement
             reflects only journal entries entered by hand - your books are in
-            QuickBooks. Turn on ledger posting in company settings to build it from
-            your invoices, payments and expenses.
+            QuickBooks. An admin can turn on ledger posting from the{' '}
+            <Link to="/finance/general-ledger" className="underline">General Ledger</Link> page
+            to build it from your invoices, payments, bills, expenses and approved time.
           </AlertDescription>
         </Alert>
       )}
@@ -303,6 +305,17 @@ export default function BalanceSheet() {
 
                     <AccountSection title="Owner's Equity" accounts={equityAccounts} />
 
+                    {/* Profit from before this fiscal year: no closing entry
+                        moves it into retained earnings, so it is shown here. */}
+                    {priorYearsEarnings !== 0 && (
+                      <TableRow>
+                        <TableCell className="pl-8">Retained Earnings - Prior Years' Profit</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(priorYearsEarnings)}
+                        </TableCell>
+                      </TableRow>
+                    )}
+
                     {/* Current Year Earnings */}
                     <TableRow>
                       <TableCell className="pl-8">Current Year Earnings</TableCell>
@@ -315,7 +328,7 @@ export default function BalanceSheet() {
                     <TableRow className="font-semibold">
                       <TableCell className="text-lg">Total Equity</TableCell>
                       <TableCell className="text-right font-mono text-lg border-t-2">
-                        {formatCurrency(totalEquity + currentYearEarnings)}
+                        {formatCurrency(totalEquity + priorYearsEarnings + currentYearEarnings)}
                       </TableCell>
                     </TableRow>
 

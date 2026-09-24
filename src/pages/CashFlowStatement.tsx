@@ -1,18 +1,79 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
-import { useChartOfAccounts } from '@/hooks/useAccounting';
+import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
+import { cashFlowStatement, type CashFlowLine, type LedgerActivityRow } from '@/lib/ledgerReporting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { ArrowRightLeft, Download, Printer, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowRightLeft, Download, Printer, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 import { downloadCsv } from '@/lib/exportCsv';
-import { cashFlowCsv, statementFilename } from '@/lib/statementCsv';
+import { cashFlowCsv, statementFilename, type CashFlowItem } from '@/lib/statementCsv';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatDate } from '@/lib/format';
+
+const LONG_DATE: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+
+interface SectionItem extends CashFlowItem {
+  isIndented?: boolean;
+}
+
+function CashFlowSection({ title, items, total, totalLabel }: {
+  title: string;
+  items: SectionItem[];
+  total: number;
+  totalLabel: string;
+}) {
+  return (
+    <>
+      <TableRow>
+        <TableCell colSpan={2} className="text-lg font-bold pt-4">
+          {title}
+        </TableCell>
+      </TableRow>
+
+      {items.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={2} className="pl-8 text-muted-foreground">No movement in this period</TableCell>
+        </TableRow>
+      )}
+
+      {items.map((item, index) => (
+        item.isHeader ? (
+          <TableRow key={index} className="bg-muted/30">
+            <TableCell colSpan={2} className="font-semibold text-sm pl-8">
+              {item.label}
+            </TableCell>
+          </TableRow>
+        ) : (
+          <TableRow key={index}>
+            <TableCell className={item.isIndented ? 'pl-12' : 'pl-8'}>
+              {item.label}
+            </TableCell>
+            <TableCell className="text-right font-mono">
+              {item.amount !== null ? formatCurrency(item.amount) : ''}
+            </TableCell>
+          </TableRow>
+        )
+      ))}
+
+      <TableRow className="bg-primary/10 font-semibold">
+        <TableCell className="pl-8">{totalLabel}</TableCell>
+        <TableCell className="text-right font-mono border-t-2">
+          {formatCurrency(total)}
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
+const indented = (lines: CashFlowLine[]): SectionItem[] =>
+  lines.map((l) => ({ label: l.label, amount: l.amount, isIndented: true }));
 
 export default function CashFlowStatement() {
   const { user } = useAuth();
@@ -24,69 +85,23 @@ export default function CashFlowStatement() {
   );
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Fetch accounts
-  const { data: accounts, isLoading, isError, refetch } = useChartOfAccounts(companyId);
+  // Posted ledger movement to the end of the period (US-334). Every figure on
+  // this page used to be a hardcoded 0 with a comment saying what it "would
+  // come from", and the opening cash summed Math.abs of undated balances.
+  const { data: activity, isLoading, isError, refetch } = useLedgerActivity(companyId, endDate);
+  const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
-  // In a real implementation, we would calculate actual cash flows
-  // For now, we'll use placeholder calculations based on account balances
+  const flow = cashFlowStatement((activity ?? []) as LedgerActivityRow[], startDate, endDate);
 
-  // Operating Activities
-  const netIncome = 0; // Would come from P&L
-  const depreciation = 0; // Non-cash expense
-  const accountsReceivableChange = 0; // Change in AR
-  const accountsPayableChange = 0; // Change in AP
-  const inventoryChange = 0; // Change in inventory
-
-  const operatingActivities = [
-    { label: 'Net Income', amount: netIncome, isSubtotal: false },
-    { label: 'Adjustments to reconcile net income:', amount: null, isHeader: true },
-    { label: 'Depreciation and Amortization', amount: depreciation, isIndented: true },
-    { label: 'Changes in Operating Assets and Liabilities:', amount: null, isHeader: true },
-    { label: 'Accounts Receivable', amount: accountsReceivableChange, isIndented: true },
-    { label: 'Inventory', amount: inventoryChange, isIndented: true },
-    { label: 'Accounts Payable', amount: accountsPayableChange, isIndented: true },
+  const operatingActivities: SectionItem[] = [
+    { label: 'Net Income', amount: flow.netIncome },
+    ...(flow.operating.length > 0
+      ? [{ label: 'Adjustments and changes in operating assets and liabilities:', amount: null, isHeader: true }]
+      : []),
+    ...indented(flow.operating),
   ];
-
-  const netCashFromOperating = netIncome + depreciation + accountsReceivableChange +
-                                accountsPayableChange + inventoryChange;
-
-  // Investing Activities
-  const propertyPurchases = 0; // Purchase of PP&E
-  const propertySales = 0; // Sale of PP&E
-  const equipmentPurchases = 0;
-
-  const investingActivities = [
-    { label: 'Purchase of Property and Equipment', amount: -propertyPurchases, isIndented: true },
-    { label: 'Purchase of Equipment', amount: -equipmentPurchases, isIndented: true },
-    { label: 'Proceeds from Sale of Equipment', amount: propertySales, isIndented: true },
-  ];
-
-  const netCashFromInvesting = -propertyPurchases - equipmentPurchases + propertySales;
-
-  // Financing Activities
-  const loanProceeds = 0; // New loans
-  const loanRepayments = 0; // Loan principal payments
-  const ownerContributions = 0; // Owner investments
-  const ownerDraws = 0; // Owner withdrawals
-
-  const financingActivities = [
-    { label: 'Proceeds from Loans', amount: loanProceeds, isIndented: true },
-    { label: 'Principal Payments on Loans', amount: -loanRepayments, isIndented: true },
-    { label: 'Owner Contributions', amount: ownerContributions, isIndented: true },
-    { label: 'Owner Draws', amount: -ownerDraws, isIndented: true },
-  ];
-
-  const netCashFromFinancing = loanProceeds - loanRepayments + ownerContributions - ownerDraws;
-
-  // Net change in cash
-  const netCashChange = netCashFromOperating + netCashFromInvesting + netCashFromFinancing;
-
-  // Cash balances
-  const beginningCash = accounts?.filter(a =>
-    ['cash', 'bank'].includes(a.account_subtype)
-  ).reduce((sum, account) => sum + Math.abs(Number(account.current_balance) || 0), 0) || 0;
-
-  const endingCash = beginningCash + netCashChange;
+  const investingActivities = indented(flow.investing);
+  const financingActivities = indented(flow.financing);
 
   const handlePrint = () => {
     window.print();
@@ -96,61 +111,52 @@ export default function CashFlowStatement() {
   const handleExport = () => {
     const csv = cashFlowCsv(
       [
-        { title: 'Operating Activities', items: operatingActivities, total: netCashFromOperating, totalLabel: 'Net Cash Provided by Operating Activities' },
-        { title: 'Investing Activities', items: investingActivities, total: netCashFromInvesting, totalLabel: 'Net Cash Used in Investing Activities' },
-        { title: 'Financing Activities', items: financingActivities, total: netCashFromFinancing, totalLabel: 'Net Cash Provided by Financing Activities' },
+        { title: 'Operating Activities', items: operatingActivities, total: flow.operatingTotal, totalLabel: 'Net Cash Provided by Operating Activities' },
+        { title: 'Investing Activities', items: investingActivities, total: flow.investingTotal, totalLabel: 'Net Cash Used in Investing Activities' },
+        { title: 'Financing Activities', items: financingActivities, total: flow.financingTotal, totalLabel: 'Net Cash Provided by Financing Activities' },
       ],
       [
-        { label: 'Net Increase (Decrease) in Cash', amount: netCashChange },
-        { label: 'Cash at Beginning of Period', amount: beginningCash },
-        { label: 'Cash at End of Period', amount: endingCash },
+        { label: 'Net Increase (Decrease) in Cash', amount: flow.netChange },
+        { label: 'Cash at Beginning of Period', amount: flow.beginningCash },
+        { label: 'Cash at End of Period', amount: flow.endingCash },
       ]
     );
     downloadCsv(statementFilename('cash-flow', startDate, endDate), csv);
   };
 
-  const CashFlowSection = ({ title, items, total, totalLabel }: any) => (
-    <div className="space-y-2">
-      <TableRow>
-        <TableCell colSpan={2} className="text-lg font-bold pt-4">
-          {title}
-        </TableCell>
-      </TableRow>
-
-      {items.map((item: any, index: number) => {
-        if (item.isHeader) {
-          return (
-            <TableRow key={index} className="bg-muted/30">
-              <TableCell colSpan={2} className="font-semibold text-sm pl-8">
-                {item.label}
-              </TableCell>
-            </TableRow>
-          );
-        }
-
-        return (
-          <TableRow key={index}>
-            <TableCell className={item.isIndented ? 'pl-12' : 'pl-8'}>
-              {item.label}
-            </TableCell>
-            <TableCell className="text-right font-mono">
-              {item.amount !== null ? formatCurrency(item.amount) : ''}
-            </TableCell>
-          </TableRow>
-        );
-      })}
-
-      <TableRow className="bg-primary/10 font-semibold">
-        <TableCell className="pl-8">{totalLabel}</TableCell>
-        <TableCell className="text-right font-mono border-t-2">
-          {formatCurrency(total)}
-        </TableCell>
-      </TableRow>
-    </div>
+  const metric = (label: string, amount: number) => (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2">
+          {amount >= 0 ? (
+            <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
+          ) : (
+            <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
+          )}
+          <div className={`text-2xl font-bold ${amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {formatCurrency(amount)}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Cash Flow Statement">
+      {postingEnabled === false && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription>
+            Brikly is not posting to a ledger for this company, so this statement
+            reflects only journal entries entered by hand - your books are in
+            QuickBooks. An admin can turn on ledger posting from the{' '}
+            <Link to="/finance/general-ledger" className="underline">General Ledger</Link> page.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
@@ -213,91 +219,30 @@ export default function CashFlowStatement() {
           description="We could not read your ledger, so no figures are shown rather than showing zeros. Try again, or contact support if it keeps failing."
           onRetry={() => { void refetch(); }}
         />
-      ) : accounts && accounts.length === 0 ? (
-        <NoLedgerActivity
-          title="No chart of accounts yet"
-          description="Set up your chart of accounts before running this report."
-          actionLabel="Set Up Chart of Accounts"
-          onCreate={() => navigate('/finance/chart-of-accounts')}
-        />
+      ) : !isLoading && activity && activity.length === 0 ? (
+        <NoLedgerActivity onCreate={() => navigate('/finance/journal-entries')} />
       ) : (
       <>
       {/* Cash Flow Metrics */}
       <section aria-label="Cash flow metrics">
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Operating Activities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                {netCashFromOperating >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
-                )}
-              <div className={`text-2xl font-bold ${netCashFromOperating >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(netCashFromOperating)}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Investing Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {netCashFromInvesting >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
-              )}
-              <div className={`text-2xl font-bold ${netCashFromInvesting >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(netCashFromInvesting)}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Financing Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {netCashFromFinancing >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
-              )}
-              <div className={`text-2xl font-bold ${netCashFromFinancing >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(netCashFromFinancing)}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Net Change in Cash</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {netCashChange >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
-              )}
-              <div className={`text-2xl font-bold ${netCashChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(netCashChange)}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {metric('Operating Activities', flow.operatingTotal)}
+          {metric('Investing Activities', flow.investingTotal)}
+          {metric('Financing Activities', flow.financingTotal)}
+          {metric('Net Change in Cash', flow.netChange)}
         </div>
       </section>
+
+      {!isLoading && !flow.reconciles && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription>
+            The activities above do not add up to the change in your cash and bank accounts
+            (off by {formatCurrency(flow.difference)}). Every posted entry should balance, so an
+            entry entered by hand is likely one-sided. The trial balance will show it.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Statement */}
       <section aria-label="Statement of cash flows">
@@ -305,17 +250,7 @@ export default function CashFlowStatement() {
           <CardHeader>
             <CardTitle>Statement of Cash Flows</CardTitle>
             <CardDescription>
-              {new Date(startDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}{' '}
-              to{' '}
-              {new Date(endDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {formatDate(`${startDate}T00:00:00`, LONG_DATE)} to {formatDate(`${endDate}T00:00:00`, LONG_DATE)}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -324,11 +259,10 @@ export default function CashFlowStatement() {
             ) : (
               <Table aria-label="Cash Flow Statement">
               <TableBody>
-                {/* Operating Activities */}
                 <CashFlowSection
                   title="CASH FLOWS FROM OPERATING ACTIVITIES"
                   items={operatingActivities}
-                  total={netCashFromOperating}
+                  total={flow.operatingTotal}
                   totalLabel="Net Cash Provided by Operating Activities"
                 />
 
@@ -336,11 +270,10 @@ export default function CashFlowStatement() {
                   <TableCell colSpan={2} className="h-4"></TableCell>
                 </TableRow>
 
-                {/* Investing Activities */}
                 <CashFlowSection
                   title="CASH FLOWS FROM INVESTING ACTIVITIES"
                   items={investingActivities}
-                  total={netCashFromInvesting}
+                  total={flow.investingTotal}
                   totalLabel="Net Cash Used in Investing Activities"
                 />
 
@@ -348,11 +281,10 @@ export default function CashFlowStatement() {
                   <TableCell colSpan={2} className="h-4"></TableCell>
                 </TableRow>
 
-                {/* Financing Activities */}
                 <CashFlowSection
                   title="CASH FLOWS FROM FINANCING ACTIVITIES"
                   items={financingActivities}
-                  total={netCashFromFinancing}
+                  total={flow.financingTotal}
                   totalLabel="Net Cash Provided by Financing Activities"
                 />
 
@@ -360,11 +292,10 @@ export default function CashFlowStatement() {
                   <TableCell colSpan={2} className="h-4"></TableCell>
                 </TableRow>
 
-                {/* Net Change in Cash */}
                 <TableRow className="bg-blue-50 font-bold text-lg">
                   <TableCell>NET INCREASE (DECREASE) IN CASH</TableCell>
                   <TableCell className="text-right font-mono border-t-4 border-double">
-                    {formatCurrency(netCashChange)}
+                    {formatCurrency(flow.netChange)}
                   </TableCell>
                 </TableRow>
 
@@ -372,18 +303,17 @@ export default function CashFlowStatement() {
                   <TableCell colSpan={2} className="h-4"></TableCell>
                 </TableRow>
 
-                {/* Cash Reconciliation */}
                 <TableRow>
                   <TableCell className="pl-8">Cash at Beginning of Period</TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(beginningCash)}
+                    {formatCurrency(flow.beginningCash)}
                   </TableCell>
                 </TableRow>
 
                 <TableRow>
                   <TableCell className="pl-8">Cash at End of Period</TableCell>
                   <TableCell className="text-right font-mono border-t-2">
-                    {formatCurrency(endingCash)}
+                    {formatCurrency(flow.endingCash)}
                   </TableCell>
                 </TableRow>
 
@@ -391,11 +321,10 @@ export default function CashFlowStatement() {
                   <TableCell colSpan={2} className="h-4"></TableCell>
                 </TableRow>
 
-                {/* Final Cash Position */}
                 <TableRow className="bg-primary/10 font-bold text-xl">
                   <TableCell>CASH AND CASH EQUIVALENTS, END OF PERIOD</TableCell>
                   <TableCell className="text-right font-mono border-t-4 border-double">
-                    {formatCurrency(endingCash)}
+                    {formatCurrency(flow.endingCash)}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -411,22 +340,24 @@ export default function CashFlowStatement() {
       <aside aria-label="Supplemental cash flow information">
         <Card>
         <CardHeader>
-          <CardTitle>Supplemental Cash Flow Information</CardTitle>
+          <CardTitle>How this statement is built</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>Note:</strong> This statement shows actual cash movements during the period.
+              Indirect method, from posted ledger entries: net income for the period, then the change
+              in every balance-sheet account other than cash and bank.
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>Operating Activities:</strong> Cash generated from normal business operations
+                <strong>Operating:</strong> receivables, payables, credit cards, accrued wages, sales tax
+                and other current accounts, and depreciation
               </li>
               <li>
-                <strong>Investing Activities:</strong> Cash used for or generated from investments in long-term assets
+                <strong>Investing:</strong> fixed and other long-term assets
               </li>
               <li>
-                <strong>Financing Activities:</strong> Cash from or used for financing (loans, owner contributions/draws)
+                <strong>Financing:</strong> long-term debt, owner contributions and draws
               </li>
             </ul>
           </div>
