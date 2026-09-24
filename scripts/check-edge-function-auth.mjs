@@ -75,7 +75,6 @@ const GUARD_TOKENS = [
 
 // Functions we have hardened — a regression here fails CI.
 const ENFORCED = new Set([
-  'dos-protection',
   'calculate-health-scores',
   // US-198 cron/system sweep — all now apply requireSystemOrAdmin + scoped CORS.
   'check-renewal-notifications',

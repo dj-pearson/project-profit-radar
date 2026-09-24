@@ -17,6 +17,7 @@ import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { captureException } from '../_shared/observability.ts';
 
@@ -50,6 +51,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(createServiceClient(), req, 'reset-password-otp', corsHeaders);
+    if (blockedIp) return blockedIp;
+
     // Rate limit per IP (US-243). There is already a per-email throttle further
     // down, which stops one address being bombed; this stops one source spraying
     // across many addresses, which the per-email check cannot see.

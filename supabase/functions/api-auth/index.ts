@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { captureException } from '../_shared/observability.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'api-auth', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Extract API key from header
     const apiKeyHeader = req.headers.get('x-api-key') || req.headers.get('authorization')?.replace('Bearer ', '')

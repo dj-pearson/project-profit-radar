@@ -13,6 +13,7 @@
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { enforceRateLimit, getClientIP, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 import { siteUrl, functionsBaseUrl } from '../_shared/app-urls.ts';
 import {
   checkPendingState, decideLink, emailVerified, randomToken, readCookie, safeReturnPath,
@@ -52,6 +53,11 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   try {
+    // US-205: an address an admin blacklisted in ip_access_control stops here,
+    // on every action - the authorize ceiling below covers one of them.
+    const blockedIp = await rejectBlockedIp(createServiceClient(), req, 'oauth-proxy', corsHeaders);
+    if (blockedIp) return blockedIp;
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const provider = url.searchParams.get('provider') || 'google';

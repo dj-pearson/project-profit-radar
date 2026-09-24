@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { captureException } from '../_shared/observability.ts';
 
 /**
@@ -48,6 +49,10 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'process-referral-signup', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Anonymous by design (it runs at signup) and it writes six rows, so it
     // gets the same ceiling as capture-lead and the other public writers.

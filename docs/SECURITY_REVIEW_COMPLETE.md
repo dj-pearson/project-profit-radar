@@ -28,7 +28,7 @@ A comprehensive security review was performed and **critical vulnerabilities hav
 
 **Fixes Applied**:
 - ✅ `disable-mfa/index.ts` - UUID validation for user_id
-- ✅ `dos-protection/index.ts` - IP address and action type validation
+- ✅ `dos-protection/index.ts` - IP address and action type validation (function deleted in US-205; see docs/RUNBOOK_DOS_PROTECTION.md)
 - ✅ `create-stripe-checkout/index.ts` - Subscription tier, billing period, company ID validation
 - ✅ `process-invoice-payment/index.ts` - Invoice ID, payment method, amount validation
 
@@ -152,7 +152,7 @@ A comprehensive security review was performed and **critical vulnerabilities hav
 ### Edge Functions:
 - `supabase/functions/_shared/validation.ts` - Shared validation utilities
 - `supabase/functions/disable-mfa/index.ts` - Added Zod validation
-- `supabase/functions/dos-protection/index.ts` - Added Zod validation
+- `supabase/functions/dos-protection/index.ts` - Added Zod validation (deleted in US-205)
 - `supabase/functions/create-stripe-checkout/index.ts` - Added Zod validation
 - `supabase/functions/process-invoice-payment/index.ts` - Added Zod validation
 

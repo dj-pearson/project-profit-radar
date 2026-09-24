@@ -121,7 +121,7 @@ const VALIDATED = new Set([
   'process-referral-signup',
   'handle-chargeback',
   'change-orders', 'change-subscription', 'create-stripe-checkout', 'disable-mfa',
-  'dos-protection', 'execute-workflow', 'generate-invoice', 'geofencing',
+  'execute-workflow', 'generate-invoice', 'geofencing',
   'invite-team-member', 'process-invoice-payment', 'projects', 'reset-password-otp',
   'send-auth-otp', 'send-notification', 'setup-mfa', 'signup-with-otp',
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',

@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { captureException } from '../_shared/observability.ts';
+import { guardAnonymousRequest } from '../_shared/ip-guard.ts';
+import { RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -14,6 +16,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // US-205: anonymous, so the blocklist and a per-IP ceiling apply.
+    const denied = await guardAnonymousRequest(supabaseClient, req, {
+      endpoint: 'generate-sitemap-file', limit: RATE_LIMITS.AUTH, corsHeaders,
+    });
+    if (denied) return denied;
 
     // Get SEO configuration
     const { data: config } = await supabaseClient

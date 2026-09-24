@@ -46,7 +46,7 @@ const EDGE_BASELINE = new Set([
   'project_team_assignments', 'proration_history', 'push_subscriptions',
   'quickbooks_routing_history', 'quickbooks_routing_rules',
   'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests',
-  'system_settings', 'teams', 'usage_billing_records',
+  'teams', 'usage_billing_records',
   // Created by 20260924140000_domain_verification_tokens.sql, not yet applied
   // to the live project. verify-domain reads every error on this table and
   // returns a 500 rather than treating a missing table as "no token", so a

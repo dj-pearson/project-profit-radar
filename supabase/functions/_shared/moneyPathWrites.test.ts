@@ -835,12 +835,9 @@ describe('the tail: analysis functions whose one write is the whole function', (
 });
 
 describe('the tail: audit trails, sessions, referral money and the last queues', () => {
-  it('dos-protection records who blocked an IP and why', () => {
-    const src = code(F('dos-protection'));
-    expect(src).toMatch(/const \{ error: blockLogError \} = await supabase/);
-    expect(src).toMatch(/const \{ error: unblockLogError \} = await supabase/);
-    expect(src).toContain('was BLOCKED but the event was not recorded');
-  });
+  // dos-protection's block/unblock audit case lived here. The function was
+  // deleted in US-205 (nothing called it); ip_access_control is now enforced
+  // by _shared/ip-guard.ts and written only from the admin dashboard.
 
   it('track-referral says when a referral was recorded but not counted', () => {
     // total_referrals is what an affiliate is paid against.

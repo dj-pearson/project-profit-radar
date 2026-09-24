@@ -4,6 +4,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { constantTimeEqual } from '../_shared/constant-time.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { captureException } from '../_shared/observability.ts';
 
 serve(async (req) => {
@@ -24,6 +25,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseAdmin, req, 'create-root-admin', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     const clientIP = getClientIP(req);
     const rl = await checkRateLimit(supabaseAdmin, {

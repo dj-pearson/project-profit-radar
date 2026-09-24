@@ -15,6 +15,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
 import { safeInviteRole } from '../_shared/writable-columns.ts';
 import { captureException } from '../_shared/observability.ts';
@@ -87,6 +88,10 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseAdmin, req, 'verify-auth-otp', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Rate limit: 10 req/min per IP for auth endpoints
     const clientIP = getClientIP(req);

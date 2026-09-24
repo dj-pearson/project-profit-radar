@@ -3363,8 +3363,8 @@
         "Legitimate traffic is unaffected by the configured thresholds"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: web security audit. US-017 added rate-limit CONFIG; this makes it actually enforced. Lower priority than the core auth/CORS sweep."
+      "passes": true,
+      "notes": "Source: web security audit. US-017 added rate-limit CONFIG; this makes it actually enforced. Lower priority than the core auth/CORS sweep. || dos-protection function deleted: nothing called it and it could not work (out-of-scope corsHeaders, read a nonexistent system_settings). Edge enforcement instead: _shared/ip-guard.ts (IPv4/IPv6 + CIDR, whitelist beats blacklist, 30s decision cache, fails open) checks ip_access_control on every anonymous function (25/26; health-check exempt with reason); guardAnonymousRequest adds the shared per-IP limiter; webhook-verify, sitemap-generator, generate-sitemap-file gained limits. check-anonymous-writes fails if an anonymous function skips the blocklist. RateLimitingDashboard copy matches what is enforced. docs/RUNBOOK_DOS_PROTECTION.md. Owner: proxy functions/api hosts through Cloudflare and lock the origin to Cloudflare IPs (else cf-connecting-ip can be spoofed), add Cloudflare rate limiting rules, consider Bot Fight Mode. rate_limit_rules and ddos_detection_logs remain unused."
     },
     {
       "id": "US-206",

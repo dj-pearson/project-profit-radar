@@ -11,6 +11,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { captureException } from '../_shared/observability.ts';
@@ -78,6 +79,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'sso-oauth-init', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Rate limit: 10 req/min per IP for auth endpoints
     const clientIP = getClientIP(req);

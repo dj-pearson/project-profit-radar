@@ -37,9 +37,6 @@ verify_jwt = false
 [functions.create-root-admin]
 verify_jwt = false
 
-[functions.dos-protection]
-verify_jwt = false
-
 # SCHEDULED/CRON FUNCTIONS (No JWT)
 [functions.process-blog-generation-queue]
 verify_jwt = false

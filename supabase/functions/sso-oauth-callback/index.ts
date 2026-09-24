@@ -11,6 +11,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
 import { captureException } from '../_shared/observability.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 
 // OAuth provider token endpoints
 const OAUTH_PROVIDERS: Record<
@@ -187,6 +188,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'sso-oauth-callback', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     const siteUrl = getSiteUrl();
 

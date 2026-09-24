@@ -45,6 +45,17 @@ const WRITE = /\.(insert|update|upsert|delete)\s*\(/g;
 // instrument for a key endpoint and stricter than the shared helper. Matching
 // only the singular name reported it as unthrottled on the first run.
 const LIMITED = /checkRateLimits?\s*\(|enforceRateLimit\s*\(/;
+// guardAnonymousRequest (US-205) counts only when it is given a limit; without
+// one it applies the IP blocklist and nothing else.
+const GUARDED_WITH_LIMIT = /guardAnonymousRequest\s*\([^;]*?\blimit\s*:/s;
+
+// US-205: every anonymous function also honours the ip_access_control
+// blocklist the admin Rate Limiting dashboard writes. Until then nothing read
+// that table, so a block an admin added did nothing.
+const BLOCKLIST = /rejectBlockedIp\s*\(|guardAnonymousRequest\s*\(/;
+const BLOCKLIST_EXEMPT = new Map([
+  ['health-check', 'The uptime monitor must reach it from wherever it runs, it writes nothing, and a blocklist lookup would make the probe depend on the table it is meant to report on.'],
+]);
 
 const guardSrc = readFileSync(join(root, 'scripts', 'check-unauthenticated-edge-functions.mjs'), 'utf8');
 const start = guardSrc.indexOf('const PUBLIC_BY_DESIGN');
@@ -66,11 +77,23 @@ for (const name of anonymous) {
   if (!existsSync(file)) continue;
   const src = readFileSync(file, 'utf8');
   const writes = (src.match(WRITE) || []).length;
-  if (writes === 0 || LIMITED.test(src)) continue;
+  if (writes === 0 || LIMITED.test(src) || GUARDED_WITH_LIMIT.test(src)) continue;
   offenders.push({ name, writes, exempt: EXEMPT.has(name) });
 }
 
 const unexpected = offenders.filter((o) => !o.exempt);
+
+const unblocked = [];
+for (const name of anonymous) {
+  const file = join(FUNCTIONS, name, 'index.ts');
+  if (!existsSync(file)) continue;
+  if (BLOCKLIST.test(readFileSync(file, 'utf8'))) continue;
+  if (!BLOCKLIST_EXEMPT.has(name)) unblocked.push(name);
+}
+const staleBlocklistExempt = [...BLOCKLIST_EXEMPT.keys()].filter((n) => {
+  const file = join(FUNCTIONS, n, 'index.ts');
+  return !existsSync(file) || BLOCKLIST.test(readFileSync(file, 'utf8'));
+});
 const stale = [...EXEMPT.keys()].filter((n) => !offenders.some((o) => o.name === n));
 
 console.log('Anonymous-write guard (US-241 follow-up)');
@@ -87,10 +110,25 @@ if (unexpected.length) {
   process.exit(1);
 }
 
+if (unblocked.length) {
+  console.error('\n\u2716 These are reachable by anyone and ignore the ip_access_control blocklist (US-205):');
+  for (const n of unblocked) console.error(`    ${n}`);
+  console.error('\n  Call rejectBlockedIp (or guardAnonymousRequest) from _shared/ip-guard.ts with a');
+  console.error('  service-role client before the handler does any work. capture-lead is the example.');
+  process.exit(1);
+}
+
+if (staleBlocklistExempt.length) {
+  console.error(`\n\u2716 Blocklist exemption(s) no longer needed: ${staleBlocklistExempt.join(', ')}`);
+  console.error('  Remove them from BLOCKLIST_EXEMPT - the list only shrinks.');
+  process.exit(1);
+}
+
 if (stale.length) {
   console.error(`\n✖ ${stale.length} exemption(s) no longer needed: ${stale.join(', ')}`);
   console.error('  Remove them from EXEMPT - the list only shrinks.');
   process.exit(1);
 }
 
-console.log(`\n✔ Every anonymous writer is throttled or exempt with a reason.`);
+console.log(`  honour the IP blocklist:    ${anonymous.length - unblocked.length - BLOCKLIST_EXEMPT.size} (${BLOCKLIST_EXEMPT.size} exempt with a reason)`);
+console.log(`\n✔ Every anonymous writer is throttled or exempt with a reason, and every anonymous function honours the blocklist.`);

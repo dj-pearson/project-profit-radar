@@ -26,6 +26,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { writeAuditLog } from "../_shared/audit-log.ts";
 import { captureException } from '../_shared/observability.ts';
 
@@ -100,6 +101,10 @@ serve(async (req) => {
     }
 
     const token = view.success ? view.data.token : accept.data!.token;
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(serviceClient, req, 'public-estimate', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Anonymous and unauthenticated, so the token is the only identity there
     // is. Throttle on it rather than on a user id.

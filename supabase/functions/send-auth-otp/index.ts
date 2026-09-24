@@ -18,6 +18,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode, AuthEmailType } from '../_shared/auth-email-templates.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 import { captureException } from '../_shared/observability.ts';
 
 // Validation schema
@@ -109,6 +110,10 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseAdmin, req, 'send-auth-otp', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Shared rate limiter: 10 req/min per IP for auth endpoints
     const clientIP = getClientIP(req);

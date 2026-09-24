@@ -15,6 +15,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { samlUnavailableResponse } from '../_shared/saml-availability.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { captureException } from '../_shared/observability.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 
 // Input validation schema
 const InitSAMLSchema = z.object({
@@ -68,6 +69,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'sso-saml-init', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // Validate request body
     let requestBody;

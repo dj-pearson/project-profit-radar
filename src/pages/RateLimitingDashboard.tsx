@@ -293,7 +293,7 @@ const RateLimitingDashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>Create Rate Limiting Rule</CardTitle>
-            <CardDescription>Define a new rate limiting rule for API endpoints</CardDescription>
+            <CardDescription>Saved for reference. The enforced limits are set in code and at Cloudflare, so a rule saved here does not change them yet.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -454,7 +454,8 @@ const RateLimitingDashboard = () => {
             <CardHeader>
               <CardTitle>Rate Limiting Rules</CardTitle>
               <CardDescription>
-                Manage API rate limiting rules and thresholds
+                Reference only. Enforced limits live in the edge functions (10 requests/min per IP on
+                sign-up, OTP, lead and SSO endpoints) and in Cloudflare; these rows do not change them.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -513,7 +514,7 @@ const RateLimitingDashboard = () => {
             <CardHeader>
               <CardTitle>Rate Limit Violations</CardTitle>
               <CardDescription>
-                Recent rate limit violations and enforcement actions
+                Requests the edge-function rate limiter refused. Each row is one refused request.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -563,7 +564,8 @@ const RateLimitingDashboard = () => {
                 <div>
                   <CardTitle>IP Access Control</CardTitle>
                   <CardDescription>
-                    Manage IP blacklists and whitelists for enhanced security
+                    A blacklisted address or range gets 403 from every public endpoint within 30 seconds.
+                    A whitelist entry overrides a blacklist match; it does not lift rate limits.
                   </CardDescription>
                 </div>
                 <Button onClick={() => setShowNewIPForm(true)}>
@@ -626,14 +628,17 @@ const RateLimitingDashboard = () => {
             <CardHeader>
               <CardTitle>DDoS Protection Status</CardTitle>
               <CardDescription>
-                Advanced DDoS detection and mitigation system status
+                Where volumetric attacks are stopped
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
                 <TrendingUp className="mx-auto h-12 w-12 mb-4" />
-                <p>Advanced DDoS protection monitoring coming soon</p>
-                <p className="text-sm">Real-time attack detection and automated mitigation</p>
+                <p>Flood traffic is absorbed by Cloudflare before it reaches Brikly.</p>
+                <p className="text-sm">
+                  Cloudflare rate limiting rules and Bot Fight Mode cover brikly.net and the API hosts; the
+                  edge functions add per-IP limits and this page's blocklist behind them.
+                </p>
               </div>
             </CardContent>
           </Card>

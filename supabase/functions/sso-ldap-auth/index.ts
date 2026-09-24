@@ -12,6 +12,7 @@ import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
 import { captureException } from '../_shared/observability.ts';
 
@@ -160,6 +161,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(supabaseClient, req, 'sso-ldap-auth', corsHeaders);
+    if (blockedIp) return blockedIp;
 
     // This takes a username and a password and performs an LDAP bind. Without a
     // ceiling that is an unlimited credential-guessing oracle against the

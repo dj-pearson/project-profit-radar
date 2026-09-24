@@ -32,6 +32,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
+import { rejectBlockedIp } from "../_shared/ip-guard.ts";
 import { withErrorReporting } from '../_shared/observability.ts';
 
 const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -140,6 +141,10 @@ serve(withErrorReporting('email-unsubscribe', async (req) => {
     const rlClient = createClient(urlForRL, serviceKeyForRL, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(rlClient, req, 'email-unsubscribe');
+    if (blockedIp) return blockedIp;
+
     const rl = await checkRateLimit(rlClient, {
       identifier: getClientIP(req),
       endpoint: "email-unsubscribe",

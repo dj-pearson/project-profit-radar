@@ -19,6 +19,7 @@ import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { isDisposableEmail } from '../_shared/disposable-email.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { rejectBlockedIp } from '../_shared/ip-guard.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { SELF_SIGNUP_ROLE } from '../_shared/writable-columns.ts';
 import { captureException } from '../_shared/observability.ts';
@@ -67,6 +68,10 @@ const handler = async (req: Request): Promise<Response> => {
   console.log('[SignupWithOTP] Processing POST request');
 
   try {
+    // US-205: an address an admin blacklisted in ip_access_control stops here.
+    const blockedIp = await rejectBlockedIp(createServiceClient(), req, 'signup-with-otp', corsHeaders);
+    if (blockedIp) return blockedIp;
+
     // Rate limit per IP (US-243). Unauthenticated and it sends mail, so without
     // a ceiling it is an open relay for bombing an address or burning SES quota.
     // There is no user to key on before signup, so IP is the only handle here.

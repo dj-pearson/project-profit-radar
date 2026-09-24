@@ -5,6 +5,9 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { captureException } from '../_shared/observability.ts';
+import { guardAnonymousRequest } from '../_shared/ip-guard.ts';
+import { RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // payload is either the raw string a consumer received or its parsed JSON;
@@ -27,6 +30,13 @@ serve(async (req) => {
   }
 
   try {
+    // US-205: anonymous, so the blocklist and a per-IP ceiling apply. It only
+    // computes an HMAC, so GENERAL's 100/min is a flood brake, not a quota.
+    const denied = await guardAnonymousRequest(createServiceClient(), req, {
+      endpoint: 'webhook-verify', limit: RATE_LIMITS.GENERAL, corsHeaders,
+    })
+    if (denied) return denied
+
     const parsed = await validateBody(req, VerifySchema, { name: 'webhook-verify' })
     if (!parsed.ok) return parsed.response
     const { payload, signature, secret } = parsed.data

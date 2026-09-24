@@ -102,13 +102,13 @@
 **Fix implemented:**
 - Created shared validation utilities with Zod schemas
 - Added validation to `disable-mfa` function (UUID validation)
-- Added validation to `dos-protection` function (IP + action validation)
+- Added validation to `dos-protection` function (IP + action validation; function deleted in US-205, see docs/RUNBOOK_DOS_PROTECTION.md)
 - Implemented safe error responses that don't leak information
 
 **Files changed:**
 - `supabase/functions/_shared/validation.ts` (new)
 - `supabase/functions/disable-mfa/index.ts`
-- `supabase/functions/dos-protection/index.ts`
+- `supabase/functions/dos-protection/index.ts` (deleted in US-205)
 
 **Remaining work:**
 - Audit and add validation to all other edge functions
@@ -134,7 +134,7 @@
 **Files changed:**
 - `supabase/functions/_shared/validation.ts`
 - `supabase/functions/disable-mfa/index.ts`
-- `supabase/functions/dos-protection/index.ts`
+- `supabase/functions/dos-protection/index.ts` (deleted in US-205)
 
 ---
 

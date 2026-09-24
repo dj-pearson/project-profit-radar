@@ -7344,3 +7344,10 @@ Sentry when a DSN is set; the CSP guard now reads the real header and
 rejects bypass hosts. A prerendered build shows no violations on public or
 app routes. style-src still needs unsafe-inline. Owner: click through
 Google/Apple sign-in, SSO and Stripe checkout once after deploy.
+
+## US-205 - DoS protection at the edge
+The dos-protection edge function had no caller and threw on every action;
+it is deleted. Every anonymous edge function now checks the admin IP
+block/allow list (ip_access_control) and the shared per-IP limiter.
+docs/RUNBOOK_DOS_PROTECTION.md has the Cloudflare rules; the origin must
+only accept Cloudflare traffic or the client IP can be spoofed.
