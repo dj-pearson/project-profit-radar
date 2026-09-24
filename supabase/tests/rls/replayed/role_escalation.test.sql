@@ -142,10 +142,11 @@ ROLLBACK;
 
 -- 7. A client_portal user of company A, enrolled in nothing, reading A's rows.
 -- invite-client gives them company_id = the contractor's company, so every
--- policy that checks only "company_id = get_user_company(auth.uid())" admits
--- them to internal data. Tightening those is a multi-release change (CLAUDE.md)
--- and is left for the owner; this list is the exposure as of US-394 and may
--- only shrink. A table that newly admits a client fails here.
+-- policy that checks only "company_id = get_user_company(auth.uid())" admitted
+-- them to internal data (205 tables at US-394). 20260924250000 confines them
+-- to the portal's tables and their enrolled projects, so the baseline is
+-- empty; it may only shrink. A table that newly admits a client fails here.
+-- client_portal_allowlist.test.sql covers what an enrolled client does see.
 CREATE TABLE rls_test.client_visible_baseline (tbl text PRIMARY KEY);
 \i supabase/tests/rls/replayed/_client_portal_baseline.sql
 
@@ -156,8 +157,10 @@ DECLARE r record; o record;
 BEGIN
   FOR r IN SELECT t.tbl FROM rls_test.tables t
             WHERE t.tbl NOT IN (SELECT tbl FROM rls_test.not_seeded) ORDER BY t.tbl::text LOOP
+    -- The client's own user_profiles row is theirs to read, not a leak.
     SELECT * INTO o FROM rls_test.probe(
-      format('SELECT count(*) FROM %s WHERE company_id::text = %L', r.tbl, 'aaaaaaaa-0000-0000-0000-000000000000'),
+      format('SELECT count(*) FROM %s WHERE company_id::text = %L', r.tbl, 'aaaaaaaa-0000-0000-0000-000000000000')
+      || CASE WHEN r.tbl = 'public.user_profiles'::regclass THEN ' AND id <> auth.uid()' ELSE '' END,
       'aaaaaaaa-0000-0000-0000-000000000000');
     INSERT INTO rls_test.results VALUES (r.tbl, 'client_select', o.outcome, o.detail);
   END LOOP;

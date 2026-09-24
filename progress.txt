@@ -7393,3 +7393,11 @@ recursive profile policies that broke reads, cross-company access to
 geofences, error logs, workflows and client portal access (tokens and
 password hashes), and anonymous lead inserts. Open and serious: client
 portal users can read 205 internal tables of their contractor.
+
+## Client portal data boundary (owner approved)
+Client-portal users carry their contractor's company_id, so they could read
+205 internal tables (bank accounts, journal lines, every project, every
+user profile). Migration 20260924250000 limits them to 19 portal tables,
+scoped to projects they are actively enrolled in, and denies every other
+company- or project-scoped table. Other roles are unaffected; the replayed
+tests pin the portal's reach at zero internal tables.
