@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,220 +12,48 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 
 import { Shield, AlertTriangle, Eye, Settings, FileText, Database, Clock, TrendingUp, RefreshCw, Download, Search, Edit } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useComplianceAudit, type AuditEvent } from '@/hooks/useComplianceAudit';
+import { ErrorState } from '@/components/common/ErrorState';
 import { format } from 'date-fns';
 import { RootAdminOnly } from '@/components/PermissionGate';
 
-interface AuditStats {
-  totalEvents: number;
-  highRiskEvents: number;
-  dataAccessEvents: number;
-  configChanges: number;
-  todayEvents: number;
-}
-
-interface AuditEvent {
-  id: string;
-  action_type: string;
-  resource_type: string;
-  resource_name: string | null;
-  risk_level: string;
-  compliance_category: string;
-  user_id: string;
-  description: string | null;
-  created_at: string;
-  user_profiles?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  };
-}
-
-interface DataAccessLog {
-  id: string;
-  data_type: string;
-  data_classification: string;
-  resource_name: string | null;
-  access_method: string;
-  user_id: string;
-  created_at: string;
-  user_profiles?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  };
-}
-
 const ComplianceAudit = () => {
-  const [stats, setStats] = useState<AuditStats>({
-    totalEvents: 0,
-    highRiskEvents: 0,
-    dataAccessEvents: 0,
-    configChanges: 0,
-    todayEvents: 0
-  });
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
-  const [dataAccessLogs, setDataAccessLogs] = useState<DataAccessLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const audit = useComplianceAudit();
+  const stats = audit.data?.stats ?? null;
+  const auditEvents = audit.data?.auditEvents ?? [];
+  const dataAccessLogs = audit.data?.dataAccessLogs ?? [];
+  const refreshing = audit.isFetching && !audit.isLoading;
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [editingEvent, setEditingEvent] = useState<AuditEvent | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      fetchAuditData();
-      
-      // Set up real-time subscription for audit logs
-      const auditChannel = supabase
-        .channel('audit-monitoring')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'audit_logs'
-          },
-          (payload) => {
-            setAuditEvents(prev => [payload.new as AuditEvent, ...prev.slice(0, 49)]);
-            updateStatsWithNewEvent();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(auditChannel);
-      };
-    }
-  }, [user]);
-
-  const fetchAuditData = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Fetch audit statistics
-      const [eventsResult, highRiskResult, dataAccessResult, configResult, todayResult] = await Promise.all([
-        // Total events (last 30 days)
-        supabase
-          .from('audit_logs')
-          .select('id')
-          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-
-        supabase
-          .from('audit_logs')
-          .select('id')
-          .in('risk_level', ['high', 'critical'])
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-
-        supabase
-          .from('data_access_logs')
-          .select('id')
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-
-        supabase
-          .from('system_config_changes')
-          .select('id')
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-
-        supabase
-          .from('audit_logs')
-          .select('id')
-          .gte('created_at', `${today}T00:00:00.000Z`)
-          .lt('created_at', `${today}T23:59:59.999Z`)
-      ]);
-
-      // Fetch recent audit events with user details
-      const { data: recentEvents } = await supabase
-        .from('audit_logs')
-        .select(`
-          *,
-          user_profiles:user_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      // Fetch recent data access logs
-      const { data: recentAccess } = await supabase
-        .from('data_access_logs')
-        .select(`
-          *,
-          user_profiles:user_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      setStats({
-        totalEvents: eventsResult.data?.length || 0,
-        highRiskEvents: highRiskResult.data?.length || 0,
-        dataAccessEvents: dataAccessResult.data?.length || 0,
-        configChanges: configResult.data?.length || 0,
-        todayEvents: todayResult.data?.length || 0
-      });
-
-      setAuditEvents((recentEvents as AuditEvent[]) ?? []);
-      setDataAccessLogs(recentAccess || []);
-    } catch (error) {
-      console.error('Error fetching audit data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load audit data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateStatsWithNewEvent = () => {
-    setStats(prev => ({
-      ...prev,
-      todayEvents: prev.todayEvents + 1,
-      totalEvents: prev.totalEvents + 1
-    }));
-  };
-
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchAuditData();
-    setRefreshing(false);
+    const result = await audit.refetch();
+    if (result.error) {
+      toast({
+        title: "Could not refresh",
+        description: result.error instanceof Error ? result.error.message : "Failed to load audit data",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Refreshed",
       description: "Audit data has been updated",
     });
   };
 
-  const generateComplianceReport = async () => {
-    try {
-      const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      // This would typically call an edge function to generate a comprehensive report
-      toast({
-        title: "Report Generation Started",
-        description: "SOC 2 compliance report is being generated...",
-      });
-    } catch (error) {
-      console.error('Error generating report:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate compliance report",
-        variant: "destructive"
-      });
-    }
+  // Nothing generates a SOC 2 report yet. This used to toast "SOC 2 compliance
+  // report is being generated..." and do nothing.
+  const generateComplianceReport = () => {
+    toast({
+      title: "SOC 2 reports are not available yet",
+      description: "No report was generated.",
+    });
   };
 
   const getRiskBadgeVariant = (risk: string) => {
@@ -268,7 +96,7 @@ const ComplianceAudit = () => {
     return matchesSearch && matchesRisk && matchesCategory;
   });
 
-  if (loading) {
+  if (audit.isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-6">
@@ -321,6 +149,15 @@ const ComplianceAudit = () => {
       >
         <div className="space-y-6">
 
+       {audit.error && (
+         <ErrorState
+           inline
+           title="Audit data could not be loaded"
+           error={audit.error}
+           onRetry={() => { void audit.refetch(); }}
+         />
+       )}
+
        {/* Statistics Cards */}
        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
          <Card>
@@ -329,7 +166,7 @@ const ComplianceAudit = () => {
              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-construction-orange" />
            </CardHeader>
            <CardContent>
-             <div className="text-lg sm:text-2xl font-bold">{stats.totalEvents}</div>
+             <div className="text-lg sm:text-2xl font-bold">{stats ? stats.totalEvents : '--'}</div>
              <p className="text-xs text-muted-foreground">Last 30 days</p>
            </CardContent>
          </Card>
@@ -340,7 +177,7 @@ const ComplianceAudit = () => {
              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
            </CardHeader>
            <CardContent>
-             <div className="text-lg sm:text-2xl font-bold">{stats.highRiskEvents}</div>
+             <div className="text-lg sm:text-2xl font-bold">{stats ? stats.highRiskEvents : '--'}</div>
              <p className="text-xs text-muted-foreground">Last 7 days</p>
            </CardContent>
          </Card>
@@ -351,7 +188,7 @@ const ComplianceAudit = () => {
              <Database className="h-3 w-3 sm:h-4 sm:w-4 text-construction-orange" />
            </CardHeader>
            <CardContent>
-             <div className="text-lg sm:text-2xl font-bold">{stats.dataAccessEvents}</div>
+             <div className="text-lg sm:text-2xl font-bold">{stats ? stats.dataAccessEvents : '--'}</div>
              <p className="text-xs text-muted-foreground">Last 24 hours</p>
            </CardContent>
          </Card>
@@ -362,7 +199,7 @@ const ComplianceAudit = () => {
              <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
            </CardHeader>
            <CardContent>
-             <div className="text-lg sm:text-2xl font-bold">{stats.configChanges}</div>
+             <div className="text-lg sm:text-2xl font-bold">{stats ? stats.configChanges : '--'}</div>
              <p className="text-xs text-muted-foreground">Last 7 days</p>
            </CardContent>
          </Card>
@@ -373,7 +210,7 @@ const ComplianceAudit = () => {
              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
            </CardHeader>
            <CardContent>
-             <div className="text-lg sm:text-2xl font-bold">{stats.todayEvents}</div>
+             <div className="text-lg sm:text-2xl font-bold">{stats ? stats.todayEvents : '--'}</div>
              <p className="text-xs text-muted-foreground">Since midnight</p>
            </CardContent>
          </Card>

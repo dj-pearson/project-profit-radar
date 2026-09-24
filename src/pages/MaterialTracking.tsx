@@ -12,52 +12,21 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useMaterialTracking } from '@/hooks/useMaterialTracking';
+import { ErrorState } from '@/components/common/ErrorState';
 import MobileMaterialScanner from '@/components/mobile/MobileMaterialScanner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Package, PlusCircle, Search, AlertTriangle, TrendingDown, Smartphone } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  unit_cost: number;
-  quantity_available: number;
-  minimum_stock_level: number;
-  supplier_name: string;
-  supplier_contact: string;
-  last_ordered_date: string;
-  location: string;
-  material_code: string;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface MaterialUsage {
-  id: string;
-  material_id: string;
-  project_id: string;
-  quantity_used: number;
-  unit_cost: number;
-  total_cost: number;
-  date_used: string;
-  notes: string;
-  materials?: { name: string };
-  projects?: { name: string };
-}
 
 const MaterialTracking = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [materialUsage, setMaterialUsage] = useState<MaterialUsage[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const tracking = useMaterialTracking();
+  const { materials, usage: materialUsage, projects } = tracking;
+  const loadData = () => { void tracking.invalidate(); };
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isUsageDialogOpen, setIsUsageDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,63 +64,7 @@ const MaterialTracking = () => {
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = async () => {
-    try {
-      setLoadingData(true);
-      
-      // Load materials
-      const { data: materialsData, error: materialsError } = await supabase
-        .from('materials')
-        .select('*')
-        .eq('company_id', userProfile?.company_id)
-        .eq('is_active', true)
-        .order('name');
-
-      if (materialsError) throw materialsError;
-      setMaterials(materialsData || []);
-
-      // Load material usage with material and project names
-      const { data: usageData, error: usageError } = await supabase
-        .from('material_usage')
-        .select(`
-          *,
-          materials(name),
-          projects(name)
-        `)
-        .order('date_used', { ascending: false })
-        .limit(50);
-
-      if (usageError) throw usageError;
-      setMaterialUsage(usageData || []);
-
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, status')
-        .eq('company_id', userProfile?.company_id)
-        .in('status', ['active', 'in_progress'])
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-    } catch (error: any) {
-      console.error('Error loading data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load materials data"
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
 
   const handleCreateMaterial = async () => {
     if (!newMaterial.name || !newMaterial.category) {
@@ -164,15 +77,7 @@ const MaterialTracking = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('materials')
-        .insert([{
-          ...newMaterial,
-          company_id: userProfile?.company_id,
-          created_by: user?.id
-        }]);
-
-      if (error) throw error;
+      await tracking.create(newMaterial);
 
       toast({
         title: "Success",
@@ -193,14 +98,12 @@ const MaterialTracking = () => {
         location: '',
         material_code: ''
       });
-      
-      loadData();
     } catch (error: any) {
       console.error('Error creating material:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create material"
+        description: error instanceof Error ? error.message : "Failed to create material"
       });
     }
   };
@@ -219,28 +122,7 @@ const MaterialTracking = () => {
       const material = materials.find(m => m.id === newUsage.material_id);
       if (!material) throw new Error('Material not found');
 
-      const totalCost = newUsage.quantity_used * (newUsage.unit_cost || material.unit_cost);
-
-      const { error } = await supabase
-        .from('material_usage')
-        .insert([{
-          ...newUsage,
-          unit_cost: newUsage.unit_cost || material.unit_cost,
-          total_cost: totalCost,
-          used_by: user?.id
-        }]);
-
-      if (error) throw error;
-
-      // Update material quantity
-      const { error: updateError } = await supabase
-        .from('materials')
-        .update({
-          quantity_available: material.quantity_available - newUsage.quantity_used
-        })
-        .eq('id', newUsage.material_id);
-
-      if (updateError) throw updateError;
+      await tracking.recordUsage(material, newUsage);
 
       toast({
         title: "Success",
@@ -255,14 +137,12 @@ const MaterialTracking = () => {
         unit_cost: 0,
         notes: ''
       });
-      
-      loadData();
     } catch (error: any) {
       console.error('Error recording usage:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to record material usage"
+        description: error instanceof Error ? error.message : "Failed to record material usage"
       });
     }
   };
@@ -279,7 +159,7 @@ const MaterialTracking = () => {
 
   const lowStockMaterials = materials.filter(m => m.quantity_available <= m.minimum_stock_level);
 
-  if (loading || loadingData) {
+  if (loading || tracking.isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="space-y-6">
@@ -581,6 +461,17 @@ const MaterialTracking = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {tracking.error && (
+          <div className="mb-6">
+            <ErrorState
+              inline
+              title="Materials could not be loaded"
+              error={tracking.error}
+              onRetry={() => { void tracking.refetch(); }}
+            />
+          </div>
+        )}
+
         {/* Low Stock Alert */}
         {lowStockMaterials.length > 0 && (
           <Card className="mb-6 border-yellow-200 bg-yellow-50">
@@ -660,7 +551,7 @@ const MaterialTracking = () => {
 
             {/* Materials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMaterials.length === 0 ? (
+              {tracking.error ? null : filteredMaterials.length === 0 ? (
                 <Card className="col-span-full">
                   <CardContent className="text-center py-12">
                     <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

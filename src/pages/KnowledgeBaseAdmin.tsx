@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, EyeOff, Star, StarOff, Search, BookOpen } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -10,51 +10,21 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+import { useKnowledgeBaseAdmin } from '@/hooks/useKnowledgeBaseAdmin';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from "@/hooks/use-toast";
 import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  slug: string;
-  icon: string;
-  sort_order: number;
-}
-
-interface Article {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  article_type: string;
-  difficulty_level: string;
-  estimated_read_time: number;
-  view_count: number;
-  is_published: boolean;
-  is_featured: boolean;
-  tags: string[];
-  published_at: string;
-  category_id: string;
-  knowledge_base_categories?: {
-    name: string;
-    slug: string;
-  };
-}
-
 export default function KnowledgeBaseAdmin() {
   const { toast } = useToast();
   
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
+  const kb = useKnowledgeBaseAdmin();
+  const { articles, categories } = kb;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   const [newArticle, setNewArticle] = useState({
@@ -71,63 +41,7 @@ export default function KnowledgeBaseAdmin() {
     is_featured: false
   });
 
-  useEffect(() => {
-    fetchCategories();
-    fetchArticles();
-  }, []);
-
-  useEffect(() => {
-    filterArticles();
-  }, [articles, searchQuery, selectedCategory, selectedStatus]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('knowledge_base_categories')
-        .select('*')
-        .order('sort_order');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load categories",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchArticles = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('knowledge_base_articles')
-        .select(`
-          *,
-          knowledge_base_categories (
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setArticles(data || []);
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load articles",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterArticles = () => {
+  const filteredArticles = useMemo(() => {
     let filtered = articles;
 
     if (searchQuery) {
@@ -151,32 +65,26 @@ export default function KnowledgeBaseAdmin() {
       }
     }
 
-    setFilteredArticles(filtered);
-  };
+    return filtered;
+  }, [articles, searchQuery, selectedCategory, selectedStatus]);
 
   const togglePublished = async (articleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('knowledge_base_articles')
-        .update({ 
-          is_published: !currentStatus,
-          published_at: !currentStatus ? new Date().toISOString() : null
-        })
-        .eq('id', articleId);
-
-      if (error) throw error;
+      await kb.update(articleId, {
+        is_published: !currentStatus,
+        published_at: !currentStatus ? new Date().toISOString() : null
+      });
 
       toast({
         title: "Success",
         description: `Article ${!currentStatus ? 'published' : 'unpublished'} successfully`,
       });
 
-      fetchArticles();
     } catch (error) {
       console.error('Error updating article:', error);
       toast({
         title: "Error",
-        description: "Failed to update article status",
+        description: error instanceof Error ? error.message : "Failed to update article status",
         variant: "destructive",
       });
     }
@@ -184,24 +92,18 @@ export default function KnowledgeBaseAdmin() {
 
   const toggleFeatured = async (articleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('knowledge_base_articles')
-        .update({ is_featured: !currentStatus })
-        .eq('id', articleId);
-
-      if (error) throw error;
+      await kb.update(articleId, { is_featured: !currentStatus });
 
       toast({
         title: "Success",
         description: `Article ${!currentStatus ? 'featured' : 'unfeatured'} successfully`,
       });
 
-      fetchArticles();
     } catch (error) {
       console.error('Error updating article:', error);
       toast({
         title: "Error",
-        description: "Failed to update featured status",
+        description: error instanceof Error ? error.message : "Failed to update featured status",
         variant: "destructive",
       });
     }
@@ -213,24 +115,18 @@ export default function KnowledgeBaseAdmin() {
     }
 
     try {
-      const { error } = await supabase
-        .from('knowledge_base_articles')
-        .delete()
-        .eq('id', articleId);
-
-      if (error) throw error;
+      await kb.remove(articleId);
 
       toast({
         title: "Success",
         description: "Article deleted successfully",
       });
 
-      fetchArticles();
     } catch (error) {
       console.error('Error deleting article:', error);
       toast({
         title: "Error",
-        description: "Failed to delete article",
+        description: error instanceof Error ? error.message : "Failed to delete article",
         variant: "destructive",
       });
     }
@@ -254,21 +150,8 @@ export default function KnowledgeBaseAdmin() {
 
   const createArticle = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const tagsArray = newArticle.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-      
-      const { error } = await supabase
-        .from('knowledge_base_articles')
-        .insert({
-          ...newArticle,
-          tags: tagsArray,
-          author_id: user.id,
-          published_at: newArticle.is_published ? new Date().toISOString() : null
-        });
-
-      if (error) throw error;
+      await kb.create({ ...newArticle, tags: tagsArray });
 
       toast({
         title: "Success",
@@ -289,13 +172,11 @@ export default function KnowledgeBaseAdmin() {
         is_published: false,
         is_featured: false
       });
-      
-      fetchArticles();
     } catch (error) {
       console.error('Error creating article:', error);
       toast({
         title: "Error",
-        description: "Failed to create article",
+        description: error instanceof Error ? error.message : "Failed to create article",
         variant: "destructive",
       });
     }
@@ -550,7 +431,7 @@ export default function KnowledgeBaseAdmin() {
       </div>
 
       {/* Articles List */}
-      {loading ? (
+      {kb.isLoading ? (
         <div className="grid grid-cols-1 gap-4">
           {[...Array(5)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -561,6 +442,12 @@ export default function KnowledgeBaseAdmin() {
             </Card>
           ))}
         </div>
+      ) : kb.error ? (
+        <ErrorState
+          title="Articles could not be loaded"
+          error={kb.error}
+          onRetry={() => { void kb.refetch(); }}
+        />
       ) : (
         <div className="space-y-4">
           {filteredArticles.map((article) => (

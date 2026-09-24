@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,15 +11,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreatePOFromMaterialDialog } from '@/components/materials/CreatePOFromMaterialDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { useMaterialsInventory, inventorySummary } from '@/hooks/useMaterialsInventory';
+import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Package, Truck, AlertTriangle, CheckCircle, Clock, TrendingUp, FileText } from 'lucide-react';
+import { Plus, Search, Package, Truck, AlertTriangle, CheckCircle, Clock, FileText } from 'lucide-react';
 
 export default function Materials() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("inventory");
-  const [projects, setProjects] = useState<any[]>([]);
+  const inventory = useMaterialsInventory();
+  const { materials, orders, projects } = inventory;
+  const summary = inventorySummary(materials, orders);
   const [newMaterial, setNewMaterial] = useState({
     name: '',
     material_code: '',
@@ -29,102 +31,20 @@ export default function Materials() {
     cost: '',
     project_id: ''
   });
-  const [materials, setMaterials] = useState<any[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [showCreatePODialog, setShowCreatePODialog] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    loadProjects();
-    loadMaterials();
-  }, []);
-
-  const loadMaterials = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('materials')
-        .select(`
-          *,
-          projects(name)
-        `)
-        .order('name');
-      
-      if (error) throw error;
-      setMaterials(data || []);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error loading materials",
-        description: error.message
-      });
-    }
-  };
-
-  const orders = [
-    {
-      id: "PO-001",
-      supplier: "BuildCo Supply",
-      order_date: "2024-04-10",
-      expected_delivery: "2024-04-15",
-      status: "pending",
-      total_amount: 2500.00,
-      items_count: 3
-    },
-    {
-      id: "PO-002",
-      supplier: "Metal Masters", 
-      order_date: "2024-04-08",
-      expected_delivery: "2024-04-12",
-      status: "delivered",
-      total_amount: 15000.00,
-      items_count: 2
-    }
-  ];
-
-
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .order('name');
-      
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error loading projects",
-        description: error.message
-      });
-    }
-  };
 
   const handleCreateMaterial = async () => {
     try {
-      // Get company_id from user profile
-      const { data: userProfile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      const { error } = await supabase
-        .from('materials')
-        .insert({
-          name: newMaterial.name,
-          material_code: newMaterial.material_code,
-          category: newMaterial.category,
-          unit: newMaterial.unit,
-          quantity_available: parseInt(newMaterial.quantity) || 0,
-          unit_cost: parseFloat(newMaterial.cost) || 0,
-          project_id: newMaterial.project_id || null,
-          company_id: userProfile.company_id
-        });
-
-      if (error) throw error;
+      await inventory.create({
+        name: newMaterial.name,
+        material_code: newMaterial.material_code,
+        category: newMaterial.category,
+        unit: newMaterial.unit,
+        quantity_available: parseInt(newMaterial.quantity) || 0,
+        unit_cost: parseFloat(newMaterial.cost) || 0,
+        project_id: newMaterial.project_id || null,
+      });
 
       setNewMaterial({
         name: '',
@@ -136,16 +56,15 @@ export default function Materials() {
         project_id: ''
       });
 
-      await loadMaterials(); // Refresh the list
       toast({
         title: "Material created",
         description: "Material has been added successfully."
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error creating material",
-        description: error.message
+        description: error instanceof Error ? error.message : undefined
       });
     }
   };
@@ -305,6 +224,14 @@ export default function Materials() {
       }
     >
       <div className="space-y-6">
+        {inventory.error && (
+          <ErrorState
+            inline
+            title="Materials could not be loaded"
+            error={inventory.error}
+            onRetry={() => { void inventory.refetch(); }}
+          />
+        )}
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
@@ -384,8 +311,8 @@ export default function Materials() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={material.quantity_available > (material.minimum_stock_level || 0) ? "default" : "secondary"}>
-                          {material.quantity_available > (material.minimum_stock_level || 0) ? "In Stock" : "Low Stock"}
+                        <Badge variant={(material.quantity_available ?? 0) > (material.minimum_stock_level || 0) ? "default" : "secondary"}>
+                          {(material.quantity_available ?? 0) > (material.minimum_stock_level || 0) ? "In Stock" : "Low Stock"}
                         </Badge>
                       </div>
                     </div>
@@ -435,16 +362,19 @@ export default function Materials() {
 
           <TabsContent value="orders" className="space-y-4">
             <div className="grid gap-4">
+              {!inventory.isLoading && !inventory.error && orders.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-8">No purchase orders yet.</p>
+              )}
               {orders.map((order) => (
                 <Card key={order.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <CardTitle className="text-lg">
-                          Purchase Order {order.id}
+                          Purchase Order {order.po_number}
                         </CardTitle>
                         <CardDescription>
-                          {order.supplier} • {order.items_count} items
+                          {order.vendor_name ?? 'Vendor not found'} - {order.items_count} items
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -456,11 +386,11 @@ export default function Materials() {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
                       <div>
                         <div className="font-medium text-muted-foreground">Order Date</div>
-                        <div>{new Date(order.order_date).toLocaleDateString()}</div>
+                        <div>{new Date(order.po_date).toLocaleDateString()}</div>
                       </div>
                       <div>
                         <div className="font-medium text-muted-foreground">Expected Delivery</div>
-                        <div>{new Date(order.expected_delivery).toLocaleDateString()}</div>
+                        <div>{order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '--'}</div>
                       </div>
                       <div>
                         <div className="font-medium text-muted-foreground">Total Amount</div>
@@ -496,10 +426,11 @@ export default function Materials() {
                   <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$18,125.00</div>
-                  <div className="flex items-center text-sm text-green-600">
-                    <TrendingUp className="h-4 w-4 mr-1" aria-hidden="true" />
-                    +5.2% from last month
+                  <div className="text-2xl font-bold">
+                    {inventory.error || inventory.isLoading ? '--' : `$${summary.totalValue.toFixed(2)}`}
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    Quantity on hand times unit cost
                   </div>
                 </CardContent>
               </Card>
@@ -509,7 +440,7 @@ export default function Materials() {
                   <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1</div>
+                  <div className="text-2xl font-bold">{inventory.error || inventory.isLoading ? '--' : summary.lowStock}</div>
                   <div className="flex items-center text-sm text-yellow-600">
                     <AlertTriangle className="h-4 w-4 mr-1" aria-hidden="true" />
                     Requires attention
@@ -522,7 +453,7 @@ export default function Materials() {
                   <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1</div>
+                  <div className="text-2xl font-bold">{inventory.error || inventory.isLoading ? '--' : summary.pendingOrders}</div>
                   <div className="flex items-center text-sm text-blue-600">
                     <Clock className="h-4 w-4 mr-1" aria-hidden="true" />
                     Awaiting delivery
@@ -541,7 +472,7 @@ export default function Materials() {
           onSuccess={() => {
             setShowCreatePODialog(false);
             setSelectedMaterials([]);
-            loadMaterials();
+            void inventory.invalidate();
           }}
         />
       </div>

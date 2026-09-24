@@ -1,98 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useBillingAutomation } from '@/hooks/useBillingAutomation';
+import { ErrorState } from '@/components/common/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DollarSign, Clock, AlertTriangle, FileText, Bell } from 'lucide-react';
 
-interface BillingRule {
-  id: string;
-  rule_name: string;
-  rule_type: string;
-  auto_generate: boolean;
-  auto_send: boolean;
-  is_active: boolean;
-  payment_terms_days: number;
-}
-
-interface PaymentReminder {
-  id: string;
-  reminder_type: string;
-  sent_at: string;
-  status: string;
-  delivery_method: string;
-}
-
 export function BillingAutomation() {
-  const { user } = useAuth();
-  const [rules, setRules] = useState<BillingRule[]>([]);
-  const [reminders, setReminders] = useState<PaymentReminder[]>([]);
-
-  useEffect(() => {
-    loadBillingRules();
-    loadPaymentReminders();
-  }, [user]);
-
-  const loadBillingRules = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('billing_automation_rules')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setRules(data || []);
-    } catch (error) {
-      console.error('Error loading rules:', error);
-    }
-  };
-
-  const loadPaymentReminders = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('payment_reminders')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setReminders(data || []);
-    } catch (error) {
-      console.error('Error loading reminders:', error);
-    }
-  };
+  const billing = useBillingAutomation();
+  const rules = billing.data?.rules ?? [];
+  const reminders = billing.data?.reminders ?? [];
+  // Figures only from a read that came back; loading or failed shows '--'.
+  const shown = (n: number) => (billing.data && !billing.error ? n : '--');
 
   const toggleRule = async (ruleId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('billing_automation_rules')
-        .update({ is_active: !isActive })
-        .eq('id', ruleId);
-
-      if (error) throw error;
-      loadBillingRules();
+      await billing.setActive(ruleId, !isActive);
     } catch (error) {
-      console.error('Error toggling rule:', error);
+      toast.error('Could not change the rule', {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -121,6 +50,20 @@ export function BillingAutomation() {
         <DollarSign className="h-12 w-12 text-indigo-600 opacity-50" />
       </div>
 
+      {billing.error && (
+        <ErrorState
+          inline
+          title="Billing automation could not be loaded"
+          error={billing.error}
+          onRetry={() => { void billing.refetch(); }}
+        />
+      )}
+      {billing.data && !billing.data.tenantId && (
+        <p className="text-sm text-muted-foreground">
+          Your profile is not linked to a tenant, so there are no billing rules or reminders to show.
+        </p>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card>
@@ -129,7 +72,7 @@ export function BillingAutomation() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {rules.filter(r => r.is_active).length}
+              {shown(rules.filter(r => r.is_active).length)}
             </div>
           </CardContent>
         </Card>
@@ -140,7 +83,7 @@ export function BillingAutomation() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {reminders.filter(r => r.status === 'sent').length}
+              {shown(billing.data?.sentCount ?? 0)}
             </div>
           </CardContent>
         </Card>
@@ -151,7 +94,7 @@ export function BillingAutomation() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {reminders.filter(r => r.status === 'pending').length}
+              {shown(billing.data?.pendingCount ?? 0)}
             </div>
           </CardContent>
         </Card>
@@ -162,7 +105,7 @@ export function BillingAutomation() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {rules.filter(r => r.auto_generate).length}
+              {shown(rules.filter(r => r.auto_generate).length)}
             </div>
           </CardContent>
         </Card>
@@ -185,9 +128,11 @@ export function BillingAutomation() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {rules.length === 0 ? (
+                {billing.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : rules.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No automation rules configured
+                    {billing.error ? 'Could not be loaded; see the error above.' : 'No automation rules configured'}
                   </p>
                 ) : (
                   rules.map((rule) => (
@@ -236,9 +181,11 @@ export function BillingAutomation() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {reminders.length === 0 ? (
+                {billing.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : reminders.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No reminders scheduled
+                    {billing.error ? 'Could not be loaded; see the error above.' : 'No reminders scheduled'}
                   </p>
                 ) : (
                   reminders.map((reminder) => (

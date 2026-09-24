@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,36 +14,13 @@ import {
   Save,
   Send
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { usePurchaseOrderForm, poTotals, type POLineItem } from '@/hooks/usePurchaseOrderForm';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-interface LineItem {
-  line_number: number;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  unit_of_measure: string;
-  cost_code_id?: string;
-  notes?: string;
-}
-
-interface Vendor {
-  id: string;
-  name: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-}
-
-interface CostCode {
-  id: string;
-  code: string;
-  name: string;
-}
+type LineItem = POLineItem;
 
 const PurchaseOrderForm = () => {
   const { id } = useParams();
@@ -54,10 +31,10 @@ const PurchaseOrderForm = () => {
   const { toast } = useToast();
   const isEditing = Boolean(id);
 
-  const [loading, setLoading] = useState(false);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCode[]>([]);
+  const po = usePurchaseOrderForm(id);
+  const vendors = po.pickers.data?.vendors ?? [];
+  const projects = po.pickers.data?.projects ?? [];
+  const loading = po.saving;
   
   const [formData, setFormData] = useState({
     vendor_id: '',
@@ -81,109 +58,15 @@ const PurchaseOrderForm = () => {
     }
   ]);
 
+  // Seed the form from the order once it has been read; later refetches must
+  // not throw away edits in progress.
+  const seeded = useRef(false);
   useEffect(() => {
-    loadFormData();
-    if (isEditing) {
-      loadPurchaseOrder();
-    }
-  }, [id, userProfile?.company_id]);
-
-  const loadFormData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      const [vendorsRes, projectsRes, costCodesRes] = await Promise.all([
-        supabase
-          .from('vendors')
-          .select('id, name')
-          .eq('company_id', userProfile.company_id)
-          .eq('is_active', true)
-          .order('name'),
-        supabase
-          .from('projects')
-          .select('id, name')
-          .eq('company_id', userProfile.company_id)
-          .order('name'),
-        supabase
-          .from('cost_codes')
-          .select('id, code, name')
-          .eq('company_id', userProfile.company_id)
-          .eq('is_active', true)
-          .order('code')
-      ]);
-
-      if (vendorsRes.error) throw vendorsRes.error;
-      if (projectsRes.error) throw projectsRes.error;
-      if (costCodesRes.error) throw costCodesRes.error;
-
-      setVendors(vendorsRes.data || []);
-      setProjects(projectsRes.data || []);
-      setCostCodes(costCodesRes.data || []);
-    } catch (error) {
-      console.error('Error loading form data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load form data"
-      });
-    }
-  };
-
-  const loadPurchaseOrder = async () => {
-    if (!id) return;
-
-    try {
-      setLoading(true);
-      const { data: po, error: poError } = await supabase
-        .from('purchase_orders')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (poError) throw poError;
-
-      setFormData({
-        vendor_id: po.vendor_id,
-        project_id: po.project_id || '',
-        po_date: po.po_date,
-        delivery_date: po.delivery_date || '',
-        delivery_address: po.delivery_address || '',
-        notes: po.notes || '',
-        terms: po.terms || '',
-        tax_rate: po.tax_rate || 0,
-        shipping_cost: po.shipping_cost || 0
-      });
-
-      const { data: items, error: itemsError } = await supabase
-        .from('purchase_order_line_items')
-        .select('*')
-        .eq('purchase_order_id', id)
-        .order('line_number');
-
-      if (itemsError) throw itemsError;
-
-      if (items && items.length > 0) {
-        setLineItems(items.map(item => ({
-          line_number: item.line_number,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          unit_of_measure: item.unit_of_measure,
-          cost_code_id: item.cost_code_id,
-          notes: item.notes
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading purchase order:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load purchase order"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (seeded.current || !po.order.data) return;
+    seeded.current = true;
+    setFormData(po.order.data.form);
+    if (po.order.data.lines.length > 0) setLineItems(po.order.data.lines);
+  }, [po.order.data]);
 
   const addLineItem = () => {
     setLineItems(prev => [...prev, {
@@ -206,13 +89,7 @@ const PurchaseOrderForm = () => {
     ));
   };
 
-  const calculateTotals = () => {
-    const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-    const taxAmount = subtotal * (formData.tax_rate / 100);
-    const total = subtotal + taxAmount + formData.shipping_cost;
-    
-    return { subtotal, taxAmount, total };
-  };
+  const calculateTotals = () => poTotals(lineItems, formData.tax_rate, formData.shipping_cost);
 
   const savePurchaseOrder = async (status: string = 'draft') => {
     if (!userProfile?.company_id || !formData.vendor_id) {
@@ -234,70 +111,7 @@ const PurchaseOrderForm = () => {
     }
 
     try {
-      setLoading(true);
-      const { subtotal, taxAmount, total } = calculateTotals();
-
-      const poData = {
-        company_id: userProfile.company_id,
-        vendor_id: formData.vendor_id,
-        project_id: formData.project_id || null,
-        po_number: '', // Will be auto-generated by trigger
-        po_date: formData.po_date,
-        delivery_date: formData.delivery_date || null,
-        delivery_address: formData.delivery_address || null,
-        notes: formData.notes || null,
-        terms: formData.terms || null,
-        subtotal,
-        tax_rate: formData.tax_rate,
-        tax_amount: taxAmount,
-        shipping_cost: formData.shipping_cost,
-        total_amount: total,
-        status,
-        created_by: userProfile.id
-      };
-
-      let poId: string;
-
-      if (isEditing) {
-        const { error } = await supabase
-          .from('purchase_orders')
-          .update(poData)
-          .eq('id', id);
-        if (error) throw error;
-        poId = id!;
-
-        // Delete existing line items
-        const { error: deleteError } = await supabase
-          .from('purchase_order_line_items')
-          .delete()
-          .eq('purchase_order_id', id);
-        if (deleteError) throw deleteError;
-      } else {
-        const { data, error } = await supabase
-          .from('purchase_orders')
-          .insert(poData)
-          .select()
-          .single();
-        if (error) throw error;
-        poId = data.id;
-      }
-
-      // Insert line items
-      const lineItemsData = lineItems.map((item, index) => ({
-        purchase_order_id: poId,
-        line_number: index + 1,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        unit_of_measure: item.unit_of_measure,
-        cost_code_id: item.cost_code_id || null,
-        notes: item.notes || null
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('purchase_order_line_items')
-        .insert(lineItemsData);
-      if (itemsError) throw itemsError;
+      await po.save(formData, lineItems, status);
 
       toast({
         title: isEditing ? "Purchase Order Updated" : "Purchase Order Created",
@@ -310,19 +124,30 @@ const PurchaseOrderForm = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save purchase order"
+        description: error instanceof Error ? error.message : "Failed to save purchase order"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const { subtotal, taxAmount, total } = calculateTotals();
 
-  if (loading && isEditing) {
+  if (isEditing && po.order.isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingSpinner size="md" />
+      </div>
+    );
+  }
+
+  // Editing an order that could not be read would save a blank form over it.
+  if (isEditing && po.order.error) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="The purchase order could not be loaded"
+          error={po.order.error as Error}
+          onRetry={() => { void po.order.refetch(); }}
+        />
       </div>
     );
   }
@@ -356,6 +181,14 @@ const PurchaseOrderForm = () => {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
+          {po.pickers.error && (
+            <ErrorState
+              inline
+              title="Vendors and projects could not be loaded"
+              error={po.pickers.error as Error}
+              onRetry={() => { void po.pickers.refetch(); }}
+            />
+          )}
           <Card>
             <CardHeader>
               <CardTitle>{isEditing ? 'Edit Purchase Order' : 'New Purchase Order'}</CardTitle>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,82 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { RefreshCw, Edit2, Save, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAffiliateManagement, type AffiliateProgram } from "@/hooks/useAffiliateManagement";
+import { ErrorState } from "@/components/common/ErrorState";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
-interface AffiliateProgram {
-  id: string;
-  name: string;
-  referrer_reward_months: number;
-  referee_reward_months: number;
-  min_subscription_duration_months: number;
-  is_active: boolean;
-}
-
-interface AffiliateCode {
-  id: string;
-  affiliate_code: string;
-  company_id: string;
-  total_referrals: number;
-  successful_referrals: number;
-  total_rewards_earned: number;
-  is_active: boolean;
-  companies: {
-    name: string;
-  };
-}
 
 const AffiliateManagement = () => {
   const { userProfile } = useAuth();
   const userRole = userProfile?.role;
-  const [programs, setPrograms] = useState<AffiliateProgram[]>([]);
-  const [affiliateCodes, setAffiliateCodes] = useState<AffiliateCode[]>([]);
-  const [loading, setLoading] = useState(false);
+  const isRootAdmin = userRole === 'root_admin';
+  const affiliates = useAffiliateManagement({ enabled: isRootAdmin });
+  const { programs, codes: affiliateCodes } = affiliates;
+  const loading = affiliates.isFetching;
+  const fetchData = () => { void affiliates.refetch(); };
   const [editingProgram, setEditingProgram] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<AffiliateProgram>>({});
-
-  const isRootAdmin = userRole === 'root_admin';
-
-  useEffect(() => {
-    if (isRootAdmin) {
-      fetchData();
-    }
-  }, [isRootAdmin]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Fetch programs
-      const { data: programsData, error: programsError } = await supabase
-        .from('affiliate_programs')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (programsError) throw programsError;
-      setPrograms(programsData || []);
-
-      // Fetch affiliate codes with company names
-      const { data: codesData, error: codesError } = await supabase
-        .from('affiliate_codes')
-        .select(`
-          *,
-          companies (
-            name
-          )
-        `)
-        .order('total_referrals', { ascending: false });
-
-      if (codesError) throw codesError;
-      setAffiliateCodes(codesData || []);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error("Failed to load affiliate data");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const startEditing = (program: AffiliateProgram) => {
     setEditingProgram(program.id);
@@ -98,49 +37,31 @@ const AffiliateManagement = () => {
     if (!editingProgram || !editForm) return;
 
     try {
-      const { error } = await supabase
-        .from('affiliate_programs')
-        .update({
-          name: editForm.name,
-          referrer_reward_months: editForm.referrer_reward_months,
-          referee_reward_months: editForm.referee_reward_months,
-          min_subscription_duration_months: editForm.min_subscription_duration_months,
-          is_active: editForm.is_active,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingProgram);
-
-      if (error) throw error;
+      await affiliates.update(editingProgram, {
+        name: editForm.name,
+        referrer_reward_months: editForm.referrer_reward_months,
+        referee_reward_months: editForm.referee_reward_months,
+        min_subscription_duration_months: editForm.min_subscription_duration_months,
+        is_active: editForm.is_active,
+      });
 
       toast.success("Program updated successfully");
       setEditingProgram(null);
       setEditForm({});
-      fetchData();
     } catch (error) {
       console.error('Error updating program:', error);
-      toast.error("Failed to update program");
+      toast.error("Failed to update program", { description: error instanceof Error ? error.message : undefined });
     }
   };
 
   const createNewProgram = async () => {
     try {
-      const { error } = await supabase
-        .from('affiliate_programs')
-        .insert({
-          name: 'New Program',
-          referrer_reward_months: 1,
-          referee_reward_months: 1,
-          min_subscription_duration_months: 1,
-          is_active: false
-        });
-
-      if (error) throw error;
+      await affiliates.create();
 
       toast.success("New program created");
-      fetchData();
     } catch (error) {
       console.error('Error creating program:', error);
-      toast.error("Failed to create program");
+      toast.error("Failed to create program", { description: error instanceof Error ? error.message : undefined });
     }
   };
 
@@ -157,6 +78,14 @@ const AffiliateManagement = () => {
 
   return (
     <div className="space-y-6">
+      {affiliates.error && (
+        <ErrorState
+          inline
+          title="Affiliate data could not be loaded"
+          error={affiliates.error}
+          onRetry={fetchData}
+        />
+      )}
       {/* Program Management */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

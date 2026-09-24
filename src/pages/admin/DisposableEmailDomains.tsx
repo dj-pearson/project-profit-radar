@@ -29,7 +29,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useDisposableEmailDomains, type DisposableEmailDomain } from '@/hooks/useDisposableEmailDomains';
+import { ErrorState } from '@/components/common/ErrorState';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import {
@@ -43,17 +44,6 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface DisposableEmailDomain {
-  id: string;
-  domain: string;
-  is_active: boolean;
-  source: 'seed' | 'manual' | 'import';
-  notes: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 type StatusFilter = 'all' | 'active' | 'inactive';
 type SourceFilter = 'all' | 'seed' | 'manual' | 'import';
 
@@ -65,8 +55,8 @@ const DisposableEmailDomains: React.FC = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [domains, setDomains] = useState<DisposableEmailDomain[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const blocklist = useDisposableEmailDomains({ enabled: userProfile?.role === 'root_admin' });
+  const domains = blocklist.domains;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
@@ -98,33 +88,7 @@ const DisposableEmailDomains: React.FC = () => {
       });
       return;
     }
-
-    if (userProfile?.role === 'root_admin') {
-      loadDomains();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadDomains = async () => {
-    try {
-      setLoadingData(true);
-      const { data, error } = await (supabase as any)
-        .from('disposable_email_domains')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDomains((data || []) as DisposableEmailDomain[]);
-    } catch (error: any) {
-      console.error('Error loading disposable email domains:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load disposable email domains.',
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
 
   const filteredDomains = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -204,28 +168,18 @@ const DisposableEmailDomains: React.FC = () => {
 
       setSubmitting(true);
       try {
-        const rows = valid.map((domain) => ({
-          domain,
-          source: 'manual' as const,
-          is_active: true,
-          created_by: userProfile.id,
-        }));
-
-        const { error } = await (supabase as any)
-          .from('disposable_email_domains')
-          .upsert(rows, { onConflict: 'domain', ignoreDuplicates: true });
-
-        if (error) throw error;
+        const added = await blocklist.addMany(valid);
+        const skipped = valid.length - added;
 
         toast({
           title: 'Domains Added',
-          description:
-            invalid.length > 0
-              ? `Added ${valid.length} domain(s). Skipped ${invalid.length} invalid entr${invalid.length === 1 ? 'y' : 'ies'}.`
-              : `Added ${valid.length} domain(s) to the blocklist.`,
+          description: [
+            `Added ${added} domain(s) to the blocklist.`,
+            skipped > 0 ? `${skipped} already listed.` : '',
+            invalid.length > 0 ? `Skipped ${invalid.length} invalid entr${invalid.length === 1 ? 'y' : 'ies'}.` : '',
+          ].filter(Boolean).join(' '),
         });
 
-        await loadDomains();
         setIsAddOpen(false);
         resetAddDialog();
       } catch (error: any) {
@@ -253,27 +207,18 @@ const DisposableEmailDomains: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await (supabase as any)
-        .from('disposable_email_domains')
-        .insert({
-          domain,
-          notes: newNotes.trim() || null,
-          source: 'manual',
-          is_active: true,
-          created_by: userProfile.id,
-        });
-
-      if (error) {
-        if (error.code === '23505') {
+      try {
+        await blocklist.addOne(domain, newNotes.trim() || null);
+      } catch (error) {
+        if ((error as { code?: string }).code === '23505') {
           toast({
             variant: 'destructive',
             title: 'Already Blocked',
             description: `${domain} is already on the blocklist.`,
           });
-        } else {
-          throw error;
+          return;
         }
-        return;
+        throw error;
       }
 
       toast({
@@ -281,7 +226,6 @@ const DisposableEmailDomains: React.FC = () => {
         description: `${domain} is now on the blocklist.`,
       });
 
-      await loadDomains();
       setIsAddOpen(false);
       resetAddDialog();
     } catch (error: any) {
@@ -298,16 +242,7 @@ const DisposableEmailDomains: React.FC = () => {
 
   const handleToggleActive = async (row: DisposableEmailDomain) => {
     try {
-      const { error } = await (supabase as any)
-        .from('disposable_email_domains')
-        .update({ is_active: !row.is_active })
-        .eq('id', row.id);
-
-      if (error) throw error;
-
-      setDomains((prev) =>
-        prev.map((d) => (d.id === row.id ? { ...d, is_active: !row.is_active } : d))
-      );
+      await blocklist.setActive(row.id, !row.is_active);
 
       toast({
         title: row.is_active ? 'Domain Disabled' : 'Domain Enabled',
@@ -326,14 +261,7 @@ const DisposableEmailDomains: React.FC = () => {
   const handleDelete = async () => {
     if (!pendingDelete) return;
     try {
-      const { error } = await (supabase as any)
-        .from('disposable_email_domains')
-        .delete()
-        .eq('id', pendingDelete.id);
-
-      if (error) throw error;
-
-      setDomains((prev) => prev.filter((d) => d.id !== pendingDelete.id));
+      await blocklist.remove(pendingDelete.id);
       toast({
         title: 'Domain Removed',
         description: `${pendingDelete.domain} was removed from the blocklist.`,
@@ -363,7 +291,7 @@ const DisposableEmailDomains: React.FC = () => {
     }
   };
 
-  if (loading || loadingData) {
+  if (loading || blocklist.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Disposable Email Blocklist">
       <DashboardLayout hasAccessibleWrapper title="Disposable Email Blocklist" showTrialBanner={false}>
@@ -390,19 +318,28 @@ const DisposableEmailDomains: React.FC = () => {
       <AccessiblePageWrapper pageTitle="Disposable Email Blocklist">
       <DashboardLayout hasAccessibleWrapper title="Disposable Email Blocklist" showTrialBanner={false}>
         <div className="space-y-6">
+          {blocklist.error && (
+            <ErrorState
+              inline
+              title="The blocklist could not be loaded"
+              error={blocklist.error}
+              onRetry={() => { void blocklist.refetch(); }}
+            />
+          )}
+
           {/* Stats */}
           <section aria-label="Blocklist summary" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Total Domains</CardDescription>
-                <CardTitle className="text-3xl">{counts.total.toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl">{blocklist.error ? '--' : counts.total.toLocaleString()}</CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Active</CardDescription>
                 <CardTitle className="text-3xl text-emerald-600">
-                  {counts.active.toLocaleString()}
+                  {blocklist.error ? '--' : counts.active.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </Card>
@@ -410,14 +347,14 @@ const DisposableEmailDomains: React.FC = () => {
               <CardHeader className="pb-2">
                 <CardDescription>Inactive</CardDescription>
                 <CardTitle className="text-3xl text-muted-foreground">
-                  {counts.inactive.toLocaleString()}
+                  {blocklist.error ? '--' : counts.inactive.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Manually Added</CardDescription>
-                <CardTitle className="text-3xl">{counts.manual.toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl">{blocklist.error ? '--' : counts.manual.toLocaleString()}</CardTitle>
               </CardHeader>
             </Card>
           </section>

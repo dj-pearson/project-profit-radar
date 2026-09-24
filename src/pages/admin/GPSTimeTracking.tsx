@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,146 +6,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Navigation, Clock, AlertCircle, CheckCircle, Map, Route, DollarSign } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useGPSTimeTracking, geofenceProblem } from '@/hooks/useGPSTimeTracking';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
-interface GPSTimeEntry {
-  id: string;
-  user_id: string;
-  project_id: string;
-  clock_in_lat: number;
-  clock_in_lng: number;
-  clock_in_address: string;
-  clock_in_timestamp: string;
-  clock_out_lat: number;
-  clock_out_lng: number;
-  clock_out_address: string;
-  clock_out_timestamp: string;
-  is_within_geofence: boolean;
-  geofence_distance_meters: number;
-  total_distance_meters: number;
-}
-
-interface Geofence {
-  id: string;
-  project_id: string;
-  name: string;
-  description: string;
-  center_lat: number;
-  center_lng: number;
-  radius_meters: number;
-  address: string;
-  is_active: boolean;
-  auto_clock_in: boolean;
-  auto_clock_out: boolean;
-  total_clock_ins: number;
-  total_clock_outs: number;
-  total_breaches: number;
-}
-
-interface TravelLog {
-  id: string;
-  user_id: string;
-  start_address: string;
-  end_address: string;
-  distance_meters: number;
-  duration_minutes: number;
-  travel_method: string;
-  status: string;
-  is_billable: boolean;
-  total_reimbursement: number;
-  created_at: string;
-}
-
 export const GPSTimeTracking = () => {
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [gpsEntries, setGpsEntries] = useState<GPSTimeEntry[]>([]);
-  const [geofences, setGeofences] = useState<Geofence[]>([]);
-  const [travelLogs, setTravelLogs] = useState<TravelLog[]>([]);
+  const gps = useGPSTimeTracking();
+  const { entries: gpsEntries, geofences, travelLogs } = gps;
   const [showCreateGeofence, setShowCreateGeofence] = useState(false);
 
   // New geofence form
   const [newGeofenceName, setNewGeofenceName] = useState('');
   const [newGeofenceAddress, setNewGeofenceAddress] = useState('');
   const [newGeofenceRadius, setNewGeofenceRadius] = useState('100');
-
-  useEffect(() => {
-    loadGPSData();
-  }, []);
-
-  const loadGPSData = async () => {
-    setLoading(true);
-    try {
-      // Load GPS time entries
-      const { data: entriesData, error: entriesError } = await supabase
-        .from('gps_time_entries')
-        .select('*')
-        .order('clock_in_timestamp', { ascending: false })
-        .limit(50);
-
-      if (entriesError) throw entriesError;
-      setGpsEntries(entriesData || []);
-
-      // Load geofences
-      const { data: geofencesData, error: geofencesError } = await supabase
-        .from('geofences')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (geofencesError) throw geofencesError;
-      setGeofences(geofencesData || []);
-
-      // Load travel logs
-      const { data: travelData, error: travelError } = await supabase
-        .from('travel_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (travelError) throw travelError;
-      setTravelLogs(travelData || []);
-    } catch (error) {
-      console.error('Failed to load GPS data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load GPS tracking data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [newGeofenceLat, setNewGeofenceLat] = useState('');
+  const [newGeofenceLng, setNewGeofenceLng] = useState('');
 
   const createGeofence = async () => {
-    if (!newGeofenceName || !newGeofenceAddress) {
+    const fence = {
+      name: newGeofenceName,
+      address: newGeofenceAddress,
+      // The site's own coordinates. This used to write New York City's for
+      // every address ("placeholder - would be from geocoding").
+      center_lat: newGeofenceLat.trim() === '' ? NaN : Number(newGeofenceLat),
+      center_lng: newGeofenceLng.trim() === '' ? NaN : Number(newGeofenceLng),
+      radius_meters: Number(newGeofenceRadius),
+    };
+    const problem = geofenceProblem(fence);
+    if (problem) {
       toast({
         title: 'Validation Error',
-        description: 'Please provide a name and address for the geofence.',
+        description: problem,
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // In production, you would geocode the address to get lat/lng
-      // For now, using placeholder coordinates
-      const { error } = await supabase
-        .from('geofences')
-        .insert({
-          name: newGeofenceName,
-          address: newGeofenceAddress,
-          center_lat: 40.7128, // Placeholder - would be from geocoding
-          center_lng: -74.0060,
-          radius_meters: parseInt(newGeofenceRadius),
-          is_active: true,
-        });
-
-      if (error) throw error;
+      await gps.create(fence);
 
       toast({
         title: 'Geofence Created',
@@ -156,12 +59,13 @@ export const GPSTimeTracking = () => {
       setNewGeofenceName('');
       setNewGeofenceAddress('');
       setNewGeofenceRadius('100');
-      loadGPSData();
+      setNewGeofenceLat('');
+      setNewGeofenceLng('');
     } catch (error) {
       console.error('Failed to create geofence:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create geofence.',
+        description: error instanceof Error ? error.message : 'Failed to create geofence.',
         variant: 'destructive',
       });
     }
@@ -169,12 +73,7 @@ export const GPSTimeTracking = () => {
 
   const toggleGeofence = async (geofenceId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('geofences')
-        .update({ is_active: !currentStatus })
-        .eq('id', geofenceId);
-
-      if (error) throw error;
+      await gps.setActive(geofenceId, !currentStatus);
 
       toast({
         title: currentStatus ? 'Geofence Disabled' : 'Geofence Enabled',
@@ -182,13 +81,11 @@ export const GPSTimeTracking = () => {
           ? 'Geofence has been disabled.'
           : 'Geofence is now active.',
       });
-
-      loadGPSData();
     } catch (error) {
       console.error('Failed to toggle geofence:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update geofence.',
+        description: error instanceof Error ? error.message : 'Failed to update geofence.',
         variant: 'destructive',
       });
     }
@@ -210,7 +107,7 @@ export const GPSTimeTracking = () => {
     return `${hours}h ${mins}min`;
   };
 
-  if (loading) {
+  if (gps.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="GPS Time Tracking">
       <DashboardLayout hasAccessibleWrapper title="GPS Time Tracking">
@@ -235,6 +132,15 @@ export const GPSTimeTracking = () => {
       description="Location-based time tracking with geofencing and travel logs"
     >
       <div className="space-y-6">
+        {gps.error && (
+          <ErrorState
+            inline
+            title="GPS tracking data could not be loaded"
+            error={gps.error}
+            onRetry={() => { void gps.refetch(); }}
+          />
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -242,7 +148,7 @@ export const GPSTimeTracking = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">GPS Entries</p>
-                  <p className="text-2xl font-bold">{gpsEntries.length}</p>
+                  <p className="text-2xl font-bold">{gps.error ? '--' : gpsEntries.length}</p>
                 </div>
                 <Clock className="w-8 h-8 text-blue-500" />
               </div>
@@ -255,7 +161,7 @@ export const GPSTimeTracking = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Active Geofences</p>
                   <p className="text-2xl font-bold">
-                    {geofences.filter((g) => g.is_active).length}
+                    {gps.error ? '--' : geofences.filter((g) => g.is_active).length}
                   </p>
                 </div>
                 <Map className="w-8 h-8 text-green-500" />
@@ -268,7 +174,7 @@ export const GPSTimeTracking = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Travel Distance</p>
-                  <p className="text-2xl font-bold">{formatDistance(totalTravelDistance)}</p>
+                  <p className="text-2xl font-bold">{gps.error ? '--' : formatDistance(totalTravelDistance)}</p>
                 </div>
                 <Route className="w-8 h-8 text-purple-500" />
               </div>
@@ -280,7 +186,7 @@ export const GPSTimeTracking = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Reimbursement</p>
-                  <p className="text-2xl font-bold">${totalReimbursement.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{gps.error ? '--' : `$${totalReimbursement.toFixed(2)}`}</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-construction-orange" />
               </div>
@@ -410,6 +316,31 @@ export const GPSTimeTracking = () => {
                       value={newGeofenceAddress}
                       onChange={(e) => setNewGeofenceAddress(e.target.value)}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="geofence-lat">Latitude</Label>
+                      <Input
+                        id="geofence-lat"
+                        type="number"
+                        step="any"
+                        placeholder="e.g., 39.7392"
+                        value={newGeofenceLat}
+                        onChange={(e) => setNewGeofenceLat(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="geofence-lng">Longitude</Label>
+                      <Input
+                        id="geofence-lng"
+                        type="number"
+                        step="any"
+                        placeholder="e.g., -104.9903"
+                        value={newGeofenceLng}
+                        onChange={(e) => setNewGeofenceLng(e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -562,11 +493,11 @@ export const GPSTimeTracking = () => {
                       <div className="grid grid-cols-4 gap-4">
                         <div>
                           <p className="text-xs text-muted-foreground">Distance</p>
-                          <p className="font-semibold">{formatDistance(log.distance_meters)}</p>
+                          <p className="font-semibold">{log.distance_meters == null ? '--' : formatDistance(log.distance_meters)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Duration</p>
-                          <p className="font-semibold">{formatDuration(log.duration_minutes)}</p>
+                          <p className="font-semibold">{log.duration_minutes == null ? '--' : formatDuration(log.duration_minutes)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Reimbursement</p>

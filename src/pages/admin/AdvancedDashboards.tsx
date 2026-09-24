@@ -1,86 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAdvancedDashboards } from '@/hooks/useAdvancedDashboards';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity } from 'lucide-react';
 
-interface FinancialSnapshot {
-  total_revenue: number;
-  total_costs: number;
-  gross_profit: number;
-  profit_margin: number;
-  cash_on_hand: number;
-  accounts_receivable: number;
-  active_projects_count: number;
-}
-
-interface KPIMetric {
-  metric_name: string;
-  metric_value: number;
-  metric_target: number;
-  change_percentage: number;
-  trend: string;
-}
+const money = (n: number | null | undefined) => (n == null ? '--' : `$${n.toLocaleString()}`);
+const count = (n: number | null | undefined) => (n == null ? '--' : n.toLocaleString());
 
 export function AdvancedDashboards() {
-  const { user } = useAuth();
-  const [snapshot, setSnapshot] = useState<FinancialSnapshot | null>(null);
-  const [kpis, setKpis] = useState<KPIMetric[]>([]);
-
-  useEffect(() => {
-    loadFinancialSnapshot();
-    loadKPIs();
-  }, [user]);
-
-  const loadFinancialSnapshot = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('financial_snapshots')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('snapshot_date', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      setSnapshot(data);
-    } catch (error) {
-      console.error('Error loading snapshot:', error);
-    }
-  };
-
-  const loadKPIs = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('kpi_metrics')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .eq('metric_date', today);
-
-      if (error) throw error;
-      setKpis(data || []);
-    } catch (error) {
-      console.error('Error loading KPIs:', error);
-    }
-  };
+  const dashboards = useAdvancedDashboards();
+  const snapshot = dashboards.data?.snapshot ?? null;
+  const kpis = dashboards.data?.kpis ?? [];
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -105,6 +35,22 @@ export function AdvancedDashboards() {
         <BarChart3 className="h-12 w-12 text-purple-600 opacity-50" />
       </div>
 
+      {dashboards.error && (
+        <ErrorState
+          inline
+          title="Dashboard data could not be loaded"
+          error={dashboards.error}
+          onRetry={() => { void dashboards.refetch(); }}
+        />
+      )}
+      {dashboards.data && !dashboards.data.snapshot && (
+        <p className="text-sm text-muted-foreground">
+          {dashboards.data.tenantId
+            ? 'No financial snapshot has been taken yet, so these figures are blank rather than zero.'
+            : 'Your profile is not linked to a tenant, so there are no snapshots to show.'}
+        </p>
+      )}
+
       <Tabs defaultValue="financial" className="space-y-4">
         <TabsList>
           <TabsTrigger value="financial">Financial Overview</TabsTrigger>
@@ -123,7 +69,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${snapshot?.total_revenue?.toLocaleString() || 0}
+                  {money(snapshot?.total_revenue)}
                 </div>
               </CardContent>
             </Card>
@@ -134,7 +80,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${snapshot?.total_costs?.toLocaleString() || 0}
+                  {money(snapshot?.total_costs)}
                 </div>
               </CardContent>
             </Card>
@@ -145,7 +91,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  ${snapshot?.gross_profit?.toLocaleString() || 0}
+                  {money(snapshot?.gross_profit)}
                 </div>
               </CardContent>
             </Card>
@@ -156,7 +102,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {snapshot?.profit_margin?.toFixed(1) || 0}%
+                  {snapshot?.profit_margin == null ? '--' : `${snapshot.profit_margin.toFixed(1)}%`}
                 </div>
               </CardContent>
             </Card>
@@ -169,7 +115,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-600">
-                  ${snapshot?.cash_on_hand?.toLocaleString() || 0}
+                  {money(snapshot?.cash_on_hand)}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">Available Cash</p>
               </CardContent>
@@ -181,7 +127,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-orange-600">
-                  ${snapshot?.accounts_receivable?.toLocaleString() || 0}
+                  {money(snapshot?.accounts_receivable)}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">Outstanding</p>
               </CardContent>
@@ -193,7 +139,7 @@ export function AdvancedDashboards() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">
-                  {snapshot?.active_projects_count || 0}
+                  {count(snapshot?.active_projects_count)}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">In Progress</p>
               </CardContent>
@@ -207,7 +153,9 @@ export function AdvancedDashboards() {
             {kpis.length === 0 ? (
               <Card className="col-span-2">
                 <CardContent className="flex items-center justify-center py-12">
-                  <p className="text-muted-foreground">No KPI data available</p>
+                  <p className="text-muted-foreground">
+                    {dashboards.error ? 'KPIs could not be loaded; see the error above.' : 'No KPI data available'}
+                  </p>
                 </CardContent>
               </Card>
             ) : (

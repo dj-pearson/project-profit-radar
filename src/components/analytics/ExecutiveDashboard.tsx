@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,292 +29,19 @@ import {
   CheckCircle,
   Download
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { useExecutiveDashboard, type ExecutivePeriod, type ProjectHealth } from '@/hooks/useExecutiveDashboard';
+import { ErrorState } from '@/components/common/ErrorState';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
-interface ExecutiveMetrics {
-  totalRevenue: number;
-  revenueGrowth: number;
-  totalProjects: number;
-  activeProjects: number;
-  completedProjects: number;
-  avgProfitMargin: number;
-  onTimeDelivery: number;
-  onBudgetProjects: number;
-  teamUtilization: number;
-  customerSatisfaction: number;
-  cashFlow: number;
-  pendingInvoices: number;
-}
-
-interface TrendData {
-  period: string;
-  revenue: number;
-  projects: number;
-  costs: number;
-  profit: number;
-  efficiency: number;
-}
-
-interface ProjectHealth {
-  id: string;
-  name: string;
-  status: 'healthy' | 'warning' | 'critical';
-  completion: number;
-  budgetVariance: number;
-  scheduleVariance: number;
-  riskScore: number;
-}
+const pct = (n: number | null | undefined) => (n == null ? '--' : `${n.toFixed(1)}%`);
 
 const ExecutiveDashboard: React.FC = () => {
-  const { userProfile } = useAuth();
-  const { toast } = useToast();
-  const [selectedPeriod, setSelectedPeriod] = useState('last_12_months');
-  const [loading, setLoading] = useState(true);
-  const [executiveMetrics, setExecutiveMetrics] = useState<ExecutiveMetrics>({
-    totalRevenue: 0,
-    revenueGrowth: 0,
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    avgProfitMargin: 0,
-    onTimeDelivery: 0,
-    onBudgetProjects: 0,
-    teamUtilization: 0,
-    customerSatisfaction: 0,
-    cashFlow: 0,
-    pendingInvoices: 0
-  });
-
-  const [trendData, setTrendData] = useState<TrendData[]>([]);
-  const [projectHealth, setProjectHealth] = useState<ProjectHealth[]>([]);
-
-  useEffect(() => {
-    if (userProfile?.company_id) {
-      loadDashboardData();
-    }
-  }, [userProfile?.company_id, selectedPeriod]);
-
-  const getDateRange = () => {
-    const now = new Date();
-    let startDate: Date;
-    
-    switch (selectedPeriod) {
-      case 'last_30_days':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case 'last_3_months':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-        break;
-      case 'last_6_months':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-        break;
-      case 'ytd':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default: // last_12_months
-        startDate = new Date(now.getFullYear(), now.getMonth() - 12, 1);
-    }
-    
-    return {
-      start: startDate.toISOString().split('T')[0],
-      end: now.toISOString().split('T')[0]
-    };
-  };
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      const dateRange = getDateRange();
-      
-      await Promise.all([
-        loadExecutiveMetrics(dateRange),
-        loadTrendData(dateRange),
-        loadProjectHealth()
-      ]);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load dashboard data"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadExecutiveMetrics = async (dateRange: { start: string; end: string }) => {
-    const { data: projects } = await supabase
-      .from('projects')
-      .select(`
-        id, name, budget, status, completion_percentage, start_date, end_date,
-        job_costs(total_cost, labor_cost, material_cost, equipment_cost)
-      `)
-      .eq('company_id', userProfile!.company_id);
-
-    const { data: invoices } = await supabase
-      .from('invoices')
-      .select('total_amount, status, issue_date')
-      .eq('company_id', userProfile!.company_id)
-      .gte('issue_date', dateRange.start)
-      .lte('issue_date', dateRange.end);
-
-    if (projects && invoices) {
-      const totalRevenue = invoices
-        .filter(inv => inv.status === 'paid')
-        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-
-      const totalProjects = projects.length;
-      const activeProjects = projects.filter(p => p.status === 'active').length;
-      const completedProjects = projects.filter(p => p.status === 'completed').length;
-
-      const projectsWithCosts = projects.map(project => {
-        const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
-        const profitMargin = (project.budget ?? 0) > 0 ? (((project.budget ?? 0) - totalCosts) / (project.budget ?? 0)) * 100 : 0;
-        return { ...project, totalCosts, profitMargin };
-      });
-
-      const avgProfitMargin = projectsWithCosts.length > 0 
-        ? projectsWithCosts.reduce((sum, p) => sum + p.profitMargin, 0) / projectsWithCosts.length 
-        : 0;
-
-      const onTimeProjects = projects.filter(p => {
-        if (!p.end_date || p.status !== 'completed') return false;
-        return new Date(p.end_date) <= new Date();
-      }).length;
-
-      const onBudgetProjects = projectsWithCosts.filter(p => p.profitMargin >= 0).length;
-
-      const pendingInvoices = invoices
-        .filter(inv => inv.status === 'pending')
-        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-
-      setExecutiveMetrics({
-        totalRevenue,
-        revenueGrowth: 0, // Would need historical data to calculate
-        totalProjects,
-        activeProjects,
-        completedProjects,
-        avgProfitMargin,
-        onTimeDelivery: totalProjects > 0 ? (onTimeProjects / totalProjects) * 100 : 0,
-        onBudgetProjects: totalProjects > 0 ? (onBudgetProjects / totalProjects) * 100 : 0,
-        teamUtilization: 85, // Would need time tracking data
-        customerSatisfaction: 4.5, // Would need feedback data
-        cashFlow: totalRevenue - pendingInvoices,
-        pendingInvoices
-      });
-    }
-  };
-
-  const loadTrendData = async (dateRange: { start: string; end: string }) => {
-    const { data: monthlyData } = await supabase
-      .from('invoices')
-      .select('total_amount, issue_date, status')
-      .eq('company_id', userProfile!.company_id)
-      .gte('issue_date', dateRange.start)
-      .lte('issue_date', dateRange.end);
-
-    const { data: expenses } = await supabase
-      .from('expenses')
-      .select('amount, expense_date')
-      .eq('company_id', userProfile!.company_id)
-      .gte('expense_date', dateRange.start)
-      .lte('expense_date', dateRange.end);
-
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('id, created_at')
-      .eq('company_id', userProfile!.company_id)
-      .gte('created_at', dateRange.start)
-      .lte('created_at', dateRange.end);
-
-    if (monthlyData && expenses && projects) {
-      const monthlyTrends = new Map<string, { revenue: number; costs: number; projects: number }>();
-
-      monthlyData.forEach(invoice => {
-        const month = new Date(invoice.issue_date).toLocaleDateString('en', { month: 'short' });
-        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
-        if (invoice.status === 'paid') {
-          current.revenue += invoice.total_amount || 0;
-        }
-        monthlyTrends.set(month, current);
-      });
-
-      expenses.forEach(expense => {
-        const month = new Date(expense.expense_date).toLocaleDateString('en', { month: 'short' });
-        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
-        current.costs += expense.amount || 0;
-        monthlyTrends.set(month, current);
-      });
-
-      projects.forEach(project => {
-        const month = new Date(project.created_at).toLocaleDateString('en', { month: 'short' });
-        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
-        current.projects += 1;
-        monthlyTrends.set(month, current);
-      });
-
-      const trendArray = Array.from(monthlyTrends.entries()).map(([period, data]) => ({
-        period,
-        revenue: data.revenue,
-        projects: data.projects,
-        costs: data.costs,
-        profit: data.revenue - data.costs,
-        efficiency: data.revenue > 0 ? Math.min(100, ((data.revenue - data.costs) / data.revenue) * 100) : 0
-      }));
-
-      setTrendData(trendArray);
-    }
-  };
-
-  const loadProjectHealth = async () => {
-    const { data: projects } = await supabase
-      .from('projects')
-      .select(`
-        id, name, budget, completion_percentage, start_date, end_date, status,
-        job_costs(total_cost)
-      `)
-      .eq('company_id', userProfile!.company_id)
-      .eq('status', 'active')
-      .limit(10);
-
-    if (projects) {
-      const healthData: ProjectHealth[] = projects.map(project => {
-        const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
-        const budgetVariance = (project.budget ?? 0) > 0 ? ((totalCosts - (project.budget ?? 0)) / (project.budget ?? 0)) * 100 : 0;
-        
-        const scheduleVariance = project.end_date 
-          ? Math.ceil((new Date(project.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-          : 0;
-
-        let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-        let riskScore = 1;
-
-        if (budgetVariance > 10 || scheduleVariance < -10) {
-          status = 'critical';
-          riskScore = 8;
-        } else if (budgetVariance > 5 || scheduleVariance < -5) {
-          status = 'warning';
-          riskScore = 5;
-        }
-
-        return {
-          id: project.id,
-          name: project.name,
-          status,
-          completion: project.completion_percentage || 0,
-          budgetVariance,
-          scheduleVariance,
-          riskScore
-        };
-      });
-
-      setProjectHealth(healthData);
-    }
-  };
+  const [selectedPeriod, setSelectedPeriod] = useState<ExecutivePeriod>('last_12_months');
+  const dashboard = useExecutiveDashboard(selectedPeriod);
+  const executiveMetrics = dashboard.data?.metrics;
+  const trendData = dashboard.data?.trend ?? [];
+  const projectHealth = dashboard.data?.projectHealth ?? [];
+  const riskCounts = dashboard.data?.riskCounts;
 
   const chartConfig = {
     revenue: {
@@ -352,9 +79,19 @@ const ExecutiveDashboard: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (dashboard.isLoading) {
     return (
       <DashboardSkeleton label="Loading analytics" />
+    );
+  }
+
+  if (dashboard.error || !executiveMetrics) {
+    return (
+      <ErrorState
+        title="The executive dashboard could not be loaded"
+        error={dashboard.error ?? 'Your account is not linked to a company.'}
+        onRetry={dashboard.error ? () => { void dashboard.refetch(); } : undefined}
+      />
     );
   }
 
@@ -367,7 +104,7 @@ const ExecutiveDashboard: React.FC = () => {
           <p className="text-muted-foreground">High-level business insights and performance metrics</p>
         </div>
         <div className="flex items-center space-x-4">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as ExecutivePeriod)}>
             <SelectTrigger className="w-48" aria-label="Reporting period">
               <SelectValue />
             </SelectTrigger>
@@ -386,55 +123,44 @@ const ExecutiveDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Key Performance Indicators */}
+      {/* Key Performance Indicators. No change badges: nothing here reads a
+          prior period to compare against, so any delta would be invented. */}
       <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4, xl: 6 }}>
         <KPICard
-          title="Total Revenue"
+          title="Revenue"
           value={`$${(executiveMetrics.totalRevenue / 1000000).toFixed(1)}M`}
           icon={DollarSign}
-          subtitle="Annual"
-          change={`+${executiveMetrics.revenueGrowth}%`}
-          changeType="positive"
+          subtitle="Paid invoices, this period"
         />
         <KPICard
           title="Active Projects"
           value={executiveMetrics.activeProjects}
           icon={Building2}
           subtitle={`of ${executiveMetrics.totalProjects} total`}
-          change="+3"
-          changeType="positive"
         />
         <KPICard
           title="Profit Margin"
-          value={`${executiveMetrics.avgProfitMargin.toFixed(1)}%`}
+          value={pct(executiveMetrics.avgProfitMargin)}
           icon={TrendingUp}
-          subtitle="Average"
-          change="+2.1%"
-          changeType="positive"
+          subtitle="Average, budget less job costs"
         />
         <KPICard
           title="On-Time Delivery"
-          value={`${executiveMetrics.onTimeDelivery.toFixed(1)}%`}
+          value={pct(executiveMetrics.onTimeDelivery)}
           icon={Target}
           subtitle="Project delivery"
-          change="+5.2%"
-          changeType="positive"
         />
         <KPICard
           title="Team Utilization"
-          value={`${executiveMetrics.teamUtilization.toFixed(1)}%`}
+          value="--"
           icon={Users}
-          subtitle="Resource efficiency"
-          change="+3.8%"
-          changeType="positive"
+          subtitle="Not tracked yet"
         />
         <KPICard
           title="Cash Flow"
           value={`$${(executiveMetrics.cashFlow / 1000).toFixed(0)}K`}
           icon={Activity}
-          subtitle="Current month"
-          change="+$42K"
-          changeType="positive"
+          subtitle="Paid less pending, this period"
         />
       </ResponsiveGrid>
 
@@ -536,12 +262,12 @@ const ExecutiveDashboard: React.FC = () => {
                 <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">YTD Revenue</p>
+                      <p className="text-sm text-muted-foreground">Invoiced</p>
                       <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                        $3.2M
+                        ${executiveMetrics.totalInvoiced.toLocaleString()}
                       </p>
                       <p className="text-xs text-green-600 dark:text-green-400">
-                        +28% vs last year
+                        {executiveMetrics.invoiceCount} invoices this period
                       </p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-green-600" />
@@ -551,12 +277,12 @@ const ExecutiveDashboard: React.FC = () => {
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Avg Deal Size</p>
+                      <p className="text-sm text-muted-foreground">Avg Invoice</p>
                       <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                        $68K
+                        {executiveMetrics.avgInvoice == null ? '--' : `$${Math.round(executiveMetrics.avgInvoice).toLocaleString()}`}
                       </p>
                       <p className="text-xs text-blue-600 dark:text-blue-400">
-                        +12% vs last year
+                        This period
                       </p>
                     </div>
                     <DollarSign className="h-8 w-8 text-blue-600" />
@@ -568,10 +294,10 @@ const ExecutiveDashboard: React.FC = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Collection Rate</p>
                       <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                        94.2%
+                        {pct(executiveMetrics.collectionRate)}
                       </p>
                       <p className="text-xs text-orange-600 dark:text-orange-400">
-                        +2.1% vs last year
+                        Paid of invoiced, this period
                       </p>
                     </div>
                     <CheckCircle className="h-8 w-8 text-purple-600" />
@@ -583,10 +309,10 @@ const ExecutiveDashboard: React.FC = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">ROI</p>
                       <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                        124%
+                        --
                       </p>
                       <p className="text-xs text-orange-600 dark:text-orange-400">
-                        +18% vs last year
+                        Not tracked yet
                       </p>
                     </div>
                     <Target className="h-8 w-8 text-orange-600" />
@@ -605,6 +331,9 @@ const ExecutiveDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {projectHealth.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No active projects.</p>
+                )}
                 {projectHealth.map((project) => (
                   <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
                     <div className="flex items-center space-x-4">
@@ -672,23 +401,25 @@ const ExecutiveDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Average Project Duration</span>
-                    <span className="font-medium">127 days</span>
+                    <span className="font-medium">
+                      {executiveMetrics.avgProjectDurationDays == null ? '--' : `${executiveMetrics.avgProjectDurationDays} days`}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Cost per Square Foot</span>
-                    <span className="font-medium">$142</span>
+                    <span className="font-medium">--</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Change Order Rate</span>
-                    <span className="font-medium">8.3%</span>
+                    <span className="font-medium">--</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Safety Incident Rate</span>
-                    <span className="font-medium">0.2%</span>
+                    <span className="font-medium">--</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Client Retention Rate</span>
-                    <span className="font-medium">94.5%</span>
+                    <span className="font-medium">--</span>
                   </div>
                 </div>
               </CardContent>
@@ -710,7 +441,7 @@ const ExecutiveDashboard: React.FC = () => {
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>
                   <p className="text-sm text-red-700 dark:text-red-300">
-                    2 projects significantly over budget requiring immediate attention
+                    {riskCounts ? riskCounts.critical : '--'} active projects more than 10% over budget or 10+ days past their end date
                   </p>
                 </div>
 
@@ -720,7 +451,7 @@ const ExecutiveDashboard: React.FC = () => {
                     <Clock className="h-5 w-5 text-yellow-600" />
                   </div>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    5 projects showing schedule delays of 5+ days
+                    {riskCounts ? riskCounts.warning : '--'} active projects 5-10% over budget or 5+ days past their end date
                   </p>
                 </div>
 
@@ -730,7 +461,7 @@ const ExecutiveDashboard: React.FC = () => {
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   </div>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    11 projects on track with minimal risk exposure
+                    {riskCounts ? riskCounts.healthy : '--'} active projects within budget and schedule
                   </p>
                 </div>
               </div>

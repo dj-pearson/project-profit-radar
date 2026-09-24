@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,51 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertTriangle, Shield, Activity, Bell, TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useSecurityMonitoringDashboard, type SecurityAlert } from '@/hooks/useSecurityMonitoringDashboard';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/components/ui/use-toast';
 import { AdminOnly } from '@/components/PermissionGate';
 import { activateOnKey } from '@/lib/accessibility';
 
-interface SecurityAlert {
-  id: string;
-  alert_type: string;
-  severity: string;
-  title: string;
-  description: string;
-  status: string;
-  triggered_at: string;
-  acknowledged_at?: string;
-  resolved_at?: string;
-  event_data: any;
-}
-
-interface MonitoringRule {
-  id: string;
-  rule_name: string;
-  rule_type: string;
-  severity: string;
-  is_active: boolean;
-  threshold_value?: number;
-  threshold_period_minutes?: number;
-  recipients: string[];
-}
-
-interface SecurityMetrics {
-  total_alerts: number;
-  critical_alerts: number;
-  resolved_alerts: number;
-  resolution_rate: number;
-  avg_resolution_time_hours: number;
-  failed_logins_24h: number;
-}
-
 export const SecurityMonitoringDashboard = () => {
-  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
-  const [rules, setRules] = useState<MonitoringRule[]>([]);
-  const [metrics, setMetrics] = useState<SecurityMetrics | null>(null);
-  const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
+  const monitoring = useSecurityMonitoringDashboard();
+  const { alerts, rules, metrics } = monitoring;
+  const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
+  // From the list, so a status change shows in the open dialog.
+  const selectedAlert = alerts.find((a) => a.id === selectedAlertId) ?? null;
+  const setSelectedAlert = (alert: SecurityAlert | null) => setSelectedAlertId(alert?.id ?? null);
   const [isCreateRuleOpen, setIsCreateRuleOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const [newRule, setNewRule] = useState({
@@ -66,98 +35,19 @@ export const SecurityMonitoringDashboard = () => {
     recipients: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadSecurityAlerts(),
-        loadMonitoringRules(),
-        loadSecurityMetrics()
-      ]);
-    } catch (error) {
-      console.error('Error loading security monitoring data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load security monitoring data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadSecurityAlerts = async () => {
-    const { data, error } = await supabase
-      .from('security_alerts')
-      .select('*')
-      .order('triggered_at', { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-    setAlerts(data || []);
-  };
-
-  const loadMonitoringRules = async () => {
-    const { data, error } = await supabase
-      .from('security_monitoring_rules')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setRules(data || []);
-  };
-
-  const loadSecurityMetrics = async () => {
-    // Get current user's company
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('company_id')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
-      .single();
-
-    if (profile?.company_id) {
-      const { data, error } = await supabase.rpc('calculate_security_metrics', {
-        p_company_id: profile.company_id
-      });
-
-      if (error) throw error;
-      setMetrics(data as unknown as SecurityMetrics);
-    }
-  };
-
   const createMonitoringRule = async () => {
     try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!profile?.company_id) {
-        throw new Error('Company not found');
-      }
-
       const recipients = newRule.recipients.split(',').map(r => r.trim()).filter(r => r);
 
-      const { error } = await supabase
-        .from('security_monitoring_rules')
-        .insert({
-          company_id: profile.company_id,
-          rule_name: newRule.rule_name,
-          rule_type: newRule.rule_type,
-          severity: newRule.severity,
-          description: newRule.description,
-          threshold_value: newRule.threshold_value,
-          threshold_period_minutes: newRule.threshold_period_minutes,
-          recipients: recipients,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        });
-
-      if (error) throw error;
+      await monitoring.addRule({
+        rule_name: newRule.rule_name,
+        rule_type: newRule.rule_type,
+        severity: newRule.severity,
+        description: newRule.description,
+        threshold_value: newRule.threshold_value,
+        threshold_period_minutes: newRule.threshold_period_minutes,
+        recipients,
+      });
 
       toast({
         title: "Success",
@@ -174,12 +64,11 @@ export const SecurityMonitoringDashboard = () => {
         recipients: ''
       });
       setIsCreateRuleOpen(false);
-      loadMonitoringRules();
     } catch (error) {
       console.error('Error creating monitoring rule:', error);
       toast({
         title: "Error",
-        description: "Failed to create monitoring rule",
+        description: error instanceof Error ? error.message : "Failed to create monitoring rule",
         variant: "destructive",
       });
     }
@@ -187,36 +76,17 @@ export const SecurityMonitoringDashboard = () => {
 
   const updateAlertStatus = async (alertId: string, status: string, notes?: string) => {
     try {
-      const { error } = await supabase
-        .from('security_alerts')
-        .update({
-          status,
-          ...(status === 'resolved' && { 
-            resolved_at: new Date().toISOString(),
-            resolved_by: (await supabase.auth.getUser()).data.user?.id,
-            resolution_notes: notes
-          }),
-          ...(status === 'investigating' && {
-            acknowledged_at: new Date().toISOString(),
-            acknowledged_by: (await supabase.auth.getUser()).data.user?.id
-          })
-        })
-        .eq('id', alertId);
-
-      if (error) throw error;
+      await monitoring.setAlertStatus(alertId, status, notes);
 
       toast({
         title: "Success",
         description: "Alert status updated successfully",
       });
-
-      loadSecurityAlerts();
-      loadSecurityMetrics();
     } catch (error) {
       console.error('Error updating alert status:', error);
       toast({
         title: "Error",
-        description: "Failed to update alert status",
+        description: error instanceof Error ? error.message : "Failed to update alert status",
         variant: "destructive",
       });
     }
@@ -242,7 +112,7 @@ export const SecurityMonitoringDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (monitoring.isLoading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -261,6 +131,19 @@ export const SecurityMonitoringDashboard = () => {
     );
   }
 
+  if (monitoring.error) {
+    return (
+      <ErrorState
+        title="Security monitoring could not be loaded"
+        error={monitoring.error}
+        onRetry={() => { void monitoring.refetch(); }}
+      />
+    );
+  }
+
+  // The metrics RPC can return nothing; that is '--', not zero alerts.
+  const metric = (n: number | undefined, suffix = '') => (n == null ? '--' : `${n}${suffix}`);
+
   return (
     <div className="space-y-6">
       {/* Security Metrics Cards */}
@@ -270,7 +153,7 @@ export const SecurityMonitoringDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Alerts</p>
-                <p className="text-2xl font-bold">{metrics?.total_alerts || 0}</p>
+                <p className="text-2xl font-bold">{metric(metrics?.total_alerts)}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-orange-500" />
             </div>
@@ -282,7 +165,7 @@ export const SecurityMonitoringDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Critical Alerts</p>
-                <p className="text-2xl font-bold text-red-600">{metrics?.critical_alerts || 0}</p>
+                <p className="text-2xl font-bold text-red-600">{metric(metrics?.critical_alerts)}</p>
               </div>
               <Shield className="h-8 w-8 text-red-500" />
             </div>
@@ -294,7 +177,7 @@ export const SecurityMonitoringDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Resolution Rate</p>
-                <p className="text-2xl font-bold text-green-600">{metrics?.resolution_rate || 0}%</p>
+                <p className="text-2xl font-bold text-green-600">{metric(metrics?.resolution_rate, '%')}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
@@ -306,7 +189,7 @@ export const SecurityMonitoringDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg Resolution Time</p>
-                <p className="text-2xl font-bold">{metrics?.avg_resolution_time_hours || 0}h</p>
+                <p className="text-2xl font-bold">{metric(metrics?.avg_resolution_time_hours, 'h')}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-500" />
             </div>

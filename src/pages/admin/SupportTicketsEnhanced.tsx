@@ -10,7 +10,8 @@ import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupportTickets, type SupportTicket } from "@/hooks/useSupportTickets";
+import { ErrorState } from "@/components/common/ErrorState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,52 +22,22 @@ import { UserContextPanel } from "@/components/admin/UserContextPanel";
 import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Sparkles, Send, Copy } from "lucide-react";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface SupportTicket {
-  id: string;
-  ticket_number: string;
-  customer_email: string;
-  customer_name: string;
-  subject: string;
-  description: string;
-  category: string;
-  priority: "low" | "medium" | "high" | "urgent";
-  status: "open" | "in_progress" | "resolved" | "closed";
-  assigned_to: string | null;
-  source: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface SupportMessage {
-  id: string;
-  ticket_id: string;
-  sender_type: "user" | "support" | "system";
-  sender_name: string;
-  sender_email: string | null;
-  content: string;
-  created_at: string;
-}
-
-interface AISuggestion {
-  id: string;
-  suggestion_type: string;
-  confidence_score: number;
-  suggested_category?: string;
-  suggested_priority?: string;
-  suggested_content?: string;
-  kb_article_id?: string;
-}
-
 const SupportTicketsEnhanced = () => {
   const { user, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [messages, setMessages] = useState<Record<string, SupportMessage[]>>({});
-  const [suggestions, setSuggestions] = useState<Record<string, AISuggestion[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const support = useSupportTickets({
+    enabled: userProfile?.role === "root_admin",
+    selectedTicketId,
+    withSuggestions: true,
+  });
+  const tickets = support.tickets.data ?? [];
+  // From the list, so a status change shows in the open dialog.
+  const selectedTicket = tickets.find((t) => t.id === selectedTicketId) ?? null;
+  const ticketMessages = support.messages.data ?? [];
+  const ticketSuggestions = support.suggestions.data ?? [];
   const [responseMessage, setResponseMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -86,80 +57,17 @@ const SupportTicketsEnhanced = () => {
       });
       return;
     }
-
-    if (userProfile?.role === "root_admin") {
-      loadTickets();
-    }
   }, [user, userProfile, authLoading, navigate]);
-
-  const loadTickets = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("support_tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setTickets((data || []) as SupportTicket[]);
-    } catch (error) {
-      console.error("Error loading tickets:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load support tickets",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async (ticketId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("support_messages")
-        .select("*")
-        .eq("ticket_id", ticketId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      setMessages((prev) => ({ ...prev, [ticketId]: (data || []) as SupportMessage[] }));
-    } catch (error) {
-      console.error("Error loading messages:", error);
-    }
-  };
-
-  const loadSuggestions = async (ticketId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("support_suggestions")
-        .select("*")
-        .eq("ticket_id", ticketId)
-        .order("confidence_score", { ascending: false });
-
-      if (error) throw error;
-      setSuggestions((prev) => ({ ...prev, [ticketId]: (data || []) as AISuggestion[] }));
-    } catch (error) {
-      console.error("Error loading suggestions:", error);
-    }
-  };
 
   const analyzeTicket = async (ticket: SupportTicket) => {
     setAnalyzingTicket(true);
     try {
-      const { error } = await supabase.functions.invoke("analyze-support-ticket", {
-        body: { ticketId: ticket.id },
-      });
-
-      if (error) throw error;
+      await support.analyze(ticket.id);
 
       toast({
         title: "Success",
         description: "Ticket analyzed successfully",
       });
-
-      // Reload suggestions
-      await loadSuggestions(ticket.id);
     } catch (error: any) {
       console.error("Error analyzing ticket:", error);
       toast({
@@ -174,14 +82,7 @@ const SupportTicketsEnhanced = () => {
 
   const updateTicketStatus = async (ticketId: string, status: string) => {
     try {
-      const { error } = await supabase
-        .from("support_tickets")
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq("id", ticketId);
-
-      if (error) throw error;
-
-      await loadTickets();
+      await support.setStatus(ticketId, status);
       toast({
         title: "Success",
         description: "Ticket status updated successfully",
@@ -191,7 +92,7 @@ const SupportTicketsEnhanced = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update ticket status",
+        description: error instanceof Error ? error.message : "Failed to update ticket status",
       });
     }
   };
@@ -203,20 +104,7 @@ const SupportTicketsEnhanced = () => {
     if (!contentToSend.trim()) return;
 
     try {
-      const { error } = await supabase.from("support_messages").insert({
-        ticket_id: selectedTicket.id,
-        sender_type: "support",
-        sender_name: "Support Team",
-        content: contentToSend,
-      });
-
-      if (error) throw error;
-
-      if (selectedTicket.status === "open") {
-        await updateTicketStatus(selectedTicket.id, "in_progress");
-      }
-
-      await loadMessages(selectedTicket.id);
+      await support.reply(selectedTicket, contentToSend);
       setResponseMessage("");
 
       toast({
@@ -228,7 +116,7 @@ const SupportTicketsEnhanced = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send response",
+        description: error instanceof Error ? error.message : "Failed to send response",
       });
     }
   };
@@ -242,16 +130,15 @@ const SupportTicketsEnhanced = () => {
   };
 
   const handleViewTicket = async (ticket: SupportTicket) => {
-    setSelectedTicket(ticket);
-    await Promise.all([
-      loadMessages(ticket.id),
-      loadSuggestions(ticket.id),
-    ]);
-
-    // Auto-analyze if no suggestions exist
-    const ticketSuggestions = suggestions[ticket.id];
-    if (!ticketSuggestions || ticketSuggestions.length === 0) {
-      await analyzeTicket(ticket);
+    setSelectedTicketId(ticket.id);
+    // Auto-analyze only a ticket with no suggestions yet. This used to test
+    // suggestions state from before the load it had just awaited, so it
+    // re-analyzed on every open.
+    try {
+      const existing = await support.readSuggestions(ticket.id);
+      if (existing.length === 0) await analyzeTicket(ticket);
+    } catch (error) {
+      console.error("Error loading suggestions:", error);
     }
   };
 
@@ -310,7 +197,7 @@ const SupportTicketsEnhanced = () => {
   const inProgressTickets = tickets.filter((t) => t.status === "in_progress").length;
   const resolvedTickets = tickets.filter((t) => t.status === "resolved").length;
 
-  if (loading) {
+  if (support.tickets.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Support Tickets">
       <DashboardLayout hasAccessibleWrapper title="Support Tickets" showTrialBanner={false}>
@@ -327,10 +214,18 @@ const SupportTicketsEnhanced = () => {
         title="Support Tickets" showTrialBanner={false}
         description="AI-powered support with user context and response suggestions"
         headerActions={
-          <Button onClick={loadTickets}>Refresh</Button>
+          <Button onClick={() => { void support.tickets.refetch(); }}>Refresh</Button>
         }
       >
         <div className="space-y-6">
+          {support.tickets.error && (
+            <ErrorState
+              inline
+              title="Support tickets could not be loaded"
+              error={support.tickets.error as Error}
+              onRetry={() => { void support.tickets.refetch(); }}
+            />
+          )}
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -339,7 +234,7 @@ const SupportTicketsEnhanced = () => {
                 <AlertCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{openTickets}</div>
+                <div className="text-2xl font-bold">{support.tickets.error ? '--' : openTickets}</div>
               </CardContent>
             </Card>
             <Card>
@@ -348,7 +243,7 @@ const SupportTicketsEnhanced = () => {
                 <Clock className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{inProgressTickets}</div>
+                <div className="text-2xl font-bold">{support.tickets.error ? '--' : inProgressTickets}</div>
               </CardContent>
             </Card>
             <Card>
@@ -357,7 +252,7 @@ const SupportTicketsEnhanced = () => {
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{resolvedTickets}</div>
+                <div className="text-2xl font-bold">{support.tickets.error ? '--' : resolvedTickets}</div>
               </CardContent>
             </Card>
           </div>
@@ -472,7 +367,7 @@ const SupportTicketsEnhanced = () => {
                                   </div>
 
                                   {/* AI Suggestions */}
-                                  {suggestions[selectedTicket.id]?.length > 0 && (
+                                  {ticketSuggestions.length > 0 && (
                                     <Card>
                                       <CardHeader>
                                         <CardTitle className="text-sm flex items-center">
@@ -481,7 +376,7 @@ const SupportTicketsEnhanced = () => {
                                         </CardTitle>
                                       </CardHeader>
                                       <CardContent className="space-y-4">
-                                        {suggestions[selectedTicket.id]
+                                        {ticketSuggestions
                                           .filter((s) => s.suggested_content)
                                           .map((suggestion) => (
                                             <div key={suggestion.id} className="p-3 border rounded">
@@ -509,7 +404,15 @@ const SupportTicketsEnhanced = () => {
 
                                   {/* Messages */}
                                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                                    {messages[selectedTicket.id]?.map((message) => (
+                                    {support.messages.error && (
+                                      <ErrorState
+                                        inline
+                                        title="Messages could not be loaded"
+                                        error={support.messages.error as Error}
+                                        onRetry={() => { void support.messages.refetch(); }}
+                                      />
+                                    )}
+                                    {ticketMessages.map((message) => (
                                       <div
                                         key={message.id}
                                         className={`p-3 rounded-lg ${

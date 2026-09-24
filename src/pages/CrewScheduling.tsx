@@ -13,52 +13,22 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AccessibleForm, AccessibleFormField } from '@/components/accessibility/AccessibleForm';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useCrewScheduling, type CrewProject } from '@/hooks/useCrewScheduling';
+import { ErrorState } from '@/components/common/ErrorState';
 import VisualScheduler from '@/components/scheduling/VisualScheduler';
 import { CrewScheduleBoard } from '@/components/scheduling/CrewScheduleBoard';
 import { Calendar, Users, Plus, MapPin, Clock, Phone, Trash2 } from 'lucide-react';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface CrewProject {
-  id: string;
-  name: string;
-  description: string | null;
-  site_address: string | null;
-}
-
-interface CrewMember {
-  id: string;
-  name: string;
-  role: string;
-  phone?: string;
-  skills: string[];
-  availability: string[];
-}
-
-interface CrewAssignment {
-  id: string;
-  project_id: string;
-  project_name: string;
-  crew_member_id: string;
-  crew_member_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  status: 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled';
-  notes?: string;
-}
-
 const CrewScheduling = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState<CrewProject[]>([]);
-  const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
-  const [assignments, setAssignments] = useState<CrewAssignment[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loadingData, setLoadingData] = useState(true);
+  const crew = useCrewScheduling(selectedDate);
+  const { projects, crewMembers, assignments } = crew;
+  const loadAssignments = () => { void crew.invalidate(); };
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
   const [newAssignment, setNewAssignment] = useState({
@@ -90,108 +60,7 @@ const CrewScheduling = () => {
       });
       return;
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = async () => {
-    try {
-      setLoadingData(true);
-      
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, description, site_address')
-        .eq('company_id', userProfile?.company_id)
-        .eq('status', 'active')
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load crew members (from user_profiles table) - now includes all construction roles
-      const { data: crewData, error: crewError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, role, phone')
-        .eq('company_id', userProfile?.company_id)
-        .in('role', [
-          'admin', 'superintendent', 'project_manager', 'foreman', 'field_supervisor', 
-          'technician', 'equipment_operator', 'journeyman', 'apprentice', 'laborer'
-        ])
-        .eq('is_active', true)
-        .order('first_name');
-
-      if (crewError) throw crewError;
-      
-      const formattedCrew = (crewData || []).map(member => ({
-        id: member.id,
-        name: `${member.first_name} ${member.last_name}`,
-        role: member.role,
-        phone: member.phone,
-        skills: [], // Could be enhanced to store skills
-        availability: ['mon', 'tue', 'wed', 'thu', 'fri'] // Default availability
-      }));
-      
-      setCrewMembers(formattedCrew);
-
-      // Load crew assignments for selected date
-      await loadAssignments();
-
-    } catch (error: unknown) {
-      console.error('Error loading data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load crew scheduling data"
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const loadAssignments = async () => {
-    try {
-      const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('crew_assignments')
-        .select(`
-          *,
-          projects(name, site_address),
-          crew_member:user_profiles!crew_member_id(first_name, last_name)
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .eq('assigned_date', selectedDate)
-        .order('start_time');
-
-      if (assignmentsError) throw assignmentsError;
-
-      const formattedAssignments = (assignmentsData || []).map(assignment => ({
-        id: assignment.id,
-        project_id: assignment.project_id,
-        project_name: assignment.projects?.name || '',
-        crew_member_id: assignment.crew_member_id,
-        crew_member_name: `${assignment.crew_member?.first_name} ${assignment.crew_member?.last_name}`,
-        date: assignment.assigned_date,
-        start_time: assignment.start_time,
-        end_time: assignment.end_time,
-        location: assignment.location || assignment.projects?.site_address || '',
-        status: assignment.status as 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled',
-        notes: assignment.notes
-      }));
-
-      setAssignments(formattedAssignments);
-    } catch (error: unknown) {
-      console.error('Error loading assignments:', error);
-    }
-  };
-
-  // Effect to reload assignments when date changes
-  useEffect(() => {
-    if (userProfile?.company_id) {
-      loadAssignments();
-    }
-  }, [selectedDate, userProfile?.company_id]);
 
   const handleCreateAssignment = async () => {
     if (!newAssignment.project_id || !newAssignment.crew_member_id) {
@@ -199,6 +68,17 @@ const CrewScheduling = () => {
         variant: "destructive",
         title: "Validation Error",
         description: "Please select both a project and crew member."
+      });
+      return;
+    }
+
+    // The conflict check reads the day's assignments; before they load, or
+    // after that read failed, it would pass everything.
+    if (crew.assignmentsLoading || crew.error) {
+      toast({
+        variant: "destructive",
+        title: "Cannot check for conflicts",
+        description: "The day's assignments have not loaded, so a double booking cannot be ruled out."
       });
       return;
     }
@@ -222,23 +102,7 @@ const CrewScheduling = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('crew_assignments')
-        .insert([{
-          company_id: userProfile?.company_id,
-          project_id: newAssignment.project_id,
-          crew_member_id: newAssignment.crew_member_id,
-          assigned_date: newAssignment.date,
-          start_time: newAssignment.start_time,
-          end_time: newAssignment.end_time,
-          location: newAssignment.location,
-          notes: newAssignment.notes,
-          created_by: user?.id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      await crew.create(newAssignment);
 
       toast({
         title: "Success",
@@ -256,40 +120,30 @@ const CrewScheduling = () => {
         notes: ''
       });
 
-      // Reload assignments
-      await loadAssignments();
-      
     } catch (error: unknown) {
       console.error('Error creating assignment:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create crew assignment"
+        description: error instanceof Error ? error.message : "Failed to create crew assignment"
       });
     }
   };
 
   const handleUpdateAssignmentStatus = async (assignmentId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('crew_assignments')
-        .update({ status: newStatus })
-        .eq('id', assignmentId);
-
-      if (error) throw error;
+      await crew.setStatus(assignmentId, newStatus);
 
       toast({
         title: "Success",
         description: `Assignment status updated to ${newStatus}`
       });
-
-      await loadAssignments();
     } catch (error: unknown) {
       console.error('Error updating assignment:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update assignment status"
+        description: error instanceof Error ? error.message : "Failed to update assignment status"
       });
     }
   };
@@ -297,25 +151,18 @@ const CrewScheduling = () => {
   const handleDeleteAssignment = async (assignmentId: string) => {
     if (!(await confirmAction({ title: 'Delete this crew assignment?', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from('crew_assignments')
-        .delete()
-        .eq('id', assignmentId);
-
-      if (error) throw error;
+      await crew.remove(assignmentId);
 
       toast({
         title: "Success",
         description: "Assignment deleted successfully"
       });
-
-      await loadAssignments();
     } catch (error: unknown) {
       console.error('Error deleting assignment:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete assignment"
+        description: error instanceof Error ? error.message : "Failed to delete assignment"
       });
     }
   };
@@ -332,7 +179,7 @@ const CrewScheduling = () => {
 
   const todaysAssignments = assignments.filter(a => a.date === selectedDate);
 
-  if (loading || loadingData) {
+  if (loading || crew.isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="space-y-6">
@@ -470,6 +317,15 @@ const CrewScheduling = () => {
         {/* Weekly drag-and-drop board (US-106) */}
         <CrewScheduleBoard />
 
+        {crew.error && (
+          <ErrorState
+            inline
+            title="Crew scheduling could not be loaded"
+            error={crew.error}
+            onRetry={() => { void crew.refetch(); }}
+          />
+        )}
+
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Today's Assignments */}
@@ -485,7 +341,9 @@ const CrewScheduling = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {todaysAssignments.length === 0 ? (
+                {crew.error ? (
+                  <p className="text-sm text-muted-foreground py-4">Assignments could not be loaded; see the error above.</p>
+                ) : todaysAssignments.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <h3 className="text-lg font-medium mb-2">No Assignments</h3>
@@ -595,7 +453,11 @@ const CrewScheduling = () => {
                             <Phone className="h-3 w-3" aria-hidden="true" />
                           </Button>
                         )}
-                        <Badge variant="outline">Available</Badge>
+                        <Badge variant="outline">
+                          {assignments.some((a) => a.crew_member_id === member.id && a.status !== 'cancelled')
+                            ? 'Assigned'
+                            : 'Unassigned'}
+                        </Badge>
                       </div>
                     </div>
                   ))}

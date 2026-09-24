@@ -1,121 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Key, Copy, CheckCircle, XCircle, Activity, TrendingUp, AlertCircle, Plus, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAPIKeyManagement, API_KEY_PERMISSIONS } from '@/hooks/useAPIKeyManagement';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
-
-interface APIKey {
-  id: string;
-  name: string;
-  description: string;
-  key_prefix: string;
-  scopes: string[];
-  environment: string;
-  is_active: boolean;
-  last_used_at: string;
-  total_requests: number;
-  total_errors: number;
-  rate_limit_per_minute: number;
-  rate_limit_per_hour: number;
-  rate_limit_per_day: number;
-  expires_at: string;
-  created_at: string;
-}
-
-interface APIRequestLog {
-  id: string;
-  method: string;
-  endpoint: string;
-  status_code: number;
-  response_time_ms: number;
-  success: boolean;
-  error_message: string;
-  created_at: string;
-}
-
-const AVAILABLE_SCOPES = [
-  { value: 'read', label: 'Read', description: 'View resources' },
-  { value: 'write', label: 'Write', description: 'Create and update resources' },
-  { value: 'delete', label: 'Delete', description: 'Delete resources' },
-  { value: 'projects', label: 'Projects', description: 'Access projects' },
-  { value: 'invoices', label: 'Invoices', description: 'Access invoices' },
-  { value: 'time_entries', label: 'Time Entries', description: 'Access time tracking' },
-  { value: 'documents', label: 'Documents', description: 'Access documents' },
-  { value: 'users', label: 'Users', description: 'Access user data' },
-];
+import { formatDate } from '@/lib/format';
 
 export const APIKeyManagement = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const api = useAPIKeyManagement();
+  const apiKeys = api.data?.keys ?? [];
+  const requestLogs = api.data?.logs ?? [];
 
-  const [loading, setLoading] = useState(true);
-  const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
-  const [requestLogs, setRequestLogs] = useState<APIRequestLog[]>([]);
   const [showCreateKey, setShowCreateKey] = useState(false);
   const [newKeyVisible, setNewKeyVisible] = useState(false);
   const [newGeneratedKey, setNewGeneratedKey] = useState('');
+  const [creating, setCreating] = useState(false);
 
   // New API key form
   const [newKeyName, setNewKeyName] = useState('');
-  const [newKeyDescription, setNewKeyDescription] = useState('');
-  const [newKeyScopes, setNewKeyScopes] = useState<string[]>(['read']);
-  const [newKeyEnvironment, setNewKeyEnvironment] = useState('production');
+  const [newKeyScopes, setNewKeyScopes] = useState<string[]>(['projects:read']);
 
-  useEffect(() => {
-    loadAPIData();
-  }, []);
-
-  const loadAPIData = async () => {
-    setLoading(true);
-    try {
-      // Load API keys
-      const { data: keysData, error: keysError } = await supabase
-        .from('api_keys')
-        .select('*')
-        .eq('created_by', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (keysError) throw keysError;
-      setApiKeys((keysData as APIKey[]) || []);
-
-      // Load recent request logs
-      if (keysData && keysData.length > 0) {
-        const { data: logsData, error: logsError } = await supabase
-          .from('api_request_logs')
-          .select('*')
-          .in('api_key_id', keysData.map((k) => k.id))
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (logsError) throw logsError;
-        setRequestLogs((logsData as APIRequestLog[]) || []);
-      }
-    } catch (error) {
-      console.error('Failed to load API data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load API keys.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const failed = (description: string, error: unknown) => {
+    console.error(description, error);
+    toast({
+      title: 'Error',
+      description: error instanceof Error && error.message ? error.message : description,
+      variant: 'destructive',
+    });
   };
 
   const generateAPIKey = async () => {
-    if (!newKeyName) {
+    if (!newKeyName.trim()) {
       toast({
         title: 'Validation Error',
         description: 'Please provide a name for the API key.',
@@ -127,33 +53,19 @@ export const APIKeyManagement = () => {
     if (newKeyScopes.length === 0) {
       toast({
         title: 'Validation Error',
-        description: 'Please select at least one scope.',
+        description: 'Please select at least one permission.',
         variant: 'destructive',
       });
       return;
     }
 
+    setCreating(true);
     try {
-      // Generate a random API key (in production, this should be done server-side)
-      const key = `sk_${newKeyEnvironment === 'production' ? 'live' : 'test'}_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-      const keyPrefix = key.substring(0, 12);
-
-      // Hash the key (in production, use proper SHA-256)
-      const keyHash = btoa(key); // Simple encoding for demo
-
-      const { error } = await supabase
-        .from('api_keys')
-        .insert({
-          created_by: user?.id,
-          key_name: newKeyName,
-          api_key_prefix: keyPrefix,
-          api_key_hash: keyHash,
-          permissions: newKeyScopes,
-          is_active: true,
-        });
-
-      if (error) throw error;
-
+      // Generated, hashed (SHA-256) and stored by api-management, which also
+      // sets the company and writes the audit log. This used to build the key
+      // from Math.random() in the browser and store btoa(key), which the
+      // server's SHA-256 check never matched.
+      const key = await api.create(newKeyName.trim(), newKeyScopes);
       setNewGeneratedKey(key);
       setNewKeyVisible(true);
 
@@ -162,18 +74,12 @@ export const APIKeyManagement = () => {
         description: 'Save this key securely. You won\'t be able to see it again.',
       });
 
-      // Reset form
       setNewKeyName('');
-      setNewKeyDescription('');
-      setNewKeyScopes(['read']);
-      loadAPIData();
+      setNewKeyScopes(['projects:read']);
     } catch (error) {
-      console.error('Failed to create API key:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create API key.',
-        variant: 'destructive',
-      });
+      failed('Failed to create API key.', error);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -187,28 +93,15 @@ export const APIKeyManagement = () => {
 
   const toggleAPIKey = async (keyId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('api_keys')
-        .update({ is_active: !currentStatus })
-        .eq('id', keyId);
-
-      if (error) throw error;
-
+      await api.setActive(keyId, !currentStatus);
       toast({
         title: currentStatus ? 'API Key Disabled' : 'API Key Enabled',
         description: currentStatus
           ? 'API key has been disabled.'
           : 'API key is now active.',
       });
-
-      loadAPIData();
     } catch (error) {
-      console.error('Failed to toggle API key:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update API key.',
-        variant: 'destructive',
-      });
+      failed('Failed to update API key.', error);
     }
   };
 
@@ -218,26 +111,13 @@ export const APIKeyManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('api_keys')
-        .delete()
-        .eq('id', keyId);
-
-      if (error) throw error;
-
+      await api.remove(keyId);
       toast({
         title: 'API Key Deleted',
         description: `API key "${keyName}" has been deleted.`,
       });
-
-      loadAPIData();
     } catch (error) {
-      console.error('Failed to delete API key:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete API key.',
-        variant: 'destructive',
-      });
+      failed('Failed to delete API key.', error);
     }
   };
 
@@ -249,24 +129,23 @@ export const APIKeyManagement = () => {
 
   const getScopeBadge = (scope: string) => {
     const colors: Record<string, string> = {
-      read: 'bg-blue-500',
-      write: 'bg-green-500',
-      delete: 'bg-red-500',
-      projects: 'bg-purple-500',
-      invoices: 'bg-yellow-500',
-      time_entries: 'bg-teal-500',
-      documents: 'bg-orange-500',
-      users: 'bg-pink-500',
+      'projects:read': 'bg-blue-500',
+      'projects:write': 'bg-green-500',
+      'estimates:read': 'bg-purple-500',
+      'invoices:read': 'bg-yellow-500',
     };
 
     return (
-      <Badge className={`${colors[scope] || 'bg-gray-500'} text-white text-xs`}>
+      <Badge key={scope} className={`${colors[scope] || 'bg-gray-500'} text-white text-xs`}>
         {scope}
       </Badge>
     );
   };
 
-  const getStatusCodeBadge = (statusCode: number) => {
+  const getStatusCodeBadge = (statusCode: number | null) => {
+    if (statusCode == null) {
+      return <Badge variant="outline">No status</Badge>;
+    }
     if (statusCode >= 200 && statusCode < 300) {
       return <Badge className="bg-green-500 text-white">{statusCode}</Badge>;
     } else if (statusCode >= 400 && statusCode < 500) {
@@ -276,7 +155,7 @@ export const APIKeyManagement = () => {
     }
   };
 
-  if (loading) {
+  if (api.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="API Keys">
       <DashboardLayout hasAccessibleWrapper title="API Keys">
@@ -286,10 +165,12 @@ export const APIKeyManagement = () => {
     );
   }
 
-  const totalRequests = apiKeys.reduce((sum, key) => sum + key.total_requests, 0);
-  const totalErrors = apiKeys.reduce((sum, key) => sum + key.total_errors, 0);
+  const loaded = !!api.data && !api.error;
+  const totalRequests = api.data?.totalRequests ?? 0;
+  const totalErrors = api.data?.totalErrors ?? 0;
   const activeKeys = apiKeys.filter((k) => k.is_active).length;
-  const successRate = totalRequests > 0 ? ((totalRequests - totalErrors) / totalRequests * 100) : 100;
+  // No requests is no rate, not 100%.
+  const successRate = totalRequests > 0 ? ((totalRequests - totalErrors) / totalRequests * 100) : null;
 
   return (
     <AccessiblePageWrapper pageTitle="API Key Management">
@@ -304,6 +185,15 @@ export const APIKeyManagement = () => {
       }
     >
       <div className="space-y-6">
+        {api.error && (
+          <ErrorState
+            inline
+            title="API keys could not be loaded"
+            error={api.error}
+            onRetry={() => { void api.refetch(); }}
+          />
+        )}
+
         {/* New API Key Display */}
         {newKeyVisible && newGeneratedKey && (
           <Card className="border-construction-orange border-2">
@@ -346,7 +236,7 @@ export const APIKeyManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Keys</p>
-                  <p className="text-2xl font-bold">{activeKeys}</p>
+                  <p className="text-2xl font-bold">{loaded ? activeKeys : '--'}</p>
                 </div>
                 <Key className="w-8 h-8 text-blue-500" />
               </div>
@@ -358,7 +248,7 @@ export const APIKeyManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Requests</p>
-                  <p className="text-2xl font-bold">{totalRequests.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{loaded ? totalRequests.toLocaleString() : '--'}</p>
                 </div>
                 <Activity className="w-8 h-8 text-green-500" />
               </div>
@@ -370,7 +260,7 @@ export const APIKeyManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Success Rate</p>
-                  <p className="text-2xl font-bold">{successRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">{loaded && successRate != null ? `${successRate.toFixed(1)}%` : '--'}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-construction-orange" />
               </div>
@@ -382,7 +272,7 @@ export const APIKeyManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Errors</p>
-                  <p className="text-2xl font-bold">{totalErrors}</p>
+                  <p className="text-2xl font-bold">{loaded ? totalErrors : '--'}</p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-red-500" />
               </div>
@@ -418,46 +308,9 @@ export const APIKeyManagement = () => {
                   </div>
 
                   <div>
-                    <Label>Description (Optional)</Label>
-                    <Textarea
-                      placeholder="Describe what this key will be used for..."
-                      value={newKeyDescription}
-                      onChange={(e) => setNewKeyDescription(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Environment</Label>
-                    <div className="flex gap-4 mt-2">
-                      <Button
-                        type="button"
-                        variant={newKeyEnvironment === 'production' ? 'default' : 'outline'}
-                        onClick={() => setNewKeyEnvironment('production')}
-                      >
-                        Production
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={newKeyEnvironment === 'sandbox' ? 'default' : 'outline'}
-                        onClick={() => setNewKeyEnvironment('sandbox')}
-                      >
-                        Sandbox
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={newKeyEnvironment === 'development' ? 'default' : 'outline'}
-                        onClick={() => setNewKeyEnvironment('development')}
-                      >
-                        Development
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Scopes ({newKeyScopes.length} selected)</Label>
+                    <Label>Permissions ({newKeyScopes.length} selected)</Label>
                     <div className="border rounded-lg p-4 mt-2 space-y-2">
-                      {AVAILABLE_SCOPES.map((scope) => (
+                      {API_KEY_PERMISSIONS.map((scope) => (
                         <div key={scope.value} className="flex items-center gap-2">
                           <Checkbox
                             checked={newKeyScopes.includes(scope.value)}
@@ -473,7 +326,7 @@ export const APIKeyManagement = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button onClick={generateAPIKey}>Generate API Key</Button>
+                    <Button onClick={generateAPIKey} disabled={creating}>{creating ? 'Generating...' : 'Generate API Key'}</Button>
                     <Button variant="outline" onClick={() => setShowCreateKey(false)}>
                       Cancel
                     </Button>
@@ -513,15 +366,7 @@ export const APIKeyManagement = () => {
                                 Disabled
                               </Badge>
                             )}
-                            <Badge variant="outline" className="capitalize">
-                              {key.environment}
-                            </Badge>
                           </div>
-                          {key.description && (
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {key.description}
-                            </p>
-                          )}
                           <div className="flex flex-wrap gap-1 mb-2">
                             {key.scopes.map((scope) => getScopeBadge(scope))}
                           </div>
@@ -534,11 +379,13 @@ export const APIKeyManagement = () => {
                       <div className="grid grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-xs text-muted-foreground">Requests</p>
-                          <p className="font-semibold">{key.total_requests.toLocaleString()}</p>
+                          <p className="font-semibold">{key.usage_count.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Errors</p>
-                          <p className="font-semibold">{key.total_errors}</p>
+                          <p className="text-xs text-muted-foreground">Expires</p>
+                          <p className="font-semibold">
+                            {key.expires_at ? formatDate(key.expires_at) : 'Never'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Last Used</p>
@@ -550,7 +397,7 @@ export const APIKeyManagement = () => {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Rate Limit</p>
-                          <p className="font-semibold">{key.rate_limit_per_minute}/min</p>
+                          <p className="font-semibold">{key.rate_limit_per_hour}/hour</p>
                         </div>
                       </div>
 
@@ -608,9 +455,11 @@ export const APIKeyManagement = () => {
                           ) : (
                             <Badge className="bg-red-500 text-white">Failed</Badge>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            {log.response_time_ms}ms
-                          </span>
+                          {log.response_time_ms != null && (
+                            <span className="text-xs text-muted-foreground">
+                              {log.response_time_ms}ms
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {new Date(log.created_at).toLocaleString()}

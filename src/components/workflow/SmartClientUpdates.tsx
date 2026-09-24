@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,46 +11,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useSmartClientUpdates } from '@/hooks/useSmartClientUpdates';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Plus, Edit, MessageSquare, FileText, Calendar, Settings, Zap, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 
 import { ListSkeleton } from '@/components/ui/skeletons';
 
-interface AutomationRule {
-  id: string;
-  company_id: string;
-  project_id?: string;
-  trigger_type: string;
-  trigger_conditions: any;
-  template_id: string;
-  is_active: boolean;
-  created_at: string;
-  template?: {
-    id: string;
-    name: string;
-    subject: string;
-    content: string;
-  };
-}
-
-interface CommunicationTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-  trigger_type: string;
-  variables: string[];
-}
-
 export const SmartClientUpdates: React.FC = () => {
-  const { userProfile } = useAuth();
   const { toast } = useToast();
-  
-  const [automationRules, setAutomationRules] = useState<AutomationRule[]>([]);
-  const [templates, setTemplates] = useState<CommunicationTemplate[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const updates = useSmartClientUpdates();
+  const { rules: automationRules, templates, projects } = updates;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('rules');
@@ -71,97 +41,12 @@ export const SmartClientUpdates: React.FC = () => {
     variables: [] as string[]
   });
 
-  useEffect(() => {
-    loadData();
-  }, [userProfile?.company_id]);
-
-  const loadData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      // Load automation rules (without join for now to avoid foreign key issues)
-      const { data: rulesData, error: rulesError } = await supabase
-        .from('automation_rules')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (rulesError) throw rulesError;
-
-      // Load templates
-      const { data: templatesData, error: templatesError } = await supabase
-        .from('communication_templates')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('name');
-
-      if (templatesError) throw templatesError;
-
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile.company_id)
-        .eq('status', 'active')
-        .order('name');
-
-      if (projectsError) throw projectsError;
-
-      // Transform data to match expected interfaces
-      const transformedRules = (rulesData || []).map(rule => ({
-        ...rule,
-        template: {
-          id: rule.template_id || '',
-          name: 'Template Name',
-          subject: 'Subject',
-          content: 'Content'
-        }
-      }));
-
-      const transformedTemplates = (templatesData || []).map(template => ({
-        ...template,
-        subject: template.subject_template || '',
-        content: template.content_template || '',
-        trigger_type: 'manual',
-        variables: Array.isArray(template.variables) 
-          ? template.variables.map(v => String(v))
-          : []
-      }));
-
-      setAutomationRules(transformedRules);
-      setTemplates(transformedTemplates);
-      setProjects(projectsData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load automation data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateRule = async () => {
-    if (!userProfile?.company_id) return;
-
     try {
-      const { error } = await supabase
-        .from('automation_rules')
-        .insert({
-          ...ruleForm,
-          company_id: userProfile.company_id,
-          created_by: userProfile.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      await updates.addRule(ruleForm);
 
       setDialogOpen(false);
       resetRuleForm();
-      await loadData();
 
       toast({
         title: "Automation Rule Created",
@@ -177,28 +62,11 @@ export const SmartClientUpdates: React.FC = () => {
   };
 
   const handleCreateTemplate = async () => {
-    if (!userProfile?.company_id) return;
-
     try {
-      const { error } = await supabase
-        .from('communication_templates')
-        .insert({
-          name: templateForm.name,
-          subject_template: templateForm.subject,
-          content_template: templateForm.content,
-          category: 'general',
-          communication_type: 'email',
-          company_id: userProfile.company_id,
-          created_by: userProfile.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      await updates.addTemplate(templateForm);
 
       setTemplateDialogOpen(false);
       resetTemplateForm();
-      await loadData();
 
       toast({
         title: "Template Created",
@@ -215,14 +83,7 @@ export const SmartClientUpdates: React.FC = () => {
 
   const handleToggleRule = async (ruleId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('automation_rules')
-        .update({ is_active: isActive })
-        .eq('id', ruleId);
-
-      if (error) throw error;
-
-      await loadData();
+      await updates.setActive(ruleId, isActive);
       toast({
         title: "Rule Updated",
         description: `Automation rule ${isActive ? 'enabled' : 'disabled'}.`,
@@ -276,9 +137,19 @@ export const SmartClientUpdates: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (updates.isLoading) {
     return (
       <ListSkeleton label="Loading automation settings" />
+    );
+  }
+
+  if (updates.error) {
+    return (
+      <ErrorState
+        title="Automation rules could not be loaded"
+        error={updates.error}
+        onRetry={() => { void updates.refetch(); }}
+      />
     );
   }
 

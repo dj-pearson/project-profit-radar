@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useSmartProcurement } from '@/hooks/useSmartProcurement';
+import { ErrorState } from '@/components/common/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,137 +9,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, TrendingUp, DollarSign, Package, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { AIGeneratedBadge } from '@/components/ui/ai-generated-badge';
 
-interface MaterialForecast {
-  id: string;
-  material_name: string;
-  forecast_quantity: number;
-  forecast_unit: string;
-  confidence_score: number;
-  estimated_lead_time_days: number;
-  recommended_order_date: string;
-}
-
-interface SupplierCatalog {
-  id: string;
-  supplier_name: string;
-  material_name: string;
-  unit_price: number;
-  lead_time_days: number;
-  supplier_rating: number;
-}
-
-interface PurchaseRecommendation {
-  id: string;
-  material_name: string;
-  recommended_quantity: number;
-  estimated_cost: number;
-  estimated_savings: number;
-  recommended_order_date: string;
-  status: string;
-  supplier_catalog: { supplier_name: string };
-}
-
 export function SmartProcurement() {
-  const { user } = useAuth();
-  const [forecasts, setForecasts] = useState<MaterialForecast[]>([]);
-  const [suppliers, setSuppliers] = useState<SupplierCatalog[]>([]);
-  const [recommendations, setRecommendations] = useState<PurchaseRecommendation[]>([]);
-
-  useEffect(() => {
-    loadForecasts();
-    loadSuppliers();
-    loadRecommendations();
-  }, [user]);
-
-  const loadForecasts = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('material_forecasts')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .gte('forecast_date', new Date().toISOString().split('T')[0])
-        .order('forecast_date')
-        .limit(20);
-
-      if (error) throw error;
-      setForecasts(data || []);
-    } catch (error) {
-      console.error('Error loading forecasts:', error);
-    }
-  };
-
-  const loadSuppliers = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('supplier_catalog')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .eq('is_active', true)
-        .order('material_name');
-
-      if (error) throw error;
-      setSuppliers(data || []);
-    } catch (error) {
-      console.error('Error loading suppliers:', error);
-    }
-  };
-
-  const loadRecommendations = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('purchase_recommendations')
-        .select(`
-          *,
-          supplier_catalog (
-            supplier_name
-          )
-        `)
-        .eq('tenant_id', userProfile.tenant_id)
-        .eq('status', 'pending')
-        .order('recommended_order_date');
-
-      if (error) throw error;
-      setRecommendations(data as any || []);
-    } catch (error) {
-      console.error('Error loading recommendations:', error);
-    }
-  };
+  const procurement = useSmartProcurement();
+  const forecasts = procurement.data?.forecasts ?? [];
+  const suppliers = procurement.data?.suppliers ?? [];
+  const recommendations = procurement.data?.recommendations ?? [];
+  // Figures only once a read has come back; a load or a failure shows '--', not 0.
+  const loaded = !!procurement.data && !procurement.error;
 
   const approveRecommendation = async (recId: string) => {
     try {
-      const { error } = await supabase
-        .from('purchase_recommendations')
-        .update({ status: 'approved' })
-        .eq('id', recId);
-
-      if (error) throw error;
-      loadRecommendations();
+      await procurement.approve(recId);
+      toast.success('Recommendation approved');
     } catch (error) {
-      console.error('Error approving recommendation:', error);
+      toast.error('Could not approve that recommendation', {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -157,6 +43,20 @@ export function SmartProcurement() {
         <ShoppingCart className="h-12 w-12 text-green-600 opacity-50" />
       </div>
 
+      {procurement.error && (
+        <ErrorState
+          inline
+          title="Procurement data could not be loaded"
+          error={procurement.error}
+          onRetry={() => { void procurement.refetch(); }}
+        />
+      )}
+      {procurement.data && !procurement.data.tenantId && (
+        <p className="text-sm text-muted-foreground">
+          Your profile is not linked to a tenant, so there are no forecasts, suppliers or recommendations to show.
+        </p>
+      )}
+
       {/* Quick Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card>
@@ -167,7 +67,7 @@ export function SmartProcurement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{forecasts.length}</div>
+            <div className="text-2xl font-bold">{loaded ? forecasts.length : '--'}</div>
           </CardContent>
         </Card>
 
@@ -179,7 +79,7 @@ export function SmartProcurement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Set(suppliers.map(s => s.supplier_name)).size}</div>
+            <div className="text-2xl font-bold">{loaded ? new Set(suppliers.map(s => s.supplier_name)).size : '--'}</div>
           </CardContent>
         </Card>
 
@@ -191,7 +91,7 @@ export function SmartProcurement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{recommendations.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{loaded ? recommendations.length : '--'}</div>
           </CardContent>
         </Card>
 
@@ -204,7 +104,7 @@ export function SmartProcurement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${recommendations.reduce((sum, r) => sum + (r.estimated_savings || 0), 0).toLocaleString()}
+              {loaded ? `$${recommendations.reduce((sum, r) => sum + (r.estimated_savings || 0), 0).toLocaleString()}` : '--'}
             </div>
           </CardContent>
         </Card>
@@ -231,9 +131,11 @@ export function SmartProcurement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recommendations.length === 0 ? (
+                {procurement.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : recommendations.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No pending recommendations
+                    {procurement.error ? 'Could not be loaded; see the error above.' : 'No pending recommendations'}
                   </p>
                 ) : (
                   recommendations.map((rec) => (
@@ -290,9 +192,11 @@ export function SmartProcurement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {forecasts.length === 0 ? (
+                {procurement.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : forecasts.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No active forecasts
+                    {procurement.error ? 'Could not be loaded; see the error above.' : 'No active forecasts'}
                   </p>
                 ) : (
                   forecasts.map((forecast) => (
@@ -341,9 +245,11 @@ export function SmartProcurement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {suppliers.length === 0 ? (
+                {procurement.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : suppliers.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No suppliers configured
+                    {procurement.error ? 'Could not be loaded; see the error above.' : 'No suppliers configured'}
                   </p>
                 ) : (
                   suppliers.map((supplier) => (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,39 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Save, X, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useBudgetManager, type BudgetItem } from '@/hooks/useBudgetManager';
+import { ErrorState } from '@/components/common/ErrorState';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface BudgetManagerProps {
   projectId: string;
 }
 
-interface BudgetItem {
-  id: string;
-  category: string;
-  description: string;
-  budgeted_quantity: number;
-  budgeted_unit_cost: number;
-  budgeted_total: number;
-  actual_quantity: number;
-  actual_total: number;
-  variance: number;
-  cost_code_id?: string;
-}
-
-interface CostCode {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-}
-
 export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   const { toast } = useToast();
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const budget = useBudgetManager(projectId);
+  const { items: budgetItems, costCodes } = budget;
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
@@ -48,55 +28,6 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const categories = ['labor', 'materials', 'equipment', 'subcontractors', 'overhead'];
-
-  useEffect(() => {
-    if (projectId) {
-      loadData();
-    }
-  }, [projectId]);
-
-  const loadData = async () => {
-    try {
-      // Load budget items
-      const { data: budgetData, error: budgetError } = await supabase
-        .from('budget_line_items')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('category', { ascending: true });
-
-      if (budgetError) throw budgetError;
-
-      // Load cost codes
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (userProfile) {
-        const { data: costCodeData, error: costCodeError } = await supabase
-          .from('cost_codes')
-          .select('*')
-          .eq('company_id', userProfile.company_id)
-          .eq('is_active', true)
-          .order('code');
-
-        if (costCodeError) throw costCodeError;
-        setCostCodes(costCodeData || []);
-      }
-
-      setBudgetItems(budgetData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load budget data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async (item: Partial<BudgetItem>) => {
     setIsSaving(true);
@@ -114,22 +45,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       cost_code_id: item.cost_code_id || null
     };
 
-      if (editingItem) {
-        const { error } = await supabase
-          .from('budget_line_items')
-          .update(itemData)
-          .eq('id', editingItem.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('budget_line_items')
-          .insert(itemData);
-
-        if (error) throw error;
-      }
-
-      await loadData();
+      await budget.save(editingItem ? editingItem.id : null, itemData);
       setEditingItem(null);
       setIsDialogOpen(false);
 
@@ -141,7 +57,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       console.error('Error saving budget item:', error);
       toast({
         title: "Error",
-        description: "Failed to save budget item",
+        description: error instanceof Error ? error.message : "Failed to save budget item",
         variant: "destructive",
       });
     } finally {
@@ -153,14 +69,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
     if (!(await confirmAction({ title: 'Delete this budget line item?', destructive: true }))) return;
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('budget_line_items')
-        .delete()
-        .eq('id', itemId);
-
-      if (error) throw error;
-
-      await loadData();
+      await budget.remove(itemId);
       setDeletingItemId(null);
       toast({
         title: "Success",
@@ -170,7 +79,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       console.error('Error deleting budget item:', error);
       toast({
         title: "Error",
-        description: "Failed to delete budget item",
+        description: error instanceof Error ? error.message : "Failed to delete budget item",
         variant: "destructive",
       });
     } finally {
@@ -322,8 +231,18 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
     );
   };
 
-  if (loading) {
+  if (budget.isLoading) {
     return <DataTablePageSkeleton />;
+  }
+
+  if (budget.error) {
+    return (
+      <ErrorState
+        title="The budget could not be loaded"
+        error={budget.error}
+        onRetry={() => { void budget.refetch(); }}
+      />
+    );
   }
 
   return (

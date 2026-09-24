@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Plus, Users, AlertTriangle, CheckCircle, Calendar as CalendarIcon, Download, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTrainingCertifications, type Certification } from '@/hooks/useSafetyPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,26 +29,10 @@ const certificationSchema = z.object({
   certificate_url: z.string().optional(),
 });
 
-interface Certification {
-  id: string;
-  user_id: string;
-  employee_name?: string;
-  certification_name: string;
-  certification_type: string;
-  issuing_organization?: string;
-  issue_date: string;
-  expiration_date?: string;
-  document_url?: string;
-  status: 'active' | 'expired' | 'revoked';
-  created_at: string;
-}
-
 const TrainingCertificationManager = () => {
-  const [certifications, setCertifications] = useState<Certification[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const training = useTrainingCertifications();
+  const { certifications, employees } = training;
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof certificationSchema>>({
@@ -60,70 +44,9 @@ const TrainingCertificationManager = () => {
     },
   });
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
-    try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) return;
-
-      // Load employees and certifications in parallel
-      const [employeesResult, certificationsResult] = await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('id, first_name, last_name')
-          .eq('company_id', profile.company_id),
-        
-        supabase
-          .from('training_certifications')
-          .select('*')
-          .eq('company_id', profile.company_id)
-          .order('created_at', { ascending: false })
-      ]);
-
-      setEmployees(employeesResult.data || []);
-      
-      const certificationsWithNames = (certificationsResult.data || []).map(cert => ({
-        ...cert,
-        employee_name: 'Employee'
-      }));
-      
-      setCertifications(certificationsWithNames as Certification[]);
-    } catch (error) {
-      console.error('Error loading training data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load training data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onSubmit = async (values: z.infer<typeof certificationSchema>) => {
     try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) {
-        throw new Error('User company not found');
-      }
-
-      const certificationData = {
-        company_id: profile.company_id,
+      await training.add({
         user_id: values.employee_id,
         certification_name: values.certification_name,
         certification_type: values.certification_type,
@@ -131,14 +54,7 @@ const TrainingCertificationManager = () => {
         issue_date: values.completion_date.toISOString().split('T')[0],
         expiration_date: values.expiration_date ? values.expiration_date.toISOString().split('T')[0] : null,
         document_url: values.certificate_url || null,
-        created_by: user?.id,
-      };
-
-      const { error } = await supabase
-        .from('training_certifications')
-        .insert(certificationData);
-
-      if (error) throw error;
+      });
 
       toast({
         title: "Success",
@@ -147,12 +63,11 @@ const TrainingCertificationManager = () => {
 
       form.reset();
       setShowAddDialog(false);
-      loadData();
     } catch (error) {
       console.error('Error adding certification:', error);
       toast({
         title: "Error",
-        description: "Failed to add training certification",
+        description: error instanceof Error ? error.message : "Failed to add training certification",
         variant: "destructive"
       });
     }
@@ -160,24 +75,17 @@ const TrainingCertificationManager = () => {
 
   const updateCertificationStatus = async (certificationId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('training_certifications')
-        .update({ status: newStatus })
-        .eq('id', certificationId);
-
-      if (error) throw error;
+      await training.setStatus(certificationId, newStatus);
 
       toast({
         title: "Success",
         description: `Certification status updated to ${newStatus}`,
       });
-
-      loadData();
     } catch (error) {
       console.error('Error updating certification:', error);
       toast({
         title: "Error",
-        description: "Failed to update certification status",
+        description: error instanceof Error ? error.message : "Failed to update certification status",
         variant: "destructive"
       });
     }
@@ -207,13 +115,23 @@ const TrainingCertificationManager = () => {
       new Date(c.expiration_date) > new Date();
   }).length;
 
-  if (loading) {
+  if (training.isLoading) {
     return (
       <Card>
         <CardContent className="p-8">
           <ListSkeleton label="Loading training data" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (training.error) {
+    return (
+      <ErrorState
+        title="Training records could not be loaded"
+        error={training.error}
+        onRetry={() => { void training.refetch(); }}
+      />
     );
   }
 
@@ -476,7 +394,7 @@ const TrainingCertificationManager = () => {
                 <div key={certification.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-medium">{certification.employee_name}</h3>
+                      <h3 className="font-medium">{certification.employee_name ?? 'Not in your company user list'}</h3>
                       {getStatusBadge(certification)}
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">

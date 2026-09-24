@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,162 +6,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, AlertCircle, CheckCircle, XCircle, Download, Search, Clock, Users, Database, Lock, Eye } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuditLoggingCompliance } from '@/hooks/useAuditLoggingCompliance';
+import { ErrorState } from '@/components/common/ErrorState';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface AuditLog {
-  id: string;
-  event_type: string;
-  action: string;
-  resource_type: string;
-  resource_name: string;
-  status: string;
-  user_id: string;
-  ip_address: string;
-  created_at: string;
-  changes: any;
-  is_sensitive: boolean;
-}
-
-interface GDPRRequest {
-  id: string;
-  request_type: string;
-  status: string;
-  requester_email: string;
-  requester_name: string;
-  deadline: string;
-  is_overdue: boolean;
-  created_at: string;
-  completed_at: string;
-}
-
-interface RetentionPolicy {
-  id: string;
-  name: string;
-  resource_type: string;
-  retention_period_days: number;
-  action_on_expiry: string;
-  is_active: boolean;
-  last_applied_at: string;
-  created_at: string;
-}
-
-interface ComplianceReport {
-  id: string;
-  report_type: string;
-  report_name: string;
-  status: string;
-  date_range_start: string;
-  date_range_end: string;
-  generated_at: string;
-  file_url: string;
-  compliance_standard: string;
-}
-
 export const AuditLoggingCompliance = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  const [loading, setLoading] = useState(true);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [gdprRequests, setGDPRRequests] = useState<GDPRRequest[]>([]);
-  const [retentionPolicies, setRetentionPolicies] = useState<RetentionPolicy[]>([]);
-  const [complianceReports, setComplianceReports] = useState<ComplianceReport[]>([]);
+  const compliance = useAuditLoggingCompliance();
+  const auditLogs = compliance.data?.auditLogs ?? [];
+  const gdprRequests = compliance.data?.gdprRequests ?? [];
+  const retentionPolicies = compliance.data?.retentionPolicies ?? [];
+  const complianceReports = compliance.data?.complianceReports ?? [];
+  // Counts only from a read that came back; a failed one shows '--', not 0.
+  const shown = (n: number) => (compliance.data ? n : '--');
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  useEffect(() => {
-    loadComplianceData();
-  }, []);
-
-  const loadComplianceData = async () => {
-    setLoading(true);
-    try {
-      // Load audit logs (last 100)
-      const { data: logsData, error: logsError } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (logsError) throw logsError;
-      setAuditLogs(logsData || []);
-
-      // Load GDPR requests
-      const { data: gdprData, error: gdprError } = await supabase
-        .from('gdpr_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (gdprError) throw gdprError;
-      setGDPRRequests(gdprData || []);
-
-      // Load retention policies
-      const { data: policiesData, error: policiesError } = await supabase
-        .from('data_retention_policies')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (policiesError) throw policiesError;
-      setRetentionPolicies(policiesData || []);
-
-      // Load compliance reports
-      const { data: reportsData, error: reportsError } = await supabase
-        .from('compliance_reports')
-        .select('*')
-        .order('generated_at', { ascending: false });
-
-      if (reportsError) throw reportsError;
-      setComplianceReports(reportsData || []);
-    } catch (error) {
-      console.error('Failed to load compliance data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load compliance data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const generateComplianceReport = async () => {
     try {
-      const startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 1);
-      const endDate = new Date();
-
-      const { error } = await supabase
-        .from('compliance_reports')
-        .insert({
-          report_type: 'audit_summary',
-          report_name: `Monthly Compliance Report - ${endDate.toLocaleDateString()}`,
-          date_range_start: startDate.toISOString().split('T')[0],
-          date_range_end: endDate.toISOString().split('T')[0],
-          status: 'pending',
-          generated_by: user?.id,
-        });
-
-      if (error) throw error;
+      await compliance.queueReport();
 
       toast({
         title: 'Report Queued',
         description: 'Compliance report generation has been queued.',
       });
-
-      loadComplianceData();
     } catch (error) {
       console.error('Failed to generate report:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate compliance report.',
+        description: error instanceof Error ? error.message : 'Failed to generate compliance report.',
         variant: 'destructive',
       });
     }
@@ -198,27 +77,17 @@ export const AuditLoggingCompliance = () => {
 
   const updateGDPRRequestStatus = async (requestId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('gdpr_requests')
-        .update({
-          status: newStatus,
-          completed_at: newStatus === 'completed' ? new Date().toISOString() : null,
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
+      await compliance.setGdprStatus(requestId, newStatus);
 
       toast({
         title: 'Status Updated',
         description: `GDPR request has been marked as ${newStatus}.`,
       });
-
-      loadComplianceData();
     } catch (error) {
       console.error('Failed to update GDPR request:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update GDPR request status.',
+        description: error instanceof Error ? error.message : 'Failed to update GDPR request status.',
         variant: 'destructive',
       });
     }
@@ -226,12 +95,7 @@ export const AuditLoggingCompliance = () => {
 
   const toggleRetentionPolicy = async (policyId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('data_retention_policies')
-        .update({ is_active: !currentStatus })
-        .eq('id', policyId);
-
-      if (error) throw error;
+      await compliance.setPolicyActive(policyId, !currentStatus);
 
       toast({
         title: currentStatus ? 'Policy Disabled' : 'Policy Enabled',
@@ -239,13 +103,11 @@ export const AuditLoggingCompliance = () => {
           ? 'Retention policy has been disabled.'
           : 'Retention policy is now active.',
       });
-
-      loadComplianceData();
     } catch (error) {
       console.error('Failed to toggle policy:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update retention policy.',
+        description: error instanceof Error ? error.message : 'Failed to update retention policy.',
         variant: 'destructive',
       });
     }
@@ -321,7 +183,7 @@ export const AuditLoggingCompliance = () => {
 
   const overdueGDPRRequests = gdprRequests.filter((req) => req.is_overdue && req.status === 'pending');
 
-  if (loading) {
+  if (compliance.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Audit & Compliance">
       <DashboardLayout hasAccessibleWrapper title="Audit & Compliance">
@@ -370,6 +232,15 @@ export const AuditLoggingCompliance = () => {
           </Card>
         )}
 
+        {compliance.error && (
+          <ErrorState
+            inline
+            title="Compliance data could not be loaded"
+            error={compliance.error}
+            onRetry={() => { void compliance.refetch(); }}
+          />
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -377,7 +248,7 @@ export const AuditLoggingCompliance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Audit Logs</p>
-                  <p className="text-2xl font-bold">{auditLogs.length}</p>
+                  <p className="text-2xl font-bold">{shown(compliance.data?.auditLogTotal ?? 0)}</p>
                 </div>
                 <FileText className="w-8 h-8 text-blue-500" />
               </div>
@@ -390,7 +261,7 @@ export const AuditLoggingCompliance = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Pending GDPR Requests</p>
                   <p className="text-2xl font-bold">
-                    {gdprRequests.filter((r) => r.status === 'pending').length}
+                    {shown(gdprRequests.filter((r) => r.status === 'pending').length)}
                   </p>
                 </div>
                 <Users className="w-8 h-8 text-yellow-500" />
@@ -404,7 +275,7 @@ export const AuditLoggingCompliance = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Active Policies</p>
                   <p className="text-2xl font-bold">
-                    {retentionPolicies.filter((p) => p.is_active).length}
+                    {shown(retentionPolicies.filter((p) => p.is_active).length)}
                   </p>
                 </div>
                 <Database className="w-8 h-8 text-green-500" />
@@ -417,7 +288,7 @@ export const AuditLoggingCompliance = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Compliance Reports</p>
-                  <p className="text-2xl font-bold">{complianceReports.length}</p>
+                  <p className="text-2xl font-bold">{shown(complianceReports.length)}</p>
                 </div>
                 <Lock className="w-8 h-8 text-purple-500" />
               </div>

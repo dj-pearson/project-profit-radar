@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,57 +21,14 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useWebhookManagement } from '@/hooks/useWebhookManagement';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { secureSecret } from '@/lib/security/secureRandom';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
-
-interface WebhookEndpoint {
-  id: string;
-  url: string;
-  description: string;
-  subscribed_events: string[];
-  is_active: boolean;
-  is_verified: boolean;
-  last_delivery_at: string;
-  last_success_at: string;
-  last_failure_at: string;
-  consecutive_failures: number;
-  total_deliveries: number;
-  successful_deliveries: number;
-  failed_deliveries: number;
-  created_at: string;
-}
-
-interface WebhookDelivery {
-  id: string;
-  webhook_endpoint_id: string;
-  url: string;
-  status: string;
-  success: boolean;
-  response_status_code: number;
-  response_time_ms: number;
-  error_message: string;
-  attempt_number: number;
-  max_attempts: number;
-  delivered_at: string;
-  created_at: string;
-}
-
-interface WebhookEvent {
-  id: string;
-  event_type: string;
-  resource_type: string;
-  action: string;
-  pending_deliveries: number;
-  completed_deliveries: number;
-  failed_deliveries: number;
-  created_at: string;
-}
 
 const AVAILABLE_EVENTS = [
   { value: '*', label: 'All Events', description: 'Subscribe to all events' },
@@ -86,70 +43,15 @@ const AVAILABLE_EVENTS = [
 ];
 
 export const WebhookManagement = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  const [loading, setLoading] = useState(true);
-  const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
-  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
-  const [events, setEvents] = useState<WebhookEvent[]>([]);
+  const webhooks = useWebhookManagement();
+  const { endpoints, deliveries, events } = webhooks;
   const [showCreateEndpoint, setShowCreateEndpoint] = useState(false);
 
   // New endpoint form
   const [newEndpointUrl, setNewEndpointUrl] = useState('');
   const [newEndpointDescription, setNewEndpointDescription] = useState('');
   const [newEndpointEvents, setNewEndpointEvents] = useState<string[]>(['*']);
-
-  useEffect(() => {
-    loadWebhookData();
-  }, []);
-
-  const loadWebhookData = async () => {
-    setLoading(true);
-    try {
-      // Load webhook endpoints
-      const { data: endpointsData, error: endpointsError } = await supabase
-        .from('webhook_endpoints')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (endpointsError) throw endpointsError;
-      setEndpoints(endpointsData || []);
-
-      // Load recent deliveries
-      if (endpointsData && endpointsData.length > 0) {
-        const { data: deliveriesData, error: deliveriesError } = await supabase
-          .from('webhook_deliveries')
-          .select('*')
-          .in('webhook_endpoint_id', endpointsData.map((e) => e.id))
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (deliveriesError) throw deliveriesError;
-        setDeliveries(deliveriesData || []);
-      }
-
-      // Load recent events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('webhook_events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (eventsError) throw eventsError;
-      setEvents(eventsData || []);
-    } catch (error) {
-      console.error('Failed to load webhook data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load webhook data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const createWebhookEndpoint = async () => {
     if (!newEndpointUrl) {
@@ -179,19 +81,12 @@ export const WebhookManagement = () => {
       // the sequence (US-296).
       const secret = secureSecret(32);
 
-      const { error } = await supabase
-        .from('webhook_endpoints')
-        .insert({
-          user_id: user?.id,
-          url: newEndpointUrl,
-          description: newEndpointDescription,
-          subscribed_events: newEndpointEvents,
-          secret: secret,
-          is_active: true,
-          is_verified: false,
-        });
-
-      if (error) throw error;
+      await webhooks.create({
+        url: newEndpointUrl,
+        description: newEndpointDescription,
+        subscribed_events: newEndpointEvents,
+        secret,
+      });
 
       toast({
         title: 'Webhook Created',
@@ -202,12 +97,11 @@ export const WebhookManagement = () => {
       setNewEndpointUrl('');
       setNewEndpointDescription('');
       setNewEndpointEvents(['*']);
-      loadWebhookData();
     } catch (error) {
       console.error('Failed to create webhook:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create webhook endpoint.',
+        description: error instanceof Error ? error.message : 'Failed to create webhook endpoint.',
         variant: 'destructive',
       });
     }
@@ -215,12 +109,7 @@ export const WebhookManagement = () => {
 
   const toggleWebhookEndpoint = async (endpointId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('webhook_endpoints')
-        .update({ is_active: !currentStatus })
-        .eq('id', endpointId);
-
-      if (error) throw error;
+      await webhooks.setActive(endpointId, !currentStatus);
 
       toast({
         title: currentStatus ? 'Webhook Disabled' : 'Webhook Enabled',
@@ -228,13 +117,11 @@ export const WebhookManagement = () => {
           ? 'Webhook has been disabled.'
           : 'Webhook is now active.',
       });
-
-      loadWebhookData();
     } catch (error) {
       console.error('Failed to toggle webhook:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update webhook.',
+        description: error instanceof Error ? error.message : 'Failed to update webhook.',
         variant: 'destructive',
       });
     }
@@ -246,42 +133,29 @@ export const WebhookManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('webhook_endpoints')
-        .delete()
-        .eq('id', endpointId);
-
-      if (error) throw error;
+      await webhooks.remove(endpointId);
 
       toast({
         title: 'Webhook Deleted',
         description: 'Webhook endpoint has been deleted.',
       });
-
-      loadWebhookData();
     } catch (error) {
       console.error('Failed to delete webhook:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete webhook.',
+        description: error instanceof Error ? error.message : 'Failed to delete webhook.',
         variant: 'destructive',
       });
     }
   };
 
-  const testWebhookEndpoint = async (endpointId: string, url: string) => {
+  // There is no test-delivery function yet. This used to toast "Test Complete:
+  // check your endpoint logs" two seconds later without sending anything.
+  const testWebhookEndpoint = () => {
     toast({
-      title: 'Test Webhook',
-      description: 'Sending test event to webhook endpoint...',
+      title: 'Test delivery is not available yet',
+      description: 'Nothing was sent. Deliveries go out when a subscribed event happens.',
     });
-
-    // In production, this would call an edge function to send a test webhook
-    setTimeout(() => {
-      toast({
-        title: 'Test Complete',
-        description: 'Check your endpoint logs for the test event.',
-      });
-    }, 2000);
   };
 
   const toggleEventSelection = (event: string) => {
@@ -319,7 +193,7 @@ export const WebhookManagement = () => {
     );
   };
 
-  if (loading) {
+  if (webhooks.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Webhooks">
       <DashboardLayout hasAccessibleWrapper title="Webhooks">
@@ -333,7 +207,9 @@ export const WebhookManagement = () => {
   const successfulDeliveries = endpoints.reduce((sum, e) => sum + e.successful_deliveries, 0);
   const failedDeliveries = endpoints.reduce((sum, e) => sum + e.failed_deliveries, 0);
   const activeEndpoints = endpoints.filter((e) => e.is_active).length;
-  const successRate = totalDeliveries > 0 ? (successfulDeliveries / totalDeliveries * 100) : 100;
+  // No deliveries is no rate, not 100%.
+  const successRate = totalDeliveries > 0 ? (successfulDeliveries / totalDeliveries * 100) : null;
+  const shown = (v: string | number) => (webhooks.error ? '--' : v);
 
   return (
     <AccessiblePageWrapper pageTitle="Webhook Management">
@@ -348,6 +224,15 @@ export const WebhookManagement = () => {
       }
     >
       <div className="space-y-6">
+        {webhooks.error && (
+          <ErrorState
+            inline
+            title="Webhooks could not be loaded"
+            error={webhooks.error}
+            onRetry={() => { void webhooks.refetch(); }}
+          />
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -355,7 +240,7 @@ export const WebhookManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Endpoints</p>
-                  <p className="text-2xl font-bold">{activeEndpoints}</p>
+                  <p className="text-2xl font-bold">{shown(activeEndpoints)}</p>
                 </div>
                 <Webhook className="w-8 h-8 text-blue-500" />
               </div>
@@ -367,7 +252,7 @@ export const WebhookManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Deliveries</p>
-                  <p className="text-2xl font-bold">{totalDeliveries.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{shown(totalDeliveries.toLocaleString())}</p>
                 </div>
                 <Send className="w-8 h-8 text-green-500" />
               </div>
@@ -379,7 +264,7 @@ export const WebhookManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Success Rate</p>
-                  <p className="text-2xl font-bold">{successRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">{shown(successRate == null ? '--' : `${successRate.toFixed(1)}%`)}</p>
                 </div>
                 <BarChart3 className="w-8 h-8 text-construction-orange" />
               </div>
@@ -391,7 +276,7 @@ export const WebhookManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Failed Deliveries</p>
-                  <p className="text-2xl font-bold">{failedDeliveries}</p>
+                  <p className="text-2xl font-bold">{shown(failedDeliveries)}</p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
@@ -560,7 +445,7 @@ export const WebhookManagement = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => testWebhookEndpoint(endpoint.id, endpoint.url)}
+                          onClick={testWebhookEndpoint}
                         >
                           <Send className="w-4 h-4 mr-2" />
                           Test

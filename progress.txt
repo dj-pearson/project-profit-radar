@@ -7253,3 +7253,12 @@ the real measured numbers (22% statements, 18% branches, 18% functions, 22%
 lines over all of src, not only imported files). The old 60% threshold was
 never enforced. Added @vitest/coverage-v8, which was missing. Axe suites
 already run in unit tests and the Playwright a11y spec in E2E.
+
+## US-266 pass 5
+Thirty-seven more screens on query hooks (raw calls 657 -> 446). Real
+bugs fixed on the way: API keys made in the browser could never
+authenticate; editing a purchase order blanked its number; every geofence
+was saved at New York City; OSHA deadlines never saved; the admin Companies
+list hid new companies. The executive dashboard and materials page stop
+showing invented dollar figures. TS 1067 -> 949, eslint warnings 4689 ->
+4390.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,35 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useQualityControl, type QualityInspection } from '@/hooks/useQualityControl';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Plus, Edit, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-interface QualityInspection {
-  id: string;
-  project_id: string;
-  inspection_type: string;
-  inspection_number: string;
-  inspection_date: string;
-  inspector_id: string;
-  status: string;
-  checklist_items: any;
-  deficiencies: any;
-  photos: any;
-  notes: string;
-  created_at: string;
-  projects?: { name: string };
-}
-
 export const QualityControlManagement: React.FC = () => {
-  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [inspections, setInspections] = useState<QualityInspection[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQualityControl();
+  const { inspections, projects, teamMembers } = qc;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInspection, setEditingInspection] = useState<QualityInspection | null>(null);
   const [activeTab, setActiveTab] = useState('inspections');
@@ -51,106 +32,24 @@ export const QualityControlManagement: React.FC = () => {
     notes: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, [userProfile?.company_id]);
-
-  const loadData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      // Load inspections
-      const { data: inspectionsData, error: inspectionsError } = await supabase
-        .from('quality_inspections')
-        .select(`
-          *,
-          projects:project_id(name)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (inspectionsError) throw inspectionsError;
-
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-
-      // Load team members
-      const { data: teamData, error: teamError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name')
-        .eq('company_id', userProfile.company_id);
-
-      if (teamError) throw teamError;
-
-      setInspections(inspectionsData || []);
-      setProjects(projectsData || []);
-      setTeamMembers(teamData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load quality control data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!userProfile?.company_id || !inspectionForm.project_id || !inspectionForm.inspection_date) return;
+    if (!inspectionForm.project_id || !inspectionForm.inspection_date) return;
 
     try {
-      const inspectionData = {
-        company_id: userProfile.company_id,
-        inspection_number: `QI-${Date.now().toString().slice(-8)}`,
-        status: 'scheduled',
-        checklist_items: [],
-        deficiencies: [],
-        photos: [],
-        ...inspectionForm
-      };
-
-      if (editingInspection) {
-        const { error } = await supabase
-          .from('quality_inspections')
-          .update(inspectionData)
-          .eq('id', editingInspection.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Inspection updated successfully"
-        });
-      } else {
-        const { error } = await supabase
-          .from('quality_inspections')
-          .insert([inspectionData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Inspection scheduled successfully"
-        });
-      }
+      await qc.save(editingInspection ? editingInspection.id : null, inspectionForm);
+      toast({
+        title: "Success",
+        description: editingInspection ? "Inspection updated successfully" : "Inspection scheduled successfully"
+      });
 
       setDialogOpen(false);
       setEditingInspection(null);
       resetForm();
-      loadData();
     } catch (error) {
       console.error('Error saving inspection:', error);
       toast({
         title: "Error",
-        description: "Failed to save inspection",
+        description: error instanceof Error ? error.message : "Failed to save inspection",
         variant: "destructive"
       });
     }
@@ -158,30 +57,17 @@ export const QualityControlManagement: React.FC = () => {
 
   const updateInspectionStatus = async (inspectionId: string, newStatus: string) => {
     try {
-      const updateData: any = { status: newStatus };
-      
-      if (newStatus === 'completed') {
-        updateData.completed_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from('quality_inspections')
-        .update(updateData)
-        .eq('id', inspectionId);
-
-      if (error) throw error;
+      await qc.setStatus(inspectionId, newStatus);
 
       toast({
         title: "Success",
         description: `Inspection ${newStatus} successfully`
       });
-      
-      loadData();
     } catch (error) {
       console.error('Error updating inspection:', error);
       toast({
         title: "Error",
-        description: "Failed to update inspection",
+        description: error instanceof Error ? error.message : "Failed to update inspection",
         variant: "destructive"
       });
     }
@@ -208,11 +94,21 @@ export const QualityControlManagement: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (qc.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="md" />
       </div>
+    );
+  }
+
+  if (qc.error) {
+    return (
+      <ErrorState
+        title="Quality inspections could not be loaded"
+        error={qc.error}
+        onRetry={() => { void qc.refetch(); }}
+      />
     );
   }
 
@@ -417,8 +313,8 @@ export const QualityControlManagement: React.FC = () => {
                                   project_id: inspection.project_id,
                                   inspection_type: inspection.inspection_type,
                                   inspection_date: inspection.inspection_date,
-                                  inspector_id: inspection.inspector_id,
-                                  notes: inspection.notes
+                                  inspector_id: inspection.inspector_id ?? '',
+                                  notes: inspection.notes ?? ''
                                 });
                                 setDialogOpen(true);
                               }}
@@ -478,12 +374,12 @@ export const QualityControlManagement: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {inspections.filter(i => ['passed', 'failed'].includes(i.status)).length > 0 ? 
-                    Math.round((inspections.filter(i => i.status === 'passed').length / 
-                    inspections.filter(i => ['passed', 'failed'].includes(i.status)).length) * 100) : 0}%
+                  {inspections.filter(i => ['passed', 'failed'].includes(i.status)).length > 0 ?
+                    `${Math.round((inspections.filter(i => i.status === 'passed').length /
+                    inspections.filter(i => ['passed', 'failed'].includes(i.status)).length) * 100)}%` : '--'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  First-time pass rate
+                  Passed of inspections passed or failed
                 </p>
               </CardContent>
             </Card>

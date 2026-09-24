@@ -1,127 +1,38 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useClientPortalPro } from '@/hooks/useClientPortalPro';
+import { ErrorState } from '@/components/common/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, MessageSquare, CheckCircle2 } from 'lucide-react';
 
-interface ClientAccess {
-  id: string;
-  client_name: string;
-  client_email: string;
-  is_active: boolean;
-  can_view_financials: boolean;
-  last_login_at: string;
-  login_count: number;
-  projects: { name: string };
-}
-
-interface ClientMessage {
-  id: string;
-  subject: string;
-  message: string;
-  sent_by_client: boolean;
-  is_read: boolean;
-  created_at: string;
-}
-
 export function ClientPortalPro() {
-  const { user } = useAuth();
-  const [clients, setClients] = useState<ClientAccess[]>([]);
-  const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    loadClients();
-    loadMessages();
-  }, [user]);
-
-  const loadClients = async () => {
-    // Without a signed-in user this used to query user_profiles by an
-    // undefined id; there is nothing to load.
-    if (!user?.id) return;
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('client_portal_access')
-        .select(`
-          *,
-          projects (name)
-        `)
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setClients(data as any || []);
-    } catch (error) {
-      console.error('Error loading clients:', error);
-    }
-  };
-
-  const loadMessages = async () => {
-    // Without a signed-in user this used to query user_profiles by an
-    // undefined id; there is nothing to load.
-    if (!user?.id) return;
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('client_messages')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setMessages(data || []);
-
-      const unread = data?.filter(m => !m.is_read && m.sent_by_client).length || 0;
-      setUnreadCount(unread);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    }
-  };
+  const portal = useClientPortalPro();
+  const clients = portal.data?.clients ?? [];
+  const messages = portal.data?.messages ?? [];
+  const unreadCount = portal.data?.unreadCount ?? 0;
+  // Figures only from a read that came back; loading or failed shows '--'.
+  const shown = (n: number) => (portal.data && !portal.error ? n : '--');
 
   const toggleClientAccess = async (clientId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('client_portal_access')
-        .update({ is_active: !isActive })
-        .eq('id', clientId);
-
-      if (error) throw error;
-      loadClients();
+      await portal.setActive(clientId, !isActive);
     } catch (error) {
-      console.error('Error toggling access:', error);
+      toast.error('Could not change client access', {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
   const markAsRead = async (messageId: string) => {
     try {
-      const { error } = await supabase
-        .from('client_messages')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('id', messageId);
-
-      if (error) throw error;
-      loadMessages();
+      await portal.markRead(messageId);
     } catch (error) {
-      console.error('Error marking as read:', error);
+      toast.error('Could not mark the message read', {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -140,6 +51,20 @@ export function ClientPortalPro() {
         <Users className="h-12 w-12 text-blue-600 opacity-50" />
       </div>
 
+      {portal.error && (
+        <ErrorState
+          inline
+          title="Client portal data could not be loaded"
+          error={portal.error}
+          onRetry={() => { void portal.refetch(); }}
+        />
+      )}
+      {portal.data && !portal.data.tenantId && (
+        <p className="text-sm text-muted-foreground">
+          Your profile is not linked to a tenant, so there are no client portal records to show.
+        </p>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card>
@@ -151,7 +76,7 @@ export function ClientPortalPro() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clients.filter(c => c.is_active).length}
+              {shown(clients.filter(c => c.is_active).length)}
             </div>
           </CardContent>
         </Card>
@@ -164,7 +89,7 @@ export function ClientPortalPro() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{unreadCount}</div>
+            <div className="text-2xl font-bold text-orange-600">{shown(unreadCount)}</div>
           </CardContent>
         </Card>
 
@@ -173,7 +98,7 @@ export function ClientPortalPro() {
             <CardTitle className="text-sm font-medium">Total Access</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clients.length}</div>
+            <div className="text-2xl font-bold">{shown(clients.length)}</div>
           </CardContent>
         </Card>
 
@@ -183,7 +108,7 @@ export function ClientPortalPro() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clients.reduce((sum, c) => sum + c.login_count, 0)}
+              {shown(clients.reduce((sum, c) => sum + (c.login_count ?? 0), 0))}
             </div>
           </CardContent>
         </Card>
@@ -204,9 +129,11 @@ export function ClientPortalPro() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {clients.length === 0 ? (
+                {portal.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : clients.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No client access configured
+                    {portal.error ? 'Could not be loaded; see the error above.' : 'No client access configured'}
                   </p>
                 ) : (
                   clients.map((client) => (
@@ -254,9 +181,11 @@ export function ClientPortalPro() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {messages.length === 0 ? (
+                {portal.isLoading ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : messages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No messages
+                    {portal.error ? 'Could not be loaded; see the error above.' : 'No messages'}
                   </p>
                 ) : (
                   messages.map((message) => (

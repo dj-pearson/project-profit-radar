@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,64 +9,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useLeadNurturingCampaigns } from '@/hooks/useLeadNurturingCampaigns';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Mail, Plus, Play, Pause, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
-interface NurturingCampaign {
-  id: string;
-  campaign_name: string;
-  description?: string;
-  campaign_type: string;
-  total_steps: number;
-  is_active: boolean;
-  auto_enrollment: boolean;
-  enrollment_count: number;
-  completion_count: number;
-  conversion_count: number;
-  created_at: string;
-}
-
-interface CampaignStep {
-  id: string;
-  step_number: number;
-  step_name: string;
-  step_type: string;
-  subject_line?: string;
-  content?: string;
-  delay_value: number;
-  delay_unit: string;
-  is_active: boolean;
-}
-
-interface CampaignEnrollment {
-  id: string;
-  status: string;
-  current_step: number;
-  steps_completed: number;
-  emails_sent: number;
-  emails_opened: number;
-  emails_clicked: number;
-  converted: boolean;
-  enrolled_at: string;
-  lead: {
-    first_name: string;
-    last_name: string;
-    company_name?: string;
-  };
-}
-
 export const LeadNurturingCampaigns: React.FC = () => {
-  const [campaigns, setCampaigns] = useState<NurturingCampaign[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<NurturingCampaign | null>(null);
-  const [campaignSteps, setCampaignSteps] = useState<CampaignStep[]>([]);
-  const [enrollments, setEnrollments] = useState<CampaignEnrollment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const nurturing = useLeadNurturingCampaigns(selectedCampaignId);
+  const { campaigns, steps: campaignSteps, enrollments } = nurturing;
+  // Read from the list, not kept as a snapshot, so pausing it shows here too.
+  const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId) ?? null;
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
 
   const [newCampaign, setNewCampaign] = useState({
     campaign_name: '',
@@ -85,91 +41,12 @@ export const LeadNurturingCampaigns: React.FC = () => {
     delay_unit: 'days'
   });
 
-  useEffect(() => {
-    loadCampaigns();
-  }, []);
-
-  const loadCampaigns = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('lead_nurturing_campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCampaigns(data || []);
-    } catch (error: unknown) {
-      toast({
-        title: "Error loading campaigns",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCampaignDetails = async (campaignId: string) => {
-    try {
-      // Load steps
-      const { data: stepsData, error: stepsError } = await supabase
-        .from('nurturing_campaign_steps')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .order('step_number');
-
-      if (stepsError) throw stepsError;
-
-      // Load enrollments
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from('lead_nurturing_enrollments')
-        .select(`
-          *,
-          lead:leads(first_name, last_name, company_name)
-        `)
-        .eq('campaign_id', campaignId)
-        .order('enrolled_at', { ascending: false })
-        .limit(50);
-
-      if (enrollmentsError) throw enrollmentsError;
-
-      setCampaignSteps(stepsData || []);
-      setEnrollments((enrollmentsData as unknown as CampaignEnrollment[]) || []);
-    } catch (error: unknown) {
-      toast({
-        title: "Error loading campaign details",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    }
-  };
-
   const createCampaign = async () => {
     try {
       setIsCreating(true);
       // lead_nurturing_campaigns.company_id is `UUID NOT NULL` (migration
-      // 20250726012428). This passed the literal string 'your-company-id',
-      // which fails the uuid cast, so creating a campaign has never once
-      // succeeded - it threw "invalid input syntax for type uuid" every time.
-      if (!userProfile?.company_id) {
-        toast({
-          title: "Can't create the campaign",
-          description: 'No company on your profile.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('lead_nurturing_campaigns')
-        .insert([{
-          ...newCampaign,
-          company_id: userProfile.company_id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      // 20250726012428); the hook refuses when the profile has no company.
+      await nurturing.create(newCampaign);
 
       toast({
         title: "Campaign created",
@@ -183,8 +60,6 @@ export const LeadNurturingCampaigns: React.FC = () => {
         auto_enrollment: false,
         score_threshold: 50
       });
-
-      await loadCampaigns();
     } catch (error: unknown) {
       toast({
         title: "Error creating campaign",
@@ -198,26 +73,13 @@ export const LeadNurturingCampaigns: React.FC = () => {
 
   const addStep = async (campaignId: string) => {
     try {
-      const stepNumber = campaignSteps.length + 1;
-      
-      const { error } = await supabase
-        .from('nurturing_campaign_steps')
-        .insert([{
-          campaign_id: campaignId,
-          step_number: stepNumber,
-          ...newStep
-        }]);
-
-      if (error) throw error;
-
-      // Update campaign total steps
-      const { error: updateLeadNurturingCampaignsError } = await supabase
-        .from('lead_nurturing_campaigns')
-        .update({ total_steps: stepNumber })
-        .eq('id', campaignId);
-      if (updateLeadNurturingCampaignsError) {
-        throw new Error(`Failed to update lead_nurturing_campaigns: ${updateLeadNurturingCampaignsError.message}`);
+      // The step number counts the steps already read; before they load, or
+      // after that read failed, it would restart at 1.
+      if (nurturing.detailsLoading || nurturing.detailsError) {
+        throw new Error('The existing steps have not loaded, so the new step cannot be numbered yet.');
       }
+      const stepNumber = campaignSteps.length + 1;
+      await nurturing.addStep(campaignId, stepNumber, newStep);
 
       toast({
         title: "Step added",
@@ -232,9 +94,6 @@ export const LeadNurturingCampaigns: React.FC = () => {
         delay_value: 1,
         delay_unit: 'days'
       });
-
-      await loadCampaignDetails(campaignId);
-      await loadCampaigns();
     } catch (error: unknown) {
       toast({
         title: "Error adding step",
@@ -246,19 +105,12 @@ export const LeadNurturingCampaigns: React.FC = () => {
 
   const toggleCampaignStatus = async (campaignId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('lead_nurturing_campaigns')
-        .update({ is_active: !isActive })
-        .eq('id', campaignId);
-
-      if (error) throw error;
+      await nurturing.setActive(campaignId, !isActive);
 
       toast({
         title: isActive ? "Campaign paused" : "Campaign activated",
         description: isActive ? "Campaign has been paused" : "Campaign is now active"
       });
-
-      await loadCampaigns();
     } catch (error: unknown) {
       toast({
         title: "Error updating campaign",
@@ -277,7 +129,7 @@ export const LeadNurturingCampaigns: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (nurturing.isLoading) {
     return <LoadingRegion label="Loading nurturing campaigns" className="p-6">
       <ListSkeleton />
     </LoadingRegion>;
@@ -353,7 +205,13 @@ export const LeadNurturingCampaigns: React.FC = () => {
       </div>
 
       <div className="grid gap-6">
-        {campaigns.length === 0 ? (
+        {nurturing.error ? (
+          <ErrorState
+            title="Campaigns could not be loaded"
+            error={nurturing.error}
+            onRetry={() => { void nurturing.refetch(); }}
+          />
+        ) : campaigns.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
@@ -368,8 +226,7 @@ export const LeadNurturingCampaigns: React.FC = () => {
         ) : (
           campaigns.map((campaign) => (
             <Card key={campaign.id} className="cursor-pointer" onClick={() => {
-              setSelectedCampaign(campaign);
-              loadCampaignDetails(campaign.id);
+              setSelectedCampaignId(campaign.id);
             }}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -432,11 +289,19 @@ export const LeadNurturingCampaigns: React.FC = () => {
       </div>
 
       {selectedCampaign && (
-        <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
+        <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaignId(null)}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedCampaign.campaign_name}</DialogTitle>
             </DialogHeader>
+            {nurturing.detailsError && (
+              <ErrorState
+                inline
+                title="Steps and enrollments could not be loaded"
+                error={nurturing.detailsError}
+                onRetry={() => { void nurturing.refetchDetails(); }}
+              />
+            )}
             <Tabs defaultValue="steps" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="steps">Campaign Steps</TabsTrigger>
@@ -581,10 +446,10 @@ export const LeadNurturingCampaigns: React.FC = () => {
                     <div key={enrollment.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <div className="font-medium">
-                          {enrollment.lead.first_name} {enrollment.lead.last_name}
+                          {enrollment.lead ? `${enrollment.lead.first_name} ${enrollment.lead.last_name}` : 'Lead not found'}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {enrollment.lead.company_name || 'Individual'}
+                          {enrollment.lead?.company_name || 'Individual'}
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">

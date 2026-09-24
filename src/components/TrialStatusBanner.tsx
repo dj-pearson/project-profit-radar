@@ -4,10 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Clock, CreditCard, AlertTriangle } from 'lucide-react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useEntitlement } from '@/hooks/useEntitlement';
 import TrialConversion from './TrialConversion';
 
 const TrialStatusBanner = () => {
   const { subscriptionStatus, loading } = useSubscription();
+  // True only when the account is read-only and the server enforces it
+  // (entitlements.trial_expiry, US-335). The copy below says what the server
+  // will actually do, not what it might do one day.
+  const { readOnly } = useEntitlement();
   const [showConversionModal, setShowConversionModal] = useState(false);
 
   const handleUpgrade = () => {
@@ -66,9 +71,13 @@ const TrialStatusBanner = () => {
             <div className="flex items-center space-x-3">
               <AlertTriangle className="h-5 w-5 text-destructive" />
               <div>
-                <h3 className="font-semibold text-destructive">Account Suspended</h3>
+                <h3 className="font-semibold text-destructive">
+                  {readOnly ? 'Account is read-only' : 'Account Suspended'}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Your trial and grace period have expired. Upgrade to reactivate your account.
+                  {readOnly
+                    ? 'You can still view and export your data. Choose a plan to add or change anything.'
+                    : 'Your trial and grace period have expired. Upgrade to reactivate your account.'}
                 </p>
               </div>
             </div>
@@ -125,9 +134,13 @@ const TrialStatusBanner = () => {
             <div className="flex items-center space-x-3">
               <AlertTriangle className="h-5 w-5 text-destructive" />
               <div>
-                <h3 className="font-semibold text-destructive">Trial Expired</h3>
+                <h3 className="font-semibold text-destructive">
+                  {readOnly ? 'Trial ended: account is read-only' : 'Trial Expired'}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Your trial has ended. Upgrade now to continue using all features.
+                  {readOnly
+                    ? 'You can still view and export your data. Choose a plan to add or change anything.'
+                    : 'Your trial has ended. Upgrade now to continue using all features.'}
                 </p>
               </div>
             </div>

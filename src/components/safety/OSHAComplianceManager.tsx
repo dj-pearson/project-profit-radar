@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOshaCompliance, type ComplianceDeadline } from '@/hooks/useSafetyPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -36,28 +36,10 @@ const complianceSchema = z.object({
   assigned_to: z.string().optional(),
 });
 
-interface ComplianceDeadline {
-  id: string;
-  title: string;
-  description?: string;
-  due_date: string;
-  deadline_type: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'pending' | 'completed' | 'overdue';
-  assigned_to?: string;
-  assigned_user_name?: string;
-  completed_date?: string;
-  completed_by?: string;
-  notes?: string;
-  created_at: string;
-}
-
 const OSHAComplianceManager = () => {
-  const [deadlines, setDeadlines] = useState<ComplianceDeadline[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const compliance = useOshaCompliance();
+  const { deadlines, employees } = compliance;
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof complianceSchema>>({
@@ -67,84 +49,19 @@ const OSHAComplianceManager = () => {
     },
   });
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
-    try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) return;
-
-      // Load employees and deadlines in parallel
-      const [employeesResult, deadlinesResult] = await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('id, first_name, last_name')
-          .eq('company_id', profile.company_id),
-        
-        supabase
-          .from('osha_compliance_deadlines')
-          .select('*')
-          .eq('company_id', profile.company_id)
-          .order('due_date', { ascending: true })
-      ]);
-
-      setEmployees(employeesResult.data || []);
-      
-      const deadlinesWithNames = (deadlinesResult.data || []).map(deadline => ({
-        ...deadline,
-        assigned_user_name: undefined
-      }));
-      
-      setDeadlines(deadlinesWithNames as ComplianceDeadline[]);
-    } catch (error) {
-      console.error('Error loading compliance data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load compliance data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onSubmit = async (values: z.infer<typeof complianceSchema>) => {
     try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) {
-        throw new Error('User company not found');
-      }
-
-      const deadlineData = {
-        company_id: profile.company_id,
+      await compliance.add({
         title: values.title,
         description: values.description || null,
         due_date: values.due_date.toISOString().split('T')[0],
         deadline_type: values.compliance_type,
         priority: values.priority,
-        assigned_to: values.assigned_to || null,
-        created_by: user?.id,
-      };
-
-      const { error } = await supabase
-        .from('osha_compliance_deadlines')
-        .insert(deadlineData);
-
-      if (error) throw error;
+        // The table has no assigned_to column (this insert sent one and so
+        // failed every time); an assignee is the related user.
+        related_entity_type: values.assigned_to ? 'user' : null,
+        related_entity_id: values.assigned_to || null,
+      });
 
       toast({
         title: "Success",
@@ -153,12 +70,11 @@ const OSHAComplianceManager = () => {
 
       form.reset();
       setShowAddDialog(false);
-      loadData();
     } catch (error) {
       console.error('Error adding compliance deadline:', error);
       toast({
         title: "Error",
-        description: "Failed to add compliance deadline",
+        description: error instanceof Error ? error.message : "Failed to add compliance deadline",
         variant: "destructive"
       });
     }
@@ -166,29 +82,17 @@ const OSHAComplianceManager = () => {
 
   const markCompleted = async (deadlineId: string, notes?: string) => {
     try {
-      const { error } = await supabase
-        .from('osha_compliance_deadlines')
-        .update({ 
-          status: 'completed',
-          completed_date: new Date().toISOString().split('T')[0],
-          completed_by: user?.id,
-          notes: notes || null
-        })
-        .eq('id', deadlineId);
-
-      if (error) throw error;
+      await compliance.complete(deadlineId, notes);
 
       toast({
         title: "Success",
         description: "Compliance deadline marked as completed",
       });
-
-      loadData();
     } catch (error) {
       console.error('Error updating compliance deadline:', error);
       toast({
         title: "Error",
-        description: "Failed to update compliance deadline",
+        description: error instanceof Error ? error.message : "Failed to update compliance deadline",
         variant: "destructive"
       });
     }
@@ -234,13 +138,23 @@ const OSHAComplianceManager = () => {
     return dueDate >= today && dueDate <= thirtyDaysFromNow && d.status === 'pending';
   }).length;
 
-  if (loading) {
+  if (compliance.isLoading) {
     return (
       <Card>
         <CardContent className="p-8">
           <ListSkeleton label="Loading compliance data" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (compliance.error) {
+    return (
+      <ErrorState
+        title="Compliance deadlines could not be loaded"
+        error={compliance.error}
+        onRetry={() => { void compliance.refetch(); }}
+      />
     );
   }
 

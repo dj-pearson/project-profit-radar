@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,93 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Clock, User, DollarSign, Calendar } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLaborTracking, type LaborEntry } from '@/hooks/useLaborTracking';
+import { ErrorState } from '@/components/common/ErrorState';
 import { format } from 'date-fns';
 
 interface LaborTrackingProps {
   projectId: string;
 }
 
-interface LaborEntry {
-  id: string;
-  employee_id?: string;
-  employee_name: string;
-  hours_worked: number;
-  hourly_rate: number;
-  overtime_hours: number;
-  overtime_rate: number;
-  total_labor_cost: number;
-  burden_rate: number;
-  total_cost_with_burden: number;
-  work_date: string;
-  description: string;
-  cost_code_id?: string;
-}
-
-interface CostCode {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-}
-
 export const LaborTracking: React.FC<LaborTrackingProps> = ({ projectId }) => {
   const { toast } = useToast();
-  const [laborEntries, setLaborEntries] = useState<LaborEntry[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const labor = useLaborTracking(projectId);
+  const { entries: laborEntries, costCodes } = labor;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (projectId) {
-      loadData();
-    }
-  }, [projectId]);
-
-  const loadData = async () => {
-    try {
-      // Load labor entries
-      const { data: laborData, error: laborError } = await supabase
-        .from('labor_costs')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('work_date', { ascending: false });
-
-      if (laborError) throw laborError;
-
-      // Load cost codes
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (userProfile) {
-        const { data: costCodeData, error: costCodeError } = await supabase
-          .from('cost_codes')
-          .select('*')
-          .eq('company_id', userProfile.company_id)
-          .eq('category', 'labor')
-          .eq('is_active', true)
-          .order('code');
-
-        if (costCodeError) throw costCodeError;
-        setCostCodes(costCodeData || []);
-      }
-
-      setLaborEntries(laborData || []);
-    } catch (error) {
-      console.error('Error loading labor data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load labor data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddLaborEntry = async (entryData: Partial<LaborEntry>) => {
     try {
@@ -119,13 +46,7 @@ export const LaborTracking: React.FC<LaborTrackingProps> = ({ projectId }) => {
         cost_code_id: entryData.cost_code_id || null
       };
 
-      const { error } = await supabase
-        .from('labor_costs')
-        .insert(laborEntry);
-
-      if (error) throw error;
-
-      await loadData();
+      await labor.add(laborEntry);
       setIsDialogOpen(false);
       
       toast({
@@ -136,7 +57,7 @@ export const LaborTracking: React.FC<LaborTrackingProps> = ({ projectId }) => {
       console.error('Error adding labor entry:', error);
       toast({
         title: "Error",
-        description: "Failed to add labor entry",
+        description: error instanceof Error ? error.message : "Failed to add labor entry",
         variant: "destructive",
       });
     }
@@ -324,8 +245,18 @@ export const LaborTracking: React.FC<LaborTrackingProps> = ({ projectId }) => {
     );
   };
 
-  if (loading) {
+  if (labor.isLoading) {
     return <DataTablePageSkeleton />;
+  }
+
+  if (labor.error) {
+    return (
+      <ErrorState
+        title="Labor costs could not be loaded"
+        error={labor.error}
+        onRetry={() => { void labor.refetch(); }}
+      />
+    );
   }
 
   return (

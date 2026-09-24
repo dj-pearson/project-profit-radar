@@ -53,7 +53,13 @@ const Hero3DFallback = () => (
 
 // Hook to detect mobile - SSR safe
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  // Read the viewport on the first render. Starting at `false` let the GSAP
+  // and 3D effects below run once as "desktop" on every phone before the
+  // correction landed, so mobile fetched three.js and hid the <h1> behind an
+  // opacity-0 tween, which is what its LCP measured (US-388).
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && (window.innerWidth < 1024 || 'ontouchstart' in window)
+  );
 
   useEffect(() => {
     const checkMobile = () => {

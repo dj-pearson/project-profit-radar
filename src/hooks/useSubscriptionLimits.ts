@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { TIER_LIMITS as SHARED_TIER_LIMITS } from '@/lib/tiers.generated';
 
 export interface SubscriptionLimits {
   teamMembers: number;
@@ -14,23 +15,9 @@ export interface SubscriptionData {
   is_complimentary?: boolean;
 }
 
-const TIER_LIMITS: Record<string, SubscriptionLimits> = {
-  starter: {
-    teamMembers: 5,
-    projects: 10,
-    storage: 10
-  },
-  professional: {
-    teamMembers: 20,
-    projects: 50,
-    storage: 100
-  },
-  enterprise: {
-    teamMembers: -1, // unlimited
-    projects: -1, // unlimited
-    storage: -1 // unlimited
-  }
-};
+// The one definition (US-335). This hook carried its own hand-typed copy of
+// the table, a third one nobody had listed.
+const TIER_LIMITS: Record<string, SubscriptionLimits> = SHARED_TIER_LIMITS;
 
 export const useSubscriptionLimits = () => {
   const { user, userProfile } = useAuth();
@@ -68,10 +55,12 @@ export const useSubscriptionLimits = () => {
 
     try {
       // Fetch team members count
+      // client_portal users are customers, not seats (US-319, US-335).
       const { count: teamMembersCount } = await supabase
         .from('user_profiles')
         .select('id', { count: 'exact' })
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', userProfile.company_id)
+        .neq('role', 'client_portal');
 
       // Fetch projects count
       const { count: projectsCount } = await supabase

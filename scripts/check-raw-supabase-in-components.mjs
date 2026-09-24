@@ -45,8 +45,13 @@ const SRC = join(root, 'src');
  * prediction, GDPR, rate limiting, RFIs/submittals, AI models, keyword
  * research, admin intelligence, auto scheduling, workflow automation and error
  * logs). ESLint now warns on supabase.from() in components and pages too.
+ * A fifth moved 211 more (37 files, the largest raw readers first: safety,
+ * audit/compliance, leads, procurement, admin security/SSO/webhooks/API keys,
+ * support tickets, crew scheduling, materials, purchase orders and the
+ * executive, WIP, budget and labor job-costing views), and removed the
+ * invented figures several of them showed.
  */
-const BASELINE = 657;
+const BASELINE = 446;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useReportingEngine } from '@/hooks/useReportingEngine';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,85 +14,12 @@ import {
   Play
 } from 'lucide-react';
 
-interface CustomReport {
-  id: string;
-  report_name: string;
-  report_type: string;
-  report_description: string;
-  is_scheduled: boolean;
-  schedule_frequency: string;
-  is_public: boolean;
-  created_at: string;
-}
-
-interface ReportHistory {
-  id: string;
-  generated_at: string;
-  output_format: string;
-  file_size_bytes: number;
-  delivery_status: string;
-  execution_time_ms: number;
-  custom_reports: { report_name: string };
-}
-
 export function ReportingEngine() {
-  const { user } = useAuth();
-  const [reports, setReports] = useState<CustomReport[]>([]);
-  const [history, setHistory] = useState<ReportHistory[]>([]);
-
-  useEffect(() => {
-    loadReports();
-    loadHistory();
-  }, [user]);
-
-  const loadReports = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('custom_reports')
-        .select('*')
-        .eq('tenant_id', userProfile.tenant_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setReports(data || []);
-    } catch (error) {
-      console.error('Error loading reports:', error);
-    }
-  };
-
-  const loadHistory = async () => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!userProfile?.tenant_id) return;
-
-      const { data, error } = await supabase
-        .from('report_history')
-        .select(`
-          *,
-          custom_reports (report_name)
-        `)
-        .order('generated_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setHistory(data as any || []);
-    } catch (error) {
-      console.error('Error loading history:', error);
-    }
-  };
+  const engine = useReportingEngine();
+  const reports = engine.data?.reports ?? [];
+  const history = engine.data?.history ?? [];
+  // Figures only from a read that came back; loading or failed shows '--'.
+  const shown = (n: number) => (engine.data && !engine.error ? n : '--');
 
   const getReportTypeIcon = (type: string) => {
     switch (type) {
@@ -126,6 +52,15 @@ export function ReportingEngine() {
         <FileText className="h-12 w-12 text-pink-600 opacity-50" />
       </div>
 
+      {engine.error && (
+        <ErrorState
+          inline
+          title="Reports could not be loaded"
+          error={engine.error}
+          onRetry={() => { void engine.refetch(); }}
+        />
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card>
@@ -133,7 +68,7 @@ export function ReportingEngine() {
             <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{reports.length}</div>
+            <div className="text-2xl font-bold">{shown(reports.length)}</div>
           </CardContent>
         </Card>
 
@@ -143,7 +78,7 @@ export function ReportingEngine() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {reports.filter(r => r.is_scheduled).length}
+              {shown(reports.filter(r => r.is_scheduled).length)}
             </div>
           </CardContent>
         </Card>
@@ -153,7 +88,7 @@ export function ReportingEngine() {
             <CardTitle className="text-sm font-medium">Generated</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{history.length}</div>
+            <div className="text-2xl font-bold">{shown(engine.data?.generatedCount ?? 0)}</div>
           </CardContent>
         </Card>
 
@@ -163,7 +98,7 @@ export function ReportingEngine() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {reports.filter(r => r.is_public).length}
+              {shown(reports.filter(r => r.is_public).length)}
             </div>
           </CardContent>
         </Card>
@@ -196,7 +131,7 @@ export function ReportingEngine() {
               <div className="space-y-3">
                 {reports.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No custom reports created
+                    {engine.error ? 'Could not be loaded; see the error above.' : 'No custom reports created'}
                   </p>
                 ) : (
                   reports.map((report) => (
@@ -247,7 +182,7 @@ export function ReportingEngine() {
               <div className="space-y-3">
                 {history.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No reports generated yet
+                    {engine.error ? 'Could not be loaded; see the error above.' : 'No reports generated yet'}
                   </p>
                 ) : (
                   history.map((item) => (
@@ -266,7 +201,7 @@ export function ReportingEngine() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Generated: {new Date(item.generated_at).toLocaleString()}
+                          Generated: {item.generated_at ? new Date(item.generated_at).toLocaleString() : '--'}
                         </p>
                       </div>
                       <div className="flex items-center gap-6">
@@ -276,7 +211,7 @@ export function ReportingEngine() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">Time</p>
-                          <p className="font-semibold">{(item.execution_time_ms / 1000).toFixed(2)}s</p>
+                          <p className="font-semibold">{item.execution_time_ms == null ? '--' : `${(item.execution_time_ms / 1000).toFixed(2)}s`}</p>
                         </div>
                         <Button size="sm" variant="outline">
                           <Download className="h-4 w-4" />

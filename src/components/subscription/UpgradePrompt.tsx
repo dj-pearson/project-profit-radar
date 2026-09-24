@@ -5,26 +5,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Users, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { TIER_LIMITS } from '@/lib/tiers.generated';
 
 interface UpgradePromptProps {
   isOpen: boolean;
   onClose: () => void;
   currentTier: string;
   requiredTier: string;
-  limitType: 'teamMembers' | 'projects';
+  limitType: 'teamMembers' | 'projects' | 'storage';
   currentUsage: number;
   currentLimit: number;
 }
+
+// Limits come from the one tier definition (US-335); this dialog used to type
+// its own copy of them. Prices and the marketing bullets are still local.
+const count = (n: number, noun: string) => (n === -1 ? `Unlimited ${noun}` : `Up to ${n} ${noun}`);
+const shown = (n: number) => (n === -1 ? 'Unlimited' : n);
 
 const TIER_FEATURES = {
   professional: {
     name: 'Professional',
     price: '$299/month',
-    teamMembers: 20,
-    projects: 50,
+    teamMembers: shown(TIER_LIMITS.professional.teamMembers),
+    projects: shown(TIER_LIMITS.professional.projects),
     features: [
-      'Up to 20 team members',
-      'Up to 50 active projects',
+      count(TIER_LIMITS.professional.teamMembers, 'team members'),
+      count(TIER_LIMITS.professional.projects, 'active projects'),
+      `${TIER_LIMITS.professional.storage} GB of file storage`,
       'Advanced reporting',
       'Priority support',
       'Mobile app access'
@@ -33,11 +40,12 @@ const TIER_FEATURES = {
   enterprise: {
     name: 'Enterprise',
     price: '$599/month',
-    teamMembers: 'Unlimited',
-    projects: 'Unlimited',
+    teamMembers: shown(TIER_LIMITS.enterprise.teamMembers),
+    projects: shown(TIER_LIMITS.enterprise.projects),
     features: [
-      'Unlimited team members',
-      'Unlimited projects',
+      count(TIER_LIMITS.enterprise.teamMembers, 'team members'),
+      count(TIER_LIMITS.enterprise.projects, 'projects'),
+      TIER_LIMITS.enterprise.storage === -1 ? 'Unlimited file storage' : `${TIER_LIMITS.enterprise.storage} GB of file storage`,
       'Advanced analytics',
       'Custom integrations',
       'Dedicated support',
@@ -63,7 +71,8 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({
   };
 
   const tierInfo = TIER_FEATURES[requiredTier as keyof typeof TIER_FEATURES];
-  const limitTypeDisplay = limitType === 'teamMembers' ? 'team members' : 'projects';
+  const limitTypeDisplay =
+    limitType === 'teamMembers' ? 'team members' : limitType === 'storage' ? 'storage (GB)' : 'projects';
 
   if (!tierInfo) return null;
 

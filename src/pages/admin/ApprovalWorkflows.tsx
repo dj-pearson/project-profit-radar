@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit, Trash2, GitBranch, X, AlertTriangle } from 'lucide-react';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
+import { useApprovalWorkflows } from '@/hooks/useApprovalWorkflows';
 import type { Json } from '@/integrations/supabase/types';
 import { logger } from '@/lib/logger';
 import { useToast } from '@/hooks/use-toast';
@@ -57,11 +57,6 @@ const APPROVER_ROLES: { value: string; label: string }[] = [
   { value: 'accounting', label: 'Accounting' },
 ];
 
-interface CompanyUser {
-  id: string;
-  name: string;
-}
-
 interface DraftState {
   name: string;
   description: string;
@@ -83,83 +78,18 @@ const emptyDraft: DraftState = {
 const newId = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tmp-${Date.now()}-${Math.random()}`;
 
-/** Coerce a DB row (JSONB columns typed as Json) into the typed workflow shape. */
-function toWorkflow(row: Record<string, unknown>): ApprovalWorkflow {
-  return {
-    id: row.id as string,
-    company_id: row.company_id as string,
-    name: row.name as string,
-    description: (row.description as string | null) ?? null,
-    entity_type: row.entity_type as ApprovalEntityType,
-    steps: Array.isArray(row.steps) ? (row.steps as ApprovalStep[]) : [],
-    conditions: Array.isArray(row.conditions) ? (row.conditions as ApprovalCondition[]) : [],
-    is_active: Boolean(row.is_active),
-    created_by: (row.created_by as string | null) ?? null,
-    created_at: row.created_at as string,
-    updated_at: row.updated_at as string,
-  };
-}
-
 const ApprovalWorkflows = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
-  const [workflows, setWorkflows] = useState<ApprovalWorkflow[]>([]);
-  const [users, setUsers] = useState<CompanyUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const approvals = useApprovalWorkflows();
+  const { workflows, users } = approvals;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ApprovalWorkflow | null>(null);
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!companyId) return;
-    loadWorkflows();
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId]);
-
-  const loadWorkflows = async () => {
-    if (!companyId) return;
-    setLoading(true);
-    setLoadError(false);
-    try {
-      const { data, error } = await supabase
-        .from('approval_workflows')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setWorkflows((data ?? []).map((r) => toWorkflow(r as Record<string, unknown>)));
-    } catch (err) {
-      logger.error('Error loading approval workflows', err as Error);
-      setLoadError(true);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load approval workflows.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    if (!companyId) return;
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('id, first_name, last_name')
-      .eq('company_id', companyId);
-    if (error) {
-      logger.error('Error loading company users for approval workflows', error);
-      return;
-    }
-    setUsers(
-      (data ?? []).map((u) => ({
-        id: u.id,
-        name: `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || 'Unnamed user',
-      }))
-    );
-  };
 
   const openCreate = () => {
     setEditing(null);
@@ -254,22 +184,9 @@ const ApprovalWorkflows = () => {
 
     setSaving(true);
     try {
-      if (editing) {
-        const { error } = await supabase
-          .from('approval_workflows')
-          .update(payload)
-          .eq('id', editing.id)
-          .eq('company_id', companyId);
-        if (error) throw error;
-        toast({ title: 'Saved', description: 'Workflow updated.' });
-      } else {
-        // created_by is set server-side (DEFAULT auth.uid()) so it can't be spoofed.
-        const { error } = await supabase.from('approval_workflows').insert([payload]);
-        if (error) throw error;
-        toast({ title: 'Created', description: 'Workflow created.' });
-      }
+      await approvals.save(editing ? editing.id : null, payload);
+      toast(editing ? { title: 'Saved', description: 'Workflow updated.' } : { title: 'Created', description: 'Workflow created.' });
       setDialogOpen(false);
-      loadWorkflows();
     } catch (err) {
       logger.error('Error saving approval workflow', err as Error);
       toast({ variant: 'destructive', title: 'Error', description: (err as Error).message });
@@ -279,34 +196,21 @@ const ApprovalWorkflows = () => {
   };
 
   const toggleActive = async (wf: ApprovalWorkflow) => {
-    if (!companyId) return;
-    // Optimistic toggle.
-    setWorkflows((prev) => prev.map((w) => (w.id === wf.id ? { ...w, is_active: !w.is_active } : w)));
-    const { error } = await supabase
-      .from('approval_workflows')
-      .update({ is_active: !wf.is_active })
-      .eq('id', wf.id)
-      .eq('company_id', companyId);
-    if (error) {
-      setWorkflows((prev) => prev.map((w) => (w.id === wf.id ? { ...w, is_active: wf.is_active } : w)));
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update status.' });
+    try {
+      await approvals.setActive(wf.id, !wf.is_active);
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: (err as Error).message || 'Failed to update status.' });
     }
   };
 
   const handleDelete = async (wf: ApprovalWorkflow) => {
-    if (!companyId) return;
     if (!(await confirmAction({ title: `Delete workflow "${wf.name}"?`, destructive: true }))) return;
-    const { error } = await supabase
-      .from('approval_workflows')
-      .delete()
-      .eq('id', wf.id)
-      .eq('company_id', companyId);
-    if (error) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete workflow.' });
-      return;
+    try {
+      await approvals.remove(wf.id);
+      toast({ title: 'Deleted', description: 'Workflow removed.' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: (err as Error).message || 'Failed to delete workflow.' });
     }
-    toast({ title: 'Deleted', description: 'Workflow removed.' });
-    setWorkflows((prev) => prev.filter((w) => w.id !== wf.id));
   };
 
   const entityLabel = (value: string) => ENTITY_TYPES.find((e) => e.value === value)?.label ?? value;
@@ -333,18 +237,18 @@ const ApprovalWorkflows = () => {
           </Button>
         </div>
 
-        {loading ? (
+        {approvals.isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </div>
-        ) : loadError ? (
+        ) : approvals.error ? (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             <AlertTitle>Couldn't load approval workflows</AlertTitle>
             <AlertDescription className="flex flex-col items-start gap-3">
-              <span>Something went wrong while loading workflows. Please try again.</span>
-              <Button size="sm" variant="outline" onClick={loadWorkflows}>
+              <span>{approvals.error.message || 'Something went wrong while loading workflows. Please try again.'}</span>
+              <Button size="sm" variant="outline" onClick={() => { void approvals.refetch(); }}>
                 Retry
               </Button>
             </AlertDescription>

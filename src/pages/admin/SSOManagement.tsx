@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Shield, Key, CheckCircle, XCircle, Plus, Edit, Trash2, Smartphone, RefreshCw, Loader2 } from 'lucide-react';
-import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
+import { useSSOManagement, type SSOConnection } from '@/hooks/useSSOManagement';
+import { ErrorState } from '@/components/common/ErrorState';
 import { SAML_AVAILABLE, SAML_UNAVAILABLE_NOTICE } from '@/lib/sso/samlAvailability';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
@@ -15,56 +15,14 @@ import { SSOConfigurationForm } from '@/components/sso/SSOConfigurationForm';
 import { TOTPSetupScreen } from '@/components/mfa/TOTPSetupScreen';
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
-interface SSOConnection {
-  id: string;
-  tenant_id: string;
-  provider: string;
-  display_name: string;
-  is_enabled: boolean;
-  is_default: boolean;
-  allowed_domains: string[];
-  total_logins: number;
-  last_used_at: string;
-  created_at: string;
-  config?: Record<string, unknown>;
-}
-
-interface UserSession {
-  id: string;
-  device_name: string;
-  device_type: string;
-  browser: string;
-  os: string;
-  ip_address: string;
-  auth_method: string;
-  is_active: boolean;
-  last_activity_at: string;
-  created_at: string;
-}
-
-interface MFADevice {
-  id: string;
-  mfa_type: string;
-  display_name: string;
-  is_enabled: boolean;
-  is_verified: boolean;
-  last_used_at: string;
-}
-
-interface UserSecurity {
-  two_factor_enabled: boolean;
-  backup_codes?: string[];
-}
-
 export const SSOManagement = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  const [loading, setLoading] = useState(true);
-  const [ssoConnections, setSSOConnections] = useState<SSOConnection[]>([]);
-  const [userSessions, setUserSessions] = useState<UserSession[]>([]);
-  const [mfaDevices, setMFADevices] = useState<MFADevice[]>([]);
-  const [userSecurity, setUserSecurity] = useState<UserSecurity | null>(null);
+  const sso = useSSOManagement();
+  const ssoConnections = sso.data?.connections ?? [];
+  const userSessions = sso.data?.sessions ?? [];
+  const mfaDevices = sso.data?.mfaDevices ?? [];
+  const userSecurity = sso.data?.security ?? null;
+  const loadSSOData = () => { void sso.refetch(); };
 
   // Dialog states
   const [showSSOForm, setShowSSOForm] = useState(false);
@@ -73,133 +31,26 @@ export const SSOManagement = () => {
   const [deletingConnectionId, setDeletingConnectionId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    loadSSOData();
-  }, []);
-
-  const loadSSOData = async () => {
-    setLoading(true);
-    try {
-      // Load SSO connections via edge function for proper filtering
-      const { data: session } = await supabase.auth.getSession();
-      if (session?.session?.access_token) {
-        try {
-          const response = await fetch(
-            getEdgeFunctionUrl('sso-manage'),
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${session.session.access_token}`,
-                apikey: supabaseAnonKey,
-              },
-              body: JSON.stringify({ action: 'list' }),
-            }
-          );
-
-          const result = await response.json();
-          if (response.ok && result.data?.connections) {
-            setSSOConnections(result.data.connections);
-          }
-        } catch (err) {
-          console.error('Failed to load SSO connections via edge function:', err);
-          // Fallback to direct query
-          const { data: ssoData } = await supabase
-            .from('sso_connections')
-            .select('*')
-            .order('created_at', { ascending: false });
-          setSSOConnections(ssoData || []);
-        }
-      }
-
-      // Load user sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('user_sessions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_active', true)
-        .order('last_activity_at', { ascending: false });
-
-      if (!sessionsError) {
-        setUserSessions(sessionsData || []);
-      }
-
-      // Load MFA devices
-      const { data: mfaData, error: mfaError } = await supabase
-        .from('mfa_devices')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (!mfaError) {
-        setMFADevices(mfaData || []);
-      }
-
-      // Load user security status
-      const { data: securityData } = await supabase
-        .from('user_security')
-        .select('two_factor_enabled, backup_codes')
-        .eq('user_id', user?.id)
-        .single();
-
-      setUserSecurity(securityData);
-    } catch (error) {
-      console.error('Failed to load SSO data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load authentication data.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const failure = (title: string, error: unknown, fallback: string) => {
+    console.error(title, error);
+    toast({
+      title: 'Error',
+      description: error instanceof Error && error.message ? error.message : fallback,
+      variant: 'destructive',
+    });
   };
 
   const toggleSSOConnection = async (connectionId: string, currentStatus: boolean) => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.access_token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(
-        getEdgeFunctionUrl('sso-manage'),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.session.access_token}`,
-            apikey: supabaseAnonKey,
-          },
-          body: JSON.stringify({
-            action: 'update',
-            id: connectionId,
-            is_enabled: !currentStatus,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update SSO connection');
-      }
-
+      await sso.setConnectionEnabled(connectionId, !currentStatus);
       toast({
         title: currentStatus ? 'SSO Disabled' : 'SSO Enabled',
         description: currentStatus
           ? 'SSO connection has been disabled.'
           : 'SSO connection is now enabled.',
       });
-
-      loadSSOData();
     } catch (error) {
-      console.error('Failed to toggle SSO:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update SSO connection.',
-        variant: 'destructive',
-      });
+      failure('Failed to toggle SSO:', error, 'Failed to update SSO connection.');
     }
   };
 
@@ -208,46 +59,13 @@ export const SSOManagement = () => {
 
     setIsDeleting(true);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.access_token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(
-        getEdgeFunctionUrl('sso-manage'),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.session.access_token}`,
-            apikey: supabaseAnonKey,
-          },
-          body: JSON.stringify({
-            action: 'delete',
-            id: deletingConnectionId,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete SSO connection');
-      }
-
+      await sso.deleteConnection(deletingConnectionId);
       toast({
         title: 'Connection Deleted',
         description: 'SSO connection has been removed.',
       });
-
-      loadSSOData();
     } catch (error) {
-      console.error('Failed to delete connection:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete SSO connection.',
-        variant: 'destructive',
-      });
+      failure('Failed to delete connection:', error, 'Failed to delete SSO connection.');
     } finally {
       setIsDeleting(false);
       setDeletingConnectionId(null);
@@ -256,96 +74,37 @@ export const SSOManagement = () => {
 
   const revokeSession = async (sessionId: string) => {
     try {
-      const { error } = await supabase
-        .from('user_sessions')
-        .update({ is_active: false })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-
+      await sso.revokeSession(sessionId);
       toast({
         title: 'Session Revoked',
         description: 'The session has been revoked.',
       });
-
-      loadSSOData();
     } catch (error) {
-      console.error('Failed to revoke session:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to revoke session.',
-        variant: 'destructive',
-      });
+      failure('Failed to revoke session:', error, 'Failed to revoke session.');
     }
   };
 
   const revokeAllSessions = async () => {
     try {
-      const { error } = await supabase
-        .from('user_sessions')
-        .update({ is_active: false })
-        .eq('user_id', user?.id)
-        .eq('is_active', true);
-
-      if (error) throw error;
-
+      const count = await sso.revokeAllSessions();
       toast({
         title: 'All Sessions Revoked',
-        description: 'All active sessions have been revoked.',
+        description: `${count} active session${count === 1 ? ' has' : 's have'} been revoked.`,
       });
-
-      loadSSOData();
     } catch (error) {
-      console.error('Failed to revoke all sessions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to revoke sessions.',
-        variant: 'destructive',
-      });
+      failure('Failed to revoke all sessions:', error, 'Failed to revoke sessions.');
     }
   };
 
   const disableMFA = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.access_token || !user?.id) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(
-        getEdgeFunctionUrl('disable-mfa'),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.session.access_token}`,
-            apikey: supabaseAnonKey,
-          },
-          body: JSON.stringify({
-            user_id: user.id,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to disable MFA');
-      }
-
+      await sso.disableMfa();
       toast({
         title: 'MFA Disabled',
         description: 'Two-factor authentication has been disabled.',
       });
-
-      loadSSOData();
     } catch (error) {
-      console.error('Failed to disable MFA:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to disable MFA.',
-        variant: 'destructive',
-      });
+      failure('Failed to disable MFA:', error, 'Failed to disable MFA.');
     }
   };
 
@@ -374,7 +133,7 @@ export const SSOManagement = () => {
     return <Badge className={`${color} text-white`}>{label}</Badge>;
   };
 
-  if (loading) {
+  if (sso.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="SSO & Authentication">
       <DashboardLayout hasAccessibleWrapper title="SSO & Authentication">
@@ -397,6 +156,14 @@ export const SSOManagement = () => {
       }
     >
       <div className="space-y-6">
+        {sso.error ? (
+          <ErrorState
+            title="Authentication settings could not be loaded"
+            error={sso.error}
+            onRetry={loadSSOData}
+          />
+        ) : (
+        <>
         {/* Tabs */}
         <Tabs defaultValue="sso" aria-label="SSO and authentication settings">
           <TabsList aria-label="Authentication categories">
@@ -707,6 +474,8 @@ export const SSOManagement = () => {
             )}
           </TabsContent>
         </Tabs>
+        </>
+        )}
       </div>
 
       {/* SSO Configuration Dialog */}

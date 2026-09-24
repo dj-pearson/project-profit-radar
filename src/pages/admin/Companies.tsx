@@ -10,28 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useCompaniesAdmin, type AdminCompany } from '@/hooks/useCompaniesAdmin';
+import { ErrorState } from '@/components/common/ErrorState';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Building2, Users, Calendar, Search, Eye } from 'lucide-react';
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Company {
-  id: string;
-  name: string;
-  address: string;
-  industry_type: string;
-  company_size: string;
-  subscription_tier: string;
-  subscription_status: string;
-  trial_end_date: string;
-  created_at: string;
-  _count?: {
-    users: number;
-    projects: number;
-  };
-}
+type Company = AdminCompany;
 
 interface CompanySettings {
   id: string;
@@ -61,15 +48,18 @@ const Companies = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
-  const [loadingData, setLoadingData] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [selectedCompanySettings, setSelectedCompanySettings] = useState<CompanySettings | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  const [loadingSettings, setLoadingSettings] = useState(false);
+  const admin = useCompaniesAdmin({
+    enabled: userProfile?.role === 'root_admin',
+    selectedCompanyId: selectedCompany?.id ?? null,
+  });
+  const companies = admin.companies.data ?? [];
+  const selectedCompanySettings = (admin.settings.data ?? null) as CompanySettings | null;
+  const loadingSettings = admin.settings.isLoading;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -85,100 +75,7 @@ const Companies = () => {
       });
       return;
     }
-    
-    if (userProfile?.role === 'root_admin') {
-      loadCompanies();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadCompanies = async () => {
-    try {
-      setLoadingData(true);
-      
-      // Load companies with user and project counts
-      const { data: companiesData, error } = await supabase
-        .from('companies')
-        .select(`
-          *,
-          user_profiles!inner(count),
-          projects!inner(count)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get user counts for each company with proper error handling
-      const companiesWithCounts = await Promise.all(
-        (companiesData || []).map(async (company) => {
-          try {
-            const [userResult, projectResult] = await Promise.all([
-              supabase
-                .from('user_profiles')
-                .select('*', { count: 'exact', head: true })
-                .eq('company_id', company.id),
-              supabase
-                .from('projects')
-                .select('*', { count: 'exact', head: true })
-                .eq('company_id', company.id)
-            ]);
-
-            return {
-              ...company,
-              _count: {
-                users: userResult.count || 0,
-                projects: projectResult.count || 0
-              }
-            };
-          } catch (error) {
-            console.error(`Error fetching counts for company ${company.id}:`, error);
-            // Return company with zero counts on error to prevent data loss
-            return {
-              ...company,
-              _count: {
-                users: 0,
-                projects: 0
-              }
-            };
-          }
-        })
-      );
-
-      setCompanies(companiesWithCounts);
-    } catch (error: any) {
-      console.error('Error loading companies:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load companies"
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const loadCompanySettings = async (companyId: string) => {
-    try {
-      setLoadingSettings(true);
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .eq('company_id', companyId)
-        .single();
-
-      if (error) {
-        console.error('Error loading company settings:', error);
-        setSelectedCompanySettings(null);
-        return;
-      }
-
-      setSelectedCompanySettings(data);
-    } catch (error: any) {
-      console.error('Error loading company settings:', error);
-      setSelectedCompanySettings(null);
-    } finally {
-      setLoadingSettings(false);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -217,7 +114,7 @@ const Companies = () => {
     return matchesSearch && matchesStatus && matchesTier;
   });
 
-  if (loading || loadingData) {
+  if (loading || admin.companies.isLoading) {
     return (
       <AccessiblePageWrapper pageTitle="Companies">
       <DashboardLayout hasAccessibleWrapper title="Companies" showTrialBanner={false}>
@@ -237,6 +134,14 @@ const Companies = () => {
       <AccessiblePageWrapper pageTitle="Companies">
       <DashboardLayout hasAccessibleWrapper title="Companies" showTrialBanner={false}>
         <div className="space-y-6">
+        {admin.companies.error && (
+          <ErrorState
+            inline
+            title="Companies could not be loaded"
+            error={admin.companies.error as Error}
+            onRetry={() => { void admin.companies.refetch(); }}
+          />
+        )}
         {/* Filters */}
         <section className="flex flex-col sm:flex-row gap-4" aria-label="Company filters">
           <div className="flex-1" role="search" aria-label="Search companies">
@@ -284,8 +189,8 @@ const Companies = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{company.name}</CardTitle>
                   <div className="flex space-x-1">
-                    {getStatusBadge(company.subscription_status)}
-                    {getTierBadge(company.subscription_tier)}
+                    {getStatusBadge(company.subscription_status ?? '')}
+                    {getTierBadge(company.subscription_tier ?? '')}
                   </div>
                 </div>
                 <CardDescription>
@@ -322,10 +227,9 @@ const Companies = () => {
                      <Button
                       size="sm"
                       variant="outline"
-                      onClick={async () => {
+                      onClick={() => {
                         setSelectedCompany(company);
                         setIsDetailDialogOpen(true);
-                        await loadCompanySettings(company.id);
                       }}
                       aria-label={`View details for ${company.name}`}
                     >
@@ -379,8 +283,8 @@ const Companies = () => {
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Subscription</Label>
                   <div className="flex space-x-2">
-                    {getTierBadge(selectedCompany.subscription_tier)}
-                    {getStatusBadge(selectedCompany.subscription_status)}
+                    {getTierBadge(selectedCompany.subscription_tier ?? '')}
+                    {getStatusBadge(selectedCompany.subscription_status ?? '')}
                   </div>
                 </div>
               </div>
@@ -427,6 +331,13 @@ const Companies = () => {
                   <LoadingRegion label="Loading settings" className="py-4">
                     <ListSkeleton />
                   </LoadingRegion>
+                ) : admin.settings.error ? (
+                  <ErrorState
+                    inline
+                    title="Settings could not be loaded"
+                    error={admin.settings.error as Error}
+                    onRetry={() => { void admin.settings.refetch(); }}
+                  />
                 ) : selectedCompanySettings ? (
                   <div className="space-y-6">
                     {/* Feature Toggles */}

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,178 +15,29 @@ import {
   RefreshCw,
   Download
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { ErrorState } from '@/components/common/ErrorState';
 import { format } from 'date-fns';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 
-interface SecurityStats {
-  totalEvents: number;
-  failedLogins: number;
-  suspiciousActivity: number;
-  activeUsers: number;
-  todayEvents: number;
-}
-
-interface SecurityEvent {
-  id: string;
-  event_type: string;
-  user_id: string | null;
-  ip_address: unknown;
-  user_agent: string | null;
-  details: any;
-  created_at: string;
-}
-
 const SecurityMonitoring = () => {
-  const [stats, setStats] = useState<SecurityStats>({
-    totalEvents: 0,
-    failedLogins: 0,
-    suspiciousActivity: 0,
-    activeUsers: 0,
-    todayEvents: 0
-  });
-  const [recentEvents, setRecentEvents] = useState<SecurityEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const { user } = useAuth();
+  const security = useSecurityMonitoring();
+  const stats = security.data?.stats ?? null;
+  const recentEvents = security.data?.recentEvents ?? [];
+  const refreshing = security.isFetching && !security.isLoading;
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      fetchSecurityData();
-      
-      // Set up real-time subscription for security logs
-      const channel = supabase
-        .channel('security-monitoring')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'security_logs'
-          },
-          (payload) => {
-            setRecentEvents(prev => [payload.new as SecurityEvent, ...prev.slice(0, 49)]);
-            updateStatsWithNewEvent(payload.new as SecurityEvent);
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [user]);
-
-  const fetchSecurityData = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Fetch security statistics
-      const [eventsResult, failedLoginsResult, todayEventsResult, recentEventsResult] = await Promise.all([
-        // Total events (last 30 days)
-        supabase
-          .from('security_logs')
-          .select('id')
-          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-        
-        // Failed login attempts (last 7 days)
-        supabase
-          .from('security_logs')
-          .select('id')
-          .eq('event_type', 'login_failed')
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        
-        // Today's events
-        supabase
-          .from('security_logs')
-          .select('id')
-          .gte('created_at', `${today}T00:00:00.000Z`)
-          .lt('created_at', `${today}T23:59:59.999Z`),
-        
-        // Recent events (last 50)
-        supabase
-          .from('security_logs')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50)
-      ]);
-
-      // Count suspicious activity (multiple failed logins from same IP)
-      const suspiciousCount = await countSuspiciousActivity();
-
-      // Count active users (logged in last 24 hours)
-      const { data: activeUsersData } = await supabase
-        .from('security_logs')
-        .select('user_id')
-        .eq('event_type', 'login_success')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      const uniqueActiveUsers = new Set(activeUsersData?.map(log => log.user_id).filter(Boolean)).size;
-
-      setStats({
-        totalEvents: eventsResult.data?.length || 0,
-        failedLogins: failedLoginsResult.data?.length || 0,
-        suspiciousActivity: suspiciousCount,
-        activeUsers: uniqueActiveUsers,
-        todayEvents: todayEventsResult.data?.length || 0
-      });
-
-      setRecentEvents(recentEventsResult.data || []);
-    } catch (error) {
-      console.error('Error fetching security data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load security data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const countSuspiciousActivity = async () => {
-    try {
-      // Get failed logins in last 24 hours grouped by IP
-      const { data } = await supabase
-        .from('security_logs')
-        .select('ip_address')
-        .eq('event_type', 'login_failed')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      if (!data) return 0;
-
-      // Count IPs with 3+ failed attempts
-      const ipCounts = data.reduce((acc: any, log) => {
-        const ip = log.ip_address as string;
-        if (ip) {
-          acc[ip] = (acc[ip] || 0) + 1;
-        }
-        return acc;
-      }, {});
-
-      return Object.values(ipCounts).filter((count: any) => count >= 3).length;
-    } catch (error) {
-      console.error('Error counting suspicious activity:', error);
-      return 0;
-    }
-  };
-
-  const updateStatsWithNewEvent = (event: SecurityEvent) => {
-    setStats(prev => ({
-      ...prev,
-      todayEvents: prev.todayEvents + 1,
-      totalEvents: prev.totalEvents + 1,
-      ...(event.event_type === 'login_failed' && { failedLogins: prev.failedLogins + 1 })
-    }));
-  };
-
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchSecurityData();
-    setRefreshing(false);
+    const result = await security.refetch();
+    if (result.error) {
+      toast({
+        title: "Could not refresh",
+        description: result.error instanceof Error ? result.error.message : "Failed to load security data",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Refreshed",
       description: "Security data has been updated",
@@ -225,7 +75,7 @@ const SecurityMonitoring = () => {
     }
   };
 
-  if (loading) {
+  if (security.isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-6">
@@ -265,6 +115,15 @@ const SecurityMonitoring = () => {
         </div>
       </div>
 
+      {security.error && (
+        <ErrorState
+          inline
+          title="Security data could not be loaded"
+          error={security.error}
+          onRetry={() => { void security.refetch(); }}
+        />
+      )}
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
         <Card>
@@ -273,7 +132,7 @@ const SecurityMonitoring = () => {
             <Activity className="h-4 w-4 text-construction-orange" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvents}</div>
+            <div className="text-2xl font-bold">{stats ? stats.totalEvents : '--'}</div>
             <p className="text-xs text-muted-foreground">Last 30 days</p>
           </CardContent>
         </Card>
@@ -284,7 +143,7 @@ const SecurityMonitoring = () => {
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.failedLogins}</div>
+            <div className="text-2xl font-bold">{stats ? stats.failedLogins : '--'}</div>
             <p className="text-xs text-muted-foreground">Last 7 days</p>
           </CardContent>
         </Card>
@@ -295,7 +154,7 @@ const SecurityMonitoring = () => {
             <Eye className="h-4 w-4 text-construction-orange" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.suspiciousActivity}</div>
+            <div className="text-2xl font-bold">{stats ? stats.suspiciousActivity : '--'}</div>
             <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
@@ -306,7 +165,7 @@ const SecurityMonitoring = () => {
             <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            <div className="text-2xl font-bold">{stats ? stats.activeUsers : '--'}</div>
             <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
@@ -317,7 +176,7 @@ const SecurityMonitoring = () => {
             <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.todayEvents}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats ? stats.todayEvents : '--'}</div>
             <p className="text-xs text-muted-foreground">Since midnight</p>
           </CardContent>
         </Card>
@@ -365,7 +224,7 @@ const SecurityMonitoring = () => {
                             {event.event_type.replace('_', ' ')}
                           </div>
                           <div className="text-xs sm:text-sm text-muted-foreground break-all">
-                            {event.ip_address && `IP: ${String(event.ip_address)}`}
+                            {event.ip_address != null && `IP: ${String(event.ip_address)}`}
                             {event.user_agent && ` • ${event.user_agent.substring(0, 30)}...`}
                           </div>
                         </div>

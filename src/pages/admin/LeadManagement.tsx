@@ -29,68 +29,14 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, Calendar, Mail, Phone, Building, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Filter, type LucideIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLeadManagement, type Lead, type DemoRequest } from '@/hooks/useLeadManagement';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Lead {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  company_name?: string;
-  phone?: string;
-  lead_score: number;
-  lead_status: 'new' | 'contacted' | 'qualified' | 'demo_scheduled' | 'converted' | 'lost';
-  lead_source?: string;
-  created_at: string;
-  last_activity_at?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-}
-
-interface DemoRequest {
-  id: string;
-  lead_id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  company_name?: string;
-  demo_type: string;
-  preferred_date?: string;
-  preferred_time?: string;
-  status: 'requested' | 'scheduled' | 'completed' | 'cancelled';
-  created_at: string;
-  leads?: Lead;
-}
-
-interface SalesContact {
-  id: string;
-  lead_id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  company_name?: string;
-  inquiry_type: string;
-  budget_range?: string;
-  timeline?: string;
-  status: 'new' | 'in_progress' | 'resolved';
-  created_at: string;
-  leads?: Lead;
-}
-
-interface LeadActivity {
-  id: string;
-  lead_id: string;
-  activity_type: string;
-  activity_metadata?: Record<string, unknown>;
-  created_at: string;
-}
 
 type CSVCellValue = string | number;
 
@@ -100,14 +46,17 @@ export const LeadManagement = () => {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState('leads');
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
-  const [salesContacts, setSalesContacts] = useState<SalesContact[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const leadData = useLeadManagement(selectedLeadId);
+  const leads = leadData.leads.data ?? [];
+  const demoRequests = leadData.demos.data ?? [];
+  const salesContacts = leadData.sales.data ?? [];
+  const leadActivities = leadData.activities.data ?? [];
+  // Read from the list so a status change shows in the open dialog too.
+  const selectedLead = leads.find((l) => l.id === selectedLeadId) ?? null;
+  const tabCount = (q: { data?: unknown[]; error: unknown }) => (q.data && !q.error ? q.data.length : '--');
 
   // Check if user is admin
   useEffect(() => {
@@ -122,97 +71,20 @@ export const LeadManagement = () => {
     }
   }, [userProfile, navigate, toast]);
 
-  // Load data
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'leads') {
-        const { data, error } = await supabase
-          .from('leads')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-        setLeads((data as Lead[]) || []);
-      } else if (activeTab === 'demos') {
-        const { data, error } = await supabase
-          .from('demo_requests')
-          .select(`
-            *,
-            leads (*)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-        setDemoRequests((data as DemoRequest[]) || []);
-      } else if (activeTab === 'sales') {
-        const { data, error } = await supabase
-          .from('sales_contact_requests')
-          .select(`
-            *,
-            leads (*)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-        setSalesContacts((data as SalesContact[]) || []);
-      }
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load data. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load lead activities when lead is selected
-  const loadLeadActivities = async (leadId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('lead_activities')
-        .select('*')
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setLeadActivities(data || []);
-    } catch (error) {
-      console.error('Failed to load lead activities:', error);
-    }
-  };
-
   // Update lead status
   const updateLeadStatus = async (leadId: string, status: Lead['lead_status']) => {
     try {
-      const { error } = await supabase
-        .from('leads')
-        .update({ lead_status: status })
-        .eq('id', leadId);
-
-      if (error) throw error;
+      await leadData.setStatus('leads', leadId, status);
 
       toast({
         title: 'Success',
         description: 'Lead status updated successfully.',
       });
-
-      loadData();
     } catch (error) {
       console.error('Failed to update lead status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update lead status.',
+        description: error instanceof Error ? error.message : 'Failed to update lead status.',
         variant: 'destructive',
       });
     }
@@ -221,24 +93,17 @@ export const LeadManagement = () => {
   // Update demo request status
   const updateDemoStatus = async (demoId: string, status: DemoRequest['status']) => {
     try {
-      const { error } = await supabase
-        .from('demo_requests')
-        .update({ status })
-        .eq('id', demoId);
-
-      if (error) throw error;
+      await leadData.setStatus('demo_requests', demoId, status);
 
       toast({
         title: 'Success',
         description: 'Demo request status updated successfully.',
       });
-
-      loadData();
     } catch (error) {
       console.error('Failed to update demo status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update demo status.',
+        description: error instanceof Error ? error.message : 'Failed to update demo status.',
         variant: 'destructive',
       });
     }
@@ -447,13 +312,13 @@ export const LeadManagement = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Lead management categories">
           <TabsList className="grid w-full grid-cols-3" aria-label="Lead categories">
             <TabsTrigger value="leads">
-              Leads ({leads.length})
+              Leads ({tabCount(leadData.leads)})
             </TabsTrigger>
             <TabsTrigger value="demos">
-              Demo Requests ({demoRequests.length})
+              Demo Requests ({tabCount(leadData.demos)})
             </TabsTrigger>
             <TabsTrigger value="sales">
-              Sales Contacts ({salesContacts.length})
+              Sales Contacts ({tabCount(leadData.sales)})
             </TabsTrigger>
           </TabsList>
 
@@ -467,8 +332,15 @@ export const LeadManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {leadData.leads.isLoading ? (
                   <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
+                ) : leadData.leads.error ? (
+                  <ErrorState
+                    inline
+                    title="Leads could not be loaded"
+                    error={leadData.leads.error as Error}
+                    onRetry={() => { void leadData.leads.refetch(); }}
+                  />
                 ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No leads found
@@ -537,8 +409,7 @@ export const LeadManagement = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
-                                  setSelectedLead(lead);
-                                  loadLeadActivities(lead.id);
+                                  setSelectedLeadId(lead.id);
                                 }}
                               >
                                 View
@@ -564,8 +435,15 @@ export const LeadManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {leadData.demos.isLoading ? (
                   <TableSkeleton rows={5} />
+                ) : leadData.demos.error ? (
+                  <ErrorState
+                    inline
+                    title="Demo requests could not be loaded"
+                    error={leadData.demos.error as Error}
+                    onRetry={() => { void leadData.demos.refetch(); }}
+                  />
                 ) : filteredDemos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No demo requests found
@@ -653,8 +531,15 @@ export const LeadManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {leadData.sales.isLoading ? (
                   <TableSkeleton rows={5} />
+                ) : leadData.sales.error ? (
+                  <ErrorState
+                    inline
+                    title="Sales contacts could not be loaded"
+                    error={leadData.sales.error as Error}
+                    onRetry={() => { void leadData.sales.refetch(); }}
+                  />
                 ) : filteredSalesContacts.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No sales contacts found
@@ -702,19 +587,12 @@ export const LeadManagement = () => {
                                 value={contact.status}
                                 onValueChange={async (value) => {
                                   try {
-                                    const { error: updateSalesContactRequestsError } = await supabase
-                                      .from('sales_contact_requests')
-                                      .update({ status: value })
-                                      .eq('id', contact.id);
-                                    if (updateSalesContactRequestsError) {
-                                      throw new Error(`Failed to update sales_contact_requests: ${updateSalesContactRequestsError.message}`);
-                                    }
-                                    loadData();
+                                    await leadData.setStatus('sales_contact_requests', contact.id, value);
                                     toast({ title: 'Status updated successfully' });
                                   } catch (error) {
                                     toast({
                                       title: 'Error',
-                                      description: 'Failed to update status',
+                                      description: error instanceof Error ? error.message : 'Failed to update status',
                                       variant: 'destructive',
                                     });
                                   }
@@ -742,7 +620,7 @@ export const LeadManagement = () => {
         </Tabs>
 
         {/* Lead Detail Modal */}
-        <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
+        <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLeadId(null)}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Lead Details</DialogTitle>
@@ -852,7 +730,16 @@ export const LeadManagement = () => {
                 {/* Activity History */}
                 <div>
                   <h3 className="font-semibold mb-3">Activity History</h3>
-                  {leadActivities.length === 0 ? (
+                  {leadData.activities.isLoading ? (
+                    <Skeleton className="h-12" />
+                  ) : leadData.activities.error ? (
+                    <ErrorState
+                      inline
+                      title="Activity could not be loaded"
+                      error={leadData.activities.error as Error}
+                      onRetry={() => { void leadData.activities.refetch(); }}
+                    />
+                  ) : leadActivities.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No activities recorded</p>
                   ) : (
                     <div className="space-y-3">

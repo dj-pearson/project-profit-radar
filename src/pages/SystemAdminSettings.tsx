@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSystemAdminSettings } from "@/hooks/useSystemAdminSettings";
+import { ErrorState } from "@/components/common/ErrorState";
 import { Save, Mail, FileText, BarChart3, FolderOpen } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 
 interface EmailTemplate {
@@ -72,10 +73,6 @@ interface DocumentManagement {
   [key: string]: Record<string, FolderConfig | ApprovalWorkflow | RetentionPolicy> | undefined;
 }
 
-interface UserProfileRole {
-  role: string;
-}
-
 interface SystemSettings {
   email_templates: Record<string, EmailTemplate>;
   form_templates: Record<string, FormTemplate>;
@@ -87,8 +84,9 @@ interface SystemSettings {
 export default function SystemAdminSettings() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfileRole | null>(null);
+  const { user, userProfile, loading } = useAuth();
+  const isRootAdmin = userProfile?.role === "root_admin";
+  const system = useSystemAdminSettings({ enabled: isRootAdmin });
   const [settings, setSettings] = useState<SystemSettings>({
     email_templates: {},
     form_templates: {},
@@ -96,94 +94,35 @@ export default function SystemAdminSettings() {
     document_management: {},
     system_preferences: {}
   });
-  const [loadingData, setLoadingData] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const saving = system.saving;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        setProfile(profile);
-        
-        if (profile?.role !== "root_admin") {
-          navigate("/dashboard");
-          return;
-        }
-      } else {
-        navigate("/auth");
-        return;
-      }
-      
-      loadSettings();
-    };
-    
-    checkAuth();
-  }, [navigate]);
-
-  const loadSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("system_admin_settings")
-        .select("*")
-        .single();
-
-      if (error) {
-        console.error("Error loading system settings:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load system settings",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data) {
-        setSettings({
-          email_templates: (data.email_templates as Record<string, EmailTemplate>) || {},
-          form_templates: (data.form_templates as Record<string, FormTemplate>) || {},
-          report_templates: (data.report_templates as Record<string, ReportTemplate>) || {},
-          document_management: (data.document_management as DocumentManagement) || {},
-          system_preferences: (data.system_preferences as Record<string, string | number | boolean>) || {}
-        });
-      }
-    } catch (error) {
-      console.error("Error loading system settings:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load system settings",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingData(false);
+    if (loading) return;
+    if (!user) {
+      navigate("/auth");
+      return;
     }
-  };
+    if (userProfile && !isRootAdmin) navigate("/dashboard");
+  }, [loading, user, userProfile, isRootAdmin, navigate]);
+
+  // Seed the editor from the row once; a refetch must not throw away edits.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || !system.row) return;
+    seeded.current = true;
+    const d = system.row.settings;
+    setSettings({
+      email_templates: d.email_templates as Record<string, EmailTemplate>,
+      form_templates: d.form_templates as Record<string, FormTemplate>,
+      report_templates: d.report_templates as Record<string, ReportTemplate>,
+      document_management: d.document_management as DocumentManagement,
+      system_preferences: d.system_preferences as Record<string, string | number | boolean>,
+    });
+  }, [system.row]);
 
   const saveSettings = async () => {
-    setSaving(true);
     try {
-      const { error } = await supabase
-        .from("system_admin_settings")
-        .update({
-          email_templates: settings.email_templates,
-          form_templates: settings.form_templates,
-          report_templates: settings.report_templates,
-          document_management: settings.document_management,
-          system_preferences: settings.system_preferences,
-          updated_by: user?.id
-        })
-        .eq("id", (await supabase.from("system_admin_settings").select("id").single()).data?.id);
-
-      if (error) {
-        throw error;
-      }
-
+      await system.save(settings);
       toast({
         title: "Success",
         description: "System settings saved successfully",
@@ -192,11 +131,9 @@ export default function SystemAdminSettings() {
       console.error("Error saving system settings:", error);
       toast({
         title: "Error",
-        description: "Failed to save system settings",
+        description: error instanceof Error ? error.message : "Failed to save system settings",
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -252,7 +189,7 @@ export default function SystemAdminSettings() {
     }));
   };
 
-  if (loadingData || saving) {
+  if (loading || system.isLoading || saving) {
     return (
       <AccessiblePageWrapper pageTitle="System Admin Settings">
       <DashboardLayout hasAccessibleWrapper title="System Admin Settings">
@@ -269,13 +206,24 @@ export default function SystemAdminSettings() {
         title="System Admin Settings"
         description="Configure system-wide settings for email templates, forms, reports, and document management"
         headerActions={
-          <Button onClick={saveSettings} disabled={saving}>
+          <Button onClick={saveSettings} disabled={saving || !system.row}>
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Saving..." : "Save Settings"}
           </Button>
         }
       >
         <div className="space-y-6">
+        {system.error && (
+          <ErrorState
+            inline
+            title="System settings could not be loaded"
+            error={system.error}
+            onRetry={() => { void system.refetch(); }}
+          />
+        )}
+        {!system.error && !system.row && (
+          <p className="text-sm text-muted-foreground">There is no system settings row yet, so there is nothing to edit.</p>
+        )}
         <Tabs defaultValue="email-templates" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="email-templates" className="flex items-center gap-2">

@@ -14,9 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSafetyIncidentForm } from '@/hooks/useSafetyPage';
 
 const incidentSchema = z.object({
   incident_date: z.date({
@@ -54,8 +53,8 @@ interface SafetyIncidentFormProps {
 
 const SafetyIncidentForm = ({ onSuccess, onCancel }: SafetyIncidentFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
-  const { user } = useAuth();
+  const incidentForm = useSafetyIncidentForm();
+  const { projects } = incidentForm;
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof incidentSchema>>({
@@ -69,56 +68,15 @@ const SafetyIncidentForm = ({ onSuccess, onCancel }: SafetyIncidentFormProps) =>
     },
   });
 
-  // Load projects for dropdown
-  useState(() => {
-    const loadProjects = async () => {
-      try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('company_id')
-          .eq('id', user?.id)
-          .single();
-
-        if (profile?.company_id) {
-          const { data } = await supabase
-            .from('projects')
-            .select('id, name')
-            .eq('company_id', profile.company_id)
-            .eq('status', 'active');
-          
-          setProjects(data || []);
-        }
-      } catch (error) {
-        console.error('Error loading projects:', error);
-      }
-    };
-
-    if (user) {
-      loadProjects();
-    }
-  });
-
   const onSubmit = async (values: z.infer<typeof incidentSchema>) => {
     setLoading(true);
     try {
-      // Get user's company
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) {
-        throw new Error('User company not found');
-      }
-
       // Parse witnesses string into array
       const witnesses = values.witnesses 
         ? values.witnesses.split(',').map(w => w.trim()).filter(w => w.length > 0)
         : [];
 
-      const incidentData = {
-        company_id: profile.company_id,
+      await incidentForm.report({
         incident_date: values.incident_date.toISOString().split('T')[0],
         incident_time: values.incident_time || null,
         project_id: values.project_id || null,
@@ -137,15 +95,7 @@ const SafetyIncidentForm = ({ onSuccess, onCancel }: SafetyIncidentFormProps) =>
         corrective_actions: values.corrective_actions || null,
         witnesses,
         osha_recordable: values.osha_recordable,
-        reported_by: user?.id,
-        created_by: user?.id,
-      };
-
-      const { error } = await supabase
-        .from('safety_incidents')
-        .insert(incidentData);
-
-      if (error) throw error;
+      });
 
       toast({
         title: "Success",
@@ -158,7 +108,7 @@ const SafetyIncidentForm = ({ onSuccess, onCancel }: SafetyIncidentFormProps) =>
       console.error('Error creating incident:', error);
       toast({
         title: "Error",
-        description: "Failed to report safety incident",
+        description: error instanceof Error ? error.message : "Failed to report safety incident",
         variant: "destructive"
       });
     } finally {
@@ -255,6 +205,11 @@ const SafetyIncidentForm = ({ onSuccess, onCancel }: SafetyIncidentFormProps) =>
                         ))}
                       </SelectContent>
                     </Select>
+                    {incidentForm.projectsError && (
+                      <FormDescription className="text-destructive">
+                        Projects could not be loaded: {incidentForm.projectsError.message}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

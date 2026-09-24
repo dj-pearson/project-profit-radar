@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertTriangle, Shield, FileText, Calendar, Plus, Clock, CheckCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSafetyOverview, fetchOsha300Incidents } from '@/hooks/useSafetyPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import SafetyIncidentForm from '@/components/safety/SafetyIncidentForm';
 import { SafetyIncidentsPanel } from '@/components/safety/SafetyIncidentsPanel';
 import SafetyChecklistBuilder from '@/components/safety/SafetyChecklistBuilder';
@@ -17,40 +17,9 @@ import TrainingCertificationManager from '@/components/safety/TrainingCertificat
 import OSHAComplianceManager from '@/components/safety/OSHAComplianceManager';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
-interface SafetyStats {
-  totalIncidents: number;
-  openIncidents: number;
-  checklistsCompleted: number;
-  expiringCertifications: number;
-  upcomingDeadlines: number;
-}
-
-interface RecentIncident {
-  id: string;
-  incident_type: string;
-  severity: string;
-  incident_date: string;
-  status: string;
-}
-
-interface SafetyChecklist {
-  id: string;
-  name: string;
-  checklist_type: string;
-  is_active: boolean;
-}
-
 const Safety = () => {
-  const [stats, setStats] = useState<SafetyStats>({
-    totalIncidents: 0,
-    openIncidents: 0,
-    checklistsCompleted: 0,
-    expiringCertifications: 0,
-    upcomingDeadlines: 0
-  });
-  const [recentIncidents, setRecentIncidents] = useState<RecentIncident[]>([]);
-  const [checklists, setChecklists] = useState<SafetyChecklist[]>([]);
-  const [loading, setLoading] = useState(true);
+  const overview = useSafetyOverview();
+  const { stats, checklists } = overview;
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -66,23 +35,14 @@ const Safety = () => {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const generateOSHA300Log = async () => {
     try {
-      // Get user's company
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) {
+      if (!overview.companyId) {
         toast({
           title: "Error",
-          description: "Company information not found",
+          description: "Your account is not linked to a company",
           variant: "destructive"
         });
         return;
@@ -90,15 +50,9 @@ const Safety = () => {
 
       // Get safety incidents for the current year
       const currentYear = new Date().getFullYear();
-      const { data: incidents } = await supabase
-        .from('safety_incidents')
-        .select('*')
-        .eq('company_id', profile.company_id)
-        .gte('incident_date', `${currentYear}-01-01`)
-        .lte('incident_date', `${currentYear}-12-31`)
-        .order('incident_date', { ascending: true });
+      const incidents = await fetchOsha300Incidents(overview.companyId, currentYear);
 
-      if (!incidents || incidents.length === 0) {
+      if (incidents.length === 0) {
         toast({
           title: "No Data",
           description: "No incidents found for the current year to generate OSHA 300 log",
@@ -160,109 +114,13 @@ const Safety = () => {
       console.error('Error generating OSHA 300 log:', error);
       toast({
         title: "Error",
-        description: "Failed to generate OSHA 300 log",
+        description: error instanceof Error ? error.message : "Failed to generate OSHA 300 log",
         variant: "destructive"
       });
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchSafetyStats();
-    }
-  }, [user]);
-
-  const fetchSafetyStats = async () => {
-    try {
-      // Get user's company
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.company_id) return;
-
-      // Fetch safety statistics in parallel
-      const [
-        incidentsResult,
-        checklistsResult,
-        certificationsResult,
-        deadlinesResult,
-        recentIncidentsResult,
-        safetyChecklistsResult
-      ] = await Promise.all([
-        // Total and open incidents
-        supabase
-          .from('safety_incidents')
-          .select('id, status')
-          .eq('company_id', profile.company_id),
-        
-        // Completed checklists this month
-        supabase
-          .from('safety_checklist_responses')
-          .select('id')
-          .eq('company_id', profile.company_id)
-          .gte('response_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]),
-        
-        // Expiring certifications (next 30 days)
-        supabase
-          .from('training_certifications')
-          .select('id')
-          .eq('company_id', profile.company_id)
-          .lte('expiration_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-          .eq('status', 'active'),
-        
-        // Upcoming compliance deadlines (next 30 days)
-        supabase
-          .from('osha_compliance_deadlines')
-          .select('id')
-          .eq('company_id', profile.company_id)
-          .lte('due_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-          .eq('status', 'pending'),
-
-        // Recent incidents
-        supabase
-          .from('safety_incidents')
-          .select('id, incident_type, severity, incident_date, status')
-          .eq('company_id', profile.company_id)
-          .order('incident_date', { ascending: false })
-          .limit(5),
-
-        // Safety checklists
-        supabase
-          .from('safety_checklists')
-          .select('id, name, checklist_type, is_active')
-          .eq('company_id', profile.company_id)
-          .eq('is_active', true)
-      ]);
-
-      const incidents = incidentsResult.data || [];
-      const openIncidents = incidents.filter(i => i.status === 'open').length;
-
-      setStats({
-        totalIncidents: incidents.length,
-        openIncidents,
-        checklistsCompleted: checklistsResult.data?.length || 0,
-        expiringCertifications: certificationsResult.data?.length || 0,
-        upcomingDeadlines: deadlinesResult.data?.length || 0
-      });
-
-      setRecentIncidents(recentIncidentsResult.data || []);
-      setChecklists(safetyChecklistsResult.data || []);
-    } catch (error) {
-      console.error('Error fetching safety stats:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load safety statistics",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (overview.isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-6">
@@ -310,7 +168,7 @@ const Safety = () => {
                 <SafetyIncidentForm 
                   onSuccess={() => {
                     setShowIncidentDialog(false);
-                    fetchSafetyStats();
+                    void overview.invalidate();
                   }}
                   onCancel={() => setShowIncidentDialog(false)}
                 />
@@ -318,6 +176,15 @@ const Safety = () => {
             </Dialog>
           </div>
         </div>
+
+        {overview.error && (
+          <ErrorState
+            inline
+            title="Safety figures could not be loaded"
+            error={overview.error}
+            onRetry={() => { void overview.refetch(); }}
+          />
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
@@ -327,9 +194,9 @@ const Safety = () => {
               <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg md:text-2xl font-bold">{stats.totalIncidents}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats ? stats.totalIncidents : '--'}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.openIncidents} open incidents
+                {stats ? stats.openIncidents : '--'} open incidents
               </p>
             </CardContent>
           </Card>
@@ -340,7 +207,7 @@ const Safety = () => {
               <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg md:text-2xl font-bold">{stats.checklistsCompleted}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats ? stats.checklistsCompleted : '--'}</div>
               <p className="text-xs text-muted-foreground">
                 Completed this month
               </p>
@@ -353,7 +220,7 @@ const Safety = () => {
               <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg md:text-2xl font-bold">{stats.expiringCertifications}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats ? stats.expiringCertifications : '--'}</div>
               <p className="text-xs text-muted-foreground">
                 Next 30 days
               </p>
@@ -366,7 +233,7 @@ const Safety = () => {
               <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg md:text-2xl font-bold">{stats.upcomingDeadlines}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats ? stats.upcomingDeadlines : '--'}</div>
               <p className="text-xs text-muted-foreground">
                 Compliance deadlines
               </p>
@@ -407,7 +274,7 @@ const Safety = () => {
                       <SafetyIncidentForm 
                         onSuccess={() => {
                           setShowIncidentDialog(false);
-                          fetchSafetyStats();
+                          void overview.invalidate();
                         }}
                         onCancel={() => setShowIncidentDialog(false)}
                       />
@@ -445,7 +312,7 @@ const Safety = () => {
                       <SafetyChecklistBuilder 
                         onSuccess={() => {
                           setShowChecklistDialog(false);
-                          fetchSafetyStats();
+                          void overview.invalidate();
                         }}
                         onCancel={() => setShowChecklistDialog(false)}
                       />
@@ -454,7 +321,9 @@ const Safety = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {checklists.length === 0 ? (
+                {overview.error ? (
+                  <p className="text-sm text-muted-foreground py-4">Checklists could not be loaded; see the error above.</p>
+                ) : checklists.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Shield className="mx-auto h-12 w-12 mb-4" aria-hidden="true" />
                     <p className="text-lg font-medium mb-2">No Safety Checklists</p>
