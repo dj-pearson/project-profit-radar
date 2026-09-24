@@ -15,6 +15,7 @@ import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeSecurityLog } from "../_shared/security-log.ts";
 import { initializeAuthContext } from "../_shared/auth-helpers.ts";
 import { captureException } from '../_shared/observability.ts';
+import { API_VERSION, apiVersionHeaders } from '../_shared/api-version.ts';
 
 // Input validation schema
 // userId is optional and, when sent, must equal the caller (US-346). Older
@@ -50,7 +51,8 @@ const CheckMFAStatusSchema = z.object({
 });
 
 serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
+  // US-273: every response here, error or not, carries X-API-Version.
+  const corsHeaders = { ...getCorsHeaders(req), ...apiVersionHeaders() };
 
   if (req.method === "OPTIONS") {
     return handleCorsPreflightRequest(req);
@@ -146,6 +148,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             timestamp: new Date().toISOString(),
+            api_version: API_VERSION,
             success: true,
             mfaRequired: hasMFA,
             mfaType: hasMFA ? "totp" : null,
@@ -295,6 +298,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             timestamp: new Date().toISOString(),
+            api_version: API_VERSION,
             success: true,
             verified: true,
             message: "MFA verification successful",
@@ -393,6 +397,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             timestamp: new Date().toISOString(),
+            api_version: API_VERSION,
             success: true,
             verified: true,
             message: "Backup code verified",
@@ -445,6 +450,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             timestamp: new Date().toISOString(),
+            api_version: API_VERSION,
             success: true,
             isTrusted,
             expiresAt: trustedDevice?.trust_expires_at,

@@ -4343,8 +4343,8 @@
         "Core client-facing functions (projects, time-tracking, invoices, auth) emit the version"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: API. SEV: MEDIUM. Source: Edge audit. Depends on envelope enforcement."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: API. SEV: MEDIUM. Source: Edge audit. Depends on envelope enforcement. || _shared/api-version.ts: API_VERSION=1, MIN_SUPPORTED_IOS_VERSION=1.0.0, MIN_SUPPORTED_WEB_VERSION=0.0.0, MIN_SUPPORTED_API_VERSION=1; parses X-Brikly-Client (or x-client-info brikly-*); missing header = legacy, and clientAtLeast is false for legacy so new shapes need an explicit opt-in. successResponse/errorResponse, entitlement and project-delete responses and verify-mfa-login add api_version plus X-API-Version and X-Min-Supported-Client headers (additive). Web sends x-client-info brikly-web/<version>; iOS EdgeFunctionsService sends X-Brikly-Client ios/<CFBundleShortVersionString> (not built in Xcode). docs/API_VERSIONING.md has the 3-release flow. Open: no client reads X-Min-Supported-Client yet; CLAUDE.md still says the API is unversioned; iOS 1.0.0 cannot identify itself, so its fields retire only after the force-update gate."
     },
     {
       "id": "US-274",

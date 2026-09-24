@@ -16,6 +16,7 @@ import {
   type TierLimits, type TierName, type AccountAccess, type EntitlementErrorCode,
 } from "./tiers.ts";
 import { isFlagEnabled } from "./feature-flags.ts";
+import { API_VERSION, apiVersionHeaders } from "./api-version.ts";
 
 export {
   TIER_LIMITS, TIER_DISPLAY_NAMES, TIER_ORDER, FEATURE_MIN_TIER,
@@ -310,8 +311,10 @@ export function entitlementDeniedResponse(
         upgradePath: "/subscription-settings",
       },
       timestamp: new Date().toISOString(),
+      // US-273: additive; see docs/API_VERSIONING.md.
+      api_version: API_VERSION,
     }),
-    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    { status: 403, headers: { ...corsHeaders, ...apiVersionHeaders(), "Content-Type": "application/json" } },
   );
 }
 

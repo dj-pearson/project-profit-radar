@@ -12,6 +12,7 @@
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from './secure-cors.ts';
+import { API_VERSION, apiVersionHeaders } from './api-version.ts';
 
 // Default secure CORS headers (fallback when request not available)
 // Uses environment variable ALLOWED_CORS_ORIGINS or falls back to brikly.net
@@ -91,12 +92,15 @@ export function errorResponse(
       error: message,
       success: false,
       timestamp: new Date().toISOString(),
+      // US-273: additive; see docs/API_VERSIONING.md.
+      api_version: API_VERSION,
     }),
     {
       status,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders,
+        ...apiVersionHeaders(),
       },
     }
   );
@@ -117,12 +121,15 @@ export function successResponse(data: any, request?: Request): Response {
       data,
       success: true,
       timestamp: new Date().toISOString(),
+      // US-273: additive; see docs/API_VERSIONING.md.
+      api_version: API_VERSION,
     }),
     {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders,
+        ...apiVersionHeaders(),
       },
     }
   );

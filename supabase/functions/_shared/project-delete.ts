@@ -13,6 +13,8 @@
  * web mirror; project-delete.test.ts checks the two agree.
  */
 
+import { apiVersionHeaders, stampEnvelope } from './api-version.ts';
+
 export const PROJECT_HAS_FINANCIAL_RECORDS = 'project_has_financial_records';
 
 export const PROJECT_HAS_FINANCIAL_RECORDS_MESSAGE =
@@ -52,8 +54,9 @@ export function projectHasFinancialRecordsBody(timestamp: string = new Date().to
 export const PROJECT_HAS_FINANCIAL_RECORDS_STATUS = 500;
 
 export function projectHasFinancialRecordsResponse(headers: Record<string, string>): Response {
-  return new Response(JSON.stringify(projectHasFinancialRecordsBody()), {
+  // US-273: api_version + version headers, additive (docs/API_VERSIONING.md).
+  return new Response(JSON.stringify(stampEnvelope(projectHasFinancialRecordsBody())), {
     status: PROJECT_HAS_FINANCIAL_RECORDS_STATUS,
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', ...headers, ...apiVersionHeaders() },
   });
 }

@@ -31,6 +31,13 @@ if (!RESOLVED_SUPABASE_KEY) {
   }
 }
 
+// Web client identity for edge-function versioning (US-273). VITE_APP_VERSION is
+// optional; without it the version is 0.0.0, which is still a web client and
+// never opts into a newer response shape by accident.
+const BRIKLY_CLIENT_INFO = `brikly-web/${
+  /^\d+(\.\d+){0,2}$/.test(import.meta.env.VITE_APP_VERSION ?? '') ? import.meta.env.VITE_APP_VERSION : '0.0.0'
+}`;
+
 // Edge Functions URL (separate deployment for self-hosted)
 // Falls back to SUPABASE_URL/functions/v1 if not specified (for backward compatibility)
 const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${RESOLVED_SUPABASE_URL}/functions/v1`;
@@ -60,7 +67,11 @@ export const supabase = createClient<Database>(RESOLVED_SUPABASE_URL, RESOLVED_S
     // Always include apikey header so Kong never returns "No API key found in request"
     headers: {
       'apikey': RESOLVED_SUPABASE_KEY,
-      'x-client-info': 'brikly-mobile',
+      // US-273: identifies the caller to edge functions as "brikly-web/<version>"
+      // (parsed by supabase/functions/_shared/api-version.ts). It rides
+      // x-client-info, not X-Brikly-Client, because x-client-info is already in
+      // every function's CORS Allow-Headers list. See docs/API_VERSIONING.md.
+      'x-client-info': BRIKLY_CLIENT_INFO,
     },
     // Override functions URL for self-hosted setup
     fetch: (url, options) => {

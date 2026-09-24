@@ -140,6 +140,9 @@ final class EdgeFunctionsService: @unchecked Sendable {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        // US-273: "ios/<CFBundleShortVersionString>" lets edge functions pick a
+        // response shape by client version. See docs/API_VERSIONING.md.
+        request.setValue(Self.clientHeader, forHTTPHeaderField: "X-Brikly-Client")
 
         let bearer = await Self.currentAccessToken() ?? anonKey
         request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
@@ -151,6 +154,9 @@ final class EdgeFunctionsService: @unchecked Sendable {
         }
         return request
     }
+
+    private static let clientHeader =
+        "ios/\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0")"
 
     @MainActor
     private static func currentAccessToken() async -> String? {

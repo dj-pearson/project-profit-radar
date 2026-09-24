@@ -7364,3 +7364,10 @@ The hub's RFI and meeting tabs said "Not available yet". RFIs now use the
 real rfis data (raise, assign, answer, close) shared with /rfis, and
 meetings are calendar events of type meeting, so they appear on /calendar.
 No new tables.
+
+## US-273 - API versioning
+Edge responses built by the shared helpers now carry api_version and an
+X-API-Version header, and clients identify themselves (web via
+x-client-info, iOS via X-Brikly-Client). A request without the header gets
+today's shape, so shipped iOS builds see no change. docs/API_VERSIONING.md
+describes the release flow.
