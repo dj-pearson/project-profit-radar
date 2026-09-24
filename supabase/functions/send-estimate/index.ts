@@ -221,6 +221,9 @@ serve(async (req) => {
       subject: `Your estimate from ${companyName}`,
       html,
       text,
+      companyId: estimate.company_id,
+      template: "estimate",
+      source: "send-estimate",
     }, siteConfig);
 
     if (!delivery.success) {

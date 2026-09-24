@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireInternalCallerOrRootAdmin } from "../_shared/system-auth.ts";
@@ -7,6 +6,7 @@ import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { siteUrl } from '../_shared/app-urls.ts';
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
 
 // RenewalNotificationPanel and check-renewal-notifications both invoke with no
 // body (a scheduled run); subscriber_id narrows a manual run to one row.
@@ -36,16 +36,11 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendKey) throw new Error("RESEND_API_KEY is not set");
-
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
-
-    const resend = new Resend(resendKey);
 
     // Get the request body if this is a manual trigger
     let subscriberId: string | null = null;
@@ -126,7 +121,7 @@ serve(async (req) => {
 
             const { data: profile } = await supabaseClient
         .from('user_profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, company_id')
         .eq('id', subscriber.user_id)
         .single();
 
@@ -191,18 +186,26 @@ serve(async (req) => {
         </div>
       `;
 
-      // Send the email
-      const { error: emailError } = await resend.emails.send({
-        from: 'Brikly <notifications@brikly.net>',
-        to: [subscriber.email],
+      // Send the email (US-253: SES through the shared sender). Keyed on the
+      // subscriber, the notice and the renewal date, so if the
+      // renewal_notifications insert below is lost the next run finds the key
+      // already sent and does not mail the customer a second time.
+      const delivery = await sendEmail({
+        to: subscriber.email,
+        from: 'notifications@brikly.net',
+        fromName: 'Brikly',
         subject: `Your subscription renews in ${daysUntilRenewal} days`,
         html,
+        companyId: (profile?.company_id as string | undefined) ?? null,
+        template: `renewal_${notificationType}`,
+        source: 'send-renewal-notification',
+        idempotencyKey: await emailIdempotencyKey('renewal_notice', subscriber.id, notificationType, subscriber.subscription_end),
       });
 
-      if (emailError) {
-        logStep("Email send failed", { 
-          subscriberId: subscriber.id, 
-          error: emailError 
+      if (!delivery.success) {
+        logStep("Email send failed", {
+          subscriberId: subscriber.id,
+          error: delivery.error
         });
         continue;
       }

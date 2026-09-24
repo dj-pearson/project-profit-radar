@@ -195,7 +195,10 @@ async function handleRequestReset(
     {
       to: email,
       subject: emailContent.subject,
-      html: emailContent.html
+      html: emailContent.html,
+      category: 'security_alerts',
+      template: 'reset_password_otp',
+      source: 'reset-password-otp',
     },
     siteConfig
   );

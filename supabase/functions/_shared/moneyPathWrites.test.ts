@@ -349,9 +349,11 @@ describe('the fourth edge batch: queues that resend when their bookkeeping is lo
 
   it('and never throws after the email has been sent', () => {
     // The catch marks the item failed, and a failed item is retried, so any
-    // throw below the send resends to a real person.
+    // throw below the send resends to a real person. (US-253: the one throw
+    // left is the send's own failure, before anything went out, so the tail
+    // starts at the sent counter.)
     const src = code(F('process-funnel-queue'));
-    const sendIndex = src.indexOf('resend.emails.send');
+    const sendIndex = src.indexOf('sent++');
     const tail = src.slice(sendIndex);
     expect(sendIndex).toBeGreaterThan(-1);
     for (const name of [

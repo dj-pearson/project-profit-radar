@@ -5,6 +5,7 @@ import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail } from '../_shared/ses-email-service.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The one caller, run-scheduled-audit, sends { notification_type, subject,
@@ -67,26 +68,14 @@ serve(async (req) => {
       if (!recipient_email) {
         results.errors.push('Email notification requested but no recipient_email provided');
       } else {
-        // In production, integrate with email service (SendGrid, AWS SES, etc.)
-        const emailApiKey = Deno.env.get('SENDGRID_API_KEY');
-
-        if (emailApiKey) {
-          try {
-            const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${emailApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                personalizations: [{
-                  to: [{ email: recipient_email }],
-                  subject,
-                }],
-                from: { email: Deno.env.get('FROM_EMAIL') || 'seo@brikly.net' },
-                content: [{
-                  type: 'text/html',
-                  value: `
+        // US-253: SES through the shared sender. This used SendGrid, which
+        // nothing else in Brikly uses.
+        const delivery = await sendEmail({
+          to: recipient_email,
+          from: 'seo@brikly.net',
+          fromName: 'Brikly SEO',
+          subject,
+          html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                       <h2 style="color: ${severity === 'critical' ? '#dc2626' : severity === 'high' ? '#ea580c' : '#3b82f6'};">
                         SEO Alert: ${subject}
@@ -101,21 +90,14 @@ serve(async (req) => {
                       </p>
                     </div>
                   `,
-                }],
-              }),
-            });
+          template: 'seo_alert',
+          source: 'send-seo-notification',
+        });
 
-            if (emailResponse.ok) {
-              results.email_sent = true;
-            } else {
-              const errorData = await emailResponse.json();
-              results.errors.push(`Email failed: ${JSON.stringify(errorData)}`);
-            }
-          } catch (error) {
-            results.errors.push(`Email error: ${error.message}`);
-          }
+        if (delivery.success) {
+          results.email_sent = true;
         } else {
-          results.errors.push('Email requested but SENDGRID_API_KEY not configured');
+          results.errors.push(`Email failed: ${delivery.error ?? 'unknown error'}`);
         }
       }
     }

@@ -4066,7 +4066,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Integrations. SEV: HIGH. Source: Ops audit."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Integrations. SEV: HIGH. Source: Ops audit. || All edge transactional email goes through _shared/ses-email-service.ts (SES): idempotency key per message, up to 3 attempts on 408/429/5xx/SMTP 4xx with Retry-After, final states sent/failed/dead_letter/suppressed (consent check reused), Sentry on failure, a row per send in email_deliveries (migration 20260924220000, company-scoped RLS, service-role writes). SES v2 API with SigV4 when AWS keys are set, SMTP fallback otherwise. Converted 9 Resend senders and 1 SendGrid sender; all now send from @brikly.net. Senders that reported success regardless now return errors. trial-management sends the 3-day warning once. OPEN (owner): apply migration + db:types + drop email_deliveries from the live-schema baseline; IAM user limited to ses:SendEmail and AWS_SES_* secrets; DNS (SES DKIM, SPF include:amazonses.com, custom MAIL FROM, DMARC p=none, remove Resend records); SES configuration set + bounce/complaint destination (webhook to update rows not built); SES out of sandbox; delete RESEND_API_KEY/FROM_EMAIL. send-scheduled-emails and workflow send_email remain stubs."
     },
     {
       "id": "US-254",

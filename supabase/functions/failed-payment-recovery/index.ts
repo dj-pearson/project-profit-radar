@@ -12,6 +12,8 @@ import { pickAllowed, WRITABLE_RECOVERY_SETTINGS_COLUMNS } from '../_shared/writ
 import { siteUrl } from '../_shared/app-urls.ts';
 import { suspendCompanyOfSubscriber } from '../_shared/entitlements.ts';
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
+import { escapeHtml } from '../_shared/html-escape.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Every settings field is nullable: the web client round-trips the row that
@@ -365,7 +367,8 @@ async function attemptPaymentRetry(
 
 async function sendFailureNotification(
   supabase: ReturnType<typeof createClient>,
-  failure: Record<string, unknown>
+  failure: Record<string, unknown>,
+  once: 'per_attempt' | 'always' = 'per_attempt',
 ): Promise<boolean> {
   const subscriber = failure.subscriber as Record<string, unknown>;
   const user = subscriber?.user as Record<string, unknown>;
@@ -415,35 +418,30 @@ Please update your payment method to continue your subscription.
     .replace('{amount}', formatCurrency(0)) // Would need invoice amount
     .replace('{update_payment_link}', `${siteUrl()}/settings/billing`);
 
-  // Send email
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  // Send email (US-253: SES through the shared sender, retried and logged).
+  // The body is the company's own template text; the customer name and the
+  // Stripe failure reason are substituted into it, so the HTML copy is
+  // escaped rather than trusted.
+  const result = await sendEmail({
+    to: user.email as string,
+    from: 'billing@brikly.net',
+    fromName: 'Brikly',
+    subject,
+    text: body,
+    html: escapeHtml(body).replace(/\n/g, '<br>'),
+    companyId: userProfile.company_id,
+    template: 'payment_failed',
+    source: 'failed-payment-recovery',
+    // Scheduled runs send one notice per failure per attempt, so a rerun of
+    // the dunning job does not mail the customer again. A dunning email an
+    // admin sends by hand is deliberate and always goes.
+    idempotencyKey: once === 'per_attempt' ? await emailIdempotencyKey('payment_failed', failure.id as string, (failure.attempt_count as number | undefined) ?? 0) : undefined,
+  });
 
-  if (!resendApiKey) {
-    logStep('Email would be sent (Resend not configured)', { to: user.email, subject });
-    return true;
+  if (!result.success) {
+    logStep('Failed to send email', { error: result.error });
   }
-
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'Brikly <billing@brikly.net>',
-        to: [user.email],
-        subject: subject,
-        text: body,
-        html: body.replace(/\n/g, '<br>')
-      })
-    });
-
-    return response.ok;
-  } catch (error) {
-    logStep('Failed to send email', { error: (error as Error).message });
-    return false;
-  }
+  return result.success;
 }
 
 async function retryPayment(
@@ -498,7 +496,7 @@ async function sendDunningEmail(
     return errorResponse('Failure not found', 404);
   }
 
-  const sent = await sendFailureNotification(supabase, failure);
+  const sent = await sendFailureNotification(supabase, failure, 'always');
 
   return new Response(
     JSON.stringify({

@@ -38,6 +38,11 @@ const TYPES = join(root, 'src', 'integrations', 'supabase', 'types.ts');
 // Known to be missing from the live schema as of the 2026-06-29-or-later
 // types.ts. Each is a real query that cannot succeed today.
 const EDGE_BASELINE = new Set([
+  // US-253: created by 20260924220000_email_deliveries.sql, not yet applied.
+  // The shared sender treats a ledger error as "log unavailable": the email
+  // still goes and the gap is reported to Sentry. Remove once applied and
+  // types.ts is regenerated.
+  'email_deliveries',
   'ai_estimates', 'auth_otp_codes', 'campaign_enrollments', 'chargebacks',
   'disposable_email_domains', 'email_automations', 'estimate_predictions', 'expo_builds',
   'failed_payment_recovery_settings', 'financial_records', 'geofence_breach_alerts',

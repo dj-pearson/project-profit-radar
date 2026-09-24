@@ -206,6 +206,9 @@ export async function sendCommercialEmail(
       fromName: options.fromName,
       replyTo: options.replyTo,
       headers,
+      // Consent was checked above; the ledger records which category it was.
+      category: options.kind,
+      template: `commercial_${options.kind}`,
     },
     siteConfig,
   );

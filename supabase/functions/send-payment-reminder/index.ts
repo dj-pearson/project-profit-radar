@@ -11,6 +11,8 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_REMINDER_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
 import { siteUrl } from '../_shared/app-urls.ts';
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
+import { escapeHtml } from '../_shared/html-escape.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // action stays a string here: dispatchReminder owns the unknown-action 400 and
@@ -137,7 +139,8 @@ async function sendReminder(
   corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   invoiceId: string,
-  reminderType?: string
+  reminderType?: string,
+  scheduledReminderId?: string,
 ) {
   if (!invoiceId) {
     return new Response(
@@ -223,13 +226,13 @@ async function sendReminder(
     logStep('Failed to create reminder log', { error: logError.message });
   }
 
-  // Send email via Resend or other provider
   const emailSent = await sendEmailViaProvider(
     recipientEmail,
     email.subject,
     email.body,
     reminderSettings.email_from_name || 'Brikly',
-    reminderSettings.email_reply_to
+    reminderSettings.email_reply_to,
+    { companyId, scheduledReminderId },
   );
 
   // Update log status
@@ -416,7 +419,8 @@ async function processScheduledReminders(corsHeaders: Record<string, string>, su
         corsHeaders, supabase,
         reminder.invoice.company_id,
         reminder.invoice_id,
-        reminder.reminder_type
+        reminder.reminder_type,
+        reminder.id,
       );
 
       const result = await response.json();
@@ -706,44 +710,33 @@ async function sendEmailViaProvider(
   subject: string,
   body: string,
   fromName: string,
-  replyTo?: string
+  replyTo: string | undefined,
+  meta: { companyId: string; scheduledReminderId?: string },
 ): Promise<boolean> {
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  // US-253: SES through the shared sender (retry, delivery log, Sentry on
+  // failure). A scheduled reminder is keyed on its payment_reminders row, so
+  // a rerun of the job that already sent it does not mail the client again;
+  // a reminder sent by hand always goes.
+  const result = await sendEmail({
+    to,
+    from: 'billing@brikly.net',
+    fromName,
+    replyTo: replyTo || undefined,
+    subject,
+    text: body,
+    html: escapeHtml(body).replace(/\n/g, '<br>'),
+    companyId: meta.companyId,
+    template: 'payment_reminder',
+    source: 'send-payment-reminder',
+    idempotencyKey: meta.scheduledReminderId
+      ? await emailIdempotencyKey('payment_reminder', meta.scheduledReminderId)
+      : undefined,
+  });
 
-  if (!resendApiKey) {
-    // Log for debugging but return success (email would be sent in production)
-    logStep('Email would be sent (Resend not configured)', { to, subject });
-    return true;
-  }
-
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: `${fromName} <billing@brikly.net>`,
-        to: [to],
-        reply_to: replyTo,
-        subject: subject,
-        text: body,
-        html: body.replace(/\n/g, '<br>')
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      logStep('Resend API error', { error: errorData });
-      return false;
-    }
-
-    logStep('Email sent via Resend', { to, subject });
-    return true;
-
-  } catch (error) {
-    logStep('Failed to send email', { error: (error as Error).message });
+  if (!result.success) {
+    logStep('Failed to send email', { error: result.error });
     return false;
   }
+  logStep('Email sent', { to, subject, messageId: result.messageId ?? null });
+  return true;
 }

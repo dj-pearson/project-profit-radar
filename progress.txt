@@ -7371,3 +7371,11 @@ X-API-Version header, and clients identify themselves (web via
 x-client-info, iOS via X-Brikly-Client). A request without the header gets
 today's shape, so shipped iOS builds see no change. docs/API_VERSIONING.md
 describes the release flow.
+
+## US-253 - one email provider
+Every transactional email from the edge functions now goes through one SES
+module with retries, idempotency, consent checks, Sentry on failure and a
+delivery log row. Ten senders moved off Resend and SendGrid, several of
+which sent from domains brikly.net's SPF/DKIM don't cover and reported
+success whether or not the email went. Owner: AWS keys, DNS, and the
+bounce webhook.

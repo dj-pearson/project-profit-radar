@@ -166,6 +166,9 @@ serve(async (req) => {
       subject: `Invoice ${invoice.invoice_number} from ${companyName}`,
       html,
       text,
+      companyId: invoice.company_id,
+      template: "invoice",
+      source: "send-invoice",
     }, siteConfig);
 
     if (!delivery.success) {

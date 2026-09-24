@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { generateBookingConfirmationHTML } from "../_shared/booking-confirmation-email.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { captureException } from '../_shared/observability.ts';
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
 
 // Sent by src/components/crm/PublicBookingForm.tsx with the inserted row's id.
 const BookingConfirmationSchema = z.object({
@@ -83,20 +81,32 @@ const handler = async (req: Request): Promise<Response> => {
       endTime: formattedEndTime,
     });
 
-    // Send email to attendee
-    const attendeeEmail = await resend.emails.send({
-      from: "Brikly CRM <notifications@resend.dev>",
-      to: [booking.attendee_email],
+    // Send email to attendee (US-253: SES through the shared sender). One
+    // confirmation per booking: a double-submitted form or a client retry
+    // does not send a second one.
+    const delivery = await sendEmail({
+      to: booking.attendee_email,
+      from: 'notifications@brikly.net',
+      fromName: 'Brikly CRM',
       subject: `Meeting Confirmed: ${booking.booking_pages?.title || 'Your Appointment'}`,
       html: emailHtml,
+      companyId: booking.company_id ?? null,
+      template: 'booking_confirmation',
+      source: 'send-booking-confirmation',
+      idempotencyKey: await emailIdempotencyKey('booking_confirmation', bookingId),
     });
 
-    console.log("Confirmation email sent successfully:", attendeeEmail);
+    if (!delivery.success) {
+      // This used to answer success: true whatever Resend said.
+      throw new Error(`Confirmation email not sent: ${delivery.error ?? 'unknown error'}`);
+    }
+
+    console.log("Confirmation email sent", { messageId: delivery.messageId ?? null });
 
     return new Response(JSON.stringify({
       timestamp: new Date().toISOString(), 
       success: true, 
-      emailId: attendeeEmail.data?.id 
+      emailId: delivery.messageId ?? delivery.deliveryId 
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

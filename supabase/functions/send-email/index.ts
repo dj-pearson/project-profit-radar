@@ -90,6 +90,8 @@ export default async (req: Request) => {
       subject,
       html: buildHtmlBody(subject, emailBody),
       text: emailBody,
+      template: typeof template === 'string' && template ? `send_email_${template}`.slice(0, 80) : 'send_email',
+      source: 'send-email',
     };
 
     const result = await sendEmail(emailOptions);

@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail } from '../_shared/ses-email-service.ts';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 // Input validation schema
 const notificationRequestSchema = z.object({
@@ -45,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Authenticate the caller.
     //
     // This handler validated its body carefully and never asked who was
-    // calling. It sends through Resend as "Brikly <...>" to a body-supplied
+    // calling. It sent through Resend (now SES, US-253) as "Brikly <...>" to a body-supplied
     // address, and being absent from supabase/config.toml gave it
     // verify_jwt = true - which only means a validly-signed project JWT is
     // present, and the publishable anon key is one, and it ships in the client
@@ -89,10 +88,20 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const emailResponse = await resend.emails.send({
-      from: "Brikly <notifications@resend.dev>",
-      to: [to],
-      subject: subject,
+    // The ledger row is scoped to the caller's company, read from their own
+    // profile rather than the body.
+    const { data: callerProfile } = await authContext.supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', authContext.user.id)
+      .maybeSingle();
+
+    // US-253: SES through the shared sender (retry, delivery log, Sentry).
+    const delivery = await sendEmail({
+      to,
+      from: 'notifications@brikly.net',
+      fromName: 'Brikly',
+      subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           ${emailContent}
@@ -102,8 +111,17 @@ const handler = async (req: Request): Promise<Response> => {
           </p>
         </div>
       `,
+      companyId: (callerProfile?.company_id as string | undefined) ?? null,
+      template: type ? `notification_${type}` : 'notification',
+      source: 'send-notification',
     });
 
+    if (!delivery.success) {
+      throw new Error(`Notification email not sent: ${delivery.error ?? 'unknown error'}`);
+    }
+
+    // Same shape the Resend SDK returned, so a caller reading emailResponse.data.id keeps working.
+    const emailResponse = { data: { id: delivery.messageId ?? delivery.deliveryId ?? null }, error: null };
     console.log("Email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: true, emailResponse }), {

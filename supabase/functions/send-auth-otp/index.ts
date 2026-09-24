@@ -214,7 +214,10 @@ const handler = async (req: Request): Promise<Response> => {
       {
         to: email,
         subject: emailContent.subject,
-        html: emailContent.html
+        html: emailContent.html,
+        category: 'security_alerts',
+        template: 'auth_otp',
+        source: 'send-auth-otp',
       },
       siteConfig
     );

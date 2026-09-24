@@ -95,12 +95,20 @@ export default async (req: Request) => {
     for (const admin of admins) {
       if (!admin.email) continue;
       try {
-        await sendEmail({
+        const delivery = await sendEmail({
           to: admin.email,
           subject,
           html: message,
           text: `${companyName} has reached ${pct}% of the ${metricType} usage limit. Current usage: ${totalUsage}/${limit}.`,
+          companyId,
+          template: 'usage_alert',
+          source: 'send-usage-alert',
         });
+        // sendEmail never throws, so this used to count failed sends as sent.
+        if (!delivery.success) {
+          logStep("Failed to send to admin", { email: admin.email, error: delivery.error });
+          continue;
+        }
         sentCount++;
       } catch (err) {
         logStep("Failed to send to admin", { email: admin.email, error: err.message });

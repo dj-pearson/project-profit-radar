@@ -94,7 +94,7 @@ export async function sendInviteWithSetPasswordLink(
   ].join('\n');
 
   const result = await sendEmail(
-    { to: email, subject: copy.subject, html, text },
+    { to: email, subject: copy.subject, html, text, template: 'invite', category: 'security_alerts' },
     siteConfig,
   );
 

@@ -108,7 +108,7 @@ describe('send-renewal-notification', () => {
   it('is gated by requireInternalCallerOrRootAdmin, not requireSystemOrAdmin', () => {
     expect(src).not.toContain('requireSystemOrAdmin');
     expect(at(src, 'requireInternalCallerOrRootAdmin(req')).toBeLessThan(at(src, ".from('subscribers')"));
-    expect(at(src, 'requireInternalCallerOrRootAdmin(req')).toBeLessThan(at(src, 'RESEND_API_KEY'));
+    expect(at(src, 'requireInternalCallerOrRootAdmin(req')).toBeLessThan(at(src, 'sendEmail('));
   });
 
   it('is still reachable by the daily run, which calls it with the service-role client', () => {

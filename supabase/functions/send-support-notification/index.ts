@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { escapeHtml } from '../_shared/html-escape.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { captureException } from '../_shared/observability.ts';
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { sendEmail } from '../_shared/ses-email-service.ts';
 
 // Sent by src/components/support/CustomerSupportChat.tsx. customerEmail is the
 // caller's own profile email there.
@@ -35,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
 
-    // Authenticate the caller. This sends through Resend as Brikly to
+    // Authenticate the caller. This sends as Brikly to
     // support@brikly.net AND to a body-supplied customerEmail, and had no auth
     // of its own: verify_jwt = true only means a validly-signed project JWT is
     // present, and the anon key is one (US-241).
@@ -74,10 +72,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Processing support notification for ticket:", ticketNumber);
 
+    // US-253: both go through SES via the shared sender (retry, delivery log,
+    // Sentry on failure).
     // Send notification to admin
-    const adminEmailResponse = await resend.emails.send({
-      from: "Brikly Support <support@brikly.net>",
+    const adminEmailResponse = await sendEmail({
+      from: "support@brikly.net",
+      fromName: "Brikly Support",
       to: ["support@brikly.net"],
+      template: 'support_ticket_admin',
+      source: 'send-support-notification',
       subject: `New Support Ticket: ${oneLine(body.ticketNumber)} - ${oneLine(body.subject)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -115,9 +118,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Send confirmation to customer
-    const customerEmailResponse = await resend.emails.send({
-      from: "Brikly Support <support@brikly.net>",
+    const customerEmailResponse = await sendEmail({
+      from: "support@brikly.net",
+      fromName: "Brikly Support",
       to: [callerEmail],
+      template: 'support_ticket_confirmation',
+      source: 'send-support-notification',
       subject: `Support Ticket Created: ${oneLine(body.ticketNumber)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -152,6 +158,13 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
+    if (!adminEmailResponse.success || !customerEmailResponse.success) {
+      // This used to report success whatever the provider answered.
+      throw new Error(
+        `Support email not sent: ${adminEmailResponse.error ?? customerEmailResponse.error ?? 'unknown error'}`,
+      );
+    }
+
     console.log("Email notifications sent successfully");
     console.log("Admin email:", adminEmailResponse);
     console.log("Customer email:", customerEmailResponse);
@@ -160,8 +173,8 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         timestamp: new Date().toISOString(), 
         success: true,
-        adminEmailId: adminEmailResponse.data?.id,
-        customerEmailId: customerEmailResponse.data?.id
+        adminEmailId: adminEmailResponse.messageId ?? adminEmailResponse.deliveryId,
+        customerEmailId: customerEmailResponse.messageId ?? customerEmailResponse.deliveryId
       }),
       {
         status: 200,

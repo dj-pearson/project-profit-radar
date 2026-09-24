@@ -1,13 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { captureException } from "../_shared/observability.ts";
+import { sendEmail, emailIdempotencyKey } from "../_shared/ses-email-service.ts";
+import { escapeHtml } from "../_shared/html-escape.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -137,26 +137,36 @@ const handler = async (req: Request): Promise<Response> => {
           emailSubject = emailSubject.replace(regex, String(value));
         });
 
-        // Send email using Resend if API key is available
-        if (resendApiKey) {
-          const resend = new Resend(resendApiKey);
-          
-          await resend.emails.send({
-            from: "Brikly <notifications@resend.dev>",
-            to: [subscriber.email],
-            subject: emailSubject,
-            html: `
+        // US-253: SES through the shared sender. This used to skip the send
+        // entirely when RESEND_API_KEY was unset and still count the item as
+        // sent. The key is the queue item, so an item marked failed after its
+        // email went out is not mailed again when it is retried.
+        const delivery = await sendEmail({
+          to: subscriber.email,
+          from: "notifications@brikly.net",
+          fromName: "Brikly",
+          subject: emailSubject,
+          html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 ${emailContent}
                 <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
                 <p style="color: #666; font-size: 12px;">
-                  This email was sent as part of your ${leadFunnel?.name || 'Lead'} sequence.
+                  This email was sent as part of your ${escapeHtml(leadFunnel?.name || 'Lead')} sequence.
                   <br>
                   <a href="#" style="color: #666;">Unsubscribe</a>
                 </p>
               </div>
             `,
-          });
+          category: "marketing",
+          companyId: leadFunnel?.company_id ?? null,
+          template: "funnel_step",
+          source: "process-funnel-queue",
+          idempotencyKey: await emailIdempotencyKey("funnel_email", item.id),
+        });
+
+        if (!delivery.success) {
+          // Before the send, so the catch below marking the item failed is right.
+          throw new Error(`Funnel email not sent: ${delivery.error ?? "unknown error"}`);
         }
 
         // The email has left the building. Nothing below may throw: the catch

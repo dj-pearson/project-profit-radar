@@ -228,6 +228,9 @@ const handler = async (req: Request): Promise<Response> => {
         to: email,
         subject: emailContent.subject,
         html: emailContent.html,
+        category: 'security_alerts',
+        template: 'signup_with_otp',
+        source: 'signup-with-otp',
       },
       siteConfig
     );

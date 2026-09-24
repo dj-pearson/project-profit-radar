@@ -3,11 +3,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { GRACE_PERIOD_DAYS } from "../_shared/tiers.ts";
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
+import { escapeHtml } from '../_shared/html-escape.ts';
+import { siteUrl } from '../_shared/app-urls.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -35,8 +37,6 @@ serve(async (req) => {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2023-10-16" 
     });
-
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     const today = new Date();
     const threeDaysFromNow = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -110,7 +110,7 @@ serve(async (req) => {
             }
 
             // Send grace period email
-            await sendGracePeriodEmail(resend, admin, company, gracePeriodEnd);
+            await sendGracePeriodEmail(admin, company, gracePeriodEnd);
             results.grace_periods_activated++;
 
             logStep("Activated grace period", { companyId: company.id });
@@ -127,20 +127,20 @@ serve(async (req) => {
               console.error(`[companies] update failed`, updateCompaniesError);
             }
 
-            await sendTrialExpiredEmail(resend, admin, company);
+            await sendTrialExpiredEmail(admin, company);
             results.expired_trials++;
 
             logStep("Trial expired and suspended", { companyId: company.id });
           }
         } else if (trialEndDate <= oneDayFromNow) {
           // Send 1-day warning
-          await sendTrialExpirationWarning(resend, admin, company, trialEndDate, "1-day");
+          await sendTrialExpirationWarning(admin, company, trialEndDate, "1-day");
           results.warnings_sent++;
           
           logStep("Sent 1-day warning", { companyId: company.id });
         } else if (trialEndDate <= threeDaysFromNow) {
           // Send 3-day warning
-          await sendTrialExpirationWarning(resend, admin, company, trialEndDate, "3-day");
+          await sendTrialExpirationWarning(admin, company, trialEndDate, "3-day");
           results.warnings_sent++;
           
           logStep("Sent 3-day warning", { companyId: company.id });
@@ -178,7 +178,6 @@ serve(async (req) => {
 });
 
 async function sendTrialExpirationWarning(
-  resend: any,
   admin: any,
   company: any,
   trialEndDate: Date,
@@ -186,18 +185,18 @@ async function sendTrialExpirationWarning(
 ) {
   const daysLeft = warningType === "1-day" ? 1 : 3;
   
-  await resend.emails.send({
-    from: "Brikly <notifications@brikly.app>",
-    to: [admin.email],
+  await deliverTrialEmail(admin, company, {
+    template: `trial_warning_${warningType}`,
+    occasion: [warningType, company.trial_end_date],
     subject: `Your Brikly trial expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #f97316;">Trial Expiring Soon</h2>
-        <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Brikly trial for <strong>${company.name}</strong> will expire in ${daysLeft} day${daysLeft > 1 ? 's' : ''} on ${trialEndDate.toLocaleDateString()}.</p>
+        <p>Hi ${escapeHtml(admin.first_name || 'there')},</p>
+        <p>Your Brikly trial for <strong>${escapeHtml(company.name ?? '')}</strong> will expire in ${daysLeft} day${daysLeft > 1 ? 's' : ''} on ${trialEndDate.toLocaleDateString()}.</p>
         <p>To continue using all Brikly features, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/subscription" 
+          <a href="${siteUrl()}/subscription" 
              style="background-color: #f97316; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             Upgrade Now
           </a>
@@ -210,24 +209,23 @@ async function sendTrialExpirationWarning(
 }
 
 async function sendGracePeriodEmail(
-  resend: any,
   admin: any,
   company: any,
   gracePeriodEnd: Date
 ) {
-  await resend.emails.send({
-    from: "Brikly <notifications@brikly.app>",
-    to: [admin.email],
+  await deliverTrialEmail(admin, company, {
+    template: 'trial_grace_period',
+    occasion: ['grace_period', company.trial_end_date],
     subject: "Brikly Trial Expired - 7-Day Grace Period Active",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Trial Expired - Grace Period Active</h2>
-        <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Brikly trial for <strong>${company.name}</strong> has expired, but we've activated a 7-day grace period.</p>
+        <p>Hi ${escapeHtml(admin.first_name || 'there')},</p>
+        <p>Your Brikly trial for <strong>${escapeHtml(company.name ?? '')}</strong> has expired, but we've activated a 7-day grace period.</p>
         <p><strong>Grace period ends:</strong> ${gracePeriodEnd.toLocaleDateString()}</p>
         <p>During this time, you can still access your account, but some features may be limited. To restore full access, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/subscription" 
+          <a href="${siteUrl()}/subscription" 
              style="background-color: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             Upgrade Now
           </a>
@@ -240,22 +238,21 @@ async function sendGracePeriodEmail(
 }
 
 async function sendTrialExpiredEmail(
-  resend: any,
   admin: any,
   company: any
 ) {
-  await resend.emails.send({
-    from: "Brikly <notifications@brikly.app>",
-    to: [admin.email],
+  await deliverTrialEmail(admin, company, {
+    template: 'trial_suspended',
+    occasion: ['suspended', company.trial_end_date],
     subject: "Brikly Account Suspended - Trial and Grace Period Expired",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Account Suspended</h2>
-        <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Brikly account for <strong>${company.name}</strong> has been suspended because both your trial and grace period have expired.</p>
+        <p>Hi ${escapeHtml(admin.first_name || 'there')},</p>
+        <p>Your Brikly account for <strong>${escapeHtml(company.name ?? '')}</strong> has been suspended because both your trial and grace period have expired.</p>
         <p>Your data is safe and will be preserved for 30 days. To reactivate your account and restore full access, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/subscription" 
+          <a href="${siteUrl()}/subscription" 
              style="background-color: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             Reactivate Account
           </a>
@@ -265,4 +262,32 @@ async function sendTrialExpiredEmail(
       </div>
     `,
   });
+}
+
+/**
+ * US-253: trial mail goes through SES via the shared sender (retry, delivery
+ * log, Sentry on failure). It used to send from brikly.app, which the
+ * brikly.net SPF/DKIM records do not cover. The key is the company, the stage
+ * and the trial end date, so the daily run sends the 3-day warning once rather
+ * than on each of the three days the trial is inside that window.
+ */
+async function deliverTrialEmail(
+  admin: any,
+  company: any,
+  email: { template: string; occasion: Array<string | null | undefined>; subject: string; html: string },
+) {
+  const result = await sendEmail({
+    to: admin.email,
+    from: 'notifications@brikly.net',
+    fromName: 'Brikly',
+    subject: email.subject,
+    html: email.html,
+    companyId: company.id,
+    template: email.template,
+    source: 'trial-management',
+    idempotencyKey: await emailIdempotencyKey('trial_email', company.id, ...email.occasion),
+  });
+  if (!result.success) {
+    logStep("Trial email not sent", { companyId: company.id, template: email.template, error: result.error });
+  }
 }

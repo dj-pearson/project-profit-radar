@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { generateIncidentHTML, getSeverityEmoji } from '../_shared/safety-incident-email.ts';
 import { captureException } from '../_shared/observability.ts';
+import { sendEmail, emailIdempotencyKey } from '../_shared/ses-email-service.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // incident is the row the client just inserted, so passthrough. severity and
@@ -22,8 +22,6 @@ const SafetyNotificationSchema = z.object({
   urgency: z.string().max(32).nullish(),
   emergency_services: z.boolean().nullish(),
 }).passthrough();
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface SafetyNotificationRequest {
   incident: {
@@ -86,11 +84,14 @@ const handler = async (req: Request): Promise<Response> => {
     
     const subject = `${severityEmoji} ${incident.severity.toUpperCase()} Safety Incident - ${incident.incident_type.replace('_', ' ')}`;
 
-    // Send notifications to all recipients
+    // Send notifications to all recipients (US-253: SES through the shared
+    // sender). Keyed on the incident, so a client that retries the same
+    // report does not page the supervisor twice.
     const emailPromises = recipients.map(async (email) => {
-      return await resend.emails.send({
-        from: "Brikly Safety <safety@brikly.dev>",
-        to: [email],
+      return await sendEmail({
+        to: email,
+        from: 'safety@brikly.net',
+        fromName: 'Brikly Safety',
         subject: subject,
         html: emailHTML,
         // Add high priority for critical incidents
@@ -98,12 +99,22 @@ const handler = async (req: Request): Promise<Response> => {
           'X-Priority': '1',
           'X-MSMail-Priority': 'High',
           'Importance': 'High'
-        } : undefined
+        } : undefined,
+        template: 'safety_incident',
+        source: 'send-safety-notification',
+        idempotencyKey: incident.id
+          ? await emailIdempotencyKey('safety_incident', incident.id, email)
+          : undefined,
       });
     });
 
     const emailResults = await Promise.all(emailPromises);
-    
+    const failedSends = emailResults.filter((r) => !r.success);
+    if (failedSends.length > 0) {
+      // This used to report success whatever the provider answered.
+      throw new Error(`${failedSends.length} of ${emailResults.length} safety notifications not sent: ${failedSends[0].error ?? 'unknown error'}`);
+    }
+
     console.log('Safety notifications sent successfully:', emailResults);
 
     // For critical incidents, could also send SMS notifications here
