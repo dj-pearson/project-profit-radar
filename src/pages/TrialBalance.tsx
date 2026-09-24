@@ -43,9 +43,9 @@ const ACCOUNT_ORDER: AccountType[] = [
 ];
 
 export default function TrialBalance() {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = userProfile?.company_id ?? undefined;
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 

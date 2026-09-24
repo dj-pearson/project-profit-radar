@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useJournalEntries, useChartOfAccounts, useCreateJournalEntry, usePostJournalEntry } from '@/hooks/useAccounting';
+import { useJournalEntriesPage, NO_COMPANY_MESSAGE } from '@/hooks/useAccountingPages';
+import { ErrorState } from '@/components/common/ErrorState';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,19 +50,15 @@ import {
 } from '@/lib/validations/accounting';
 
 export default function JournalEntries() {
-  const { user } = useAuth();
-  const companyId = user?.user_metadata?.company_id;
-
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Fetch data
-  const { data: journalEntries, isLoading } = useJournalEntries(companyId, {
-    status: filterStatus === 'all' ? undefined : filterStatus,
-  });
-  const { data: accounts } = useChartOfAccounts(companyId);
-  const createEntry = useCreateJournalEntry();
-  const postEntry = usePostJournalEntry();
+  const page = useJournalEntriesPage(filterStatus === 'all' ? undefined : filterStatus);
+  const { companyId, loadError } = page;
+  const { data: journalEntries, isLoading } = page.entries;
+  const { data: accounts } = page.accounts;
+  const createEntry = page.create;
+  const postEntry = page.post;
 
   // Form state (US-268: react-hook-form + journalEntryFormSchema)
   const form = useForm<JournalEntryFormValues>({
@@ -100,7 +97,16 @@ export default function JournalEntries() {
 
   // Handle form submission
   const handleSubmit = async (values: JournalEntryFormValues) => {
-    await createEntry.mutateAsync(buildJournalEntryPayload(companyId, values));
+    if (!companyId) {
+      toast.error(NO_COMPANY_MESSAGE);
+      return;
+    }
+    // The hook toasts the failure; keep the dialog open so nothing typed is lost.
+    try {
+      await createEntry.mutateAsync(buildJournalEntryPayload(companyId, values));
+    } catch {
+      return;
+    }
 
     // Reset form
     form.reset({ ...emptyJournalEntry(), lines: [] });
@@ -109,7 +115,11 @@ export default function JournalEntries() {
 
   const handlePostEntry = async (entryId: string) => {
     if (await confirmAction({ title: 'Are you sure you want to post this journal entry?', description: 'This will update account balances.', confirmLabel: 'Post entry' })) {
-      await postEntry.mutateAsync(entryId);
+      try {
+        await postEntry.mutateAsync(entryId);
+      } catch {
+        // Toasted by the hook.
+      }
     }
   };
 
@@ -426,7 +436,13 @@ export default function JournalEntries() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {loadError ? (
+              <ErrorState
+                title="Journal entries could not be loaded"
+                error={loadError}
+                onRetry={() => { void page.entries.refetch(); void page.accounts.refetch(); }}
+              />
+            ) : isLoading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : journalEntries && journalEntries.length > 0 ? (
               <VirtualizedTable

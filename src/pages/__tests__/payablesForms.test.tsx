@@ -16,7 +16,8 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@/components/ui/select', () => import('@/test/selectMock'));
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u-1', user_metadata: { company_id: 'co-1' } } }),
+  // The pages read the company from the profile (US-266), not user_metadata.
+  useAuth: () => ({ user: { id: 'u-1', user_metadata: {} }, userProfile: { id: 'u-1', company_id: 'co-1' } }),
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -47,8 +48,13 @@ vi.mock('@/integrations/supabase/client', () => {
         q.then = (res: (v: unknown) => unknown) => Promise.resolve({ data: rows(table), error: null }).then(res);
         q.insert = (row: unknown) => {
           h.insert(table, row);
+          const landed = (Array.isArray(row) ? row : [row]).map((_, i) => ({ id: `row-${i}` }));
           return {
-            select: () => ({ single: () => Promise.resolve({ data: { id: 'pay-1' }, error: null }) }),
+            // Writes are read back: .single() for the payment, the rows for its applications.
+            select: () => ({
+              single: () => Promise.resolve({ data: { id: 'pay-1' }, error: null }),
+              then: (res: (v: unknown) => unknown) => Promise.resolve({ data: landed, error: null }).then(res),
+            }),
             then: (res: (v: unknown) => unknown) => Promise.resolve({ error: null }).then(res),
           };
         };

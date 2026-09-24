@@ -9,7 +9,7 @@ import React from 'react';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    user: { id: 'u1', user_metadata: { company_id: 'c1' } },
+    user: { id: 'u1', user_metadata: {} },
     userProfile: { id: 'u1', company_id: 'c1', role: 'accounting' },
     loading: false,
   }),

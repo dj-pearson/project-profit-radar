@@ -1,11 +1,11 @@
 /**
  * Vendor directory reads and writes for /vendors (US-266).
  *
- * The key is ['vendors', companyId, 'directory'] rather than ['vendors',
- * companyId]: AccountsPayable and BillPayments cache a narrower select under
- * the two-part key, and sharing it would hand one screen the other's rows.
- * Invalidation uses the two-part prefix so a vendor added here also refreshes
- * the payables pickers.
+ * The key is ['vendors', companyId, 'directory']: AccountsPayable and
+ * BillPayments cache a narrower select under ['vendors', companyId,
+ * 'payables'] (useAccountingPages), and sharing a key would hand one screen
+ * the other's rows. Invalidation uses the two-part prefix so a vendor added
+ * here also refreshes the payables pickers.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';

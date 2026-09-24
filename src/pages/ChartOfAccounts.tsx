@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useChartOfAccounts, useCreateAccount, useUpdateAccount } from '@/hooks/useAccounting';
+import { useChartOfAccountsPage } from '@/hooks/useAccountingPages';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,19 +62,16 @@ interface ChartAccount {
 }
 
 export default function ChartOfAccounts() {
-  const { user } = useAuth();
+  const page = useChartOfAccountsPage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<ChartAccount | null>(null);
 
-  // Get company ID from user profile
-  const companyId = user?.user_metadata?.company_id;
-
-  // Fetch accounts
-  const { data: accounts, isLoading } = useChartOfAccounts(companyId);
-  const createAccount = useCreateAccount();
-  const updateAccount = useUpdateAccount();
+  const { companyId, loadError } = page;
+  const { data: accounts, isLoading } = page.accounts;
+  const createAccount = page.create;
+  const updateAccount = page.update;
 
   // Form state
   const form = useForm<ChartAccountFormValues>({
@@ -122,13 +119,18 @@ export default function ChartOfAccounts() {
         : 'credit',
     };
 
-    if (editingAccount) {
-      await updateAccount.mutateAsync({
-        id: editingAccount.id,
-        updates: accountData,
-      });
-    } else {
-      await createAccount.mutateAsync(accountData);
+    // The hooks toast the failure; keep the dialog open so nothing typed is lost.
+    try {
+      if (editingAccount) {
+        await updateAccount.mutateAsync({
+          id: editingAccount.id,
+          updates: accountData,
+        });
+      } else {
+        await createAccount.mutateAsync(accountData);
+      }
+    } catch {
+      return;
     }
 
     // Reset form
@@ -409,7 +411,13 @@ export default function ChartOfAccounts() {
 
       {/* Accounts Table */}
       <section aria-label="Accounts list">
-        {isLoading ? (
+        {loadError ? (
+          <ErrorState
+            title="Accounts could not be loaded"
+            error={loadError}
+            onRetry={() => { void page.accounts.refetch(); }}
+          />
+        ) : isLoading ? (
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>

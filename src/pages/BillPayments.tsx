@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBills, useChartOfAccounts } from '@/hooks/useAccounting';
+import { useBillPaymentsPage, NO_COMPANY_MESSAGE, type PayablesVendor } from '@/hooks/useAccountingPages';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,8 +34,6 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Plus, DollarSign } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -60,12 +58,6 @@ interface BillRecord {
   line_items?: unknown[];
 }
 
-interface VendorRecord {
-  id: string;
-  name: string;
-  [key: string]: unknown;
-}
-
 interface BillPaymentRecord {
   id: string;
   payment_number: string;
@@ -74,17 +66,6 @@ interface BillPaymentRecord {
   total_amount: number;
   payment_method: string;
   applications?: { amount_applied: number; bill: { bill_number: string } | null }[];
-}
-
-interface PaymentFormData {
-  paymentDate: string;
-  paymentMethod: string;
-  bankAccountId: string;
-  checkNumber: string;
-  referenceNumber: string;
-  memo: string;
-  billsToPayArray: BillToPayApplication[];
-  totalAmount?: number;
 }
 
 interface BillToPayApplication {
@@ -97,59 +78,17 @@ interface BillToPayApplication {
 }
 
 export default function BillPayments() {
-  const { user } = useAuth();
-  const companyId = user?.user_metadata?.company_id;
-  const queryClient = useQueryClient();
+  const page = useBillPaymentsPage();
+  const { companyId, loadError } = page;
+  const createPayment = page.create;
 
   const [isPayDialogOpen, setIsPayDialogOpen] = useState(false);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
 
-  // Fetch open bills
-  const { data: bills } = useBills(companyId, {
-    status: 'open',
-  });
-
-  // Fetch accounts (for bank account selection)
-  const { data: accounts } = useChartOfAccounts(companyId);
-
-  // Fetch vendors
-  const { data: vendors } = useQuery({
-    queryKey: ['vendors', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vendors')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('name');
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!companyId,
-  });
-
-  // Fetch bill payments
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
-    queryKey: ['bill-payments', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('bill_payments')
-        .select(`
-          *,
-          vendor:vendors(name),
-          applications:bill_payment_applications(
-            amount_applied,
-            bill:bills(bill_number)
-          )
-        `)
-        .eq('company_id', companyId)
-        .order('payment_date', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!companyId,
-  });
+  const { data: bills } = page.bills;
+  const { data: accounts } = page.accounts;
+  const { data: vendors } = page.vendors;
+  const { data: payments, isLoading: paymentsLoading } = page.payments;
 
   // Form state (US-268: react-hook-form + billPaymentFormSchema)
   const form = useForm<BillPaymentFormValues>({
@@ -201,98 +140,33 @@ export default function BillPayments() {
     );
   };
 
-  // Create bill payment mutation
-  const createPayment = useMutation({
-    mutationFn: async (paymentData: PaymentFormData) => {
-      // payment_number is assigned by the set_bill_payment_number trigger
-      // (US-310). This used to be `rpc('nextval', { sequence_name: ... })`,
-      // which is pg_catalog.nextval(regclass): wrong schema for PostgREST to
-      // expose and wrong argument shape, so it could never resolve and the
-      // `throw seqError` on the next line meant no bill payment has ever been
-      // recorded.
-
-      // Get vendor ID from first bill
-      const firstBill = bills?.find((b: BillRecord) => b.id === paymentData.billsToPayArray[0].billId);
-
-      // Create payment
-      const { data: payment, error: paymentError } = await supabase
-        .from('bill_payments')
-        .insert({
-          company_id: companyId,
-          payment_date: paymentData.paymentDate,
-          vendor_id: firstBill?.vendor_id,
-          total_amount: paymentData.totalAmount,
-          payment_method: paymentData.paymentMethod,
-          check_number: paymentData.checkNumber,
-          reference_number: paymentData.referenceNumber,
-          bank_account_id: paymentData.bankAccountId,
-          memo: paymentData.memo,
-        })
-        .select()
-        .single();
-
-      if (paymentError) throw paymentError;
-
-      // Create payment applications
-      const applications = paymentData.billsToPayArray.map((app: BillToPayApplication) => ({
-        bill_payment_id: payment.id,
-        bill_id: app.billId,
-        company_id: companyId,
-        amount_applied: app.amountToPay,
-      }));
-
-      const { error: appsError } = await supabase
-        .from('bill_payment_applications')
-        .insert(applications);
-
-      if (appsError) throw appsError;
-
-      // Update bill amounts_paid.
-      //
-      // This used to fall back to a direct update when the RPC failed, reading
-      // amount_paid off the client's loaded copy of the bill and writing back
-      // the sum. No migration defined apply_bill_payment, so that fallback was
-      // the only path - and two payments applied to the same bill at once both
-      // read the same amount_paid and both write the same total, losing one of
-      // them in a ledger. apply_bill_payment now exists and does the
-      // read-modify-write inside one UPDATE, under the row lock (US-310), so
-      // the fallback is gone rather than kept as a lossy second chance.
-      for (const app of paymentData.billsToPayArray) {
-        const { error: updateError } = await supabase.rpc('apply_bill_payment', {
-          p_bill_id: app.billId,
-          p_amount: app.amountToPay,
-        });
-
-        if (updateError) {
-          throw new Error(
-            `Payment recorded but bill ${app.billId} could not be updated (${updateError.message}). ` +
-              `The bill still shows the old balance and must be reconciled by hand.`,
-          );
-        }
-      }
-
-      return payment;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bills'] });
-      queryClient.invalidateQueries({ queryKey: ['bill-payments'] });
-      toast.success('Bill payment created successfully');
-      setIsPayDialogOpen(false);
-      // Reset form
-      form.reset(emptyBillPayment());
-      setSelectedVendorId('');
-    },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to create payment: ${message}`);
-    },
-  });
-
   const handleSubmit = async (values: BillPaymentFormValues) => {
-    await createPayment.mutateAsync({
-      ...values,
-      totalAmount: totalPaymentAmount,
-    });
+    if (!companyId) {
+      toast.error(NO_COMPANY_MESSAGE);
+      return;
+    }
+    // The vendor comes from the first bill; the dialog pays one vendor at a time.
+    const firstBill = bills?.find((b: BillRecord) => b.id === values.billsToPayArray[0]?.billId);
+    try {
+      await createPayment.mutateAsync({
+        vendorId: firstBill?.vendor_id,
+        paymentDate: values.paymentDate,
+        paymentMethod: values.paymentMethod,
+        bankAccountId: values.bankAccountId,
+        checkNumber: values.checkNumber,
+        referenceNumber: values.referenceNumber,
+        memo: values.memo,
+        totalAmount: totalPaymentAmount,
+        applications: values.billsToPayArray.map((app) => ({ billId: app.billId, amountToPay: app.amountToPay })),
+      });
+    } catch (error) {
+      toast.error(`Failed to create payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return;
+    }
+    toast.success('Bill payment created successfully');
+    setIsPayDialogOpen(false);
+    form.reset(emptyBillPayment());
+    setSelectedVendorId('');
   };
 
   // Bank accounts for selection
@@ -444,7 +318,7 @@ export default function BillPayments() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All Vendors</SelectItem>
-                      {vendors?.map((vendor: VendorRecord) => (
+                      {vendors?.map((vendor: PayablesVendor) => (
                         <SelectItem key={vendor.id} value={vendor.id}>
                           {vendor.name}
                         </SelectItem>
@@ -637,7 +511,18 @@ export default function BillPayments() {
             <CardDescription>Recent bill payments</CardDescription>
           </CardHeader>
           <CardContent>
-            {paymentsLoading ? (
+            {loadError ? (
+              <ErrorState
+                title="Bill payments could not be loaded"
+                error={loadError}
+                onRetry={() => {
+                  void page.bills.refetch();
+                  void page.accounts.refetch();
+                  void page.vendors.refetch();
+                  void page.payments.refetch();
+                }}
+              />
+            ) : paymentsLoading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : payments && payments.length > 0 ? (
               <Table aria-label="Payment history">

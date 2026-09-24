@@ -7327,3 +7327,12 @@ doesn't have, so every save failed; the second also never had a project
 id, and the first fell back to fake projects. Both now save through the
 same hook as the desktop form, including items, photos and crew. TS 879 ->
 875, eslint warnings 4243 -> 4239, customer-links 22 -> 18.
+
+## Accounting pages read a company id nothing sets
+Nine accounting pages (chart of accounts, payables, bill payments, journal
+entries and the five statements) took the company from
+user_metadata.company_id, which nothing writes, so for most users they
+loaded nothing. They now use the profile's company; a test fails if
+anything reads user_metadata.company_id again. Account updates and journal
+posting are now company-scoped, and bill payment applications are read
+back so a partial save no longer reports success. TS 875 -> 872.

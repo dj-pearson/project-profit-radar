@@ -53,9 +53,9 @@ interface MonthGroup {
 }
 
 export default function GeneralLedger() {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = userProfile?.company_id ?? undefined;
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [startDate, setStartDate] = useState(

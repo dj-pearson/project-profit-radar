@@ -60,7 +60,7 @@ const SRC = join(root, 'src');
  * An eighth moved 3 more (the two mobile daily-report forms, onto
  * useDailyReportsPage's saveDailyReport and project list).
  */
-const BASELINE = 333;
+const BASELINE = 328;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

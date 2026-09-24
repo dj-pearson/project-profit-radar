@@ -25,9 +25,9 @@ import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BalanceSheet() {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = userProfile?.company_id ?? undefined;
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 

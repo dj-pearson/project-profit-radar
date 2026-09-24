@@ -76,9 +76,9 @@ const indented = (lines: CashFlowLine[]): SectionItem[] =>
   lines.map((l) => ({ label: l.label, amount: l.amount, isIndented: true }));
 
 export default function CashFlowStatement() {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = userProfile?.company_id ?? undefined;
 
   const [startDate, setStartDate] = useState(
     new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]

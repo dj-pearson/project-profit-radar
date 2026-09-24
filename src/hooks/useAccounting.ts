@@ -61,23 +61,37 @@ export function useAccount(accountId: string) {
   });
 }
 
-export function useCreateAccount() {
+/** Zero rows back from a write means RLS or the company filter stopped it. */
+function requireRows(data: unknown[] | null, what: string): void {
+  if (!data || data.length === 0) {
+    throw new Error(`${what} was not saved. It may have been removed, or you may not have permission.`);
+  }
+}
+
+function requireCompany(companyId: string | undefined): string {
+  if (!companyId) throw new Error('Your profile is not linked to a company, so there is nowhere to save this.');
+  return companyId;
+}
+
+export function useCreateAccount(companyId?: string) {
   const queryClient = useQueryClient();
-    return useMutation({
+  return useMutation({
     mutationFn: async (accountData: Record<string, unknown>) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
           ...accountData,
-        })
+          company_id: requireCompany(companyId),
+        } as never)
         .select()
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error('The account was not created.');
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts', companyId] });
       toast.success('Account created successfully');
     },
     onError: (error: Error) => {
@@ -86,23 +100,28 @@ export function useCreateAccount() {
   });
 }
 
-export function useUpdateAccount() {
+/**
+ * Scoped to the company and read back: an update RLS filtered to zero rows
+ * used to report "Account updated successfully".
+ */
+export function useUpdateAccount(companyId?: string) {
   const queryClient = useQueryClient();
-    return useMutation({
+  return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
-            const { data, error } = await supabase
+      const { company_id: _ignored, ...patch } = updates;
+      const { data, error } = await supabase
         .from('chart_of_accounts')
-        .update(updates)
+        .update(patch)
         .eq('id', id)
-          // CRITICAL: Site isolation
-        .select()
-        .single();
+        .eq('company_id', requireCompany(companyId))
+        .select('id');
 
       if (error) throw error;
-      return data;
+      requireRows(data, 'The account');
+      return data[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts', companyId] });
       queryClient.invalidateQueries({ queryKey: ['account'] });
       toast.success('Account updated successfully');
     },
@@ -254,9 +273,14 @@ export function useCreateJournalEntry() {
         cost_code_id: line.costCodeId,
       }));
 
-      const { error: linesError } = await supabase
+      const { data: insertedLines, error: insertLinesError } = await supabase
         .from('journal_entry_lines')
-        .insert(lines);
+        .insert(lines)
+        .select('id');
+      const linesError = insertLinesError ??
+        ((insertedLines?.length ?? 0) !== lines.length
+          ? new Error(`only ${insertedLines?.length ?? 0} of ${lines.length} lines were saved`)
+          : null);
 
       if (linesError) {
         // Rollback: delete the header. Read the rollback's own error - a
@@ -288,29 +312,31 @@ export function useCreateJournalEntry() {
   });
 }
 
-export function usePostJournalEntry() {
+/** Scoped to the company and read back, like useUpdateAccount. */
+export function usePostJournalEntry(companyId?: string) {
   const queryClient = useQueryClient();
-    return useMutation({
+  return useMutation({
     mutationFn: async (entryId: string) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('journal_entries')
         .update({
           transaction_status: 'posted',
           posting_date: new Date().toISOString().split('T')[0],
         })
         .eq('id', entryId)
-          // CRITICAL: Site isolation
-        .select()
-        .single();
+        .eq('company_id', requireCompany(companyId))
+        .select('id');
 
       if (error) throw error;
-      return data;
+      requireRows(data, 'The journal entry');
+      return data[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['journal-entries', companyId] });
       queryClient.invalidateQueries({ queryKey: ['journal-entry'] });
-      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['chart-of-accounts', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['ledger-activity', companyId] });
       toast.success('Journal entry posted successfully');
     },
     onError: (error: Error) => {
@@ -425,9 +451,14 @@ export function useCreateBill() {
         cost_code_id: item.costCodeId,
       }));
 
-      const { error: linesError } = await supabase
+      const { data: insertedItems, error: insertItemsError } = await supabase
         .from('bill_line_items')
-        .insert(lineItems);
+        .insert(lineItems)
+        .select('id');
+      const linesError = insertItemsError ??
+        ((insertedItems?.length ?? 0) !== lineItems.length
+          ? new Error(`only ${insertedItems?.length ?? 0} of ${lineItems.length} line items were saved`)
+          : null);
 
       if (linesError) {
         // Rollback. As above: a failed rollback leaves a bill with no line

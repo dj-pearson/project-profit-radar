@@ -33,7 +33,7 @@ const DOCUMENTS = [
   { table: 'bill_payments', column: 'payment_number', fn: 'generate_bill_payment_number', prefix: 'PMT-' },
 ];
 
-const CLIENTS = ['src/hooks/useAccounting.ts', 'src/pages/BillPayments.tsx'];
+const CLIENTS = ['src/hooks/useAccounting.ts', 'src/hooks/useAccountingPages.ts', 'src/pages/BillPayments.tsx'];
 
 /** File contents with comment lines stripped, so documenting a shape is not using it. */
 function code(path: string): string {
@@ -174,7 +174,8 @@ describe('apply_bill_payment', () => {
   });
 
   it('the client no longer falls back to a client-side read-modify-write', () => {
-    const client = code('src/pages/BillPayments.tsx');
+    // The write moved from the page into its hook (US-266).
+    const client = code('src/hooks/useAccountingPages.ts');
     for (const payload of insertPayloads(client)) {
       expect(payload).not.toMatch(/amount_paid\s*:/);
     }

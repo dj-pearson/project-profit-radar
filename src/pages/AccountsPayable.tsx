@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBills, useCreateBill, useChartOfAccounts } from '@/hooks/useAccounting';
+import { useAccountsPayablePage, NO_COMPANY_MESSAGE, type PayablesVendor } from '@/hooks/useAccountingPages';
+import { ErrorState } from '@/components/common/ErrorState';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,8 +35,6 @@ import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -48,23 +47,6 @@ import {
   type BillFormValues,
   type BillLineItemValues,
 } from '@/lib/validations/accounting';
-
-interface Vendor {
-  id: string;
-  name: string;
-  address: string | null;
-  company_id: string;
-  contact_person: string | null;
-  created_at: string;
-  created_by: string | null;
-  email: string | null;
-  is_active: boolean;
-  notes: string | null;
-  payment_terms: string | null;
-  phone: string | null;
-  tax_id: string | null;
-  updated_at: string;
-}
 
 interface Bill {
   id: string;
@@ -82,34 +64,15 @@ interface Bill {
 }
 
 export default function AccountsPayable() {
-  const { user } = useAuth();
-  const companyId = user?.user_metadata?.company_id;
-
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Fetch data
-  const { data: bills, isLoading } = useBills(companyId, {
-    status: filterStatus === 'all' ? undefined : filterStatus,
-  });
-  const { data: accounts } = useChartOfAccounts(companyId);
-  const createBill = useCreateBill();
-
-  // Fetch vendors
-  const { data: vendors } = useQuery({
-    queryKey: ['vendors', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vendors')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('name');
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!companyId,
-  });
+  const page = useAccountsPayablePage(filterStatus === 'all' ? undefined : filterStatus);
+  const { companyId, loadError } = page;
+  const { data: bills, isLoading } = page.bills;
+  const { data: accounts } = page.accounts;
+  const { data: vendors } = page.vendors;
+  const createBill = page.create;
 
   // Form state (US-268: react-hook-form + billFormSchema)
   const form = useForm<BillFormValues>({
@@ -157,7 +120,16 @@ export default function AccountsPayable() {
 
   // Handle form submission
   const handleSubmit = async (values: BillFormValues) => {
-    await createBill.mutateAsync(buildBillPayload(companyId, values));
+    if (!companyId) {
+      toast.error(NO_COMPANY_MESSAGE);
+      return;
+    }
+    // The hook toasts the failure; keep the dialog open so nothing typed is lost.
+    try {
+      await createBill.mutateAsync(buildBillPayload(companyId, values));
+    } catch {
+      return;
+    }
 
     // Reset form
     form.reset(emptyBill([]));
@@ -231,7 +203,7 @@ export default function AccountsPayable() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {vendors?.map((vendor: Vendor) => (
+                            {vendors?.map((vendor: PayablesVendor) => (
                               <SelectItem key={vendor.id} value={vendor.id}>
                                 {vendor.name}
                               </SelectItem>
@@ -510,7 +482,13 @@ export default function AccountsPayable() {
             <CardDescription>All vendor bills</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {loadError ? (
+              <ErrorState
+                title="Bills could not be loaded"
+                error={loadError}
+                onRetry={() => { void page.bills.refetch(); void page.accounts.refetch(); void page.vendors.refetch(); }}
+              />
+            ) : isLoading ? (
               <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8" />)}</div>
             ) : bills && bills.length > 0 ? (
               <VirtualizedTable

@@ -13,9 +13,9 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  // FiscalPeriods reads the company from the profile (US-266); ChartOfAccounts
-  // still reads user_metadata.
-  useAuth: () => ({ user: { id: 'u-1', user_metadata: { company_id: 'co-1' } }, userProfile: { id: 'u-1', company_id: 'co-1' } }),
+  // The pages read the company from the profile (US-266); user_metadata is
+  // left empty, as the signup paths leave it.
+  useAuth: () => ({ user: { id: 'u-1', user_metadata: {} }, userProfile: { id: 'u-1', company_id: 'co-1' } }),
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/integrations/supabase/client', () => {

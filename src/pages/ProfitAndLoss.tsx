@@ -24,9 +24,9 @@ import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfitAndLoss() {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = userProfile?.company_id ?? undefined;
 
   const [startDate, setStartDate] = useState(
     new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]
