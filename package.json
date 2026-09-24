@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "npm@10.9.2",
   "comments": {
-    "overrides": "Targeted replacements for the former blanket .npmrc legacy-peer-deps (US-260), which globally silenced ALL peer conflicts and risked shipping a real incompatibility. Each entry is a specific, reviewed conflict: (1) react/react-dom -> $react pins every react resolution to the app's v19, satisfying libs whose peer is capped at ^18 but are 19-compatible in practice (react-day-picker, react-helmet-async, vaul, next-themes, @react-spring/*, react-composer). (2) @react-three/drei's @react-three/fiber peer is pinned to root fiber (^9) — the app already ships this fiber@9+drei@9 tree. (3) expo-constants is pinned to the range expo-router@6 requires; the archived Expo stack lives in the web root only for the vite web-fallback aliases and is not run on web, so unifying its internal peer is safe. Separately, @capacitor/app and @capacitor/status-bar were realigned from a stray v8 back to the suite's v7 (a genuine version-mismatch fix), and typescript-eslint bumped to a TS-5.9-supporting line. A genuinely new incompatibility now fails install instead of being hidden."
+    "overrides": "Peer conflicts are resolved one by one instead of by the old blanket .npmrc legacy-peer-deps / npm install --force (US-260). Overrides: (1) react and react-dom are forced to the app's ^19.1.0 everywhere, because react-day-picker@8, react-helmet-async@2, vaul@0.9, next-themes@0.3, @react-spring/* and @react-three/drei@9 still cap their react peer at ^18 but run on 19. (2) @react-three/drei@9 declares a @react-three/fiber ^8 peer; it is pinned to the root fiber ^9.4.0, the tree the app already ships. The versioned entries below that (@xmldom/xmldom, brace-expansion, js-yaml, nanoid, postcss, undici, fast-uri, ip-address) are security floors, not peer fixes. Version bumps instead of overrides: three ^0.158 -> ^0.159 so drei's @monogrid/gainmap-js@3.4 peer (three >=0.159) is met; @capacitor/app and @capacitor/status-bar realigned from a stray v8 to the suite's v7; typescript-eslint moved to a TS-5.9-supporting line; expo-constants declared directly at the ^18 range expo-router@6 needs. @react-three/fiber@9 caps react at <19.3, so bumping react past 19.2 needs a fiber bump too. Check with: rm -rf node_modules && npm ci (no ERESOLVE warnings) and npm ls --all | grep invalid (empty). A new conflict should fail install; add a reviewed entry here rather than a global flag."
   },
   "overrides": {
     "react": "^19.1.0",
@@ -197,7 +197,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^6.0.1",
-    "three": "^0.158.0",
+    "three": "^0.159.0",
     "vaul": "^0.9.3",
     "web-vitals": "^5.1.0",
     "xlsx": "^0.18.5",

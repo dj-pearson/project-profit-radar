@@ -7379,3 +7379,9 @@ delivery log row. Ten senders moved off Resend and SendGrid, several of
 which sent from domains brikly.net's SPF/DKIM don't cover and reported
 success whether or not the email went. Owner: AWS keys, DNS, and the
 bounce webhook.
+
+## US-260 - no more ignored peer conflicts
+The last real peer conflict (three 0.158 vs gainmap-js wanting 0.159) is
+fixed by bumping three; npm ci on a clean tree is warning-free and npm ls
+reports nothing invalid. The remaining overrides are targeted and
+documented, and the Dockerfile no longer passes --legacy-peer-deps.

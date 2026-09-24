@@ -4161,8 +4161,8 @@
         "CI install succeeds without global legacy-peer-deps"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: MEDIUM. Source: Testing/CI audit. Depends on the mobile-stack removal item."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: MEDIUM. Source: Testing/CI audit. Depends on the mobile-stack removal item. || legacy-peer-deps and --force were already gone from .npmrc, scripts and CI (164ea52). Last real peer conflict fixed: three bumped ^0.158 -> ^0.159 for @monogrid/gainmap-js (drei); npm ci on a clean tree now has no ERESOLVE and npm ls shows 0 invalid. Kept targeted overrides: react/react-dom ^19.1.0 (libraries cap at ^18) and drei -> @react-three/fiber ^9.4.0, each documented in package.json comments. Dockerfile npm ci no longer passes --legacy-peer-deps. Verified in a clean copy: npm ci, npm run build (76/76 prerendered), vitest src/lib, security:audit. Open: Dockerfile base image node:20 vs engines >=22.12; cloudflare:build script points at a missing file; a future react 19.3 bump needs a fiber bump."
     },
     {
       "id": "US-261",
