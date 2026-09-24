@@ -6,6 +6,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { auditUrl } from "../_shared/audit-url.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // US-241. The URL below is fetched by this function. It used to arrive from the
 // request body with nothing but an `if (!url)` check, so the caller decided what
@@ -120,6 +121,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'validate-structured-data', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

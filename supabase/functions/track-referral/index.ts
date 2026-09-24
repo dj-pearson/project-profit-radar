@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // US-241. Anonymous, two writes, and affiliate_code went straight into an
 // .eq() lookup against affiliate_codes. A code is a short opaque token, so the
@@ -163,6 +164,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'track-referral', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in track-referral", { message: errorMessage });
     // success and timestamp added, error left where it is (US-274). This one

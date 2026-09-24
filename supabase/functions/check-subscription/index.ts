@@ -4,6 +4,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Helper logging function for enhanced debugging
 const logStep = (step: string, details?: any) => {
@@ -213,6 +214,7 @@ export default async (req: Request) => {
       status: 200,
     });
   } catch (error) {
+    await captureException(error, { fn: 'check-subscription', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     // SECURITY: Return generic error message to client

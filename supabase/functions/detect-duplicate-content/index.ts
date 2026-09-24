@@ -6,6 +6,7 @@ import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 import { auditUrl } from "../_shared/audit-url.ts";
+import { captureException } from '../_shared/observability.ts';
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only; no caller in src/. Both URLs are fetched by this function,
 // so both go through auditUrl, the shared definition of a fetchable target.
@@ -97,6 +98,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'detect-duplicate-content', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

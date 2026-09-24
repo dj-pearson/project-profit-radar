@@ -24,6 +24,7 @@ import { writeAuditLog } from "../_shared/audit-log.ts";
 import { sendEmail, getSiteEmailConfig } from "../_shared/ses-email-service.ts";
 import { escapeHtml } from "../_shared/invite-email.ts";
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[SEND-INVOICE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -210,6 +211,7 @@ serve(async (req) => {
     logStep("Invoice sent", { invoiceId: invoice.id, to: recipient });
     return successResponse({ invoiceId: invoice.id, to: recipient, sent: true }, req);
   } catch (err) {
+    await captureException(err, { fn: 'send-invoice', req });
     logStep("Unhandled error", err instanceof Error ? err.message : String(err));
     return errorResponse("An unexpected error occurred", 500, req);
   }

@@ -4,6 +4,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { buildHistoricalTrends, type HistoryProject } from '../_shared/benchmark-history.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/components/analytics/PerformanceBenchmarking.tsx, sends
@@ -231,6 +232,7 @@ The company data above does not determine marketPosition, currentScore, overallS
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'generate-performance-benchmarks', req });
     console.error('Error generating performance benchmarks:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }),

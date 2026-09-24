@@ -6,6 +6,7 @@ import { requireInternalCallerOrRootAdmin } from "../_shared/system-auth.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // RenewalNotificationPanel and check-renewal-notifications both invoke with no
 // body (a scheduled run); subscriber_id narrows a manual run to one row.
@@ -254,6 +255,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'send-renewal-notification', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

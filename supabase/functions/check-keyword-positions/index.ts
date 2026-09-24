@@ -16,6 +16,7 @@ import {
   type KeywordPosition,
 } from '../_shared/keyword-positions.ts';
 import { resolveSeoSiteId } from '../_shared/seo-site.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only. SEOManager.tsx sends { keywords, domain }, keywords being a
@@ -136,6 +137,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'check-keyword-positions', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

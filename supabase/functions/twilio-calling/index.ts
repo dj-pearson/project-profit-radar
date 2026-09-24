@@ -6,6 +6,7 @@ import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { verifyTwilioSignature, TWILIO_SIGNATURE_HEADER } from '../_shared/twilio-signature.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // JSON actions, sent by src/components/crm/ClickToCall.tsx and CallHistory.tsx.
 // recording_callback is not here: Twilio posts it as form data with the action
@@ -330,6 +331,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    await captureException(error, { fn: 'twilio-calling', req });
     console.error("Twilio calling error:", error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

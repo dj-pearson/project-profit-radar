@@ -49,6 +49,7 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { isInErasureScope } from "../_shared/storage-buckets.ts";
 import { writeAuditLog } from "../_shared/audit-log.ts";
+import { withErrorReporting } from '../_shared/observability.ts';
 
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -67,7 +68,7 @@ interface DSARRow {
 const MAX_RETRIES = 5;
 const BATCH_SIZE = 50;
 
-serve(async (req) => {
+serve(withErrorReporting('process-dsar-fulfillment', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -294,7 +295,7 @@ serve(async (req) => {
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
-});
+}));
 
 async function markCompleted(
   admin: ReturnType<typeof createClient>,

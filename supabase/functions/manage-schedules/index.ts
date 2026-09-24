@@ -6,6 +6,7 @@ import { WRITABLE_SCHEDULE_COLUMNS, pickAllowed } from '../_shared/writable-colu
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { auditUrl } from '../_shared/audit-url.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // target_url is STORED and fetched on a timer by run-scheduled-audit, so it
@@ -199,6 +200,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'manage-schedules', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

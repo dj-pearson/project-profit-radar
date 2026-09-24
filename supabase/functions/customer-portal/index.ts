@@ -5,6 +5,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // PaymentDashboard and PaymentFailureAlert invoke with no body at all;
 // SubscriptionManager sends {} or { flow: 'cancel' }. Parsed with safeParse
@@ -132,6 +133,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'customer-portal', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in customer-portal", { message: errorMessage });
     // SECURITY: Return generic error message to client

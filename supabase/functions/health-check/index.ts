@@ -2,8 +2,9 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { evaluateHealth, toPublicChecks } from "./evaluate.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { withErrorReporting } from '../_shared/observability.ts';
 
-serve(async (req) => {
+serve(withErrorReporting('health-check', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -102,4 +103,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
   );
-});
+}));

@@ -3,6 +3,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -111,6 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
+    await captureException(error, { fn: 'send-notification', req });
     console.error("Error sending notification:", error);
     // SECURITY: Don't expose internal error details to clients
     return new Response(

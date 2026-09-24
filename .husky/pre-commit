@@ -32,6 +32,11 @@ node scripts/check-rls-write-paths.mjs || exit 1
 # 3f. Audit-trail coverage (US-244) — critical mutations keep logging.
 node scripts/check-audit-coverage.mjs || exit 1
 
+# 3f2. Error reporting (US-251) - every edge function's top-level catch calls
+#      captureException, or the handler is wrapped in withErrorReporting, so a
+#      failing webhook or cron job reaches Sentry instead of only the logs.
+node scripts/check-edge-error-reporting.mjs || exit 1
+
 # 3g. Silent-write guard — supabase-js returns errors rather than throwing, so
 #     an unread error is a write that may never have happened.
 node scripts/check-silent-writes.mjs || exit 1

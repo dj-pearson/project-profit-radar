@@ -5,6 +5,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema, createErrorResponse } from "../_shared/validation.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY: Input validation schema
 const VerifyMFASchema = z.object({
@@ -177,6 +178,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'verify-mfa-setup', req });
     // SECURITY: Never expose internal errors to clients
     console.error("[MFA] Unexpected error:", error);
     return createErrorResponse(500, "An unexpected error occurred", corsHeaders);

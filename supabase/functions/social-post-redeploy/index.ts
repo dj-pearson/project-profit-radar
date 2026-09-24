@@ -4,6 +4,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const RedeploySchema = z.object({
   company_id: z.string().uuid(),
@@ -165,6 +166,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    await captureException(error, { fn: 'social-post-redeploy', req });
     log("ERROR", error);
     const message = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ timestamp: new Date().toISOString(), success: false, error: message }), {

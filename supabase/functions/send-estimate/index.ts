@@ -24,6 +24,7 @@ import { writeAuditLog } from "../_shared/audit-log.ts";
 import { sendEmail, getSiteEmailConfig } from "../_shared/ses-email-service.ts";
 import { escapeHtml } from "../_shared/invite-email.ts";
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[SEND-ESTIMATE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -290,6 +291,7 @@ serve(async (req) => {
     logStep("Estimate sent", { estimateId: estimate.id, to: recipient });
     return successResponse({ estimateId: estimate.id, to: recipient, link, sent: true }, req);
   } catch (err) {
+    await captureException(err, { fn: 'send-estimate', req });
     logStep("Unhandled error", err instanceof Error ? err.message : String(err));
     return errorResponse("An unexpected error occurred", 500, req);
   }

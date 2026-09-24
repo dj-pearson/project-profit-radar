@@ -8,6 +8,7 @@ import { createServiceClient } from '../_shared/service-client.ts';
 import { resolveCompanyScope } from '../_shared/caller-company.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // forecast_period drives a one-row-per-day loop, so it is bounded. The web
@@ -175,6 +176,7 @@ export default async (req: Request) => {
     }, req);
 
   } catch (error) {
+    await captureException(error, { fn: 'generate-cash-flow-forecast', req });
     logStep("Error", { message: error.message });
     return errorResponse(error.message || 'Internal server error', 500, req);
   }

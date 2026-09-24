@@ -25,6 +25,13 @@ import { ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
 import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransition";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import {
+  canArchiveProject,
+  isProjectHasFinancialRecordsError,
+  PROJECT_ARCHIVE_STATUS,
+  PROJECT_HAS_FINANCIAL_RECORDS_MESSAGE,
+} from "@/lib/projectDeleteErrors";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { Building2, Search, Filter, Plus, Edit, Eye, Calendar, MapPin, User, DollarSign, MoreHorizontal, Trash2, FilterX, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -194,10 +201,49 @@ const Projects = () => {
         description: "Project has been deleted successfully.",
       });
     } catch (error: unknown) {
+      if (isProjectHasFinancialRecordsError(error)) {
+        const status = projects.find((p) => p.id === projectId)?.status;
+        toast({
+          variant: "destructive",
+          title: "Project not deleted",
+          description: PROJECT_HAS_FINANCIAL_RECORDS_MESSAGE,
+          action: canArchiveProject(status) ? (
+            <ToastAction altText="Archive project" onClick={() => void handleArchiveProject(projectId)}>
+              Archive
+            </ToastAction>
+          ) : undefined,
+        });
+        return;
+      }
       toast({
         variant: "destructive",
         title: "Error deleting project",
         description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
+  const handleArchiveProject = async (projectId: string) => {
+    try {
+      await projectService.archiveProject(projectId);
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === projectId ? { ...project, status: PROJECT_ARCHIVE_STATUS } : project
+        )
+      );
+      toast({
+        title: "Project archived",
+        description: "The project is closed. Its financial records are kept.",
+      });
+    } catch (error: unknown) {
+      toast({
+        variant: "destructive",
+        title: "Could not archive project",
+        // set_project_status() says why, e.g. how much is still unpaid.
+        description:
+          error && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : "Unknown error",
       });
     }
   };

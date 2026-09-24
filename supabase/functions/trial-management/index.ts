@@ -7,6 +7,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { GRACE_PERIOD_DAYS } from "../_shared/tiers.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -166,6 +167,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'trial-management', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in trial-management", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -177,6 +178,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'schedule-custom-reports', req });
     console.error('Error in schedule-custom-reports:', error)
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // OAuth provider token endpoints
 const OAUTH_PROVIDERS: Record<
@@ -482,6 +483,7 @@ serve(async (req) => {
     const finalRedirectUrl = isValidRedirectUrl(magicLinkUrl, siteUrl);
     return Response.redirect(finalRedirectUrl);
   } catch (error) {
+    await captureException(error, { fn: 'sso-oauth-callback', req });
     console.error("[OAuth] Callback error:", error);
     const siteUrl = getSiteUrl();
     return Response.redirect(`${siteUrl}/auth?error=oauth_callback_failed`);

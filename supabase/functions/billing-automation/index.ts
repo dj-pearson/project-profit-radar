@@ -7,6 +7,7 @@ import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -221,6 +222,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'billing-automation', req });
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(

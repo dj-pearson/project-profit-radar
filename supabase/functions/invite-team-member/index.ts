@@ -39,6 +39,7 @@ import {
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { sendInviteWithSetPasswordLink, escapeHtml } from '../_shared/invite-email.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(
@@ -365,6 +366,7 @@ serve(async (req) => {
       req,
     );
   } catch (err) {
+    await captureException(err, { fn: 'invite-team-member', req });
     logStep("Unhandled error", err instanceof Error ? err.message : String(err));
     return errorResponse("An unexpected error occurred", 500, req);
   }

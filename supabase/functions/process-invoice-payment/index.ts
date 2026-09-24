@@ -7,6 +7,7 @@ import { initializeAuthContext, errorResponse, successResponse, safeErrorRespons
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY: Input validation schema
 const PaymentRequestSchema = z.object({
@@ -133,6 +134,7 @@ serve(async (req) => {
     return successResponse(result);
 
   } catch (error) {
+    await captureException(error, { fn: 'process-invoice-payment', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-payment", { message: errorMessage });
     return safeErrorResponse(req);

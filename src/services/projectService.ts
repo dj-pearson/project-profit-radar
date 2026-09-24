@@ -3,6 +3,11 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { ilikeAnyFilter } from '@/lib/security/postgrestFilter';
+import {
+  isForeignKeyViolation,
+  PROJECT_ARCHIVE_STATUS,
+  ProjectHasFinancialRecordsError,
+} from '@/lib/projectDeleteErrors';
 
 export interface Project {
   id: string;
@@ -172,6 +177,27 @@ class ProjectService {
     }
 
     const { error } = await query;
+
+    // Invoices, bills, budgets and the rest reference projects without a
+    // cascade (20260924200000), so Postgres refuses with 23503. Say what to do.
+    if (error && isForeignKeyViolation(error)) {
+      throw new ProjectHasFinancialRecordsError(projectId);
+    }
+    if (error) throw error;
+  }
+
+  /**
+   * Archive a project: move it to 'closed' through set_project_status(), the
+   * one path that enforces transitions and writes the audit trail. There is no
+   * 'archived' status. The RPC refuses while invoices are unpaid and the error
+   * says how much is outstanding.
+   */
+  async archiveProject(projectId: string): Promise<void> {
+    const { error } = await supabase.rpc('set_project_status', {
+      p_project_id: projectId,
+      p_status: PROJECT_ARCHIVE_STATUS,
+      p_override_reason: null,
+    });
 
     if (error) throw error;
   }

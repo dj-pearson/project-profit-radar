@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // og_image_url is not .url(): the SEO manager posts whatever is in the input,
@@ -75,6 +76,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'save-meta-settings', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

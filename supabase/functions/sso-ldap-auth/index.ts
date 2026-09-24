@@ -13,6 +13,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Input validation schema
 const LDAPAuthSchema = z.object({
@@ -375,6 +376,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'sso-ldap-auth', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 interface DosSettings {
   enabled: boolean;
@@ -112,6 +113,7 @@ serve(async (req) => {
         throw new Error(`Unknown action: ${action}`);
     }
   } catch (error) {
+    await captureException(error, { fn: 'dos-protection', req });
     console.error('DOS Protection Error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }),

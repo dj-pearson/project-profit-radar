@@ -4,6 +4,7 @@ import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // user_id is sent by WorkflowExecutionService and ignored here.
@@ -243,6 +244,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error: any) {
+    await captureException(error, { fn: 'workflow-execution', req });
     console.error('Workflow execution error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

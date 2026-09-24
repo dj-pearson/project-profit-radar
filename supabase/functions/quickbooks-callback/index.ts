@@ -10,6 +10,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { getQuickBooksTokenKey, tokenColumnsForWrite } from '../_shared/quickbooks-token-crypto.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // realm_id is interpolated into the Intuit API path
@@ -226,6 +227,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'quickbooks-callback', req });
     console.error('QuickBooks callback error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
 

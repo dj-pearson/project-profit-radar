@@ -7,6 +7,7 @@ import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/components/smart-import/SmartImportWizard.tsx, sends
@@ -285,6 +286,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'smart-data-analyzer', req });
     console.error('Error in smart-data-analyzer:', error);
     const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
     return new Response(JSON.stringify({

@@ -7,6 +7,7 @@ import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 const recipient = z.string().email().max(320);
@@ -102,6 +103,7 @@ export default async (req: Request) => {
     return successResponse({ sent: true, messageId: result.messageId }, req);
 
   } catch (error) {
+    await captureException(error, { fn: 'send-email', req });
     logStep("Error", { message: error.message });
     return errorResponse(error.message || 'Internal server error', 500, req);
   }

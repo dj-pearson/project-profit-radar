@@ -9,6 +9,7 @@ import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 /**
  * amount is the one that matters. It was an unbounded number, and the approval
@@ -116,6 +117,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'process-refund', req });
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(

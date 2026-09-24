@@ -23,6 +23,7 @@ import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { encryptSecret, getQuickBooksTokenKey } from '../_shared/quickbooks-token-crypto.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const BATCH = 200;
 
@@ -130,6 +131,7 @@ serve(async (req) => {
     console.log('[quickbooks-encrypt-backfill] done', result);
     return json({ success: failed.length === 0, data: result }, failed.length === 0 ? 200 : 500, corsHeaders);
   } catch (err) {
+    await captureException(err, { fn: 'quickbooks-encrypt-backfill', req });
     const message = err instanceof Error ? err.message : String(err);
     console.error('[quickbooks-encrypt-backfill] failed', message);
     return json({ success: false, error: message }, 500, corsHeaders);

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -89,6 +90,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'gsc-oauth-init', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

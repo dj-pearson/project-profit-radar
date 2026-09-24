@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -58,6 +59,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    await captureException(error, { fn: 'sitemap-generator', req });
     console.error('Sitemap Generation Error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(

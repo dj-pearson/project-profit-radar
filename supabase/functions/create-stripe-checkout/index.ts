@@ -8,6 +8,7 @@ import { validateRequest, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY: Input validation schema
 const CheckoutRequestSchema = z.object({
@@ -208,6 +209,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'create-stripe-checkout', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
     console.error("Error creating checkout:", error);

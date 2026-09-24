@@ -12,6 +12,7 @@ import {
 } from '../_shared/entitlements.ts';
 import { isFlagEnabled } from '../_shared/feature-flags.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request bodies (US-241), one per route that reads one; report mode by
 // default - see _shared/validate-body.ts. All .passthrough(): the web admin
@@ -115,6 +116,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'api-management', req });
     console.error('API Management error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),

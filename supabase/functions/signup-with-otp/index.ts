@@ -21,6 +21,7 @@ import { isDisposableEmail } from '../_shared/disposable-email.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { SELF_SIGNUP_ROLE } from '../_shared/writable-columns.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Validation schema
 const signupSchema = z.object({
@@ -264,6 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'signup-with-otp', req });
     console.error('[SignupWithOTP] Error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),

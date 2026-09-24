@@ -404,7 +404,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     // A sync that stops working is invisible until someone notices missing
     // data, which is exactly the failure US-252 was about (US-251).
-    await captureException(error, { fn: 'quickbooks-sync' });
+    await captureException(error, { fn: 'quickbooks-sync', req });
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }),
       {

@@ -14,6 +14,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-co
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeSecurityLog } from "../_shared/security-log.ts";
 import { initializeAuthContext } from "../_shared/auth-helpers.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Input validation schema
 // userId is optional and, when sent, must equal the caller (US-346). Older
@@ -459,6 +460,7 @@ serve(async (req) => {
         return createErrorResponse(400, `Unknown action: ${action}`, corsHeaders);
     }
   } catch (error) {
+    await captureException(error, { fn: 'verify-mfa-login', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

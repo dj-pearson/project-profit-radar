@@ -5,6 +5,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { generateIncidentHTML, getSeverityEmoji } from '../_shared/safety-incident-email.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // incident is the row the client just inserted, so passthrough. severity and
@@ -126,6 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
+    await captureException(error, { fn: 'send-safety-notification', req });
     console.error("Error in send-safety-notification function:", error);
     
     return new Response(

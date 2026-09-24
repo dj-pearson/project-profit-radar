@@ -9,6 +9,7 @@ import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeSecurityLog } from "../_shared/security-log.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY: Input validation schema
 const SetupMFASchema = z.object({
@@ -115,6 +116,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'setup-mfa', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

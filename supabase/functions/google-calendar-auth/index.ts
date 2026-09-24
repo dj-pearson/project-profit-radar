@@ -5,6 +5,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCalendarTokenKey, signOAuthState, GOOGLE_SCOPES } from '../_shared/calendar-oauth.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // company_id is still accepted (the web client sends it) but no longer
@@ -91,6 +92,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'google-calendar-auth', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

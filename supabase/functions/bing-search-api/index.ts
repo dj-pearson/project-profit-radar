@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+import { captureException } from '../_shared/observability.ts';
 
 // root_admin only; no caller in src/ or Brikly-iOS/ today.
 const BingSearchSchema = z.object({
@@ -115,6 +116,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'bing-search-api', req });
     console.error('Bing Search API Error:', error)
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',

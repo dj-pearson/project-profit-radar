@@ -3,6 +3,7 @@ import { initializeAuthContext, errorResponse, successResponse } from '../_share
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Two callers, two shapes: LeadTrackingDashboard sends { leadId, companyId },
 // useLeadScore (src/hooks/useCRM.ts) sends { lead_id } alone.
@@ -211,6 +212,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'calculate-lead-score', req });
     console.error('Error in calculate-lead-score function:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return errorResponse(errorMessage, 500);

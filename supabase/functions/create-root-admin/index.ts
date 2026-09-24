@@ -4,6 +4,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { constantTimeEqual } from '../_shared/constant-time.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { captureException } from '../_shared/observability.ts';
 
 serve(async (req) => {
   // Use secure CORS (whitelist-based)
@@ -131,6 +132,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'create-root-admin', req });
     console.error("Error creating root admin:", error);
     // SECURITY: Don't expose internal error details
     return new Response(

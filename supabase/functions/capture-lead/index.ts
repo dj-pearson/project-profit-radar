@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 import { verifyTurnstile, TURNSTILE_FAILED_MESSAGE } from "../_shared/turnstile.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -373,6 +374,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'capture-lead', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in lead capture", { message: errorMessage });
 

@@ -3,6 +3,7 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -76,6 +77,7 @@ export default async (req: Request) => {
     return successResponse({ payment_methods: methods }, req);
 
   } catch (error) {
+    await captureException(error, { fn: 'get-payment-methods', req });
     logStep("Error", { message: error.message });
     return errorResponse(error.message || 'Internal server error', 500, req);
   }

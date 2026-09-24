@@ -5,6 +5,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { generateBookingConfirmationHTML } from "../_shared/booking-confirmation-email.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -102,6 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
+    await captureException(error, { fn: 'send-booking-confirmation', req });
     console.error("Error sending booking confirmation:", error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

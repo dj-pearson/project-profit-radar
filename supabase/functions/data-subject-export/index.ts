@@ -34,6 +34,7 @@ import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-
 import { createServiceClient } from "../_shared/service-client.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { withErrorReporting } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The web app (PrivacyControls) sends { user_id, request_type: 'access' };
@@ -68,7 +69,7 @@ interface ExportPayload {
   data_subject_requests: Record<string, unknown>[];
 }
 
-serve(async (req) => {
+serve(withErrorReporting('data-subject-export', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -209,4 +210,4 @@ serve(async (req) => {
     },
     req,
   );
-});
+}));

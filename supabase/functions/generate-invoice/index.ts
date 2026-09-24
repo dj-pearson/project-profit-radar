@@ -3,6 +3,7 @@ import { initializeAuthContext, errorResponse, successResponse, safeErrorRespons
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
+import { captureException } from '../_shared/observability.ts';
 
 interface InvoiceRequest {
   client_id?: string;
@@ -208,6 +209,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'generate-invoice', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in generate-invoice", { message: errorMessage });
     return safeErrorResponse(req);

@@ -5,6 +5,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Archived Expo app (mobile-app/, see CLAUDE.md). No caller in the repo; an
 // operator invokes it by hand with the service-role key.
@@ -108,6 +109,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'trigger-expo-build', req });
     const errorObj = error as Error;
     console.error('Expo build trigger error:', error)
     return new Response(

@@ -9,6 +9,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -140,6 +141,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'handle-chargeback', req });
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(

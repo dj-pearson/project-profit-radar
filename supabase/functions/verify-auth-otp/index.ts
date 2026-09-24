@@ -17,6 +17,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
 import { safeInviteRole } from '../_shared/writable-columns.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Helper function to get user by email (works with all Supabase client versions)
 async function getUserByEmail(supabaseAdmin: any, email: string) {
@@ -412,6 +413,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'verify-auth-otp', req });
     console.error('[VerifyAuthOTP] Error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),

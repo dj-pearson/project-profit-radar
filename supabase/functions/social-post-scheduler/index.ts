@@ -3,6 +3,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Callers: the pg_cron job ({"manual_trigger": false}), cron-social-scheduler
@@ -327,6 +328,7 @@ export default async (req: Request) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'social-post-scheduler', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", errorMessage);
 

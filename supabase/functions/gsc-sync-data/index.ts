@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only; no caller in src/.
@@ -226,6 +227,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'gsc-sync-data', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Internal error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

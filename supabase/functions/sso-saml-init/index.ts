@@ -14,6 +14,7 @@ import { compress } from "https://deno.land/x/compress@v0.4.5/zlib/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { samlUnavailableResponse } from '../_shared/saml-availability.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Input validation schema
 const InitSAMLSchema = z.object({
@@ -169,6 +170,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'sso-saml-init', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

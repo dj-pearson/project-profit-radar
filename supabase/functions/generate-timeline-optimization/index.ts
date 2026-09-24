@@ -6,6 +6,7 @@ import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 import { resolveCompanyScope } from '../_shared/caller-company.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/components/analytics/TimelineOptimization.tsx, sends
@@ -176,6 +177,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'generate-timeline-optimization', req });
     console.error('Timeline optimization error:', error);
     return new Response(JSON.stringify({
       success: false,

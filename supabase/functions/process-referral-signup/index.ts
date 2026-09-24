@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { captureException } from '../_shared/observability.ts';
 
 /**
  * The authorisation here is already right - the comments below record why
@@ -294,6 +295,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'process-referral-signup', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-referral-signup", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

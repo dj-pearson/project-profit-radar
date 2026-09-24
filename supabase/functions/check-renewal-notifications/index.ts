@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -44,6 +45,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'check-renewal-notifications', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

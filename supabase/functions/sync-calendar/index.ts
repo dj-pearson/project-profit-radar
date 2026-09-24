@@ -20,6 +20,7 @@ import {
   type ProviderCall,
   type StoredCalendarTokenRow,
 } from '../_shared/calendar-oauth.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // company_id is accepted but ignored; the handler derives it from the caller.
@@ -268,6 +269,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'sync-calendar', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

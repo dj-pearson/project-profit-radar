@@ -231,6 +231,9 @@ jobs:
       - name: Audit-trail coverage guard (US-244)
         run: node scripts/check-audit-coverage.mjs
 
+      - name: Edge-function error-reporting guard (US-251)
+        run: node scripts/check-edge-error-reporting.mjs
+
       - name: Silent-write guard
         run: node scripts/check-silent-writes.mjs
 

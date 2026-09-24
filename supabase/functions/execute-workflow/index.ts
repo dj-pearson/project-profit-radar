@@ -6,6 +6,7 @@ import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 import { validateBody } from '../_shared/validate-body.ts'
 import { evaluateWorkflowCondition } from '../_shared/workflow-condition.ts'
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY (US-236): the caller is authenticated and confirmed to own the target
 // workflow/execution before anything runs with the service role (see handler below).
@@ -96,6 +97,7 @@ Deno.serve(async (req) => {
       })
     }
   } catch (error) {
+    await captureException(error, { fn: 'execute-workflow', req });
     console.error('Error in execute-workflow:', error)
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,

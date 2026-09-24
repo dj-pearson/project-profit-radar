@@ -18,6 +18,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode, AuthEmailType } from '../_shared/auth-email-templates.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Validation schema
 const sendOTPSchema = z.object({
@@ -251,6 +252,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'send-auth-otp', req });
     console.error('[SendAuthOTP] Error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'An error occurred processing your request' }),

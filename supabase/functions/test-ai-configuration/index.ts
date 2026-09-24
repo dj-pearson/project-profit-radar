@@ -13,6 +13,7 @@ import { AIServiceEnv } from "../_shared/ai-service-env.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // AIModelManager sends { testType: 'full' }; an empty body means 'full'.
 const TestSchema = z.object({
@@ -121,6 +122,7 @@ export default async function handler(req: Request): Promise<Response> {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    await captureException(error, { fn: 'test-ai-configuration', req });
     console.error('Test AI configuration error:', error);
     return new Response(
       JSON.stringify({

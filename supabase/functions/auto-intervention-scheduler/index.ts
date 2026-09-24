@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 interface InterventionRule {
   type: string;
@@ -247,6 +248,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'auto-intervention-scheduler', req });
     console.error("[AUTO-INTERVENTION-SCHEDULER] Error:", error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

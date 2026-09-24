@@ -13,6 +13,7 @@ import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/b
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // OAuth provider configurations
 const OAUTH_PROVIDERS: Record<
@@ -231,6 +232,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'sso-oauth-init', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

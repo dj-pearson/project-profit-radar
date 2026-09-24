@@ -5,6 +5,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // An unknown tier or period used to reach pricing[tier][period] and 500 on a
@@ -214,6 +215,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'convert-trial-to-paid', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in trial conversion", { message: errorMessage });
     return new Response(JSON.stringify({

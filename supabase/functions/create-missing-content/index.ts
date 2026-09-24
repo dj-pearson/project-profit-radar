@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -386,6 +387,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     );
 
   } catch (error) {
+    await captureException(error, { fn: 'create-missing-content', req });
     console.error('Error creating missing content:', error);
     return new Response(
       JSON.stringify({

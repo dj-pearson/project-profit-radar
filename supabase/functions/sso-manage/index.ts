@@ -18,6 +18,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { wouldEnableSaml, SAML_UNAVAILABLE_MESSAGE } from '../_shared/saml-availability.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // SAML Configuration Schema
 const SAMLConfigSchema = z.object({
@@ -452,6 +453,7 @@ serve(async (req) => {
         return createErrorResponse(400, `Unknown action: ${action}`, corsHeaders);
     }
   } catch (error) {
+    await captureException(error, { fn: 'sso-manage', req });
     const safeMessage = sanitizeError(error);
     return createErrorResponse(500, safeMessage, corsHeaders);
   }

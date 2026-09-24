@@ -6,6 +6,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // The action is in the query string; these are the bodies that go with it.
 // initiate takes no body. No caller in src/ or Brikly-iOS/ today.
@@ -426,6 +427,7 @@ serve(async (req) => {
 
     throw new Error('Invalid action parameter');
   } catch (error) {
+    await captureException(error, { fn: 'analytics-oauth-google', req });
     return new Response(
       JSON.stringify({
         timestamp: new Date().toISOString(),

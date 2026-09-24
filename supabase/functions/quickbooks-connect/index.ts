@@ -4,6 +4,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 const ConnectSchema = z.object({
@@ -88,6 +89,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'quickbooks-connect', req });
     console.error('Error in quickbooks-connect:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(

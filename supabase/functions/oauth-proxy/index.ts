@@ -18,6 +18,7 @@ import {
   checkPendingState, decideLink, emailVerified, randomToken, readCookie, safeReturnPath,
   sha256Hex, signState, verifyState, type Candidate,
 } from './flow.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Configuration from environment variables
 const FRONTEND_URL = siteUrl();
@@ -322,6 +323,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'oauth-proxy', req });
     console.error('OAuth proxy error:', error);
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: (error as Error).message }), {
       status: 500,

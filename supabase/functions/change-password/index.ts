@@ -8,13 +8,14 @@ import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { changePassword, sessionIdFromJwt } from './core.ts';
+import { withErrorReporting } from '../_shared/observability.ts';
 
 const ChangePasswordSchema = z.object({
   otpCode: z.string().regex(/^\d{6}$/),
   newPassword: z.string().min(1).max(256),
 });
 
-serve(async (req) => {
+serve(withErrorReporting('change-password', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -98,4 +99,4 @@ serve(async (req) => {
   }
   const detail = result.body.details?.length ? `: ${result.body.details.join('; ')}` : '';
   return errorResponse(`${result.body.error}${detail}`, result.status, req);
-});
+}));

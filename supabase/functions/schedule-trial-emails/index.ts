@@ -5,6 +5,7 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 /**
  * These land in a scheduled-email row and are rendered into the message body,
@@ -247,6 +248,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'schedule-trial-emails', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in email scheduling", { message: errorMessage });
 

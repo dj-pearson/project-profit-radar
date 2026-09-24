@@ -3,6 +3,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCallerOrRootAdmin } from '../_shared/system-auth.ts';
 import { validateBody } from '../_shared/validate-body.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+import { captureException } from '../_shared/observability.ts';
 const DateRangeSchema = z.object({
   startDate: z.string().max(40),
   endDate: z.string().max(40),
@@ -113,6 +114,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'google-search-console-api', req });
     console.error('Google Search Console API Error:', error)
     console.error('Error details:', {
       message: error instanceof Error ? error.message : String(error),

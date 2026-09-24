@@ -4,6 +4,7 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/hooks/useSocialMediaAutomation.ts, sends
@@ -250,6 +251,7 @@ export default async (req: Request) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'blog-social-webhook', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", errorMessage);
 

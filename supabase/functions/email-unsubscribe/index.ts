@@ -32,6 +32,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
+import { withErrorReporting } from '../_shared/observability.ts';
 
 const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -115,7 +116,7 @@ const confirmationPage = (ok: boolean, message: string): Response => {
   });
 };
 
-serve(async (req) => {
+serve(withErrorReporting('email-unsubscribe', async (req) => {
   // Support RFC 8058 List-Unsubscribe-Post (HTTPS POST with
   // "List-Unsubscribe=One-Click" body). Both GET and POST are valid.
   if (req.method !== "GET" && req.method !== "POST") {
@@ -203,4 +204,4 @@ serve(async (req) => {
       ? `You've been unsubscribed from our ${category.replaceAll("_", " ")} emails. You'll still receive account and security messages.`
       : "You've been unsubscribed from all marketing, product update, and newsletter emails. You'll still receive account and security messages.",
   );
-});
+}));

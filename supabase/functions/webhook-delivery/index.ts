@@ -7,6 +7,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // webhook-trigger is the one caller and posts { delivery_id }.
@@ -169,6 +170,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'webhook-delivery', req });
     console.error('Webhook Delivery Error:', error)
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error', details: error.message }),

@@ -195,7 +195,13 @@ function verifiesCallerInHandler(text, file) {
       (ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'serve')
     );
     if (isServe) {
-      const arg = n.arguments[0];
+      let arg = n.arguments[0];
+      // serve(withErrorReporting('fn', async (req) => { ... })) (US-251): the
+      // wrapper only reports and rethrows, so the handler is its last argument.
+      if (arg && ts.isCallExpression(arg) && ts.isIdentifier(arg.expression)
+          && arg.expression.text === 'withErrorReporting') {
+        arg = arg.arguments[arg.arguments.length - 1];
+      }
       if (arg && (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg))) handlers.push(arg);
       else if (arg && ts.isIdentifier(arg)) handlers.push({ __name: arg.text });
     }

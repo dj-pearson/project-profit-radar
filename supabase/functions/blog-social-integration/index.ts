@@ -5,6 +5,7 @@ import { aiService } from "../_shared/ai-service.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // No caller in src/ or Brikly-iOS/. The drafts are inserted on the caller's
@@ -78,6 +79,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'blog-social-integration', req });
     console.error('Error generating social content:', error);
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,

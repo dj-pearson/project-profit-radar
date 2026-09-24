@@ -3,6 +3,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 interface Project {
   id: string;
@@ -75,6 +76,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'document-classifier', req });
     console.error('Classification error:', error);
     return new Response(JSON.stringify({
       success: false,

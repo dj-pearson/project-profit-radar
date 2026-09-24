@@ -9,6 +9,7 @@ import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { ilikeAnyFilter } from "../_shared/postgrest-filter.ts";
+import { captureException } from '../_shared/observability.ts';
 
 /** ticketId is the only input, and it reaches a uuid column. */
 const AnalyzeTicketSchema = z.object({
@@ -121,6 +122,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'analyze-support-ticket', req });
     console.error("Error analyzing ticket:", error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
@@ -52,6 +53,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    await captureException(error, { fn: 'manage-subscription', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in customer-portal", { message: errorMessage });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: errorMessage }), {

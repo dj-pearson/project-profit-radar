@@ -39,6 +39,7 @@ import { createServiceClient } from '../_shared/service-client.ts';
 import { resolveCompanyScope } from '../_shared/caller-company.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { withErrorReporting } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The iOS app (ProjectListView) invokes this with NO body and the web app
@@ -49,7 +50,7 @@ const DataSubjectDeleteSchema = z.object({
   company_id: z.string().max(255).nullish(),
 }).passthrough();
 
-serve(async (req) => {
+serve(withErrorReporting('data-subject-delete', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -193,4 +194,4 @@ serve(async (req) => {
     },
     req,
   );
-});
+}));

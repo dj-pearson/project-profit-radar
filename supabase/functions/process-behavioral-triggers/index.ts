@@ -7,6 +7,7 @@ import { canActOnUser } from "../_shared/caller-company.ts";
 import { constantTimeEqual } from "../_shared/constant-time.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The one caller, src/hooks/useBehavioralTriggers.ts, sends
@@ -275,6 +276,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'process-behavioral-triggers', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in trigger processor", { message: errorMessage });
 

@@ -354,7 +354,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error processing funnel queue:", error);
     // Cron-driven: a stalled queue looks like nothing happening (US-251).
-    await captureException(error, { fn: 'process-funnel-queue' });
+    await captureException(error, { fn: 'process-funnel-queue', req });
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       {

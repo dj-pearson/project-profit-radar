@@ -7,6 +7,8 @@ import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-colum
 import {
   checkEntitlement, entitlementDeniedResponse, limitDenial, refuseIfReadOnly,
 } from '../_shared/entitlements.ts';
+import { captureException } from '../_shared/observability.ts';
+import { isForeignKeyViolation, projectHasFinancialRecordsResponse } from '../_shared/project-delete.ts';
 
 /**
  * The write path used to spread the raw body into insert()/update(), so any
@@ -232,6 +234,12 @@ serve(async (req) => {
             .eq('id', projectId)
             .eq('company_id', userProfile.company_id);
 
+          // A project with invoices, bills or budgets is protected by foreign
+          // keys (20260924200000). Say so, with the same 500 as before.
+          if (deleteError && isForeignKeyViolation(deleteError)) {
+            logStep("Project delete refused: financial records", { projectId });
+            return projectHasFinancialRecordsResponse(getCorsHeaders(req));
+          }
           if (deleteError) throw new Error(`Project deletion error: ${deleteError.message}`);
 
           logStep("Project deleted", { projectId });
@@ -245,6 +253,7 @@ serve(async (req) => {
     return errorResponse("Route not found", 404);
 
   } catch (error) {
+    await captureException(error, { fn: 'projects', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return safeErrorResponse(req);

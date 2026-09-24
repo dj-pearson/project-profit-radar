@@ -14,6 +14,7 @@ import {
   txtMatchesToken,
   verificationRecordName,
 } from '../_shared/domain-verification.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // verify-domain proves a tenant controls its custom domain.
 //
@@ -310,6 +311,7 @@ serve(async (req) => {
       record_value: recordValue,
     });
   } catch (error) {
+    await captureException(error, { fn: 'verify-domain', req });
     console.error('[VERIFY-DOMAIN] unhandled error:', error);
     return safeErrorResponse(req);
   }

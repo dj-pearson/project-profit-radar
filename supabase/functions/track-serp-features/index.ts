@@ -11,6 +11,7 @@ import {
   toSerpFeaturesRow,
 } from '../_shared/keyword-positions.ts';
 import { resolveSeoSiteId } from '../_shared/seo-site.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only; no caller in src/. keyword and domain go into a search-API
@@ -204,6 +205,7 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {
+    await captureException(error, { fn: 'track-serp-features', req });
     return new Response(JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

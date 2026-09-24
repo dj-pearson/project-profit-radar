@@ -8,6 +8,7 @@ import {
   getCalendarTokenKey,
   verifyOAuthState,
 } from "../_shared/calendar-oauth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -199,6 +200,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'outlook-calendar-callback', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     

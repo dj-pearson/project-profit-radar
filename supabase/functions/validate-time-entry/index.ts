@@ -4,6 +4,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Mirrors validateTimeEntry() below rather than replacing it. That function
@@ -208,6 +209,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
+    await captureException(error, { fn: 'validate-time-entry', req });
     console.error('[VALIDATE-TIME-ENTRY] Unexpected error:', error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: 'Internal server error' }),

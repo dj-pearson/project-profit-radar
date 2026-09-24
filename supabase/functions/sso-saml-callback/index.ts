@@ -13,6 +13,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { samlUnavailableResponse } from '../_shared/saml-availability.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 interface SAMLAssertion {
   email: string;
@@ -351,6 +352,7 @@ serve(async (req) => {
     // Redirect to the magic link URL (which will establish the session)
     return Response.redirect(sessionData.properties?.action_link || "/dashboard");
   } catch (error) {
+    await captureException(error, { fn: 'sso-saml-callback', req });
     console.error("[SAML] Callback error:", error);
     return Response.redirect(
       `${siteUrl()}/auth?error=saml_callback_failed`

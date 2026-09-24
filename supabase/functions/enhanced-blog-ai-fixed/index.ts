@@ -8,6 +8,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 import { initializeAuthContext } from "../_shared/auth-helpers.ts";
 import { resolveCompanyScope } from "../_shared/caller-company.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Callers: BlogAutoGeneration.tsx (analyze-content-diversity, test-generation
@@ -244,6 +245,7 @@ export default async (req: Request) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'enhanced-blog-ai-fixed', req });
     logStep("Fatal error", { 
       error: error instanceof Error ? error.message : 'Unknown error', 
       stack: error instanceof Error ? error.stack : undefined,

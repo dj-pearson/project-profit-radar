@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // payload is either the raw string a consumer received or its parsed JSON;
@@ -62,6 +63,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    await captureException(error, { fn: 'webhook-verify', req });
     console.error('Verification Error:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),

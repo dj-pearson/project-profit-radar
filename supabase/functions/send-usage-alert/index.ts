@@ -8,6 +8,7 @@ import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { escapeHtml } from '../_shared/html-escape.ts';
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // The one (commented-out) caller is track-usage, which sends usagePercentage
 // as a toFixed() string, so numbers are accepted as strings too.
@@ -110,6 +111,7 @@ export default async (req: Request) => {
     return successResponse({ sent: true, sentCount }, req);
 
   } catch (error) {
+    await captureException(error, { fn: 'send-usage-alert', req });
     logStep("Error", { message: error.message });
     return errorResponse(error.message || 'Internal server error', 500, req);
   }

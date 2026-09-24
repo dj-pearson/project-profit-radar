@@ -5,6 +5,7 @@ import { initializeAuthContext, errorResponse, successResponse } from '../_share
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The account is looked up on the caller's JWT client first, so RLS decides
@@ -86,6 +87,7 @@ export default async (req: Request) => {
     return errorResponse(`Unknown action: ${action}`, 400, req);
 
   } catch (error) {
+    await captureException(error, { fn: 'email-sync', req });
     logStep("Error", { message: error.message });
     return errorResponse(error.message || 'Internal server error', 500, req);
   }

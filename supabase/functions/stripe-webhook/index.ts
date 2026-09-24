@@ -186,7 +186,7 @@ serve(async (req) => {
     const errorObj = error as Error;
     logStep("Webhook error", { error: errorObj.message });
     // A webhook that starts failing at 3am has to page someone (US-251).
-    await captureException(errorObj, { fn: 'stripe-webhook' });
+    await captureException(errorObj, { fn: 'stripe-webhook', req });
     return new Response(JSON.stringify({ error: errorObj.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

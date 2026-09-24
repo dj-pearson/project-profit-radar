@@ -5,6 +5,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-co
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // SECURITY: Input validation schema
 const DisableMFARequestSchema = z.object({
@@ -155,6 +156,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'disable-mfa', req });
     // SECURITY: Never expose internal errors to clients
     console.error("[MFA] Unexpected error:", error);
     return createSafeErrorResponse(500, "An unexpected error occurred", corsHeaders);

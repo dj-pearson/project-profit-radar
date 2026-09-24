@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+import { captureException } from '../_shared/observability.ts';
 
 // Sent by src/hooks/useGoogleIndexing.ts. The hand-written checks below stay:
 // in report mode validateBody hands the handler the raw body.
@@ -196,6 +197,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    await captureException(error, { fn: 'google-indexing-api', req });
     console.error('Google Indexing API Error:', error)
     return new Response(
       JSON.stringify({

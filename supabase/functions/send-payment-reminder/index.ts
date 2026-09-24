@@ -10,6 +10,7 @@ import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_REMINDER_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
 import { siteUrl } from '../_shared/app-urls.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // action stays a string here: dispatchReminder owns the unknown-action 400 and
@@ -122,6 +123,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    await captureException(error, { fn: 'send-payment-reminder', req });
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(

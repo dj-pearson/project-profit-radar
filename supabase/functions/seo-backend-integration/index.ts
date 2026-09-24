@@ -4,6 +4,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Internal only, no caller in the repo; an operator invokes it by hand.
 const SeoBackendSchema = z.object({
@@ -44,6 +45,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'seo-backend-integration', req });
     console.error('SEO Backend Integration Error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(

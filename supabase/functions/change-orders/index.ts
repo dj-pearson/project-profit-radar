@@ -3,6 +3,7 @@ import { initializeAuthContext, errorResponse, successResponse, safeErrorRespons
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const uuid = z.string().uuid();
 
@@ -434,6 +435,7 @@ serve(async (req) => {
     return errorResponse("Route not found", 404);
 
   } catch (error) {
+    await captureException(error, { fn: 'change-orders', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return safeErrorResponse(req);

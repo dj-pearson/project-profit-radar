@@ -2,6 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Content Generator] ${step}:`, data || "");
@@ -1305,6 +1306,7 @@ export default async (req: Request) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'social-content-generator', req });
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in social content generation", errorMessage);
 

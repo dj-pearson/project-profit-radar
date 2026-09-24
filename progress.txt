@@ -7304,3 +7304,11 @@ failed load; the client portal budget card always said "$0, On Budget";
 fiscal periods, smart-import mappings and custom report filters never
 worked. Audit log entries are now read-only in the UI. TS 946 -> 879,
 eslint warnings 4379 -> 4245.
+
+## US-251 (code) + project delete refusal
+Every edge function now reports failures to Sentry through one scrubbed
+reporter, and a guard keeps it that way; confirming events arrive needs the
+owner's DSN. Deleting a project with financial records now says so and
+offers Archive (moves it to closed via set_project_status) instead of a
+generic error. TS 879 -> 880 is the order-dependent TS2589 count; no new
+error in changed files.

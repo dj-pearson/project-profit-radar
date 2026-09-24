@@ -7,6 +7,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 interface RevenueMetrics {
   periodStart: Date;
@@ -129,6 +130,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    await captureException(error, { fn: 'calculate-revenue-metrics', req });
     console.error("[CALCULATE-REVENUE-METRICS] Error:", error);
     return new Response(
       JSON.stringify({ success: false, timestamp: new Date().toISOString(), error: error.message }),

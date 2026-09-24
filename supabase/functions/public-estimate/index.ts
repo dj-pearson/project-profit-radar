@@ -27,6 +27,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit } from "../_shared/rate-limiter.ts";
 import { writeAuditLog } from "../_shared/audit-log.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[PUBLIC-ESTIMATE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -278,6 +279,7 @@ serve(async (req) => {
       data: { accepted: true, companyName: company?.name || "Your contractor" },
     });
   } catch (err) {
+    await captureException(err, { fn: 'public-estimate', req });
     logStep("Unhandled error", err instanceof Error ? err.message : String(err));
     return json({ success: false, error: "An unexpected error occurred" }, 500);
   }

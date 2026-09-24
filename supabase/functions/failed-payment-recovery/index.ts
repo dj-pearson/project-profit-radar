@@ -11,6 +11,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_RECOVERY_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
 import { siteUrl } from '../_shared/app-urls.ts';
 import { suspendCompanyOfSubscriber } from '../_shared/entitlements.ts';
+import { captureException } from '../_shared/observability.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Every settings field is nullable: the web client round-trips the row that
@@ -165,6 +166,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    await captureException(error, { fn: 'failed-payment-recovery', req });
     const errorObj = error as Error;
     logStep('Error', { error: errorObj.message });
     return new Response(
