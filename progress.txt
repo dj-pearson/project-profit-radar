@@ -7385,3 +7385,11 @@ The last real peer conflict (three 0.158 vs gainmap-js wanting 0.159) is
 fixed by bumping three; npm ci on a clean tree is warning-free and npm ls
 reports nothing invalid. The remaining overrides are targeted and
 documented, and the Dockerfile no longer passes --legacy-peer-deps.
+
+## US-394 - tenancy and role-escalation tests
+test:rls replays every migration and checks all 305 company-scoped tables
+for cross-company access, plus role-escalation paths. It found and fixed:
+recursive profile policies that broke reads, cross-company access to
+geofences, error logs, workflows and client portal access (tokens and
+password hashes), and anonymous lead inserts. Open and serious: client
+portal users can read 205 internal tables of their contractor.

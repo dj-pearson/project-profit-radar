@@ -195,6 +195,8 @@ jobs:
 
       # Tenancy isolation against a real Postgres (US-343, US-394). The runner
       # image ships the PostgreSQL server binaries; the script finds them.
+      # replayed/*.test.sql run against every migration applied in order (about
+      # two minutes): the per-table tenancy matrix and role-escalation paths.
       - name: RLS tenancy tests
         run: npm run test:rls
 
