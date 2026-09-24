@@ -7336,3 +7336,11 @@ loaded nothing. They now use the profile's company; a test fails if
 anything reads user_metadata.company_id again. Account updates and journal
 posting are now company-scoped, and bill payment applications are read
 back so a partial save no longer reports success. TS 875 -> 872.
+
+## US-202 - CSP
+script-src no longer allows jsdelivr or any *.supabase.co host (either
+lets an attacker serve their own script); CSP violations are reported to
+Sentry when a DSN is set; the CSP guard now reads the real header and
+rejects bypass hosts. A prerendered build shows no violations on public or
+app routes. style-src still needs unsafe-inline. Owner: click through
+Google/Apple sign-in, SSO and Stripe checkout once after deploy.

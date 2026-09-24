@@ -43,8 +43,16 @@ They can still be overridden per environment in the dashboard if needed.
 | `VITE_SUPABASE_PROJECT_ID` | Supabase project id (diagnostics)                  |
 | `VITE_POSTHOG_API_KEY`   | PostHog analytics                                    |
 | `VITE_POSTHOG_HOST`      | PostHog host URL                                     |
-| `VITE_SENTRY_DSN`        | Sentry error tracking (strongly recommended in prod) |
+| `VITE_SENTRY_DSN`        | Sentry error tracking (strongly recommended in prod); also where CSP violation reports go, see below |
 | `VITE_APP_VERSION`       | Release tag for Sentry                               |
+
+CSP violation reports: when `VITE_SENTRY_DSN` is set at build time, the
+`csp-reporting` plugin in `vite.config.ts` appends `report-uri` / `report-to`
+pointing at that project's Sentry security endpoint to the CSP in
+`dist/_headers`, and adds a `Reporting-Endpoints` header. Without a DSN the CSP
+ships with no reporting and violations only show in the browser console. The
+policy itself lives in `public/_headers`; `scripts/check-csp-hashes.mjs` guards
+it (US-202).
 
 ## Stripe price / product IDs
 

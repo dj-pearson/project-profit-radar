@@ -4,7 +4,8 @@ import path from "path";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { addCspReporting, sentrySecurityEndpoint } from './scripts/csp-reporting.mjs';
 import {
   findEagerLazyOnlyChunks,
   manualChunkFor,
@@ -96,6 +97,31 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    // CSP violation reports go to Sentry's security endpoint (US-202). The
+    // endpoint is per-environment, so public/_headers carries no report-uri
+    // and it is appended to dist/_headers here, only when VITE_SENTRY_DSN is
+    // set. See scripts/csp-reporting.mjs.
+    mode === "production" && (() => {
+      let outDir = 'dist';
+      return {
+        name: 'csp-reporting',
+        apply: 'build',
+        configResolved(config) {
+          outDir = path.resolve(config.root, config.build.outDir);
+        },
+        closeBundle() {
+          const file = path.join(outDir, '_headers');
+          const dsn = env.VITE_SENTRY_DSN;
+          if (!dsn || !existsSync(file)) return;
+          const endpoint = sentrySecurityEndpoint(dsn, mode);
+          if (!endpoint) {
+            this.warn('[csp-reporting] VITE_SENTRY_DSN did not parse; CSP ships without report-uri.');
+            return;
+          }
+          writeFileSync(file, addCspReporting(readFileSync(file, 'utf8'), endpoint));
+        },
+      } satisfies Plugin;
+    })(),
     // Upload sourcemaps to Sentry so production stack traces de-minify.
     // Only active when SENTRY_AUTH_TOKEN is present (CI release build), so
     // normal/local builds are unaffected. Must be the LAST plugin.

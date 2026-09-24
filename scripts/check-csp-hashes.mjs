@@ -17,11 +17,20 @@
  * there are no inline event handlers (onclick=, onload=, ...) — hashes do not
  * cover those, and removing 'unsafe-inline' stops them firing. That is exactly
  * how the font stylesheet's onload="this.media='all'" would have broken.
+ *
+ * Beyond the hashes it pins the shape of the rest of the policy: no
+ * 'strict-dynamic' (it makes browsers ignore the host allowlist), no host in
+ * script-src that serves arbitrary third-party files (a public CDN or anyone's
+ * Supabase storage bucket is a ready-made CSP bypass), and object-src 'none',
+ * base-uri and frame-ancestors present. It also runs the build-time reporting
+ * rewrite (scripts/csp-reporting.mjs) against the real file, so a change that
+ * breaks report-uri injection fails here instead of shipping a mangled header.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addCspReporting, sentrySecurityEndpoint } from './csp-reporting.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const htmlPath = join(root, 'index.html');
@@ -30,7 +39,10 @@ const headersPath = join(root, 'public', '_headers');
 const html = readFileSync(htmlPath, 'utf8');
 const headers = readFileSync(headersPath, 'utf8');
 
-const scriptSrc = (headers.match(/script-src([^;]*)/) || [])[1];
+// Read the directive from the header line itself, not the first mention of
+// "script-src" anywhere in the file (comments above it talk about script-src).
+const csp = (headers.match(/^\s+Content-Security-Policy:\s*(.*)$/m) || [])[1] || '';
+const scriptSrc = (csp.match(/(?:^|;)\s*script-src([^;]*)/) || [])[1];
 if (!scriptSrc) {
   console.error('✖ No script-src directive found in public/_headers.');
   process.exit(1);
@@ -78,8 +90,51 @@ for (const m of withoutComments.matchAll(/\son[a-z]+\s*=\s*["']/g)) {
 }
 
 // 5. Trusted Types must stay on (US-202 AC4).
-if (!/require-trusted-types-for\s+'script'/.test(headers)) {
+if (!/require-trusted-types-for\s+'script'/.test(csp)) {
   problems.push("require-trusted-types-for 'script' is missing from the CSP");
+}
+
+// 6. Policy shape beyond script hashes.
+const directive = (name) => {
+  const d = csp.split(';').map((x) => x.trim()).find((x) => x.split(/\s+/)[0] === name);
+  return d === undefined ? null : d.split(/\s+/).slice(1);
+};
+const scriptSources = directive('script-src') || [];
+if (scriptSources.includes("'strict-dynamic'")) {
+  problems.push("script-src contains 'strict-dynamic' - browsers then ignore the host allowlist (GTM, Stripe, Google sign-in break)");
+}
+// Hosts that serve files anyone can publish. Allowing one in script-src lets an
+// attacker who finds an injection point load their own script from it.
+const BYPASS_HOSTS = [
+  /^https:\/\/cdn\.jsdelivr\.net/, /^https:\/\/unpkg\.com/, /^https:\/\/cdnjs\.cloudflare\.com/,
+  /supabase\.co$/, /^https:\/\/raw\.(githubusercontent|githack)\.com/, /googleusercontent\.com$/,
+  /^https:\/\/storage\.googleapis\.com/,
+];
+for (const src of scriptSources) {
+  if (['*', 'https:', 'http:', 'data:', 'blob:'].includes(src) || BYPASS_HOSTS.some((re) => re.test(src))) {
+    problems.push(`script-src allows ${src}, which serves attacker-publishable content`);
+  }
+}
+if (!(directive('object-src') || []).includes("'none'")) problems.push("object-src 'none' is missing");
+if (!directive('base-uri')) problems.push('base-uri is missing');
+if (!directive('frame-ancestors')) problems.push('frame-ancestors is missing');
+if (/\breport-(uri|to)\b/.test(csp)) {
+  problems.push('report-uri/report-to belong in the build step (scripts/csp-reporting.mjs), not public/_headers');
+}
+
+// 7. The build-time reporting rewrite still produces a well-formed header.
+{
+  const ep = sentrySecurityEndpoint('https://abc123@o42.ingest.us.sentry.io/7', 'production');
+  const want = 'https://o42.ingest.us.sentry.io/api/7/security/?sentry_key=abc123&sentry_environment=production';
+  if (ep !== want) problems.push(`sentrySecurityEndpoint() returned ${ep}, expected ${want}`);
+  const out = addCspReporting(headers, want);
+  const outCsp = (out.match(/^\s+Content-Security-Policy:\s*(.*)$/m) || [])[1];
+  if (outCsp !== `${csp.replace(/;\s*$/, '')}; report-uri ${want}; report-to csp`) {
+    problems.push('addCspReporting() did not append report-uri/report-to to the CSP unchanged');
+  }
+  if (!out.includes(`Reporting-Endpoints: csp="${want}"`)) problems.push('addCspReporting() did not add Reporting-Endpoints');
+  if (addCspReporting(out, want) !== out) problems.push('addCspReporting() is not idempotent');
+  if (sentrySecurityEndpoint('not a dsn') !== null) problems.push('sentrySecurityEndpoint() accepted a malformed DSN');
 }
 
 // US-301: no second CSP anywhere under src/.
@@ -145,4 +200,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log('\n✔ Every inline script is hash-allowed, no orphans, no unsafe-inline, Trusted Types on.');
+console.log('\n✔ Every inline script is hash-allowed, no orphans, no unsafe-inline, Trusted Types on, no bypass hosts, reporting rewrite OK.');
