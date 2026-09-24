@@ -7312,3 +7312,10 @@ owner's DSN. Deleting a project with financial records now says so and
 offers Archive (moves it to closed via set_project_status) instead of a
 generic error. TS 879 -> 880 is the order-dependent TS2589 count; no new
 error in changed files.
+
+## US-330 - daily report as the field record
+Material and equipment lines become rows, photos get AI tags from a new
+classify-photo function, and a report downloads as a PDF with its photos,
+crew and materials. A migration fills company_id, created_by and site_id on
+insert: site_id is NOT NULL and nothing wrote it, so daily report inserts
+were probably failing wherever the schema matches the migrations.

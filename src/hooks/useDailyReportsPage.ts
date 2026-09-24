@@ -11,6 +11,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
+import type { EquipmentItemRow, MaterialItemRow } from '@/lib/dailyReportField';
 
 export interface DailyReportsProject {
   id: string;
@@ -143,10 +145,75 @@ export interface PhotoAttachmentRow {
   taken_at: string;
 }
 
-/** Returns the error rather than throwing: the report is already saved when this runs (US-330). */
+/** Matches the classify-photo function's own ceiling per call. */
+export const CLASSIFY_BATCH_LIMIT = 10;
+
+/**
+ * Returns the error rather than throwing: the report is already saved when this
+ * runs (US-330). On success the new rows are handed to the classifier.
+ */
 export async function insertPhotoAttachments(rows: PhotoAttachmentRow[]) {
-  const { error } = await supabase.from('photo_attachments').insert(rows as never);
+  const { data, error } = await supabase.from('photo_attachments').insert(rows as never).select('id');
+  if (!error) classifyPhotosInBackground(((data ?? []) as Array<{ id: string }>).map((r) => r.id));
   return error;
+}
+
+/**
+ * Tag new photos (US-046, via US-330) without holding up the person filing.
+ *
+ * Not awaited: classification is a model call per photo, and a superintendent
+ * at the end of a shift should not wait on it. A failure is logged and the
+ * rows keep ai_classified_at NULL, which is what the classifier's backlog
+ * index (idx_photo_attachments_unclassified) selects on, so nothing is lost.
+ */
+export function classifyPhotosInBackground(photoIds: string[]): void {
+  for (let i = 0; i < photoIds.length; i += CLASSIFY_BATCH_LIMIT) {
+    const batch = photoIds.slice(i, i + CLASSIFY_BATCH_LIMIT);
+    void supabase.functions
+      .invoke('classify-photo', { body: { photo_ids: batch } })
+      .then(({ error }) => {
+        if (error) logger.warn('Photo classification did not run; the photos stay untagged for now', { error: error.message });
+      })
+      .catch((error: unknown) => {
+        logger.warn('Photo classification did not run; the photos stay untagged for now', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+  }
+}
+
+/**
+ * Materials and equipment as rows, alongside the text columns iOS reads
+ * (US-330, AC3). Returns a sentence per failure rather than throwing, for the
+ * same reason as the photo rows: the report is saved by now.
+ */
+export async function insertDailyReportItems(
+  dailyReportId: string,
+  materials: MaterialItemRow[],
+  equipment: EquipmentItemRow[],
+): Promise<string[]> {
+  const failures: string[] = [];
+  if (materials.length > 0) {
+    const { error } = await supabase
+      .from('daily_report_material_items')
+      .insert(materials.map((m) => ({ ...m, daily_report_id: dailyReportId })))
+      .select('id');
+    if (error) {
+      logger.error('Daily report saved but its material rows were not', error);
+      failures.push(`Materials were saved as text but not as line items (${error.message})`);
+    }
+  }
+  if (equipment.length > 0) {
+    const { error } = await supabase
+      .from('daily_report_equipment_items')
+      .insert(equipment.map((e) => ({ ...e, daily_report_id: dailyReportId })))
+      .select('id');
+    if (error) {
+      logger.error('Daily report saved but its equipment rows were not', error);
+      failures.push(`Equipment was saved as text but not as line items (${error.message})`);
+    }
+  }
+  return failures;
 }
 
 /** How many time entries were clocked on a project on one day. */

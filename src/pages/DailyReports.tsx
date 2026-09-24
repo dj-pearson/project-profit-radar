@@ -22,19 +22,22 @@ import {
   useDailyReportsPage,
   fetchPreviousDailyReport,
   insertPhotoAttachments,
+  insertDailyReportItems,
   countTimeEntriesOnDay,
   type DailyReportsProject,
   type DailyReportListRow,
 } from '@/hooks/useDailyReportsPage';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { logger } from '@/lib/logger';
-import { photoStoragePath } from '@/lib/dailyReportField';
+import { photoStoragePath, materialItemsFromText, equipmentItemsFromText } from '@/lib/dailyReportField';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState, NoDailyReports } from '@/components/ui/EmptyStates';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, X, Smartphone } from 'lucide-react';
+import { Calendar, Users, AlertTriangle, PlusCircle, FileText, FileDown, Cloud, X, Smartphone } from 'lucide-react';
+import { formatDate } from '@/lib/format';
+import { useDailyReportPdf } from '@/hooks/useDailyReportExport';
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
 import { buildReportFromPrevious, applyTemplateDefaults } from '@/lib/dailyReports/templateFill';
 import { useForm } from 'react-hook-form';
@@ -140,6 +143,23 @@ const DailyReports = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
+  // The customer copy, photos included (US-330).
+  const reportPdf = useDailyReportPdf();
+  const handleDownloadPdf = (reportId: string) => {
+    reportPdf.mutate(reportId, {
+      onSuccess: ({ photos, missing }) => toast({
+        title: 'PDF downloaded',
+        description: missing > 0
+          ? `${photos} photo(s) included; ${missing} could not be loaded and are noted in the PDF.`
+          : `${photos} photo(s) included.`,
+      }),
+      onError: (error) => {
+        logger.error('Daily report PDF failed', error);
+        toast({ variant: 'destructive', title: 'PDF not created', description: 'The report could not be loaded. Try again.' });
+      },
+    });
+  };
+
   const handleApplyTemplate = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
     if (!template) return;
@@ -204,14 +224,20 @@ const DailyReports = () => {
    * comes back as a sentence in the toast.
    */
   const recordFieldDetail = async ({
-    reportId, projectId, reportDate, uploaded,
+    reportId, projectId, reportDate, uploaded, values,
   }: {
     reportId: string;
     projectId: string;
     reportDate: string;
     uploaded: Array<{ path: string; file: File }>;
+    values: DailyReportFormValues;
   }): Promise<string[]> => {
-    const notes: string[] = [];
+    // Materials and equipment as rows; the text columns stay for iOS.
+    const notes: string[] = await insertDailyReportItems(
+      reportId,
+      materialItemsFromText(values.materials_delivered),
+      equipmentItemsFromText(values.equipment_used),
+    );
 
     const companyId = userProfile?.company_id;
     if (uploaded.length > 0 && companyId && userProfile) {
@@ -321,6 +347,7 @@ const DailyReports = () => {
         projectId: values.project_id,
         reportDate,
         uploaded,
+        values,
       });
 
       toast({
@@ -463,7 +490,7 @@ const DailyReports = () => {
                 render: (value) => (
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4 text-construction-blue" aria-hidden="true" />
-                    {new Date(value).toLocaleDateString()}
+                    {formatDate(value)}
                   </span>
                 ),
               },
@@ -533,10 +560,11 @@ const DailyReports = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    aria-label={`View report for ${new Date(row.date).toLocaleDateString()}`}
-                    onClick={() => {/* View detail */}}
+                    aria-label={`Download PDF of the report for ${formatDate(row.date)}`}
+                    disabled={reportPdf.isPending && reportPdf.variables === row.id}
+                    onClick={() => handleDownloadPdf(row.id)}
                   >
-                    <FileText className="h-4 w-4" aria-hidden="true" />
+                    <FileDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 ),
               },

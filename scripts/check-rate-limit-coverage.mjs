@@ -33,6 +33,7 @@ const EXPENSIVE = new Map([
   ['smart-data-analyzer', 'LLM analysis of uploaded data'],
   ['generate-cash-flow-forecast', 'LLM forecasting'],
   ['analyze-support-ticket', 'LLM classification'],
+  ['classify-photo', 'vision model call per job-site photo'],
   ['voice-to-text', 'Whisper transcription, billed per request'],
   ['process-voice-command', 'Whisper plus an LLM round trip'],
   ['generate-custom-report', 'heavy query fan-out, AI-assisted'],

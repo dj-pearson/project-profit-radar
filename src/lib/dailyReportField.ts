@@ -167,3 +167,93 @@ export function projectIdFromPhotoPath(path: string): string | null {
     ? first
     : null;
 }
+
+/**
+ * Materials and equipment as rows (US-330).
+ *
+ * The web form collects both as free text, and iOS at MIN_SUPPORTED_IOS_VERSION
+ * reads those text columns, so they stay. What changes is that each line also
+ * becomes a daily_report_material_items or daily_report_equipment_items row, so
+ * "how much concrete went into this job" is a query rather than a read of every
+ * report. The text stays the source a person typed; the rows are the best
+ * reading of it, and a line that does not parse still becomes a row with just a
+ * name rather than being dropped.
+ */
+
+/** Lines past this are not a daily report; they are a paste accident. */
+export const MAX_REPORT_ITEMS = 50;
+const MAX_ITEM_NAME = 200;
+
+export interface MaterialItemRow {
+  material_name: string;
+  quantity: number | null;
+  unit: string | null;
+}
+
+export interface EquipmentItemRow {
+  equipment_name: string;
+  hours_used: number | null;
+}
+
+/** Units a superintendent actually writes. Anything else is part of the name. */
+const MATERIAL_UNITS = new Set([
+  'bag', 'bags', 'box', 'boxes', 'bundle', 'bundles', 'cy', 'yd', 'yds', 'yard', 'yards',
+  'ton', 'tons', 'lf', 'sf', 'sq', 'ea', 'each', 'pc', 'pcs', 'piece', 'pieces',
+  'sheet', 'sheets', 'gal', 'gallon', 'gallons', 'lb', 'lbs', 'ft', 'pallet', 'pallets',
+  'load', 'loads', 'roll', 'rolls', 'tube', 'tubes', 'bucket', 'buckets', 'case', 'cases',
+]);
+
+/** One item per line or semicolon, with list bullets and numbering removed. */
+export function splitReportLines(text: string | null | undefined): string[] {
+  if (!text) return [];
+  return text
+    .split(/[\r\n;]+/)
+    .map((line) => line
+      .replace(/^\s*(?:[-*]|\d+[.)])\s+/, '')
+      .replace(/\s+/g, ' ')
+      .trim())
+    .filter((line) => line.length > 0 && !/^(none|n\/a|na|-+)$/i.test(line))
+    .slice(0, MAX_REPORT_ITEMS);
+}
+
+const clip = (s: string) => s.slice(0, MAX_ITEM_NAME);
+
+/**
+ * "20 bags concrete" -> 20, bags, concrete. "12 2x4 studs" -> 12, no unit,
+ * "2x4 studs". "Rebar delivered" -> a name and nothing else.
+ */
+export function materialItemsFromText(text: string | null | undefined): MaterialItemRow[] {
+  return splitReportLines(text).map((line) => {
+    const m = line.match(/^(\d+(?:\.\d+)?)\s*x?\s+(.+)$/i);
+    if (!m) return { material_name: clip(line), quantity: null, unit: null };
+
+    const quantity = Number(m[1]);
+    let rest = m[2];
+    let unit: string | null = null;
+    const unitMatch = rest.match(/^([a-z]+)\.?(?:\s+of)?\s+(.+)$/i);
+    if (unitMatch && MATERIAL_UNITS.has(unitMatch[1].toLowerCase())) {
+      unit = unitMatch[1].toLowerCase();
+      rest = unitMatch[2];
+    }
+    return { material_name: clip(rest.trim()), quantity, unit };
+  });
+}
+
+/**
+ * "Excavator 6h", "Excavator - 6 hrs", "Excavator (6 hours)" -> Excavator, 6.
+ * No hours on the line means unknown, not zero: a machine on site that nobody
+ * timed was still on site.
+ */
+export function equipmentItemsFromText(text: string | null | undefined): EquipmentItemRow[] {
+  return splitReportLines(text).map((line) => {
+    const hours = line.match(/(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\b\.?/i);
+    if (!hours) return { equipment_name: clip(line), hours_used: null };
+    const name = line
+      .replace(hours[0], '')
+      .replace(/\(\s*\)/g, '')
+      .replace(/[\s\-:,@]+$/, '')
+      .replace(/^[\s\-:,@]+/, '')
+      .trim();
+    return { equipment_name: clip(name || line), hours_used: Number(hours[1]) };
+  });
+}
