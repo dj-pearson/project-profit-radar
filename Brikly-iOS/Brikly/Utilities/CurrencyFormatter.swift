@@ -34,3 +34,23 @@ enum CurrencyFormatter {
         }
     }
 }
+
+/// Reads a number typed into a text field in the user's locale: "1,500.50"
+/// in the US, "1.500,50" or "1,5" in Germany. Stripping commas and calling
+/// `Double(_:)` turns a German "1,5" into 15.
+enum NumberInput {
+    private static let formatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = .current
+        return f
+    }()
+
+    static func double(_ text: String) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+        if let number = formatter.number(from: trimmed) { return number.doubleValue }
+        // A "." typed on a keyboard whose locale uses ",".
+        return Double(trimmed)
+    }
+}

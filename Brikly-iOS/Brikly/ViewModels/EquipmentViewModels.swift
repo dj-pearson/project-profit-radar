@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 @Observable
 @MainActor
@@ -48,7 +49,13 @@ final class EquipmentDetailViewModel {
     var equipment: Equipment
     var maintenance: [MaintenanceRecord] = []
     var assignments: [EquipmentAssignment] = []
-    var qrValue: String?
+    var qrValue: String? {
+        didSet {
+            if qrValue != oldValue { qrImage = qrValue.flatMap { QRCodeRenderer.image(for: $0) } }
+        }
+    }
+    /// Rendered once per label value, not on every redraw.
+    private(set) var qrImage: UIImage?
     var isGeneratingQR = false
     var errorMessage: String?
 
@@ -60,10 +67,12 @@ final class EquipmentDetailViewModel {
 
     func load() async {
         errorMessage = nil
-        async let fresh = service.equipment(id: equipment.id)
-        async let records = service.maintenance(equipmentId: equipment.id)
-        async let bookings = service.assignments(equipmentId: equipment.id)
-        async let label = service.qrValue(equipmentId: equipment.id)
+        // A local, so the child tasks don't read main-actor state.
+        let id = equipment.id
+        async let fresh = service.equipment(id: id)
+        async let records = service.maintenance(equipmentId: id)
+        async let bookings = service.assignments(equipmentId: id)
+        async let label = service.qrValue(equipmentId: id)
 
         do {
             let row = try await fresh
@@ -165,8 +174,13 @@ final class EquipmentScanViewModel {
         label = parsed
         errorMessage = nil
         result = nil
-        if let currentStatus {
-            scanType = currentStatus == EquipmentStatus.inUse.rawValue ? .checkIn : .checkOut
+        // Default to the likely action. Something in the shop defaults to an
+        // inspection: a check-out would mark it in use and pull it out of
+        // maintenance.
+        switch currentStatus {
+        case EquipmentStatus.inUse.rawValue: scanType = .checkIn
+        case EquipmentStatus.maintenance.rawValue, EquipmentStatus.outOfService.rawValue: scanType = .inspection
+        default: scanType = .checkOut
         }
         return true
     }
@@ -190,10 +204,11 @@ final class EquipmentScanViewModel {
             pLongitude: location?.coordinate.longitude,
             pAccuracy: location?.horizontalAccuracy,
             pLocationDescription: locationDescription.isEmpty ? nil : locationDescription,
-            pProjectId: projectId.isEmpty ? nil : projectId,
+            // The picker only shows for these two; don't send a stale choice.
+            pProjectId: (scanType == .checkOut || scanType == .locationUpdate) && !projectId.isEmpty ? projectId : nil,
             pConditionRating: condition.isEmpty ? nil : condition,
-            pHoursReading: Double(hours),
-            pFuelLevel: Double(fuel),
+            pHoursReading: NumberInput.double(hours),
+            pFuelLevel: NumberInput.double(fuel),
             pNotes: notes.isEmpty ? nil : notes
         )
         do {
@@ -209,6 +224,7 @@ final class EquipmentScanViewModel {
     }
 
     func reset() {
+        scanType = .checkOut
         rawCode = nil
         label = nil
         result = nil

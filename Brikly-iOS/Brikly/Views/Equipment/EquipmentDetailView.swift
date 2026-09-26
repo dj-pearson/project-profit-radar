@@ -120,7 +120,7 @@ struct EquipmentDetailView: View {
     @ViewBuilder
     private var labelSection: some View {
         Section("QR Label") {
-            if let value = viewModel.qrValue, let image = QRCodeRenderer.image(for: value) {
+            if let image = viewModel.qrImage {
                 HStack {
                     Spacer()
                     Image(uiImage: image)

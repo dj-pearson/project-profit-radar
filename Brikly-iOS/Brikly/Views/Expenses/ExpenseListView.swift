@@ -101,7 +101,7 @@ private struct ExpenseFormView: View {
     @State private var isSaving = false
     @State private var failed = false
 
-    private var amountValue: Double? { Double(amount.replacingOccurrences(of: ",", with: "")) }
+    private var amountValue: Double? { NumberInput.double(amount) }
 
     var body: some View {
         NavigationStack {
@@ -147,7 +147,7 @@ private struct ExpenseFormView: View {
             siteId: siteId,
             vendorName: vendor.isEmpty ? nil : vendor,
             amount: value,
-            taxAmount: Double(tax) ?? 0,
+            taxAmount: NumberInput.double(tax) ?? 0,
             expenseDate: DateFormatting.localISODate(date),
             paymentMethod: method,
             description: description.trimmingCharacters(in: .whitespaces),

@@ -186,7 +186,7 @@ private struct ChangeOrderFormView: View {
     @State private var failed = false
 
     /// Negative amounts are credits back to the client.
-    private var amountValue: Double? { Double(amount.replacingOccurrences(of: ",", with: "")) }
+    private var amountValue: Double? { NumberInput.double(amount) }
 
     var body: some View {
         NavigationStack {

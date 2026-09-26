@@ -20,14 +20,12 @@ struct EquipmentScanSheet: View {
     }
 
     var body: some View {
-        @Bindable var vm = viewModel
-
         NavigationStack {
             Group {
                 if let result = viewModel.result {
                     resultView(result)
                 } else if viewModel.label != nil {
-                    actionForm(vm: vm)
+                    actionForm
                 } else if cameraUnavailable {
                     ContentUnavailableView(
                         "Camera Unavailable",
@@ -93,8 +91,8 @@ struct EquipmentScanSheet: View {
         }
     }
 
-    private func actionForm(vm: EquipmentScanViewModel) -> some View {
-        @Bindable var vm = vm
+    private var actionForm: some View {
+        @Bindable var vm = viewModel
         return Form {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
@@ -133,6 +131,13 @@ struct EquipmentScanSheet: View {
             }
             if let error = viewModel.errorMessage {
                 Section { Text(error).foregroundStyle(Color.brandDanger) }
+            }
+            Section {
+                Button("Scan a Different Label") {
+                    viewModel.reset()
+                    scanKey = UUID()
+                }
+                .disabled(viewModel.isSubmitting)
             }
             Section {
                 Button {

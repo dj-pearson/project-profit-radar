@@ -26,7 +26,7 @@ struct MaintenanceFormView: View {
     @State private var failed = false
 
     private func number(_ text: String) -> Double? {
-        Double(text.replacingOccurrences(of: ",", with: ""))
+        NumberInput.double(text)
     }
 
     var body: some View {
@@ -139,6 +139,9 @@ struct AssignmentFormView: View {
                 Section("Dates") {
                     DatePicker("From", selection: $start, displayedComponents: .date)
                     DatePicker("To", selection: $end, in: start..., displayedComponents: .date)
+                }
+                .onChange(of: start) {
+                    if end < start { end = start }
                 }
                 Section("Notes") {
                     TextField("Notes", text: $notes, axis: .vertical).lineLimit(2...4)
