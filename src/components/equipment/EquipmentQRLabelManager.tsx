@@ -29,10 +29,12 @@ import {
   getOrGenerateQRCode,
   batchGenerateQRCodes,
   downloadQRCode,
+  renderQRCodeImage,
   type Equipment,
 } from '@/services/qrCodeService';
 
 interface EquipmentWithQR extends Equipment {
+  /** Rendered here from qr_code_value; the stored qr_code_image is not trusted. */
   qr_code_image?: string;
   qr_code_value?: string;
   qr_code_id?: string;
@@ -58,13 +60,31 @@ export const EquipmentQRLabelManager: React.FC = () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('equipment')
-        .select('*')
+        .from('equipment_with_qr')
+        .select('equipment_id, company_id, name, equipment_type, model, serial_number, qr_code_id, qr_code_value')
         .eq('company_id', userProfile.company_id)
         .order('name');
 
       if (error) throw error;
-      setEquipment((data || []) as EquipmentWithQR[]);
+
+      // Images saved before this fix encode a client-built string that never
+      // matched qr_code_value, so every label is rendered from the value.
+      const rows = await Promise.all(
+        (data || []).map(async (row): Promise<EquipmentWithQR> => ({
+          id: row.equipment_id as string,
+          company_id: row.company_id as string,
+          name: row.name ?? '',
+          equipment_type: row.equipment_type,
+          model: row.model,
+          serial_number: row.serial_number,
+          qr_code_id: row.qr_code_id ?? undefined,
+          qr_code_value: row.qr_code_value ?? undefined,
+          qr_code_image: row.qr_code_value
+            ? await renderQRCodeImage(row.qr_code_value).catch(() => undefined)
+            : undefined,
+        }))
+      );
+      setEquipment(rows);
     } catch (error) {
       console.error('Error loading equipment:', error);
       toast.error('Failed to load equipment');
@@ -215,7 +235,6 @@ export const EquipmentQRLabelManager: React.FC = () => {
     return (
       eq.name.toLowerCase().includes(searchLower) ||
       eq.equipment_type?.toLowerCase().includes(searchLower) ||
-      eq.make?.toLowerCase().includes(searchLower) ||
       eq.model?.toLowerCase().includes(searchLower) ||
       eq.serial_number?.toLowerCase().includes(searchLower)
     );
@@ -279,9 +298,7 @@ export const EquipmentQRLabelManager: React.FC = () => {
                 className="w-full h-auto mx-auto mb-2"
               />
               <h3 className="font-bold text-sm mb-1">{eq.name}</h3>
-              <p className="text-xs text-gray-600">
-                {eq.make} {eq.model}
-              </p>
+              {eq.model && <p className="text-xs text-gray-600">{eq.model}</p>}
               {eq.serial_number && (
                 <p className="text-xs text-gray-500 font-mono mt-1">{eq.serial_number}</p>
               )}
@@ -428,9 +445,9 @@ export const EquipmentQRLabelManager: React.FC = () => {
 
                         <div className="flex-1">
                           <h3 className="font-medium">{eq.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {eq.make} {eq.model}
-                          </p>
+                          {eq.model && (
+                            <p className="text-sm text-muted-foreground">{eq.model}</p>
+                          )}
                           {eq.serial_number && (
                             <p className="text-xs text-muted-foreground font-mono mt-1">
                               S/N: {eq.serial_number}

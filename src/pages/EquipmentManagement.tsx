@@ -43,6 +43,8 @@ export default function EquipmentManagement() {
     const statusConfig = {
       available: { variant: "default" as const, label: "Available", icon: CheckCircle },
       assigned: { variant: "secondary" as const, label: "Assigned", icon: TrendingUp },
+      // What a QR check-out (process_equipment_qr_scan) sets.
+      in_use: { variant: "secondary" as const, label: "Checked Out", icon: TrendingUp },
       maintenance: { variant: "destructive" as const, label: "Maintenance", icon: Wrench },
       out_of_service: { variant: "outline" as const, label: "Out of Service", icon: AlertTriangle }
     };
@@ -96,8 +98,8 @@ export default function EquipmentManagement() {
 
   const filteredEquipment = equipment.filter(item =>
     (item.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (item.current_location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (item.equipment_type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -195,7 +197,7 @@ export default function EquipmentManagement() {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Type</label>
-                          <p>{eq.type || 'Not specified'}</p>
+                          <p>{eq.equipment_type || 'Not specified'}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium">Current Status</label>
@@ -203,7 +205,7 @@ export default function EquipmentManagement() {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Location</label>
-                          <p>{eq.current_location || 'Not specified'}</p>
+                          <p>{eq.location || 'Not specified'}</p>
                         </div>
                         {eq.assigned_project && (
                           <div className="col-span-2">
@@ -258,7 +260,7 @@ export default function EquipmentManagement() {
                             {item.name}
                             {getStatusBadge(item.status || 'available')}
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">{item.type || 'Equipment'}</p>
+                          <p className="text-sm text-muted-foreground">{item.equipment_type || 'Equipment'}</p>
                           <p className="text-xs text-muted-foreground">
                             {item.model && `${item.model} • `}{item.serial_number || 'No serial'}
                           </p>
@@ -288,7 +290,7 @@ export default function EquipmentManagement() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <span>{item.current_location || 'Location not set'}</span>
+                          <span>{item.location || 'Location not set'}</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">

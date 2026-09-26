@@ -8,46 +8,73 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { parseQRCodeData, validateQRCodeData } from '@/services/qrCodeService';
+import {
+  toEquipmentScanType,
+  validateScannedQRValue,
+  type EquipmentScanType,
+  type LegacyScanType,
+} from '@/services/qrCodeService';
 
+/** A row of the equipment_with_qr view (20260926020000). */
 export interface EquipmentWithQR {
   equipment_id: string;
   company_id: string;
   name: string;
   equipment_type: string | null;
-  make: string | null;
   model: string | null;
   serial_number: string | null;
-  status: string;
-  current_condition: string | null;
-  current_location: string | null;
-  checked_out_by: string | null;
-  checked_out_at: string | null;
-  due_back_at: string | null;
+  status: string | null;
+  location: string | null;
   qr_code_id: string | null;
   qr_code_value: string | null;
   qr_code_image: string | null;
+  qr_generated_at: string | null;
+  scan_count: number | null;
+  last_scanned_at: string | null;
+  qr_is_active: boolean | null;
   has_qr_code: boolean;
-  is_overdue: boolean;
-  checked_out_by_name: string | null;
 }
 
+/** A row of the recent_equipment_scans view (20260926020000). */
 export interface ScanEvent {
-  id: string;
+  scan_id: string;
   scan_type: string;
   scanned_at: string;
-  equipment_name: string;
-  scanned_by_name: string;
   location_description: string | null;
   condition_rating: string | null;
   hours_reading: number | null;
   fuel_level: number | null;
   notes: string | null;
+  overdue_flag: boolean | null;
+  equipment_id: string;
+  equipment_name: string;
+  equipment_type: string | null;
+  serial_number: string | null;
+  scanned_by_id: string;
+  scanned_by_name: string | null;
+  scanned_by_email: string | null;
+  project_id: string | null;
+  project_name: string | null;
+  gps_latitude: number | null;
+  gps_longitude: number | null;
+  hours_since_scan: number | null;
+}
+
+/** What process_equipment_qr_scan returns. A failed scan is success: false, not an error. */
+export interface ProcessScanResult {
+  success: boolean;
+  error?: string;
+  scan_event_id?: string;
+  equipment_id?: string;
+  equipment_name?: string;
+  new_status?: string;
+  message?: string;
 }
 
 export interface ProcessScanParams {
+  /** The raw scanned string. The RPC matches it byte for byte against qr_code_value. */
   qrCodeValue: string;
-  scanType: 'check_out' | 'check_in' | 'inspection' | 'location_update' | 'maintenance' | 'verification';
+  scanType: EquipmentScanType | LegacyScanType;
   latitude?: number;
   longitude?: number;
   accuracy?: number;
@@ -80,7 +107,7 @@ export const useEquipmentQRScanning = () => {
         .order('name');
 
       if (error) throw error;
-      return data as EquipmentWithQR[];
+      return (data ?? []) as unknown as EquipmentWithQR[];
     },
     enabled: !!userProfile?.company_id,
   });
@@ -91,14 +118,16 @@ export const useEquipmentQRScanning = () => {
     queryFn: async () => {
       if (!userProfile?.company_id) return [];
 
-      // Note: recent_equipment_scans view is filtered via RLS
+      // The view has no company_id column to filter on here; it filters to
+      // the caller's company itself (20260926020000).
       const { data, error } = await supabase
         .from('recent_equipment_scans')
         .select('*')
+        .order('scanned_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      return data as ScanEvent[];
+      return (data ?? []) as unknown as ScanEvent[];
     },
     enabled: !!userProfile?.company_id,
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -106,27 +135,29 @@ export const useEquipmentQRScanning = () => {
 
   // Process QR scan mutation
   const processScanMutation = useMutation({
-    mutationFn: async (params: ProcessScanParams) => {
+    mutationFn: async (params: ProcessScanParams): Promise<ProcessScanResult> => {
+      // Optional args are left out rather than sent as null; the RPC defaults
+      // them to NULL. `??` keeps a real 0 (empty tank, zero hours).
       const { data, error } = await supabase.rpc('process_equipment_qr_scan', {
         p_qr_code_value: params.qrCodeValue,
-        p_scan_type: params.scanType,
-        p_latitude: params.latitude || null,
-        p_longitude: params.longitude || null,
-        p_accuracy: params.accuracy || null,
-        p_location_description: params.locationDescription || null,
-        p_project_id: params.projectId || null,
-        p_condition_rating: params.conditionRating || null,
-        p_hours_reading: params.hoursReading || null,
-        p_fuel_level: params.fuelLevel || null,
-        p_notes: params.notes || null,
-        p_photo_urls: params.photoUrls || null,
-        p_due_back_at: params.dueBackAt || null,
+        p_scan_type: toEquipmentScanType(params.scanType),
+        p_latitude: params.latitude ?? undefined,
+        p_longitude: params.longitude ?? undefined,
+        p_accuracy: params.accuracy ?? undefined,
+        p_location_description: params.locationDescription || undefined,
+        p_project_id: params.projectId || undefined,
+        p_condition_rating: params.conditionRating || undefined,
+        p_hours_reading: params.hoursReading ?? undefined,
+        p_fuel_level: params.fuelLevel ?? undefined,
+        p_notes: params.notes || undefined,
+        p_photo_urls: params.photoUrls?.length ? params.photoUrls : undefined,
+        p_due_back_at: params.dueBackAt || undefined,
       });
 
       if (error) throw error;
-      return data;
+      return (data ?? { success: false, error: 'No response from server' }) as unknown as ProcessScanResult;
     },
-    onSuccess: (result, params) => {
+    onSuccess: (result) => {
       if (result.success) {
         toast({
           title: 'Scan Successful',
@@ -164,23 +195,11 @@ export const useEquipmentQRScanning = () => {
   // Validate scanned QR code
   const validateScannedQRCode = useCallback(
     (qrValue: string): { valid: boolean; error?: string; equipmentId?: string } => {
-      if (!userProfile?.company_id) {
-        return { valid: false, error: 'User company not found' };
+      const result = validateScannedQRValue(qrValue, userProfile?.company_id);
+      if (!result.valid) {
+        return { valid: false, error: result.error };
       }
-
-      // Parse QR code data
-      const qrData = parseQRCodeData(qrValue);
-      if (!qrData) {
-        return { valid: false, error: 'Invalid QR code format' };
-      }
-
-      // Validate QR code data
-      const isValid = validateQRCodeData(qrData, userProfile.company_id);
-      if (!isValid) {
-        return { valid: false, error: 'QR code does not belong to your company' };
-      }
-
-      return { valid: true, equipmentId: qrData.equipmentId };
+      return { valid: true, equipmentId: result.data.equipmentId };
     },
     [userProfile?.company_id]
   );
