@@ -1,52 +1,108 @@
 import SwiftUI
 
+/// Project hub. Every section the web project page has that a phone user
+/// works in is one tap from here, grouped the way the work is done.
 struct ProjectDetailView: View {
     @Environment(AuthViewModel.self) private var auth
     @State private var viewModel: ProjectDetailViewModel
-    @State private var selectedTab = 0
 
     init(project: Project) {
         _viewModel = State(initialValue: ProjectDetailViewModel(project: project))
     }
 
+    private var project: Project { viewModel.project }
+    private var companyId: String { auth.companyId ?? project.companyId }
+    private var siteId: String { auth.siteId ?? project.siteId ?? "" }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ProjectOverviewView(project: viewModel.project)
-                .tabItem { Label("Overview", systemImage: "chart.bar.fill") }
-                .tag(0)
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        StatusBadge(status: project.status ?? "active")
+                        Spacer()
+                        if project.effectiveBudget > 0 {
+                            Text(CurrencyFormatter.format(project.effectiveBudget))
+                                .font(.subheadline.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    ProgressView(value: min(max(project.completionPercentage ?? 0, 0), 100), total: 100) {
+                        Text("\(Int(project.completionPercentage ?? 0))% complete")
+                            .font(.subheadline)
+                    }
+                    if project.startDate != nil || project.endDate != nil {
+                        Text("\(DateFormatting.medium(project.startDate)) to \(DateFormatting.medium(project.endDate))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
 
-            TaskListView(
-                projectId: viewModel.project.id,
-                companyId: auth.companyId ?? "",
-                siteId: auth.siteId ?? viewModel.project.siteId ?? ""
-            )
-            .tabItem { Label("Tasks", systemImage: "checklist") }
-            .tag(1)
+                NavigationLink {
+                    ProjectOverviewView(project: project)
+                        .navigationTitle("Details")
+                } label: {
+                    Label("Project Details", systemImage: "info.circle")
+                }
+            }
 
-            DailyReportListView(
-                projectId: viewModel.project.id,
-                companyId: auth.companyId ?? "",
-                siteId: auth.siteId ?? viewModel.project.siteId ?? ""
-            )
-            .tabItem { Label("Reports", systemImage: "doc.text.fill") }
-            .tag(2)
+            Section("Field") {
+                link("Tasks", icon: "checklist") {
+                    TaskListView(projectId: project.id, companyId: companyId, siteId: siteId)
+                }
+                link("Daily Reports", icon: "doc.text") {
+                    DailyReportListView(projectId: project.id, companyId: companyId, siteId: siteId)
+                }
+                link("Punch List", icon: "checklist.checked") {
+                    PunchListView(projectId: project.id, companyId: companyId)
+                }
+                link("Safety", icon: "cross.case") {
+                    SafetyIncidentListView(projectId: project.id, companyId: companyId)
+                }
+            }
 
-            JobCostListView(
-                projectId: viewModel.project.id,
-                companyId: auth.companyId ?? ""
-            )
-            .tabItem { Label("Costs", systemImage: "dollarsign.circle.fill") }
-            .tag(3)
+            Section("Money") {
+                link("Job Costs", icon: "dollarsign.circle") {
+                    JobCostListView(projectId: project.id, companyId: companyId)
+                }
+                link("Change Orders", icon: "arrow.triangle.2.circlepath.doc.on.clipboard") {
+                    ChangeOrderListView(projectId: project.id)
+                }
+                link("Expenses", icon: "creditcard") {
+                    ExpenseListView(projectId: project.id, companyId: companyId, siteId: siteId.isEmpty ? nil : siteId)
+                }
+            }
 
-            DocumentListView(
-                projectId: viewModel.project.id,
-                companyId: auth.companyId ?? "",
-                siteId: auth.siteId ?? viewModel.project.siteId
-            )
-                .tabItem { Label("Docs", systemImage: "folder.fill") }
-                .tag(4)
+            Section("Paperwork") {
+                link("RFIs", icon: "questionmark.bubble") {
+                    RFIListView(projectId: project.id, companyId: companyId)
+                }
+                link("Submittals", icon: "doc.badge.gearshape") {
+                    SubmittalListView(projectId: project.id, companyId: companyId)
+                }
+                link("Documents", icon: "folder") {
+                    DocumentListView(projectId: project.id, companyId: companyId, siteId: siteId.isEmpty ? nil : siteId)
+                }
+            }
         }
-        .navigationTitle(viewModel.project.name)
+        .listStyle(.insetGrouped)
+        .navigationTitle(project.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func link<Destination: View>(
+        _ title: String,
+        icon: String,
+        @ViewBuilder destination: @escaping () -> Destination
+    ) -> some View {
+        NavigationLink {
+            destination()
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            Label(title, systemImage: icon)
+        }
     }
 }

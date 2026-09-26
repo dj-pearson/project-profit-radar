@@ -38,10 +38,13 @@
 	<key>SENTRY_DSN</key>
 	<string>$(SENTRY_DSN)</string>
 	<!--
-	Privacy usage descriptions and UIBackgroundModes are intentionally not declared.
 	Add a usage description ONLY when the corresponding feature actually ships;
 	requesting permissions the app does not use causes App Store review rejection.
+	Location (when in use) ships with the time clock's job-site geofence check.
+	UIBackgroundModes are intentionally not declared.
 	-->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Brikly checks that you're at the job site when you clock in, and records that location on your time entry.</string>
 
 	<!-- App-Bound Domains (required when limitsNavigationsToAppBoundDomains is true) -->
 	<key>WKAppBoundDomains</key>

@@ -63,6 +63,34 @@
 		AA000054 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AB000057; };
 		AA000055 /* OfflineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000058; };
 		AA000056 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000059; };
+		AA000100 /* AppNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000100; };
+		AA000101 /* ChangeOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000101; };
+		AA000102 /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000102; };
+		AA000103 /* PunchListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000103; };
+		AA000104 /* RFI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000104; };
+		AA000105 /* SafetyIncident.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000105; };
+		AA000106 /* Submittal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000106; };
+		AA000107 /* TimeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000107; };
+		AA000108 /* ChangeOrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000108; };
+		AA000109 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000109; };
+		AA000110 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000110; };
+		AA000111 /* RecordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000111; };
+		AA000112 /* TimeEntryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000112; };
+		AA000113 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000113; };
+		AA000114 /* NotificationListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000114; };
+		AA000115 /* RecordListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000115; };
+		AA000116 /* TimeClockViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000116; };
+		AA000117 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000117; };
+		AA000118 /* ChangeOrderListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000118; };
+		AA000119 /* ExpenseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000119; };
+		AA000120 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000120; };
+		AA000121 /* NotificationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000121; };
+		AA000122 /* PunchListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000122; };
+		AA000123 /* RFIListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000123; };
+		AA000124 /* SafetyIncidentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000124; };
+		AA000125 /* ChipFilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000125; };
+		AA000126 /* SubmittalListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000126; };
+		AA000127 /* TimeClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000127; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -126,6 +154,34 @@
 		AB000058 /* OfflineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineStore.swift; sourceTree = "<group>"; };
 		AB000059 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		AB000099 /* Brikly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Brikly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB000100 /* AppNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotification.swift; sourceTree = "<group>"; };
+		AB000101 /* ChangeOrder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeOrder.swift; sourceTree = "<group>"; };
+		AB000102 /* Expense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expense.swift; sourceTree = "<group>"; };
+		AB000103 /* PunchListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PunchListItem.swift; sourceTree = "<group>"; };
+		AB000104 /* RFI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFI.swift; sourceTree = "<group>"; };
+		AB000105 /* SafetyIncident.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyIncident.swift; sourceTree = "<group>"; };
+		AB000106 /* Submittal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Submittal.swift; sourceTree = "<group>"; };
+		AB000107 /* TimeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeEntry.swift; sourceTree = "<group>"; };
+		AB000108 /* ChangeOrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeOrderService.swift; sourceTree = "<group>"; };
+		AB000109 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		AB000110 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		AB000111 /* RecordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordService.swift; sourceTree = "<group>"; };
+		AB000112 /* TimeEntryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeEntryService.swift; sourceTree = "<group>"; };
+		AB000113 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		AB000114 /* NotificationListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationListViewModel.swift; sourceTree = "<group>"; };
+		AB000115 /* RecordListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordListViewModel.swift; sourceTree = "<group>"; };
+		AB000116 /* TimeClockViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeClockViewModel.swift; sourceTree = "<group>"; };
+		AB000117 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		AB000118 /* ChangeOrderListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeOrderListView.swift; sourceTree = "<group>"; };
+		AB000119 /* ExpenseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseListView.swift; sourceTree = "<group>"; };
+		AB000120 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		AB000121 /* NotificationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationListView.swift; sourceTree = "<group>"; };
+		AB000122 /* PunchListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PunchListView.swift; sourceTree = "<group>"; };
+		AB000123 /* RFIListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIListView.swift; sourceTree = "<group>"; };
+		AB000124 /* SafetyIncidentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyIncidentListView.swift; sourceTree = "<group>"; };
+		AB000125 /* ChipFilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipFilterBar.swift; sourceTree = "<group>"; };
+		AB000126 /* SubmittalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubmittalListView.swift; sourceTree = "<group>"; };
+		AB000127 /* TimeClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeClockView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,6 +249,14 @@
 				AB000010 /* JobCost.swift */,
 				AB000011 /* CostCode.swift */,
 				AB000012 /* Document.swift */,
+				AB000100 /* AppNotification.swift */,
+				AB000101 /* ChangeOrder.swift */,
+				AB000102 /* Expense.swift */,
+				AB000103 /* PunchListItem.swift */,
+				AB000104 /* RFI.swift */,
+				AB000105 /* SafetyIncident.swift */,
+				AB000106 /* Submittal.swift */,
+				AB000107 /* TimeEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -209,6 +273,11 @@
 				AB000018 /* DocumentService.swift */,
 				AB000058 /* OfflineStore.swift */,
 				AB000059 /* SyncEngine.swift */,
+				AB000108 /* ChangeOrderService.swift */,
+				AB000109 /* LocationService.swift */,
+				AB000110 /* NotificationService.swift */,
+				AB000111 /* RecordService.swift */,
+				AB000112 /* TimeEntryService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -223,6 +292,10 @@
 				AB000023 /* DailyReportListViewModel.swift */,
 				AB000024 /* JobCostListViewModel.swift */,
 				AB000025 /* DocumentListViewModel.swift */,
+				AB000113 /* DashboardViewModel.swift */,
+				AB000114 /* NotificationListViewModel.swift */,
+				AB000115 /* RecordListViewModel.swift */,
+				AB000116 /* TimeClockViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -239,6 +312,15 @@
 				AD000017 /* JobCosting */,
 				AD000018 /* Documents */,
 				AD000013 /* Shared */,
+				AD000099 /* ChangeOrders */,
+				AD000100 /* Expenses */,
+				AD000101 /* Home */,
+				AD000102 /* Notifications */,
+				AD000103 /* PunchList */,
+				AD000104 /* RFIs */,
+				AD000105 /* Safety */,
+				AD000106 /* Submittals */,
+				AD000107 /* TimeClock */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -247,6 +329,7 @@
 			isa = PBXGroup;
 			children = (
 				AB000026 /* ContentView.swift */,
+				AB000117 /* MainTabView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -325,6 +408,7 @@
 				AB000046 /* EmptyStateView.swift */,
 				AB000047 /* StatusBadge.swift */,
 				AB000048 /* CurrencyText.swift */,
+				AB000125 /* ChipFilterBar.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -347,6 +431,78 @@
 				AB000052 /* View+Extensions.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		AD000099 /* ChangeOrders */ = {
+			isa = PBXGroup;
+			children = (
+				AB000118 /* ChangeOrderListView.swift */,
+			);
+			path = ChangeOrders;
+			sourceTree = "<group>";
+		};
+		AD000100 /* Expenses */ = {
+			isa = PBXGroup;
+			children = (
+				AB000119 /* ExpenseListView.swift */,
+			);
+			path = Expenses;
+			sourceTree = "<group>";
+		};
+		AD000101 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				AB000120 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		AD000102 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				AB000121 /* NotificationListView.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		AD000103 /* PunchList */ = {
+			isa = PBXGroup;
+			children = (
+				AB000122 /* PunchListView.swift */,
+			);
+			path = PunchList;
+			sourceTree = "<group>";
+		};
+		AD000104 /* RFIs */ = {
+			isa = PBXGroup;
+			children = (
+				AB000123 /* RFIListView.swift */,
+			);
+			path = RFIs;
+			sourceTree = "<group>";
+		};
+		AD000105 /* Safety */ = {
+			isa = PBXGroup;
+			children = (
+				AB000124 /* SafetyIncidentListView.swift */,
+			);
+			path = Safety;
+			sourceTree = "<group>";
+		};
+		AD000106 /* Submittals */ = {
+			isa = PBXGroup;
+			children = (
+				AB000126 /* SubmittalListView.swift */,
+			);
+			path = Submittals;
+			sourceTree = "<group>";
+		};
+		AD000107 /* TimeClock */ = {
+			isa = PBXGroup;
+			children = (
+				AB000127 /* TimeClockView.swift */,
+			);
+			path = TimeClock;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -428,6 +584,34 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* BriklyApp.swift in Sources */,
+				AA000127 /* TimeClockView.swift in Sources */,
+				AA000126 /* SubmittalListView.swift in Sources */,
+				AA000125 /* ChipFilterBar.swift in Sources */,
+				AA000124 /* SafetyIncidentListView.swift in Sources */,
+				AA000123 /* RFIListView.swift in Sources */,
+				AA000122 /* PunchListView.swift in Sources */,
+				AA000121 /* NotificationListView.swift in Sources */,
+				AA000120 /* HomeView.swift in Sources */,
+				AA000119 /* ExpenseListView.swift in Sources */,
+				AA000118 /* ChangeOrderListView.swift in Sources */,
+				AA000117 /* MainTabView.swift in Sources */,
+				AA000116 /* TimeClockViewModel.swift in Sources */,
+				AA000115 /* RecordListViewModel.swift in Sources */,
+				AA000114 /* NotificationListViewModel.swift in Sources */,
+				AA000113 /* DashboardViewModel.swift in Sources */,
+				AA000112 /* TimeEntryService.swift in Sources */,
+				AA000111 /* RecordService.swift in Sources */,
+				AA000110 /* NotificationService.swift in Sources */,
+				AA000109 /* LocationService.swift in Sources */,
+				AA000108 /* ChangeOrderService.swift in Sources */,
+				AA000107 /* TimeEntry.swift in Sources */,
+				AA000106 /* Submittal.swift in Sources */,
+				AA000105 /* SafetyIncident.swift in Sources */,
+				AA000104 /* RFI.swift in Sources */,
+				AA000103 /* PunchListItem.swift in Sources */,
+				AA000102 /* Expense.swift in Sources */,
+				AA000101 /* ChangeOrder.swift in Sources */,
+				AA000100 /* AppNotification.swift in Sources */,
 				AA000002 /* AppConfiguration.swift in Sources */,
 				AA000003 /* SupabaseService.swift in Sources */,
 				AA000004 /* DateDecoding.swift in Sources */,

@@ -159,6 +159,103 @@ final class BriklyTests: XCTestCase {
         XCTAssertEqual(project.effectiveBudget, 25_000)
     }
 
+    // MARK: - Time clock
+
+    func testTimeEntryWorkedHoursExcludesBreaks() throws {
+        let json = """
+        {
+          "id": "t1",
+          "user_id": "u1",
+          "project_id": "p1",
+          "start_time": "2024-01-15T08:00:00+00:00",
+          "break_duration": 30,
+          "created_at": "2024-01-15T08:00:00+00:00"
+        }
+        """
+        let entry = try decode(TimeEntry.self, from: json)
+        XCTAssertTrue(entry.isOpen)
+        let fourHoursLater = entry.startTime.addingTimeInterval(4 * 3600)
+        XCTAssertEqual(entry.workedHours(now: fourHoursLater), 3.5, accuracy: 0.0001)
+    }
+
+    func testClosedTimeEntryUsesStoredTotal() throws {
+        let json = """
+        {
+          "id": "t1",
+          "user_id": "u1",
+          "project_id": "p1",
+          "start_time": "2024-01-15T08:00:00+00:00",
+          "end_time": "2024-01-15T16:00:00+00:00",
+          "total_hours": 7.5
+        }
+        """
+        let entry = try decode(TimeEntry.self, from: json)
+        XCTAssertFalse(entry.isOpen)
+        XCTAssertEqual(entry.workedHours(), 7.5)
+    }
+
+    /// Rates and company_id are server-owned (AGENTS.md, US-321); the clock-in
+    /// payload must never carry them.
+    func testNewTimeEntryPayloadHasNoServerOwnedFields() throws {
+        let entry = NewTimeEntry(
+            userId: "u1", projectId: "p1", costCodeId: "cc1", siteId: nil,
+            startTime: "2024-01-15T08:00:00Z", endTime: nil, totalHours: nil,
+            breakDuration: 0, description: nil, gpsLatitude: 1, gpsLongitude: 2,
+            locationAccuracy: 5, isGeofenceVerified: true, geofenceDistanceMeters: 12,
+            geofenceBreachDetected: false
+        )
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any]
+        )
+        XCTAssertEqual(object["cost_code_id"] as? String, "cc1")
+        XCTAssertEqual(object["is_geofence_verified"] as? Bool, true)
+        for key in ["company_id", "hourly_rate", "burden_rate", "labor_cost", "site_id", "end_time"] {
+            XCTAssertNil(object[key], "\(key) should not be sent")
+        }
+    }
+
+    // MARK: - Project records
+
+    func testRecordNumberMatchesWebFormat() {
+        let number = RecordNumber.make("RFI")
+        XCTAssertTrue(number.hasPrefix("RFI-"))
+        XCTAssertEqual(number.count, 12)
+        XCTAssertTrue(number.dropFirst(4).allSatisfy(\.isNumber))
+    }
+
+    func testDisplayDateDoesNotShiftAcrossTimeZones() {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = TimeZone(identifier: "America/Los_Angeles")!
+        XCTAssertTrue(DateFormatting.displayDate("2024-01-15").contains("15"))
+        XCTAssertEqual(DateFormatting.displayDate(nil), "\u{2014}")
+    }
+
+    func testChangeOrderDecodesFromEdgeEnvelopeAndSummarizesApproval() throws {
+        let json = """
+        {
+          "id": "co1",
+          "change_order_number": "CO-003",
+          "title": "Add outlet",
+          "amount": 450.5,
+          "status": "pending",
+          "internal_approved": true,
+          "client_approved": null,
+          "project_id": "p1",
+          "projects": { "name": "X", "client_name": "Y" }
+        }
+        """
+        let order = try decode(ChangeOrder.self, from: json)
+        XCTAssertEqual(order.changeOrderNumber, "CO-003")
+        XCTAssertEqual(order.amount, 450.5)
+        XCTAssertEqual(order.approvalSummary, "Awaiting client")
+    }
+
+    func testChangeOrderPermissionsMatchEdgeFunction() {
+        XCTAssertTrue(ChangeOrderPermissions.canManage(role: "project_manager"))
+        XCTAssertFalse(ChangeOrderPermissions.canManage(role: "field_supervisor"))
+    }
+
     // MARK: - Helpers
 
     private func decode<T: Decodable>(_ type: T.Type, from jsonString: String) throws -> T {

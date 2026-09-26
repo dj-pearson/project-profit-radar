@@ -40,8 +40,46 @@ against.
 `site_id` is filled by `trg_project_site_id` from the project's company
 (US-317). Do not send it.
 
+### Time clock (iOS)
+
+`TimeClockViewModel` follows `MobileTimeClock.tsx`: project and cost code
+required, a GPS fix required, clock-in refused outside the project geofence
+(`geofence_radius_meters`, default 100 m). `total_hours` excludes break time,
+the same as the web timer. `site_id` is sent from the project when it has one
+(some environments still have `time_entries.site_id NOT NULL` with no trigger,
+US-275).
+
+Two `UserDefaults` keys hold an in-progress shift. They are on-device storage
+contracts; don't rename them:
+
+- `brikly.timeClock.pendingClockIn`: a `NewTimeEntry` for a clock-in made
+  offline. It is not queued; it is written as one complete row at clock-out.
+- `brikly.timeClock.breakStartedAt`: the `Date` a running break started.
+
+### Change orders
+
+iOS goes through the `change-orders` edge function (list / create / approve),
+never `change_orders` directly. `approve` reads camelCase keys (`orderId`,
+`approvalType`), so that call passes `snakeCaseKeys: false` to
+`EdgeFunctionsService.invoke`. Only `admin`, `project_manager` and
+`root_admin` see create/approve; the function enforces the same list. The
+client's approval comes from the client portal only.
+
+### Other project records
+
+RFIs, punch list, safety incidents, expenses and submittals are plain
+PostgREST writes through `RecordService`, with the web pages' payloads and
+status values (`RFIs.tsx`, `PunchList.tsx`, `SafetyIncidentForm.tsx`,
+`ExpenseTracker.tsx`, `Submittals.tsx`). Notifications read
+`real_time_notifications` (missing from the generated `types.ts`, but present
+in migrations).
+
 ## Offline sync
 
-`OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs. A
-queued time entry replayed later goes through the same triggers, so a mutation
-captured offline needs no rate on it either.
+`OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with
+typed replays. Time entries, safety incidents, expenses and punch list items
+are queued as JSON and replayed into their table by
+`SyncEngine.genericTables`; the DTOs carry explicit snake_case keys so the
+payload goes to PostgREST unchanged. A queued time entry replayed later goes
+through the same triggers, so a mutation captured offline needs no rate on it
+either. RFIs, submittals and change orders need a connection.
