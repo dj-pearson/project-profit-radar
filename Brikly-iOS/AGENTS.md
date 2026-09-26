@@ -95,6 +95,26 @@ CHECK constraint: `daily_report`, `punch_list`, `progress`, `safety`,
 `daily_reports.photos` (dual write, same as web). Images are downscaled to a
 2048 px long edge before upload. Upload needs a connection.
 
+### Equipment
+
+Equipment tab: fleet list, detail, maintenance log, project bookings, QR
+labels and scanning. Two separate things, as on web:
+
+- **QR scans** go through `process_equipment_qr_scan` and are what move
+  `equipment.status` (`check_out` sets `in_use`, `check_in` sets
+  `available`). The label encodes the JSON string `generate_equipment_qr_code`
+  stores in `equipment_qr_codes.qr_code_value`; render the label from that
+  value, because the server looks the scan up by exact string. iOS parses the
+  JSON only to reject another company's or a non-Brikly code early.
+- **Bookings** are `equipment_assignments` rows (project + date range). They
+  don't change `equipment.status`; iOS doesn't write `equipment` at all
+  (RLS limits it to admin, PM, office staff).
+
+iOS is the first writer of `equipment_maintenance_records`
+(`work_order_number` comes from a trigger). Migration `20260926020000`
+scoped both QR functions and both equipment views to the caller's company,
+fixed the `location_update` scan, and fills `equipment_qr_codes.site_id`.
+
 ## Offline sync
 
 `OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with

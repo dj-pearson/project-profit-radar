@@ -299,6 +299,49 @@ final class BriklyTests: XCTestCase {
         XCTAssertEqual(max(decoded.size.width, decoded.size.height), PhotoProcessing.maxDimension)
     }
 
+    // MARK: - Equipment
+
+    func testEquipmentLabelParsesServerQRValue() {
+        // Shape built by generate_equipment_qr_code.
+        let raw = #"{"equipmentId" : "e1", "companyId" : "c1", "name" : "Lift", "serialNumber" : null, "type" : "equipment_checkout", "version" : "1.0", "generatedAt" : "2026-09-26T10:00:00+00:00"}"#
+        let label = EquipmentLabel.parse(raw)
+        XCTAssertEqual(label?.equipmentId, "e1")
+        XCTAssertEqual(label?.companyId, "c1")
+        XCTAssertNil(EquipmentLabel.parse("https://example.com/not-ours"))
+        XCTAssertNil(EquipmentLabel.parse(#"{"equipmentId":"e1","companyId":"c1","type":"something_else"}"#))
+    }
+
+    func testEquipmentStatusFoldsWebVariants() throws {
+        func status(_ value: String) throws -> EquipmentStatus {
+            let json = """
+            {"id":"e1","company_id":"c1","name":"X","equipment_type":"lift","status":"\(value)","created_at":"2024-01-01T00:00:00+00:00"}
+            """
+            return try decode(Equipment.self, from: json).displayStatus
+        }
+        XCTAssertEqual(try status("checked_out"), .inUse)
+        XCTAssertEqual(try status("assigned"), .inUse)
+        XCTAssertEqual(try status("maintenance"), .maintenance)
+        XCTAssertEqual(try status("something_new"), .available)
+    }
+
+    /// Values the database CHECK constraints accept.
+    func testEquipmentEnumsMatchCheckConstraints() {
+        let scanTypes: Set<String> = ["check_out", "check_in", "inspection", "location_update", "maintenance", "verification"]
+        XCTAssertTrue(Set(EquipmentScanType.allCases.map(\.rawValue)).isSubset(of: scanTypes))
+        XCTAssertEqual(Set(ScanCondition.allCases.map(\.rawValue)), ["excellent", "good", "fair", "poor", "needs_repair"])
+        XCTAssertEqual(Set(MaintenanceType.allCases.map(\.rawValue)),
+                       ["preventive", "corrective", "emergency", "inspection", "calibration", "overhaul", "seasonal"])
+        XCTAssertEqual(Set(MaintenanceCondition.allCases.map(\.rawValue)), ["excellent", "good", "fair", "poor", "needs_followup"])
+    }
+
+    func testEquipmentScanParamsUseRPCArgumentNames() throws {
+        let params = EquipmentScanParams(pQrCodeValue: "{}", pScanType: "check_out", pProjectId: "p1")
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) as? [String: Any]
+        )
+        XCTAssertEqual(Set(object.keys), ["p_qr_code_value", "p_scan_type", "p_project_id"])
+    }
+
     // MARK: - Helpers
 
     private func decode<T: Decodable>(_ type: T.Type, from jsonString: String) throws -> T {

@@ -100,6 +100,14 @@
 		AA000134 /* CrewCheckInSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000134; };
 		AA000135 /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000135; };
 		AA000136 /* ProjectPhotosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000136; };
+		AA000137 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000137; };
+		AA000138 /* EquipmentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000138; };
+		AA000139 /* EquipmentViewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000139; };
+		AA000140 /* EquipmentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000140; };
+		AA000141 /* EquipmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000141; };
+		AA000142 /* EquipmentForms.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000142; };
+		AA000143 /* EquipmentScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000143; };
+		AA000144 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000144; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -200,6 +208,14 @@
 		AB000134 /* CrewCheckInSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrewCheckInSection.swift; sourceTree = "<group>"; };
 		AB000135 /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
 		AB000136 /* ProjectPhotosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPhotosView.swift; sourceTree = "<group>"; };
+		AB000137 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
+		AB000138 /* EquipmentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentService.swift; sourceTree = "<group>"; };
+		AB000139 /* EquipmentViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentViewModels.swift; sourceTree = "<group>"; };
+		AB000140 /* EquipmentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentListView.swift; sourceTree = "<group>"; };
+		AB000141 /* EquipmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentDetailView.swift; sourceTree = "<group>"; };
+		AB000142 /* EquipmentForms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentForms.swift; sourceTree = "<group>"; };
+		AB000143 /* EquipmentScanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentScanSheet.swift; sourceTree = "<group>"; };
+		AB000144 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -277,6 +293,7 @@
 				AB000107 /* TimeEntry.swift */,
 				AB000128 /* CrewAssignment.swift */,
 				AB000129 /* ProjectPhoto.swift */,
+				AB000137 /* Equipment.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -300,6 +317,7 @@
 				AB000112 /* TimeEntryService.swift */,
 				AB000130 /* CrewService.swift */,
 				AB000131 /* PhotoService.swift */,
+				AB000138 /* EquipmentService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -320,6 +338,7 @@
 				AB000116 /* TimeClockViewModel.swift */,
 				AB000132 /* CrewCheckInViewModel.swift */,
 				AB000133 /* ProjectPhotosViewModel.swift */,
+				AB000139 /* EquipmentViewModels.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -347,6 +366,7 @@
 				AD000107 /* TimeClock */,
 				AD000108 /* Crew */,
 				AD000109 /* Photos */,
+				AD000110 /* Equipment */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -548,6 +568,18 @@
 			path = Photos;
 			sourceTree = "<group>";
 		};
+		AD000110 /* Equipment */ = {
+			isa = PBXGroup;
+			children = (
+				AB000140 /* EquipmentListView.swift */,
+				AB000141 /* EquipmentDetailView.swift */,
+				AB000142 /* EquipmentForms.swift */,
+				AB000143 /* EquipmentScanSheet.swift */,
+				AB000144 /* QRScannerView.swift */,
+			);
+			path = Equipment;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -627,6 +659,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* BriklyApp.swift in Sources */,
+				AA000144 /* QRScannerView.swift in Sources */,
+				AA000143 /* EquipmentScanSheet.swift in Sources */,
+				AA000142 /* EquipmentForms.swift in Sources */,
+				AA000141 /* EquipmentDetailView.swift in Sources */,
+				AA000140 /* EquipmentListView.swift in Sources */,
+				AA000139 /* EquipmentViewModels.swift in Sources */,
+				AA000138 /* EquipmentService.swift in Sources */,
+				AA000137 /* Equipment.swift in Sources */,
 				AA000136 /* ProjectPhotosView.swift in Sources */,
 				AA000135 /* CameraPicker.swift in Sources */,
 				AA000134 /* CrewCheckInSection.swift in Sources */,
