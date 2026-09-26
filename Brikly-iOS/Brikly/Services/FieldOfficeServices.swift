@@ -214,6 +214,13 @@ actor ChatService {
     func realtimeChannel(channelId: String) -> RealtimeChannelV2 {
         client.realtimeV2.channel("chat_\(channelId)")
     }
+
+    /// Unsubscribe and drop the channel from the client's cache, so reopening
+    /// the chat gets a fresh channel instead of the old, already-subscribed
+    /// one (which accepts no new postgres_changes listeners).
+    func removeRealtime(_ channel: RealtimeChannelV2) async {
+        await client.realtimeV2.removeChannel(channel)
+    }
 }
 
 actor TimesheetService {

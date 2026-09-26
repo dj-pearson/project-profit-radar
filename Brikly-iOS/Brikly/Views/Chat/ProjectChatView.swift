@@ -77,8 +77,9 @@ final class ProjectChatViewModel {
     }
 
     func stopListening() async {
-        await realtime?.unsubscribe()
+        guard let channel = realtime else { return }
         realtime = nil
+        await service.removeRealtime(channel)
     }
 }
 
@@ -90,7 +91,7 @@ struct ProjectChatView: View {
     @State private var viewModel = ProjectChatViewModel()
     @FocusState private var composerFocused: Bool
 
-    private var userId: String { auth.userProfile?.id ?? "" }
+    private var userId: String? { auth.userProfile?.id }
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -99,7 +100,10 @@ struct ProjectChatView: View {
             if viewModel.isLoading {
                 LoadingView(message: "Opening chat...")
             } else if viewModel.channel == nil, let error = viewModel.errorMessage {
-                ErrorView(message: error) { await open() }
+                ErrorView(message: error) {
+                    await open()
+                    await viewModel.listen()
+                }
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -148,6 +152,7 @@ struct ProjectChatView: View {
                         .textFieldStyle(.roundedBorder)
                         .focused($composerFocused)
                     Button {
+                        guard let userId else { return }
                         Task { await viewModel.send(companyId: companyId, userId: userId) }
                     } label: {
                         Image(systemName: "arrow.up.circle.fill").font(.title2)
@@ -169,6 +174,7 @@ struct ProjectChatView: View {
     }
 
     private func open() async {
+        guard let userId else { return }
         await viewModel.open(project: project, companyId: companyId, userId: userId)
     }
 }

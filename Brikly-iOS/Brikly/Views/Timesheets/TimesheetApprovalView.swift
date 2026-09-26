@@ -13,15 +13,20 @@ final class TimesheetApprovalViewModel {
     private let service = TimesheetService()
 
     struct WorkerGroup: Identifiable {
+        let userId: String
         let worker: String
         let entries: [PendingTimesheet]
-        var id: String { worker }
+        var id: String { userId }
         var hours: Double { entries.reduce(0) { $0 + ($1.totalHours ?? 0) } }
     }
 
     var byWorker: [WorkerGroup] {
-        Dictionary(grouping: entries, by: \.displayWorker)
-            .map { WorkerGroup(worker: $0.key, entries: $0.value.sorted { $0.startTime > $1.startTime }) }
+        // By person, not name: two crew members can share one.
+        Dictionary(grouping: entries, by: \.userId)
+            .map { key, rows in
+                WorkerGroup(userId: key, worker: rows.first?.displayWorker ?? "Crew member",
+                            entries: rows.sorted { $0.startTime > $1.startTime })
+            }
             .sorted { $0.worker < $1.worker }
     }
 
@@ -77,8 +82,11 @@ struct TimesheetApprovalView: View {
     @State private var viewModel = TimesheetApprovalViewModel()
     @State private var rejecting: [String]?
     @State private var reason = ""
+    /// Selecting several is a mode, so swipe actions work the rest of the time.
+    @State private var editMode: EditMode = .inactive
 
-    private var approverId: String { auth.userProfile?.id ?? "" }
+    /// Only sent because the RPC signature has it; the server uses the session.
+    private var approverId: String { auth.userProfile?.id ?? "00000000-0000-0000-0000-000000000000" }
 
     var body: some View {
         NavigationStack {
@@ -116,7 +124,7 @@ struct TimesheetApprovalView: View {
                             Section { Text(error).foregroundStyle(Color.brandDanger) }
                         }
                     }
-                    .environment(\.editMode, .constant(.active))
+                    .environment(\.editMode, $editMode)
                     .refreshable { await viewModel.load() }
                 }
             }
@@ -124,6 +132,15 @@ struct TimesheetApprovalView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(editMode.isEditing ? "Cancel" : "Select") {
+                        withAnimation {
+                            editMode = editMode.isEditing ? .inactive : .active
+                            if !editMode.isEditing { viewModel.selected = [] }
+                        }
+                    }
+                    .disabled(viewModel.entries.isEmpty)
+                }
                 ToolbarItemGroup(placement: .bottomBar) {
                     Button("Reject \(viewModel.selected.count)") { rejecting = Array(viewModel.selected) }
                         .disabled(viewModel.selected.isEmpty || viewModel.isWorking)

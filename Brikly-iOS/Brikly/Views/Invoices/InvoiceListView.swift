@@ -197,8 +197,10 @@ struct InvoiceDetailView: View {
     }
 
     private func loadDetail() async {
-        async let items = service.lineItems(invoiceId: invoice.id)
-        async let paid = service.payments(invoiceId: invoice.id)
+        let service = self.service
+        let id = invoice.id
+        async let items = service.lineItems(invoiceId: id)
+        async let paid = service.payments(invoiceId: id)
         let freshItems = try? await items
         if let freshItems { lineItems = freshItems }
         let freshPayments = try? await paid
@@ -215,9 +217,12 @@ struct InvoiceDetailView: View {
         do {
             try await service.recordPayment(invoiceId: invoice.id, amount: amount, notes: notes)
             message = "Payment of \(CurrencyFormatter.format(amount)) recorded."
+            // Before touching amountPaid: balance falls back to it when
+            // amountDue is nil, and would subtract the payment twice.
+            let newDue = max(0, invoice.balance - amount)
             invoice.amountPaid = (invoice.amountPaid ?? 0) + amount
-            invoice.amountDue = max(0, invoice.balance - amount)
-            if invoice.amountDue == 0 { invoice.status = "paid" }
+            invoice.amountDue = newDue
+            if newDue == 0 { invoice.status = "paid" }
             await refreshInvoice()
             return true
         } catch {
