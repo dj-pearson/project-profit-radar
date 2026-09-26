@@ -117,6 +117,7 @@
 		AA000151 /* InvoiceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000151; };
 		AA000152 /* ProjectChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000152; };
 		AA000153 /* TimesheetApprovalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000153; };
+		AA000154 /* PushNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000154; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -234,6 +235,7 @@
 		AB000151 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
 		AB000152 /* ProjectChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectChatView.swift; sourceTree = "<group>"; };
 		AB000153 /* TimesheetApprovalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimesheetApprovalView.swift; sourceTree = "<group>"; };
+		AB000154 /* PushNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -341,6 +343,7 @@
 				AB000131 /* PhotoService.swift */,
 				AB000138 /* EquipmentService.swift */,
 				AB000149 /* FieldOfficeServices.swift */,
+				AB000154 /* PushNotificationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -718,6 +721,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* BriklyApp.swift in Sources */,
+				AA000154 /* PushNotificationService.swift in Sources */,
 				AA000153 /* TimesheetApprovalView.swift in Sources */,
 				AA000152 /* ProjectChatView.swift in Sources */,
 				AA000151 /* InvoiceListView.swift in Sources */,

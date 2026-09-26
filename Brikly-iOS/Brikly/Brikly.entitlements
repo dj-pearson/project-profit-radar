@@ -3,10 +3,14 @@
 <plist version="1.0">
 <dict>
 	<!--
-	aps-environment and com.apple.developer.location.push intentionally
-	omitted until push notifications and background location are implemented.
-	Declaring entitlements without using them increases App Store review risk.
+	Push notifications ship with the Alerts tab (deliver-apns). Xcode writes
+	"production" into this key when it exports for TestFlight / App Store.
+	com.apple.developer.location.push stays omitted: there is no background
+	location, and declaring unused entitlements invites App Store review
+	questions.
 	-->
+	<key>aps-environment</key>
+	<string>development</string>
 
 	<!-- Keychain Access Groups for secure token storage -->
 	<key>keychain-access-groups</key>

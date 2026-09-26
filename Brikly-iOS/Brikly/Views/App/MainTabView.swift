@@ -32,7 +32,15 @@ struct MainTabView: View {
                 .badge(notifications.unreadCount)
                 .tag(Tab.alerts)
         }
-        .task(id: auth.userProfile?.id) { await loadAlerts() }
+        .task(id: auth.userProfile?.id) {
+            await loadAlerts()
+            await PushNotificationService.shared.registerIfAuthorized()
+        }
+        .onChange(of: PushNotificationService.shared.openAlertsRequested) {
+            guard PushNotificationService.shared.openAlertsRequested else { return }
+            PushNotificationService.shared.openAlertsRequested = false
+            selection = .alerts
+        }
         .onChange(of: selection) {
             if selection == .alerts { Task { await loadAlerts() } }
         }

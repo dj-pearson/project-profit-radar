@@ -139,6 +139,20 @@ fixed the `location_update` scan, and fills `equipment_qr_codes.site_id`.
 
 All four rely on migration `20260926030000`.
 
+### Push notifications
+
+- The app asks for permission from the Alerts tab (never at launch), then
+  registers on every sign-in because APNs rotates tokens. The token goes to
+  `register_device_push_token` (`device_push_tokens`), tagged `sandbox` for
+  Xcode debug builds and `production` otherwise. Sign-out deletes it first.
+- Delivery: a Database Webhook on INSERT into `real_time_notifications`
+  calls the internal `deliver-apns` edge function, which signs with the APNs
+  key (secrets `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY`, optional
+  `APNS_BUNDLE_ID`) and prunes tokens APNs reports dead. Without the secrets
+  it answers `sent: 0` and the alert still shows in the app.
+- Tapping a notification opens the Alerts tab.
+- `brikly.push.deviceToken` (UserDefaults) is an on-device storage contract.
+
 ## Offline sync
 
 `OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with

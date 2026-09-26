@@ -127,6 +127,8 @@ final class AuthViewModel {
 
     /// Sign out.
     func signOut() async {
+        // While the session is still valid, so the delete passes RLS.
+        await PushNotificationService.shared.unregister()
         do {
             try await authService.signOut()
         } catch {

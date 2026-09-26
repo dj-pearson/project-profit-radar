@@ -8,6 +8,35 @@ struct NotificationListView: View {
 
     var body: some View {
         NavigationStack {
+            VStack(spacing: 0) {
+                if PushNotificationService.shared.authorization == .notDetermined {
+                    Button {
+                        Task { await PushNotificationService.shared.requestPermission() }
+                    } label: {
+                        Label("Get these on your lock screen too", systemImage: "bell.badge")
+                            .font(.subheadline.weight(.medium))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding()
+                }
+                content
+            }
+            .navigationTitle("Alerts")
+            .toolbar {
+                if viewModel.unreadCount > 0 {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Mark All Read") {
+                            Task { await viewModel.markAllRead(recipientId: recipientId) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
             Group {
                 if viewModel.isLoading {
                     LoadingView(message: "Loading alerts...")
@@ -33,17 +62,6 @@ struct NotificationListView: View {
                     .refreshable { await viewModel.load(recipientId: recipientId) }
                 }
             }
-            .navigationTitle("Alerts")
-            .toolbar {
-                if viewModel.unreadCount > 0 {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Mark All Read") {
-                            Task { await viewModel.markAllRead(recipientId: recipientId) }
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
