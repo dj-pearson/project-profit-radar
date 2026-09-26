@@ -40,11 +40,15 @@
 	<!--
 	Add a usage description ONLY when the corresponding feature actually ships;
 	requesting permissions the app does not use causes App Store review rejection.
-	Location (when in use) ships with the time clock's job-site geofence check.
+	Location (when in use) ships with the time clock's job-site geofence check
+	and crew check-in. Camera ships with project photos; the photo library is
+	read through PhotosPicker, which needs no usage description.
 	UIBackgroundModes are intentionally not declared.
 	-->
+	<key>NSCameraUsageDescription</key>
+	<string>Brikly uses the camera to take job-site photos for your project and daily reports.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Brikly checks that you're at the job site when you clock in, and records that location on your time entry.</string>
+	<string>Brikly checks that you're at the job site when you clock in or check in, and records that location on your time entry or crew assignment.</string>
 
 	<!-- App-Bound Domains (required when limitsNavigationsToAppBoundDomains is true) -->
 	<key>WKAppBoundDomains</key>

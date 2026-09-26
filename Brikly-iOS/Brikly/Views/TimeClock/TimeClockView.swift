@@ -4,6 +4,7 @@ struct TimeClockView: View {
     @Environment(AuthViewModel.self) private var auth
     @Environment(\.openURL) private var openURL
     @State private var viewModel = TimeClockViewModel()
+    @State private var crew = CrewCheckInViewModel()
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -17,6 +18,18 @@ struct TimeClockView: View {
                 } else {
                     Form {
                         statusSection
+
+                        CrewCheckInSection(
+                            viewModel: crew,
+                            projectName: { viewModel.project(for: $0)?.name ?? "Assigned project" },
+                            userId: auth.userProfile?.id ?? "",
+                            onVerified: { projectId in
+                                // Line the clock up with the site just checked into.
+                                if !viewModel.isClockedIn, viewModel.project(for: projectId) != nil {
+                                    viewModel.selectedProjectId = projectId
+                                }
+                            }
+                        )
 
                         if !viewModel.isClockedIn {
                             Section("Job") {
@@ -191,7 +204,9 @@ struct TimeClockView: View {
 
     private func reload() async {
         guard let userId = auth.userProfile?.id, let companyId = auth.companyId else { return }
-        await viewModel.load(userId: userId, companyId: companyId)
+        async let clock: Void = viewModel.load(userId: userId, companyId: companyId)
+        async let assignments: Void = crew.load(userId: userId)
+        _ = await (clock, assignments)
     }
 
     static func duration(_ hours: Double) -> String {

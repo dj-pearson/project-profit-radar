@@ -91,6 +91,15 @@
 		AA000125 /* ChipFilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000125; };
 		AA000126 /* SubmittalListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000126; };
 		AA000127 /* TimeClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000127; };
+		AA000128 /* CrewAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000128; };
+		AA000129 /* ProjectPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000129; };
+		AA000130 /* CrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000130; };
+		AA000131 /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000131; };
+		AA000132 /* CrewCheckInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000132; };
+		AA000133 /* ProjectPhotosViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000133; };
+		AA000134 /* CrewCheckInSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000134; };
+		AA000135 /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000135; };
+		AA000136 /* ProjectPhotosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000136; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -182,6 +191,15 @@
 		AB000125 /* ChipFilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipFilterBar.swift; sourceTree = "<group>"; };
 		AB000126 /* SubmittalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubmittalListView.swift; sourceTree = "<group>"; };
 		AB000127 /* TimeClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeClockView.swift; sourceTree = "<group>"; };
+		AB000128 /* CrewAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrewAssignment.swift; sourceTree = "<group>"; };
+		AB000129 /* ProjectPhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPhoto.swift; sourceTree = "<group>"; };
+		AB000130 /* CrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrewService.swift; sourceTree = "<group>"; };
+		AB000131 /* PhotoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoService.swift; sourceTree = "<group>"; };
+		AB000132 /* CrewCheckInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrewCheckInViewModel.swift; sourceTree = "<group>"; };
+		AB000133 /* ProjectPhotosViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPhotosViewModel.swift; sourceTree = "<group>"; };
+		AB000134 /* CrewCheckInSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrewCheckInSection.swift; sourceTree = "<group>"; };
+		AB000135 /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
+		AB000136 /* ProjectPhotosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPhotosView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +275,8 @@
 				AB000105 /* SafetyIncident.swift */,
 				AB000106 /* Submittal.swift */,
 				AB000107 /* TimeEntry.swift */,
+				AB000128 /* CrewAssignment.swift */,
+				AB000129 /* ProjectPhoto.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -278,6 +298,8 @@
 				AB000110 /* NotificationService.swift */,
 				AB000111 /* RecordService.swift */,
 				AB000112 /* TimeEntryService.swift */,
+				AB000130 /* CrewService.swift */,
+				AB000131 /* PhotoService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -296,6 +318,8 @@
 				AB000114 /* NotificationListViewModel.swift */,
 				AB000115 /* RecordListViewModel.swift */,
 				AB000116 /* TimeClockViewModel.swift */,
+				AB000132 /* CrewCheckInViewModel.swift */,
+				AB000133 /* ProjectPhotosViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -321,6 +345,8 @@
 				AD000105 /* Safety */,
 				AD000106 /* Submittals */,
 				AD000107 /* TimeClock */,
+				AD000108 /* Crew */,
+				AD000109 /* Photos */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -505,6 +531,23 @@
 			path = TimeClock;
 			sourceTree = "<group>";
 		};
+		AD000108 /* Crew */ = {
+			isa = PBXGroup;
+			children = (
+				AB000134 /* CrewCheckInSection.swift */,
+			);
+			path = Crew;
+			sourceTree = "<group>";
+		};
+		AD000109 /* Photos */ = {
+			isa = PBXGroup;
+			children = (
+				AB000135 /* CameraPicker.swift */,
+				AB000136 /* ProjectPhotosView.swift */,
+			);
+			path = Photos;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -584,6 +627,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* BriklyApp.swift in Sources */,
+				AA000136 /* ProjectPhotosView.swift in Sources */,
+				AA000135 /* CameraPicker.swift in Sources */,
+				AA000134 /* CrewCheckInSection.swift in Sources */,
+				AA000133 /* ProjectPhotosViewModel.swift in Sources */,
+				AA000132 /* CrewCheckInViewModel.swift in Sources */,
+				AA000131 /* PhotoService.swift in Sources */,
+				AA000130 /* CrewService.swift in Sources */,
+				AA000129 /* ProjectPhoto.swift in Sources */,
+				AA000128 /* CrewAssignment.swift in Sources */,
 				AA000127 /* TimeClockView.swift in Sources */,
 				AA000126 /* SubmittalListView.swift in Sources */,
 				AA000125 /* ChipFilterBar.swift in Sources */,

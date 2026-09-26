@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import Brikly
 
@@ -254,6 +255,48 @@ final class BriklyTests: XCTestCase {
     func testChangeOrderPermissionsMatchEdgeFunction() {
         XCTAssertTrue(ChangeOrderPermissions.canManage(role: "project_manager"))
         XCTAssertFalse(ChangeOrderPermissions.canManage(role: "field_supervisor"))
+    }
+
+    // MARK: - Crew check-in and photos
+
+    func testCrewCheckInResultDecodesRPCShape() throws {
+        let json = """
+        {"success": true, "verified": false, "distance_meters": 1000.75,
+         "allowed_radius_meters": 150, "message": "You are 1001m from the site."}
+        """
+        let result = try decode(CrewCheckInResult.self, from: json)
+        XCTAssertTrue(result.success)
+        XCTAssertEqual(result.verified, false)
+        XCTAssertEqual(result.distanceMeters, 1000.75)
+        XCTAssertEqual(result.allowedRadiusMeters, 150)
+    }
+
+    func testCrewCheckInParamsUseRPCArgumentNames() throws {
+        let params = CrewCheckInParams(pAssignmentId: "a1", pLatitude: 40, pLongitude: -105, pAccuracy: 5)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) as? [String: Any]
+        )
+        XCTAssertEqual(Set(object.keys), ["p_assignment_id", "p_latitude", "p_longitude", "p_accuracy"])
+    }
+
+    /// photo_attachments.source has a CHECK on exactly these values.
+    func testPhotoSourceValuesMatchCheckConstraint() {
+        XCTAssertEqual(
+            Set(PhotoSource.allCases.map(\.rawValue)),
+            ["daily_report", "punch_list", "progress", "safety", "other"]
+        )
+    }
+
+    func testPhotoProcessingDownscalesLongEdge() throws {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let big = UIGraphicsImageRenderer(size: CGSize(width: 4000, height: 3000), format: format).image { ctx in
+            UIColor.gray.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 4000, height: 3000))
+        }
+        let data = try XCTUnwrap(PhotoProcessing.jpeg(from: big))
+        let decoded = try XCTUnwrap(UIImage(data: data))
+        XCTAssertEqual(max(decoded.size.width, decoded.size.height), PhotoProcessing.maxDimension)
     }
 
     // MARK: - Helpers

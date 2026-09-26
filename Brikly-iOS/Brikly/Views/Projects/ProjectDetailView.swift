@@ -49,6 +49,12 @@ struct ProjectDetailView: View {
             }
 
             Section("Field") {
+                link("Crew on Site", icon: "person.3") {
+                    CrewPresenceView(projectId: project.id)
+                }
+                link("Photos", icon: "photo.on.rectangle") {
+                    ProjectPhotosView(project: project, companyId: companyId)
+                }
                 link("Tasks", icon: "checklist") {
                     TaskListView(projectId: project.id, companyId: companyId, siteId: siteId)
                 }

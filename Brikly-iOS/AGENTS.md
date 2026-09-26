@@ -74,6 +74,27 @@ status values (`RFIs.tsx`, `PunchList.tsx`, `SafetyIncidentForm.tsx`,
 `real_time_notifications` (missing from the generated `types.ts`, but present
 in migrations).
 
+### Crew check-in
+
+Check-in calls `verify_crew_gps_checkin(p_assignment_id, p_latitude,
+p_longitude, p_accuracy)`; the server measures the distance and sets
+`gps_checkin_verified`, `is_onsite` and `status`. The device never decides
+whether someone is on site. Check-out is the same direct update web makes
+(`gps_checkout_*`, `is_onsite = false`, `status = completed`). Both need a
+connection. Migration `20260926000000` fixed the RPC, which read columns that
+don't exist and failed on every call before it.
+
+### Photos
+
+`photo_attachments` is the photo record (US-330); files go to the private
+`project-documents` bucket at `<projectId>/photos/<uuid>.jpg`, or
+`<projectId>/daily-reports/...` when attached to a report. The bucket
+policies key on the first path segment being a project id. `source` has a
+CHECK constraint: `daily_report`, `punch_list`, `progress`, `safety`,
+`other`. A photo attached to a daily report is also appended to
+`daily_reports.photos` (dual write, same as web). Images are downscaled to a
+2048 px long edge before upload. Upload needs a connection.
+
 ## Offline sync
 
 `OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with
