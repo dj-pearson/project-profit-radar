@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import Brikly
 
@@ -157,6 +158,241 @@ final class BriklyTests: XCTestCase {
         """
         let project = try decode(Project.self, from: json)
         XCTAssertEqual(project.effectiveBudget, 25_000)
+    }
+
+    // MARK: - Time clock
+
+    func testTimeEntryWorkedHoursExcludesBreaks() throws {
+        let json = """
+        {
+          "id": "t1",
+          "user_id": "u1",
+          "project_id": "p1",
+          "start_time": "2024-01-15T08:00:00+00:00",
+          "break_duration": 30,
+          "created_at": "2024-01-15T08:00:00+00:00"
+        }
+        """
+        let entry = try decode(TimeEntry.self, from: json)
+        XCTAssertTrue(entry.isOpen)
+        let fourHoursLater = entry.startTime.addingTimeInterval(4 * 3600)
+        XCTAssertEqual(entry.workedHours(now: fourHoursLater), 3.5, accuracy: 0.0001)
+    }
+
+    func testClosedTimeEntryUsesStoredTotal() throws {
+        let json = """
+        {
+          "id": "t1",
+          "user_id": "u1",
+          "project_id": "p1",
+          "start_time": "2024-01-15T08:00:00+00:00",
+          "end_time": "2024-01-15T16:00:00+00:00",
+          "total_hours": 7.5
+        }
+        """
+        let entry = try decode(TimeEntry.self, from: json)
+        XCTAssertFalse(entry.isOpen)
+        XCTAssertEqual(entry.workedHours(), 7.5)
+    }
+
+    /// Rates and company_id are server-owned (AGENTS.md, US-321); the clock-in
+    /// payload must never carry them.
+    func testNewTimeEntryPayloadHasNoServerOwnedFields() throws {
+        let entry = NewTimeEntry(
+            userId: "u1", projectId: "p1", costCodeId: "cc1", siteId: nil,
+            startTime: "2024-01-15T08:00:00Z", endTime: nil, totalHours: nil,
+            breakDuration: 0, description: nil, gpsLatitude: 1, gpsLongitude: 2,
+            locationAccuracy: 5, isGeofenceVerified: true, geofenceDistanceMeters: 12,
+            geofenceBreachDetected: false
+        )
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any]
+        )
+        XCTAssertEqual(object["cost_code_id"] as? String, "cc1")
+        // Device-generated, so a retried write lands on the same row.
+        XCTAssertEqual((object["id"] as? String)?.count, 36)
+        XCTAssertEqual(object["is_geofence_verified"] as? Bool, true)
+        for key in ["company_id", "hourly_rate", "burden_rate", "labor_cost", "site_id", "end_time"] {
+            XCTAssertNil(object[key], "\(key) should not be sent")
+        }
+    }
+
+    // MARK: - Project records
+
+    func testRecordNumberMatchesWebFormat() {
+        let number = RecordNumber.make("RFI")
+        XCTAssertTrue(number.hasPrefix("RFI-"))
+        XCTAssertEqual(number.count, 12)
+        XCTAssertTrue(number.dropFirst(4).allSatisfy(\.isNumber))
+    }
+
+    func testDisplayDateDoesNotShiftAcrossTimeZones() {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = TimeZone(identifier: "America/Los_Angeles")!
+        XCTAssertTrue(DateFormatting.displayDate("2024-01-15").contains("15"))
+        XCTAssertEqual(DateFormatting.displayDate(nil), "\u{2014}")
+    }
+
+    func testChangeOrderDecodesFromEdgeEnvelopeAndSummarizesApproval() throws {
+        let json = """
+        {
+          "id": "co1",
+          "change_order_number": "CO-003",
+          "title": "Add outlet",
+          "amount": 450.5,
+          "status": "pending",
+          "internal_approved": true,
+          "client_approved": null,
+          "project_id": "p1",
+          "projects": { "name": "X", "client_name": "Y" }
+        }
+        """
+        let order = try decode(ChangeOrder.self, from: json)
+        XCTAssertEqual(order.changeOrderNumber, "CO-003")
+        XCTAssertEqual(order.amount, 450.5)
+        XCTAssertEqual(order.approvalSummary, "Awaiting client")
+    }
+
+    func testChangeOrderPermissionsMatchEdgeFunction() {
+        XCTAssertTrue(ChangeOrderPermissions.canManage(role: "project_manager"))
+        XCTAssertFalse(ChangeOrderPermissions.canManage(role: "field_supervisor"))
+    }
+
+    // MARK: - Crew check-in and photos
+
+    func testCrewCheckInResultDecodesRPCShape() throws {
+        let json = """
+        {"success": true, "verified": false, "distance_meters": 1000.75,
+         "allowed_radius_meters": 150, "message": "You are 1001m from the site."}
+        """
+        let result = try decode(CrewCheckInResult.self, from: json)
+        XCTAssertTrue(result.success)
+        XCTAssertEqual(result.verified, false)
+        XCTAssertEqual(result.distanceMeters, 1000.75)
+        XCTAssertEqual(result.allowedRadiusMeters, 150)
+    }
+
+    func testCrewCheckInParamsUseRPCArgumentNames() throws {
+        let params = CrewCheckInParams(pAssignmentId: "a1", pLatitude: 40, pLongitude: -105, pAccuracy: 5)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) as? [String: Any]
+        )
+        XCTAssertEqual(Set(object.keys), ["p_assignment_id", "p_latitude", "p_longitude", "p_accuracy"])
+    }
+
+    /// photo_attachments.source has a CHECK on exactly these values.
+    func testPhotoSourceValuesMatchCheckConstraint() {
+        XCTAssertEqual(
+            Set(PhotoSource.allCases.map(\.rawValue)),
+            ["daily_report", "punch_list", "progress", "safety", "other"]
+        )
+    }
+
+    func testPhotoProcessingDownscalesLongEdge() throws {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let big = UIGraphicsImageRenderer(size: CGSize(width: 4000, height: 3000), format: format).image { ctx in
+            UIColor.gray.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 4000, height: 3000))
+        }
+        let data = try XCTUnwrap(PhotoProcessing.jpeg(from: big))
+        let decoded = try XCTUnwrap(UIImage(data: data))
+        XCTAssertEqual(max(decoded.size.width, decoded.size.height), PhotoProcessing.maxDimension)
+    }
+
+    // MARK: - Equipment
+
+    func testEquipmentLabelParsesServerQRValue() {
+        // Shape built by generate_equipment_qr_code.
+        let raw = "{\"equipmentId\" : \"e1\", \"companyId\" : \"c1\", \"name\" : \"Lift\", \"serialNumber\" : null, \"type\" : \"equipment_checkout\", \"version\" : \"1.0\", \"generatedAt\" : \"2026-09-26T10:00:00+00:00\"}"
+        let label = EquipmentLabel.parse(raw)
+        XCTAssertEqual(label?.equipmentId, "e1")
+        XCTAssertEqual(label?.companyId, "c1")
+        XCTAssertNil(EquipmentLabel.parse("https://example.com/not-ours"))
+        XCTAssertNil(EquipmentLabel.parse("{\"equipmentId\":\"e1\",\"companyId\":\"c1\",\"type\":\"something_else\"}"))
+    }
+
+    func testEquipmentStatusFoldsWebVariants() throws {
+        func status(_ value: String) throws -> EquipmentStatus {
+            let json = """
+            {"id":"e1","company_id":"c1","name":"X","equipment_type":"lift","status":"\(value)","created_at":"2024-01-01T00:00:00+00:00"}
+            """
+            return try decode(Equipment.self, from: json).displayStatus
+        }
+        XCTAssertEqual(try status("checked_out"), .inUse)
+        XCTAssertEqual(try status("assigned"), .inUse)
+        XCTAssertEqual(try status("maintenance"), .maintenance)
+        XCTAssertEqual(try status("something_new"), .available)
+    }
+
+    /// Values the database CHECK constraints accept.
+    func testEquipmentEnumsMatchCheckConstraints() {
+        let scanTypes: Set<String> = ["check_out", "check_in", "inspection", "location_update", "maintenance", "verification"]
+        XCTAssertTrue(Set(EquipmentScanType.allCases.map(\.rawValue)).isSubset(of: scanTypes))
+        XCTAssertEqual(Set(ScanCondition.allCases.map(\.rawValue)), ["excellent", "good", "fair", "poor", "needs_repair"])
+        XCTAssertEqual(Set(MaintenanceType.allCases.map(\.rawValue)),
+                       ["preventive", "corrective", "emergency", "inspection", "calibration", "overhaul", "seasonal"])
+        XCTAssertEqual(Set(MaintenanceCondition.allCases.map(\.rawValue)), ["excellent", "good", "fair", "poor", "needs_followup"])
+    }
+
+    func testEquipmentScanParamsUseRPCArgumentNames() throws {
+        let params = EquipmentScanParams(pQrCodeValue: "{}", pScanType: "check_out", pProjectId: "p1")
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) as? [String: Any]
+        )
+        XCTAssertEqual(Set(object.keys), ["p_qr_code_value", "p_scan_type", "p_project_id"])
+    }
+
+    // MARK: - Materials, invoices, chat, timesheets
+
+    func testRPCParamsUseServerArgumentNames() throws {
+        func keys(_ value: some Encodable) throws -> Set<String> {
+            let object = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as? [String: Any]
+            )
+            return Set(object.keys)
+        }
+        XCTAssertEqual(
+            try keys(LogMaterialUsageParams(pMaterialId: "m", pProjectId: "p", pQuantity: 2, pNotes: "x")),
+            ["p_material_id", "p_project_id", "p_quantity", "p_notes"]
+        )
+        XCTAssertEqual(
+            try keys(NewChatMessage(channelId: "c", companyId: "co", userId: "u", content: "hi")),
+            ["channel_id", "company_id", "user_id", "content", "message_type"]
+        )
+    }
+
+    func testInvoicePastDueIgnoresPaidAndDraft() throws {
+        func invoice(status: String, due: String, paid: Double) throws -> Invoice {
+            let json = """
+            {"id":"i1","invoice_number":"INV-1","status":"\(status)","issue_date":"2020-01-01",
+             "due_date":"\(due)","total_amount":100,"amount_paid":\(paid),"amount_due":\(100 - paid)}
+            """
+            return try decode(Invoice.self, from: json)
+        }
+        XCTAssertTrue(try invoice(status: "sent", due: "2020-02-01", paid: 0).isPastDue)
+        XCTAssertEqual(try invoice(status: "sent", due: "2020-02-01", paid: 0).displayStatus, "overdue")
+        XCTAssertFalse(try invoice(status: "paid", due: "2020-02-01", paid: 100).isPastDue)
+        XCTAssertFalse(try invoice(status: "draft", due: "2020-02-01", paid: 0).isPastDue)
+        XCTAssertFalse(try invoice(status: "sent", due: "2999-01-01", paid: 0).isPastDue)
+    }
+
+    func testPendingTimesheetDecodesView() throws {
+        let json = """
+        {"id":"t1","user_id":"u1","project_id":"p1","start_time":"2026-09-25T13:00:00+00:00",
+         "end_time":"2026-09-25T21:30:00+00:00","total_hours":8,"break_duration":30,
+         "approval_status":"pending","worker_name":" ","project_name":"Main St","cost_code":"03-300"}
+        """
+        let entry = try decode(PendingTimesheet.self, from: json)
+        XCTAssertEqual(entry.totalHours, 8)
+        XCTAssertEqual(entry.displayWorker, "Crew member")
+    }
+
+    func testBulkTimesheetResultDecodesRPCRow() throws {
+        let rows = try decode([BulkTimesheetResult].self, from: "[{\"success_count\":3,\"failed_count\":1}]")
+        XCTAssertEqual(rows.first?.successCount, 3)
+        XCTAssertEqual(rows.first?.failedCount, 1)
     }
 
     // MARK: - Helpers

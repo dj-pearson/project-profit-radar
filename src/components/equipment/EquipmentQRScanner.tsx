@@ -23,34 +23,55 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEquipmentQRScanning, type EquipmentWithQR } from '@/hooks/useEquipmentQRScanning';
-import { parseQRCodeData, validateQRCodeData } from '@/services/qrCodeService';
+import {
+  useEquipmentQRScanning,
+  type EquipmentWithQR,
+  type ProcessScanResult,
+} from '@/hooks/useEquipmentQRScanning';
+import {
+  toEquipmentScanType,
+  validateScannedQRValue,
+  type EquipmentScanType,
+  type LegacyScanType,
+} from '@/services/qrCodeService';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface EquipmentQRScannerProps {
   onScanComplete: (result: ScanResult) => void;
   onCancel: () => void;
-  scanType: 'check_out' | 'check_in' | 'inspect' | 'maintain';
+  scanType: EquipmentScanType | LegacyScanType;
   title?: string;
   projectId?: string;
+  /**
+   * When true (the default), confirming logs the scan through
+   * process_equipment_qr_scan. Pass false when the parent only needs the
+   * scanner to identify the equipment and records the scan itself.
+   */
+  recordScan?: boolean;
 }
 
 export interface ScanResult {
   success: boolean;
+  /** The raw scanned string, as the RPC needs it. */
   qrCodeValue: string;
   equipment: EquipmentWithQR | null;
-  scanType: 'check_out' | 'check_in' | 'inspect' | 'maintain';
+  scanType: EquipmentScanType;
+  /** The RPC's answer, when recordScan was on. */
+  scan?: ProcessScanResult;
 }
 
 export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
   onScanComplete,
   onCancel,
-  scanType,
+  scanType: requestedScanType,
   title,
   projectId,
+  recordScan = true,
 }) => {
+  const scanType = toEquipmentScanType(requestedScanType);
   const { userProfile } = useAuth();
-  const { equipmentWithQR, validateQRCode, isValidating } = useEquipmentQRScanning();
+  const { equipmentWithQR, loadingEquipment, processScanAsync, processingScans } =
+    useEquipmentQRScanning();
 
   const [isScanning, setIsScanning] = useState(false);
   const [scannedQRValue, setScannedQRValue] = useState<string>('');
@@ -88,10 +109,14 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
         return 'Check Out Equipment';
       case 'check_in':
         return 'Check In Equipment';
-      case 'inspect':
+      case 'inspection':
         return 'Inspect Equipment';
-      case 'maintain':
+      case 'maintenance':
         return 'Log Maintenance';
+      case 'location_update':
+        return 'Update Location';
+      case 'verification':
+        return 'Verify Equipment';
       default:
         return 'Scan Equipment';
     }
@@ -106,7 +131,7 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
       // Initialize QR Scanner
       qrScannerRef.current = new QrScanner(
         videoRef.current,
-        (result) => handleQRDetected(result.data),
+        (result) => onDetectedRef.current(result.data),
         {
           returnDetailedScanResult: true,
           highlightScanRegion: true,
@@ -133,82 +158,99 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
     setIsScanning(false);
   };
 
-  const handleQRDetected = async (qrValue: string) => {
+  const handleQRDetected = (qrValue: string) => {
     setScannedQRValue(qrValue);
     stopScanning();
-    await validateAndLookupEquipment(qrValue);
+    validateAndLookupEquipment(qrValue);
   };
 
-  const validateAndLookupEquipment = async (qrValue: string) => {
+  // QrScanner keeps the callback it was built with. Route it through a ref so
+  // a detection sees the equipment list as it is now, not as it was when the
+  // camera started (often still empty). Updated after commit, never during
+  // render, so a discarded render can't leave its closure behind.
+  const onDetectedRef = useRef(handleQRDetected);
+  useEffect(() => {
+    onDetectedRef.current = handleQRDetected;
+  });
+
+  const fail = (message: string) => {
+    setValidationError(message);
+    toast.error(message);
+  };
+
+  const validateAndLookupEquipment = (qrValue: string) => {
     setValidationError(null);
+    setEquipment(null);
 
-    try {
-      // Parse QR code data
-      const qrData = parseQRCodeData(qrValue);
-      if (!qrData) {
-        setValidationError('Invalid QR code format');
-        toast.error('Invalid QR code format');
-        return;
-      }
-
-      // Validate company ID matches
-      if (!userProfile?.company_id) {
-        setValidationError('User company ID not found');
-        return;
-      }
-
-      const isValid = validateQRCodeData(qrData, userProfile.company_id);
-      if (!isValid) {
-        setValidationError('QR code does not belong to your company or is invalid');
-        toast.error('Invalid QR code for this company');
-        return;
-      }
-
-      // Validate with hook
-      const validationResult = await validateQRCode(qrValue, userProfile.company_id);
-      if (!validationResult.valid) {
-        setValidationError(validationResult.message || 'QR code validation failed');
-        toast.error(validationResult.message || 'QR code validation failed');
-        return;
-      }
-
-      // Find equipment in list
-      const foundEquipment = equipmentWithQR?.find(
-        (eq) => eq.equipment_id === qrData.equipmentId
-      );
-
-      if (foundEquipment) {
-        setEquipment(foundEquipment);
-        toast.success(`Equipment found: ${foundEquipment.equipment_name}`);
-      } else {
-        setValidationError('Equipment not found in database');
-        toast.error('Equipment not found');
-      }
-    } catch (error: any) {
-      console.error('Error validating QR code:', error);
-      setValidationError(error.message || 'Failed to validate QR code');
-      toast.error(error.message || 'Failed to validate QR code');
+    const validation = validateScannedQRValue(qrValue, userProfile?.company_id);
+    if (!validation.valid) {
+      fail(validation.error);
+      return;
     }
+
+    if (loadingEquipment) {
+      fail('Equipment list is still loading. Try again in a moment.');
+      return;
+    }
+
+    const foundEquipment = equipmentWithQR.find(
+      (eq) => eq.equipment_id === validation.data.equipmentId
+    );
+
+    if (!foundEquipment) {
+      fail('Equipment not found');
+      return;
+    }
+
+    // The RPC matches the label byte for byte against the active code. Labels
+    // printed before the image was rendered from qr_code_value carry a
+    // different string and will never match; say so instead of failing later.
+    if (foundEquipment.qr_code_value !== qrValue) {
+      fail(`This label for ${foundEquipment.name} is out of date. Reprint it from the QR labels page.`);
+      return;
+    }
+
+    setEquipment(foundEquipment);
+    toast.success(`Equipment found: ${foundEquipment.name}`);
   };
 
-  const handleManualLookup = async () => {
+  const handleManualLookup = () => {
     if (!manualQRValue.trim()) {
       toast.error('Please enter a QR code value');
       return;
     }
 
     setScannedQRValue(manualQRValue);
-    await validateAndLookupEquipment(manualQRValue);
+    validateAndLookupEquipment(manualQRValue);
   };
 
-  const handleConfirm = () => {
-    const result: ScanResult = {
-      success: !!equipment && !validationError,
-      qrCodeValue: scannedQRValue,
-      equipment: equipment,
-      scanType: scanType,
-    };
-    onScanComplete(result);
+  const handleConfirm = async () => {
+    if (!equipment || validationError) return;
+
+    if (!recordScan) {
+      onScanComplete({ success: true, qrCodeValue: scannedQRValue, equipment, scanType });
+      return;
+    }
+
+    try {
+      // The hook toasts both outcomes.
+      const scan = await processScanAsync({
+        qrCodeValue: scannedQRValue,
+        scanType,
+        projectId,
+        latitude: gpsLocation?.latitude,
+        longitude: gpsLocation?.longitude,
+      });
+
+      if (!scan.success) {
+        setValidationError(scan.error || 'Failed to process scan');
+        return;
+      }
+
+      onScanComplete({ success: true, qrCodeValue: scannedQRValue, equipment, scanType, scan });
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : 'Failed to process scan');
+    }
   };
 
   useEffect(() => {
@@ -270,43 +312,42 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
                   onChange={(e) => setManualQRValue(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleManualLookup()}
                 />
-                <Button onClick={handleManualLookup} disabled={isValidating}>
-                  {isValidating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
+                <Button onClick={handleManualLookup} aria-label="Look up QR code">
+                  <Search className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          ) : isScanning ? (
-            <div className="relative">
-              <video
-                ref={videoRef}
-                className="w-full h-80 object-cover rounded-lg bg-black"
-                playsInline
-                muted
-              />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-64 h-64 border-4 border-primary rounded-lg shadow-lg">
-                  <div className="w-full h-full border-2 border-primary/50 rounded-lg animate-pulse" />
-                </div>
-              </div>
-              <Button
-                onClick={stopScanning}
-                className="absolute top-4 right-4 z-10"
-                size="sm"
-                variant="secondary"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/70 px-4 py-2 rounded-lg">
-                <QrCode className="h-4 w-4 inline mr-2 animate-pulse" />
-                Scanning for QR codes...
+          ) : null}
+
+          {/* The video stays mounted: startScanning needs videoRef before
+              isScanning flips, so rendering it only while scanning meant the
+              camera could never start. */}
+          <div className={isScanning ? 'relative' : 'hidden'}>
+            <video
+              ref={videoRef}
+              className="w-full h-80 object-cover rounded-lg bg-black"
+              playsInline
+              muted
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-64 h-64 border-4 border-primary rounded-lg shadow-lg">
+                <div className="w-full h-full border-2 border-primary/50 rounded-lg animate-pulse" />
               </div>
             </div>
-          ) : null}
+            <Button
+              onClick={stopScanning}
+              className="absolute top-4 right-4 z-10"
+              size="sm"
+              variant="secondary"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/70 px-4 py-2 rounded-lg">
+              <QrCode className="h-4 w-4 inline mr-2 animate-pulse" />
+              Scanning for QR codes...
+            </div>
+          </div>
         </div>
 
         {/* Results Section */}
@@ -323,14 +364,7 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
               </div>
             </div>
 
-            {isValidating ? (
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Validating QR code and looking up equipment...</span>
-                </div>
-              </div>
-            ) : validationError ? (
+            {validationError ? (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{validationError}</AlertDescription>
@@ -342,7 +376,7 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Wrench className="h-5 w-5" />
-                        {equipment.equipment_name}
+                        {equipment.name}
                       </CardTitle>
                       <Badge variant="secondary" className="mt-2">
                         {equipment.equipment_type || 'Equipment'}
@@ -358,38 +392,38 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    {equipment.equipment_make && (
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Make</Label>
-                        <p className="font-medium">{equipment.equipment_make}</p>
-                      </div>
-                    )}
-
-                    {equipment.equipment_model && (
+                    {equipment.model && (
                       <div>
                         <Label className="text-xs text-muted-foreground">Model</Label>
-                        <p className="font-medium">{equipment.equipment_model}</p>
+                        <p className="font-medium">{equipment.model}</p>
                       </div>
                     )}
 
-                    {equipment.equipment_serial_number && (
+                    {equipment.serial_number && (
                       <div className="col-span-2">
                         <Label className="text-xs text-muted-foreground">Serial Number</Label>
-                        <p className="font-mono text-sm">{equipment.equipment_serial_number}</p>
+                        <p className="font-mono text-sm">{equipment.serial_number}</p>
                       </div>
                     )}
 
                     <div>
                       <Label className="text-xs text-muted-foreground">Status</Label>
                       <p className="font-medium capitalize">
-                        {equipment.equipment_status?.replace('_', ' ') || 'Unknown'}
+                        {equipment.status?.replace('_', ' ') || 'Unknown'}
                       </p>
                     </div>
 
-                    {equipment.qr_scan_count > 0 && (
+                    {equipment.location && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Location</Label>
+                        <p className="font-medium">{equipment.location}</p>
+                      </div>
+                    )}
+
+                    {!!equipment.scan_count && (
                       <div>
                         <Label className="text-xs text-muted-foreground">Total Scans</Label>
-                        <p className="font-medium">{equipment.qr_scan_count}</p>
+                        <p className="font-medium">{equipment.scan_count}</p>
                       </div>
                     )}
                   </div>
@@ -431,13 +465,19 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
               <Button
                 onClick={handleConfirm}
                 className="flex-1 bg-construction-orange"
-                disabled={!equipment || !!validationError}
+                disabled={!equipment || !!validationError || processingScans}
               >
-                <CheckCircle className="h-4 w-4 mr-2" />
+                {processingScans ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
                 {scanType === 'check_out' && 'Check Out'}
                 {scanType === 'check_in' && 'Check In'}
-                {scanType === 'inspect' && 'Inspect'}
-                {scanType === 'maintain' && 'Log Maintenance'}
+                {scanType === 'inspection' && 'Inspect'}
+                {scanType === 'maintenance' && 'Log Maintenance'}
+                {scanType === 'location_update' && 'Update Location'}
+                {scanType === 'verification' && 'Verify'}
               </Button>
             </div>
           </div>

@@ -98,8 +98,8 @@ struct ProjectListView: View {
 // MARK: - Settings
 
 /// Account settings sheet. Includes the App Store-required account deletion
-/// path (Apple guideline 5.1.1(v)). Lives in this file because it is only
-/// reachable from `ProjectListView`'s account menu.
+/// path (Apple guideline 5.1.1(v)). Reachable from `ProjectListView`'s
+/// account menu and the Home screen's account button.
 struct SettingsView: View {
     @Environment(AuthViewModel.self) private var auth
     @Environment(\.dismiss) private var dismiss

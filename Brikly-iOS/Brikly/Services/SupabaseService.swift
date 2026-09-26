@@ -98,14 +98,19 @@ final class EdgeFunctionsService: @unchecked Sendable {
 
     /// Invoke an edge function and decode the response into `T`.
     /// The auth bearer is the active user's JWT when signed in, otherwise the anon key.
+    ///
+    /// Body keys are converted to snake_case unless `snakeCaseKeys` is false,
+    /// for functions whose schema uses camelCase keys (e.g. `change-orders`
+    /// reads `orderId`).
     @discardableResult
     func invoke<T: Decodable>(
         _ name: String,
         body: (any Encodable)? = nil,
         method: String = "POST",
+        snakeCaseKeys: Bool = true,
         as _: T.Type = T.self
     ) async throws -> T {
-        let request = try await buildRequest(name: name, body: body, method: method)
+        let request = try await buildRequest(name: name, body: body, method: method, snakeCaseKeys: snakeCaseKeys)
         let (data, response) = try await session.data(for: request)
 
         guard let http = response as? HTTPURLResponse else {
@@ -130,12 +135,18 @@ final class EdgeFunctionsService: @unchecked Sendable {
     func invoke(
         _ name: String,
         body: (any Encodable)? = nil,
-        method: String = "POST"
+        method: String = "POST",
+        snakeCaseKeys: Bool = true
     ) async throws {
-        _ = try await invoke(name, body: body, method: method, as: EmptyResponse.self)
+        _ = try await invoke(name, body: body, method: method, snakeCaseKeys: snakeCaseKeys, as: EmptyResponse.self)
     }
 
-    private func buildRequest(name: String, body: (any Encodable)?, method: String) async throws -> URLRequest {
+    private func buildRequest(
+        name: String,
+        body: (any Encodable)?,
+        method: String,
+        snakeCaseKeys: Bool
+    ) async throws -> URLRequest {
         var request = URLRequest(url: baseURL.appendingPathComponent(name))
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -146,7 +157,9 @@ final class EdgeFunctionsService: @unchecked Sendable {
 
         if let body {
             let encoder = JSONEncoder()
-            encoder.keyEncodingStrategy = .convertToSnakeCase
+            if snakeCaseKeys {
+                encoder.keyEncodingStrategy = .convertToSnakeCase
+            }
             request.httpBody = try encoder.encode(AnyEncodable(body))
         }
         return request

@@ -21,15 +21,15 @@ struct StatusBadge: View {
         switch status.lowercased() {
         case "active", "in_progress", "approved":
             .blue
-        case "completed", "done":
+        case "completed", "done", "available", "verified", "paid":
             .green
-        case "planning", "pending", "draft":
+        case "planning", "pending", "draft", "maintenance", "open", "planned":
             .orange
         case "on_hold", "paused":
             .yellow
         case "blocked":
             .red
-        case "cancelled", "rejected":
+        case "cancelled", "rejected", "out_of_service", "closed":
             .gray
         case "urgent":
             .red

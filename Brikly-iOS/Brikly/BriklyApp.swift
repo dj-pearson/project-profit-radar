@@ -3,6 +3,7 @@ import os
 
 @main
 struct BriklyApp: App {
+    @UIApplicationDelegateAdaptor(BriklyAppDelegate.self) private var appDelegate
     @State private var authViewModel = AuthViewModel()
     @State private var networkMonitor = NetworkMonitor.shared
 

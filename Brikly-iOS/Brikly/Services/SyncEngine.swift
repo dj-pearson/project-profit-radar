@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Observation
+import Supabase
 
 // MARK: - Network Monitor
 
@@ -113,7 +114,10 @@ final class SyncEngine {
         case "job_cost":
             try await replayJobCost(mutation)
         default:
-            throw SyncError.unsupportedEntity(mutation.entityType)
+            guard let table = Self.genericTables[mutation.entityType] else {
+                throw SyncError.unsupportedEntity(mutation.entityType)
+            }
+            try await replayGeneric(mutation, table: table)
         }
     }
 
@@ -209,6 +213,41 @@ final class SyncEngine {
                 store.upsertJobCost(inserted)
             }
 
+        default:
+            throw SyncError.unsupportedOperation(mutation.operation)
+        }
+    }
+
+    /// Entity types whose queued payload is replayed as-is (the DTOs all
+    /// carry explicit snake_case keys) into the named table. Queued by
+    /// `TimeClockViewModel` and `RecordListViewModel`.
+    static let genericTables: [String: String] = [
+        "time_entry": "time_entries",
+        "safety_incident": "safety_incidents",
+        "expense": "expenses",
+        "punch_list_item": "punch_list_items",
+    ]
+
+    private func replayGeneric(_ mutation: PendingMutation, table: String) async throws {
+        let body = try JSONDecoder().decode([String: AnyJSON].self, from: mutation.payload)
+
+        switch mutation.operation {
+        case "create":
+            // Queued creates carry a device-generated id, so a replay of a
+            // write that did reach the server (its response was lost) lands on
+            // the same row. A time entry merges, because clock-out completes a
+            // row clock-in may already have written; the rest were complete
+            // when queued, so a duplicate is simply ignored.
+            if body["id"] == nil {
+                try await supabase.from(table).insert(body).execute()
+            } else if table == "time_entries" {
+                try await supabase.from(table).upsert(body, onConflict: "id").execute()
+            } else {
+                try await supabase.from(table).upsert(body, onConflict: "id", ignoreDuplicates: true).execute()
+            }
+        case "update":
+            guard let entityId = mutation.entityId else { throw SyncError.missingEntityId }
+            try await supabase.from(table).update(body).eq("id", value: entityId).execute()
         default:
             throw SyncError.unsupportedOperation(mutation.operation)
         }

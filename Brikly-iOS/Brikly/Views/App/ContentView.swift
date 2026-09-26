@@ -21,7 +21,7 @@ struct ContentView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Brikly is loading")
                 } else if auth.isAuthenticated {
-                    ProjectListView()
+                    MainTabView()
                 } else {
                     LoginView()
                 }

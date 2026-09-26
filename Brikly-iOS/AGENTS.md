@@ -40,8 +40,125 @@ against.
 `site_id` is filled by `trg_project_site_id` from the project's company
 (US-317). Do not send it.
 
+### Time clock (iOS)
+
+`TimeClockViewModel` follows `MobileTimeClock.tsx`: project and cost code
+required, a GPS fix required, clock-in refused outside the project geofence
+(`geofence_radius_meters`, default 100 m). `total_hours` excludes break time,
+the same as the web timer. `site_id` is sent from the project when it has one
+(some environments still have `time_entries.site_id NOT NULL` with no trigger,
+US-275).
+
+Two `UserDefaults` keys hold an in-progress shift. They are on-device storage
+contracts; don't rename them:
+
+- `brikly.timeClock.pendingClockIn`: a `NewTimeEntry` for a clock-in made
+  offline. It is not queued; it is written as one complete row at clock-out.
+- `brikly.timeClock.breakStartedAt`: the `Date` a running break started.
+
+### Change orders
+
+iOS goes through the `change-orders` edge function (list / create / approve),
+never `change_orders` directly. `approve` reads camelCase keys (`orderId`,
+`approvalType`), so that call passes `snakeCaseKeys: false` to
+`EdgeFunctionsService.invoke`. Only `admin`, `project_manager` and
+`root_admin` see create/approve; the function enforces the same list. The
+client's approval comes from the client portal only.
+
+### Other project records
+
+RFIs, punch list, safety incidents, expenses and submittals are plain
+PostgREST writes through `RecordService`, with the web pages' payloads and
+status values (`RFIs.tsx`, `PunchList.tsx`, `SafetyIncidentForm.tsx`,
+`ExpenseTracker.tsx`, `Submittals.tsx`). Notifications read
+`real_time_notifications` (missing from the generated `types.ts`, but present
+in migrations).
+
+### Crew check-in
+
+Check-in calls `verify_crew_gps_checkin(p_assignment_id, p_latitude,
+p_longitude, p_accuracy)`; the server measures the distance and sets
+`gps_checkin_verified`, `is_onsite` and `status`. The device never decides
+whether someone is on site. Check-out is the same direct update web makes
+(`gps_checkout_*`, `is_onsite = false`, `status = completed`). Both need a
+connection. Migration `20260926000000` fixed the RPC, which read columns that
+don't exist and failed on every call before it.
+
+### Photos
+
+`photo_attachments` is the photo record (US-330); files go to the private
+`project-documents` bucket at `<projectId>/photos/<uuid>.jpg`, or
+`<projectId>/daily-reports/...` when attached to a report. The bucket
+policies key on the first path segment being a project id. `source` has a
+CHECK constraint: `daily_report`, `punch_list`, `progress`, `safety`,
+`other`. A photo attached to a daily report is also appended to
+`daily_reports.photos` (dual write, same as web). Images are downscaled to a
+2048 px long edge before upload. Upload needs a connection.
+
+### Equipment
+
+Equipment tab: fleet list, detail, maintenance log, project bookings, QR
+labels and scanning. Two separate things, as on web:
+
+- **QR scans** go through `process_equipment_qr_scan` and are what move
+  `equipment.status` (`check_out` sets `in_use`, `check_in` sets
+  `available`). The label encodes the JSON string `generate_equipment_qr_code`
+  stores in `equipment_qr_codes.qr_code_value`; render the label from that
+  value, because the server looks the scan up by exact string. iOS parses the
+  JSON only to reject another company's or a non-Brikly code early.
+- **Bookings** are `equipment_assignments` rows (project + date range). They
+  don't change `equipment.status`; iOS doesn't write `equipment` at all
+  (RLS limits it to admin, PM, office staff).
+
+iOS is the first writer of `equipment_maintenance_records`
+(`work_order_number` comes from a trigger). Migration `20260926020000`
+scoped both QR functions and both equipment views to the caller's company,
+fixed the `location_update` scan, and fills `equipment_qr_codes.site_id`.
+
+### Materials, invoices, team chat, timesheet approval
+
+- **Materials** (project hub): company stock with this project's first;
+  logging usage calls `log_material_usage`, which inserts `material_usage`
+  and decrements stock in one locked transaction. Don't write the two
+  tables separately from the app.
+- **Invoices** (project hub, finance roles): read-only list and detail.
+  Recording a manual payment goes through the `process-invoice-payment`
+  edge function (`payment_method: manual`), never a direct `invoices`
+  update; the payment trigger owns `amount_paid`, `amount_due` and `status`.
+  Sending uses `send-invoice`. Invoices are created on web.
+- **Team chat** (project hub): the web chat tables. Opening a project's chat
+  finds its open channel, or creates it with the caller as channel admin,
+  and joins it. Names come from `company_member_names()`, because
+  `user_profiles` hides coworkers from non-managers. New messages arrive by
+  Realtime insert on `chat_messages`.
+- **Timesheet approval** (Time Clock tab, approver roles): reads
+  `pending_timesheet_approvals`, approves/rejects through
+  `bulk_approve_timesheets` / `bulk_reject_timesheets`. The server takes the
+  approver from the session and refuses self-approval (admin excepted);
+  approving posts labor cost via `trg_post_labor_cost`.
+
+All four rely on migration `20260926030000`.
+
+### Push notifications
+
+- The app asks for permission from the Alerts tab (never at launch), then
+  registers on every sign-in because APNs rotates tokens. The token goes to
+  `register_device_push_token` (`device_push_tokens`), tagged `sandbox` for
+  Xcode debug builds and `production` otherwise. Sign-out deletes it first.
+- Delivery: a Database Webhook on INSERT into `real_time_notifications`
+  calls the internal `deliver-apns` edge function, which signs with the APNs
+  key (secrets `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY`, optional
+  `APNS_BUNDLE_ID`) and prunes tokens APNs reports dead. Without the secrets
+  it answers `sent: 0` and the alert still shows in the app.
+- Tapping a notification opens the Alerts tab.
+- `brikly.push.deviceToken` (UserDefaults) is an on-device storage contract.
+
 ## Offline sync
 
-`OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs. A
-queued time entry replayed later goes through the same triggers, so a mutation
-captured offline needs no rate on it either.
+`OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with
+typed replays. Time entries, safety incidents, expenses and punch list items
+are queued as JSON and replayed into their table by
+`SyncEngine.genericTables`; the DTOs carry explicit snake_case keys so the
+payload goes to PostgREST unchanged. A queued time entry replayed later goes
+through the same triggers, so a mutation captured offline needs no rate on it
+either. RFIs, submittals and change orders need a connection.

@@ -10376,6 +10376,39 @@ export type Database = {
           },
         ]
       }
+      device_push_tokens: {
+        Row: {
+          app_version: string | null
+          created_at: string
+          environment: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          platform?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_categories: {
         Row: {
           company_id: string

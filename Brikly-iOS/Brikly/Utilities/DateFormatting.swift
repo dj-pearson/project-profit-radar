@@ -42,4 +42,34 @@ enum DateFormatting {
     static func isoDate(_ date: Date) -> String {
         isoDateFormatter.string(from: date)
     }
+
+    private static let localISODateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    private static let utcMediumFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
+    /// "2024-01-15" in the device's time zone. Use this for a calendar day the
+    /// user picked: `isoDate` converts to UTC, which moves an evening pick in
+    /// the Americas to the next day.
+    static func localISODate(_ date: Date) -> String {
+        localISODateFormatter.string(from: date)
+    }
+
+    /// Display a PostgreSQL `date` string ("2024-01-15" or a timestamp) as
+    /// "Jan 15, 2024" without shifting it across a time zone. "—" if nil.
+    static func displayDate(_ isoString: String?) -> String {
+        guard let isoString, !isoString.isEmpty else { return "—" }
+        guard let date = isoDateFormatter.date(from: String(isoString.prefix(10))) else { return isoString }
+        return utcMediumFormatter.string(from: date)
+    }
 }
