@@ -32,10 +32,13 @@ actor TimeEntryService {
         return response
     }
 
+    /// Upsert on the device-generated id: sending the same entry twice (a
+    /// retry after an ambiguous failure, or clock-out completing a clock-in
+    /// that did reach the server) updates the one row rather than adding one.
     func create(_ entry: NewTimeEntry) async throws -> TimeEntry {
         let response: [TimeEntry] = try await client
             .from("time_entries")
-            .insert(entry)
+            .upsert(entry, onConflict: "id")
             .select()
             .execute()
             .value

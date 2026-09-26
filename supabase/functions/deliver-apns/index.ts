@@ -8,6 +8,7 @@ import { requireInternalCaller } from "../_shared/internal-only.ts";
 import { createServiceClient } from "../_shared/service-client.ts";
 import { apnsConfigFromEnv, sendApns } from "../_shared/apns.ts";
 import { errorResponse, successResponse } from "../_shared/auth-helpers.ts";
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
 
 // Either the Database Webhook envelope or a direct call.
 const WebhookSchema = z.object({
@@ -31,8 +32,13 @@ const DirectSchema = z.object({
 });
 
 export default async (req: Request): Promise<Response> => {
-  const rejected = requireInternalCaller(req);
-  if (rejected) return rejected;
+  const corsHeaders = getCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  // Same 404 and message as requireInternalCaller, in the standard envelope.
+  if (requireInternalCaller(req)) return errorResponse("Not found", 404, req);
 
   let raw: unknown;
   try {

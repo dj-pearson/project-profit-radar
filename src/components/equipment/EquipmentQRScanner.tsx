@@ -166,9 +166,12 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
 
   // QrScanner keeps the callback it was built with. Route it through a ref so
   // a detection sees the equipment list as it is now, not as it was when the
-  // camera started (often still empty).
+  // camera started (often still empty). Updated after commit, never during
+  // render, so a discarded render can't leave its closure behind.
   const onDetectedRef = useRef(handleQRDetected);
-  onDetectedRef.current = handleQRDetected;
+  useEffect(() => {
+    onDetectedRef.current = handleQRDetected;
+  });
 
   const fail = (message: string) => {
     setValidationError(message);

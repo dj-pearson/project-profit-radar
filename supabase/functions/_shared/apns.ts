@@ -80,6 +80,52 @@ export interface ApnsAlert {
   threadId?: string;
 }
 
+/** APNs rejects a payload over 4 KB with PayloadTooLarge. */
+export const APNS_MAX_PAYLOAD_BYTES = 4096;
+/** Per request; one stalled connection mustn't hold up the other tokens. */
+export const APNS_REQUEST_TIMEOUT_MS = 10_000;
+
+function buildPayload(alert: ApnsAlert, title: string, body: string | undefined): string {
+  return JSON.stringify({
+    aps: {
+      alert: { title, ...(body ? { body } : {}) },
+      sound: "default",
+      ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
+    },
+    ...(alert.data ?? {}),
+  });
+}
+
+function truncate(text: string, maxChars: number): string {
+  const chars = Array.from(text);   // whole code points, never half a surrogate pair
+  return chars.length <= maxChars ? text : chars.slice(0, Math.max(0, maxChars - 1)).join("") + "\u2026";
+}
+
+/**
+ * The JSON sent to APNs, within 4 KB. Shortens the body first, then the
+ * title, never the custom data (the app needs it on tap). Throws only if the
+ * data alone doesn't fit.
+ */
+export function apnsPayload(alert: ApnsAlert): string {
+  const encoder = new TextEncoder();
+  const fits = (s: string) => encoder.encode(s).length <= APNS_MAX_PAYLOAD_BYTES;
+
+  let title = alert.title;
+  let body = alert.body;
+  let payload = buildPayload(alert, title, body);
+  // Halve until it fits: bounded (log2 of the length), deterministic.
+  while (!fits(payload) && body && body.length > 0) {
+    body = Array.from(body).length > 1 ? truncate(body, Math.floor(Array.from(body).length / 2)) : undefined;
+    payload = buildPayload(alert, title, body);
+  }
+  while (!fits(payload) && Array.from(title).length > 1) {
+    title = truncate(title, Math.floor(Array.from(title).length / 2));
+    payload = buildPayload(alert, title, body);
+  }
+  if (!fits(payload)) throw new Error("APNs payload too large even without text");
+  return payload;
+}
+
 export type ApnsResult =
   | { ok: true }
   | { ok: false; status: number; reason: string; tokenIsDead: boolean };
@@ -92,14 +138,7 @@ export async function sendApns(
 ): Promise<ApnsResult> {
   const host = environment === "sandbox" ? "api.sandbox.push.apple.com" : "api.push.apple.com";
   const jwt = await providerToken(config);
-  const payload = {
-    aps: {
-      alert: { title: alert.title, ...(alert.body ? { body: alert.body } : {}) },
-      sound: "default",
-      ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
-    },
-    ...(alert.data ?? {}),
-  };
+  const payload = apnsPayload(alert);
 
   const response = await fetch(`https://${host}/3/device/${token}`, {
     method: "POST",
@@ -110,7 +149,8 @@ export async function sendApns(
       "apns-priority": "10",
       "content-type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: payload,
+    signal: AbortSignal.timeout(APNS_REQUEST_TIMEOUT_MS),
   });
 
   if (response.ok) return { ok: true };

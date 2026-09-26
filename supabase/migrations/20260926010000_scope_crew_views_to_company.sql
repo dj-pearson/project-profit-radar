@@ -12,6 +12,10 @@
 -- a project manager is meant to see. Filtering on the project's company is
 -- the same boundary crew_assignments' own SELECT policy draws.
 --
+-- Crew members' email and phone are masked for everyone but the person
+-- themselves and admin / project_manager / root_admin, which is what
+-- user_profiles' own SELECT policy allows; the view bypassed it.
+--
 -- Deliberate tightening of a read path (CLAUDE.md asks for these to be staged
 -- across releases). It is done in one step because what it removes is
 -- cross-tenant data; no client is meant to rely on reading another company's
@@ -34,8 +38,19 @@ SELECT
   -- User info
   up.id as user_id,
   CONCAT(up.first_name, ' ', up.last_name) as crew_member_name,
-  up.email as crew_member_email,
-  up.phone as crew_member_phone,
+  -- Contact details only for the person themselves and managers, the same
+  -- line user_profiles' own SELECT policy draws (20251006204552); this view
+  -- runs as its owner, so it has to apply it itself.
+  CASE
+    WHEN up.id = auth.uid()
+      OR get_user_role(auth.uid()) IN ('root_admin'::user_role, 'admin'::user_role, 'project_manager'::user_role)
+    THEN up.email
+  END as crew_member_email,
+  CASE
+    WHEN up.id = auth.uid()
+      OR get_user_role(auth.uid()) IN ('root_admin'::user_role, 'admin'::user_role, 'project_manager'::user_role)
+    THEN up.phone
+  END as crew_member_phone,
   up.role as crew_member_role,
 
   -- Project info

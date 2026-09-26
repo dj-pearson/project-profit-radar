@@ -209,6 +209,8 @@ final class BriklyTests: XCTestCase {
             JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any]
         )
         XCTAssertEqual(object["cost_code_id"] as? String, "cc1")
+        // Device-generated, so a retried write lands on the same row.
+        XCTAssertEqual((object["id"] as? String)?.count, 36)
         XCTAssertEqual(object["is_geofence_verified"] as? Bool, true)
         for key in ["company_id", "hourly_rate", "burden_rate", "labor_cost", "site_id", "end_time"] {
             XCTAssertNil(object[key], "\(key) should not be sent")

@@ -5,6 +5,12 @@
 -- Signatures, parameter names and return shapes of existing functions are
 -- unchanged. New functions and policies are additive.
 --
+-- Every SECURITY DEFINER function here pins search_path to public, pg_temp,
+-- and EXECUTE is revoked from anon as well as PUBLIC: Supabase's default
+-- privileges grant it to anon explicitly, so REVOKE FROM PUBLIC alone does
+-- not stop an anon-key RPC. A NULL auth.uid() is treated as a trusted server
+-- caller only through is_trusted_server_caller(), never on its own.
+--
 -- 1. record_invoice_payment is SECURITY DEFINER, granted to authenticated,
 --    and never checked the caller: any signed-in user could post a payment
 --    to any company's invoice, and p_processed_by was whatever they sent.
@@ -61,6 +67,36 @@
 --       only, never email or phone.
 
 -- ===========================================================================
+-- 0. Who counts as a server-side caller
+-- ===========================================================================
+-- auth.uid() is NULL for the service role (Stripe webhook, edge functions
+-- using the service client), for direct database sessions, AND for an
+-- anonymous PostgREST request. Treating "no uid" as "trusted server" alone
+-- would let the anon key through. A request is trusted without a uid only
+-- when its role is not one PostgREST hands to browsers.
+CREATE OR REPLACE FUNCTION public.is_trusted_server_caller()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = public, pg_temp
+AS $$
+  SELECT auth.uid() IS NULL
+     AND COALESCE(
+           NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
+           NULLIF(current_setting('request.jwt.claim.role', true), ''),
+           NULLIF(current_setting('role', true), 'none')
+         ) IS DISTINCT FROM 'anon'
+     AND COALESCE(
+           NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
+           NULLIF(current_setting('request.jwt.claim.role', true), ''),
+           NULLIF(current_setting('role', true), 'none')
+         ) IS DISTINCT FROM 'authenticated';
+$$;
+
+REVOKE ALL ON FUNCTION public.is_trusted_server_caller() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_trusted_server_caller() TO authenticated, service_role;
+
+-- ===========================================================================
 -- 1. record_invoice_payment
 -- ===========================================================================
 CREATE OR REPLACE FUNCTION public.record_invoice_payment(
@@ -75,7 +111,7 @@ CREATE OR REPLACE FUNCTION public.record_invoice_payment(
 RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_company uuid;
@@ -90,6 +126,10 @@ BEGIN
 
   SELECT company_id INTO v_company FROM public.invoices WHERE id = p_invoice_id;
   IF v_company IS NULL THEN
+    RAISE EXCEPTION 'Invoice not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_caller IS NULL AND NOT public.is_trusted_server_caller() THEN
     RAISE EXCEPTION 'Invoice not found' USING ERRCODE = 'P0002';
   END IF;
 
@@ -138,7 +178,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.record_invoice_payment(uuid, numeric, text, text, text, text, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.record_invoice_payment(uuid, numeric, text, text, text, text, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.record_invoice_payment(uuid, numeric, text, text, text, text, uuid) TO authenticated, service_role;
 
 -- ===========================================================================
@@ -148,16 +188,13 @@ CREATE OR REPLACE FUNCTION public.guard_time_entry_approval()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_caller uuid := auth.uid();
   v_role text;
   v_company uuid;
 BEGIN
-  IF v_caller IS NULL THEN
-    RETURN NEW;   -- server-side job
-  END IF;
   IF NEW.approval_status IS NOT DISTINCT FROM OLD.approval_status THEN
     RETURN NEW;
   END IF;
@@ -165,6 +202,14 @@ BEGIN
   -- a decision that posted labor cost, is a manager's call.
   IF NOT (NEW.approval_status IN ('approved', 'rejected') OR OLD.approval_status = 'approved') THEN
     RETURN NEW;
+  END IF;
+
+  IF v_caller IS NULL THEN
+    IF public.is_trusted_server_caller() THEN
+      RETURN NEW;   -- server-side job
+    END IF;
+    RAISE EXCEPTION 'Only a manager in this company can approve or reject time'
+      USING ERRCODE = '42501';
   END IF;
 
   v_role := get_user_role(v_caller)::text;
@@ -211,7 +256,10 @@ DECLARE
   timesheet_id UUID;
   -- The caller, not the client-supplied id. approver_id is kept so the
   -- signature doesn't change; it is used only by server-side callers.
-  v_approver UUID := COALESCE(auth.uid(), approver_id);
+  v_approver UUID := COALESCE(
+    auth.uid(),
+    CASE WHEN public.is_trusted_server_caller() THEN approver_id END
+  );
 BEGIN
   FOREACH timesheet_id IN ARRAY timesheet_ids
   LOOP
@@ -239,7 +287,7 @@ BEGIN
 
   RETURN QUERY SELECT success, failed;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 CREATE OR REPLACE FUNCTION bulk_reject_timesheets(
   timesheet_ids UUID[],
@@ -251,7 +299,10 @@ DECLARE
   success INT := 0;
   failed INT := 0;
   timesheet_id UUID;
-  v_rejector UUID := COALESCE(auth.uid(), rejector_id);
+  v_rejector UUID := COALESCE(
+    auth.uid(),
+    CASE WHEN public.is_trusted_server_caller() THEN rejector_id END
+  );
 BEGIN
   FOREACH timesheet_id IN ARRAY timesheet_ids
   LOOP
@@ -278,7 +329,14 @@ BEGIN
 
   RETURN QUERY SELECT success, failed;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Supabase's default privileges grant EXECUTE on public functions to anon;
+-- these need a signed-in caller or the service role.
+REVOKE ALL ON FUNCTION bulk_approve_timesheets(uuid[], uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION bulk_approve_timesheets(uuid[], uuid, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION bulk_reject_timesheets(uuid[], uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION bulk_reject_timesheets(uuid[], uuid, text) TO authenticated, service_role;
 
 -- ===========================================================================
 -- 2d. History: log a reopen as 'reopened'
@@ -306,7 +364,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- ===========================================================================
 -- 2e. Managers read their company's approval history
@@ -338,7 +396,7 @@ CREATE OR REPLACE FUNCTION public.log_material_usage(
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_caller uuid := auth.uid();
@@ -401,7 +459,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.log_material_usage(uuid, uuid, numeric, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.log_material_usage(uuid, uuid, numeric, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.log_material_usage(uuid, uuid, numeric, text) TO authenticated;
 
 COMMENT ON FUNCTION public.log_material_usage(uuid, uuid, numeric, text) IS
@@ -414,7 +472,7 @@ CREATE OR REPLACE FUNCTION public.fill_site_id_from_company()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   IF NEW.site_id IS NULL AND NEW.company_id IS NOT NULL THEN
@@ -476,7 +534,7 @@ CREATE OR REPLACE FUNCTION public.mark_chat_channel_read(p_channel_id uuid)
 RETURNS void
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
   UPDATE public.chat_channel_members
      SET last_read_at = now()
@@ -484,7 +542,7 @@ AS $$
      AND user_id = auth.uid();
 $$;
 
-REVOKE ALL ON FUNCTION public.mark_chat_channel_read(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.mark_chat_channel_read(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.mark_chat_channel_read(uuid) TO authenticated;
 
 -- ===========================================================================
@@ -495,7 +553,7 @@ RETURNS TABLE(user_id uuid, display_name text)
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
   SELECT up.id,
          NULLIF(btrim(CONCAT(up.first_name, ' ', up.last_name)), '')
@@ -504,5 +562,5 @@ AS $$
      AND up.company_id = get_user_company(auth.uid());
 $$;
 
-REVOKE ALL ON FUNCTION public.company_member_names(uuid[]) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.company_member_names(uuid[]) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.company_member_names(uuid[]) TO authenticated;

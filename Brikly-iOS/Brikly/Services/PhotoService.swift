@@ -10,7 +10,10 @@ actor PhotoService {
             .from("photo_attachments")
             .select("id, file_name, file_path, storage_bucket, caption, taken_at, created_at, daily_report_id, ai_tags")
             .eq("project_id", value: projectId)
-            .order("taken_at", ascending: false)
+            // Undated photos after dated ones, then by upload time, so the
+            // 300 kept are the newest by the same date the grid groups on.
+            .order("taken_at", ascending: false, nullsFirst: false)
+            .order("created_at", ascending: false)
             .limit(300)
             .execute()
             .value

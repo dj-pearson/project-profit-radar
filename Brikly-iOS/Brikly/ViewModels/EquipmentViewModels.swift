@@ -84,8 +84,12 @@ final class EquipmentDetailViewModel {
         if let freshRecords { maintenance = freshRecords }
         let freshBookings = try? await bookings
         if let freshBookings { assignments = freshBookings }
-        let freshLabel = try? await label
-        if let freshLabel { qrValue = freshLabel }
+        do {
+            // nil is an answer: the label was deactivated.
+            qrValue = try await label
+        } catch {
+            // Keep the last known label when the fetch fails.
+        }
     }
 
     func generateQR() async {

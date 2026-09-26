@@ -92,11 +92,19 @@ final class PushNotificationService: NSObject, UNUserNotificationCenterDelegate 
     /// user's notifications. Needs the session still valid.
     func unregister() async {
         guard let token = UserDefaults.standard.string(forKey: tokenKey) else { return }
-        _ = try? await SupabaseService.shared.client
-            .from("device_push_tokens")
-            .delete()
-            .eq("token", value: token)
-            .execute()
+        do {
+            try await SupabaseService.shared.client
+                .from("device_push_tokens")
+                .delete()
+                .eq("token", value: token)
+                .execute()
+        } catch {
+            // Offline at sign-out: the row stays, so stop this phone receiving
+            // anything for the old account. The next sign-in registers again
+            // and register_device_push_token moves the token to that user.
+            Loggers.app.error("Push token not removed: \(error.localizedDescription, privacy: .public)")
+            UIApplication.shared.unregisterForRemoteNotifications()
+        }
     }
 
     // MARK: - UNUserNotificationCenterDelegate

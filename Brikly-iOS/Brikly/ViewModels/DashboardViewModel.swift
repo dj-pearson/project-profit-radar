@@ -11,6 +11,9 @@ final class DashboardViewModel {
     var myTasks: [ProjectTask] = []
     var activeProjects: [Project] = []
     var weekHours: Double = 0
+    /// Last successful server total, so a device-held shift is still added
+    /// when the week's entries can't be loaded (which is when it exists).
+    private var serverWeekHours: Double = 0
     var openEntry: TimeEntry?
     /// A clock-in made offline and still held on this device.
     var heldClockIn: NewTimeEntry?
@@ -56,8 +59,9 @@ final class DashboardViewModel {
         heldClockIn = TimeClockViewModel.deviceHeldClockIn()
         let freshEntries = try? await entries
         if let freshEntries {
-            weekHours = freshEntries.reduce(0) { $0 + $1.workedHours() } + heldHours()
+            serverWeekHours = freshEntries.reduce(0) { $0 + $1.workedHours() }
         }
+        weekHours = serverWeekHours + heldHours()
         do {
             openEntry = try await openRow
         } catch {

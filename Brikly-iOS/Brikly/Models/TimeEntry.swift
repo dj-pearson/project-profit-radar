@@ -36,6 +36,10 @@ struct TimeEntry: Codable, Identifiable, Hashable, Sendable {
 /// Clock-in payload. `company_id` is filled by `trg_time_entry_company_id`
 /// and rates by `resolve_labor_rate()` at approval, so neither is sent.
 struct NewTimeEntry: Codable, Sendable {
+    /// Generated on the device at clock-in and kept through every retry, so a
+    /// write whose response was lost (timeout, dropped connection) lands on
+    /// the same row when it's sent again instead of creating a second one.
+    var id: String = UUID().uuidString.lowercased()
     let userId: String
     let projectId: String
     var costCodeId: String
@@ -53,6 +57,7 @@ struct NewTimeEntry: Codable, Sendable {
     var geofenceBreachDetected: Bool?
 
     enum CodingKeys: String, CodingKey {
+        case id
         case userId = "user_id"
         case projectId = "project_id"
         case costCodeId = "cost_code_id"

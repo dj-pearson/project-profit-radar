@@ -4,8 +4,13 @@ import Observation
 /// True when a write failed because the request never got an answer, so
 /// queuing it for replay is safe. A 4xx, an RLS denial or a decode failure
 /// after the row was written must not be queued: replaying it would fail
-/// forever (stalling `SyncEngine`, which stops at the first failure) or
-/// insert a duplicate.
+/// forever (stalling `SyncEngine`, which stops at the first failure).
+///
+/// `.timedOut` and `.networkConnectionLost` are ambiguous: the server may
+/// have committed the write before the answer was lost. That is safe only
+/// because every offline-capable create carries a device-generated id and
+/// replays as an upsert on it; a create body without an id must not be
+/// queued on these.
 func isConnectivityError(_ error: Error) -> Bool {
     guard let urlError = error as? URLError else { return false }
     switch urlError.code {

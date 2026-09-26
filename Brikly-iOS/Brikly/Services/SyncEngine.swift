@@ -233,7 +233,18 @@ final class SyncEngine {
 
         switch mutation.operation {
         case "create":
-            try await supabase.from(table).insert(body).execute()
+            // Queued creates carry a device-generated id, so a replay of a
+            // write that did reach the server (its response was lost) lands on
+            // the same row. A time entry merges, because clock-out completes a
+            // row clock-in may already have written; the rest were complete
+            // when queued, so a duplicate is simply ignored.
+            if body["id"] == nil {
+                try await supabase.from(table).insert(body).execute()
+            } else if table == "time_entries" {
+                try await supabase.from(table).upsert(body, onConflict: "id").execute()
+            } else {
+                try await supabase.from(table).upsert(body, onConflict: "id", ignoreDuplicates: true).execute()
+            }
         case "update":
             guard let entityId = mutation.entityId else { throw SyncError.missingEntityId }
             try await supabase.from(table).update(body).eq("id", value: entityId).execute()

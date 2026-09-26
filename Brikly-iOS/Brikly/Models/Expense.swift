@@ -30,6 +30,9 @@ enum PaymentMethod: String, CaseIterable {
 }
 
 struct NewExpense: Codable, Sendable {
+    /// Device-generated so a queued retry after a lost response can't insert
+    /// a second row (SyncEngine replays it as an upsert on this id).
+    var id: String = UUID().uuidString.lowercased()
     let companyId: String
     let projectId: String
     var siteId: String?
@@ -45,6 +48,7 @@ struct NewExpense: Codable, Sendable {
     var createdBy: String?
 
     enum CodingKeys: String, CodingKey {
+        case id
         case companyId = "company_id"
         case projectId = "project_id"
         case siteId = "site_id"

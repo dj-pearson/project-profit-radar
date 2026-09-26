@@ -49,6 +49,13 @@ enum NumberInput {
     static func double(_ text: String) -> Double? {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
+        // In a comma-decimal locale "." is the grouping separator, so the
+        // formatter would read "1.5" as 15. Input with a "." and no "," there
+        // is a decimal typed on a hardware or pasted keyboard.
+        if formatter.decimalSeparator == ",", trimmed.contains("."), !trimmed.contains(","),
+           let value = Double(trimmed) {
+            return value
+        }
         if let number = formatter.number(from: trimmed) { return number.doubleValue }
         // A "." typed on a keyboard whose locale uses ",".
         return Double(trimmed)

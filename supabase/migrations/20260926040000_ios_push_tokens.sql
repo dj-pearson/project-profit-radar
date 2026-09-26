@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION public.register_device_push_token(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   IF auth.uid() IS NULL THEN
@@ -85,5 +85,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.register_device_push_token(text, text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.register_device_push_token(text, text, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.register_device_push_token(text, text, text) TO authenticated;

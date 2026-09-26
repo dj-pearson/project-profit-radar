@@ -27,8 +27,9 @@
 -- 4. equipment_with_qr and recent_equipment_scans run as their owner, so RLS
 --    never applied, and neither filtered by company. recent_equipment_scans
 --    returned every company's scans with the scanner's email. Both now filter
---    on the caller's company inside the view (root_admin still sees all).
---    Same columns and order.
+--    on the caller's company inside the view (root_admin still sees all), and
+--    the scanner's email is shown only to the scanner and to managers. Same
+--    columns and order.
 
 -- ---------------------------------------------------------------------------
 -- 1 + 3a. generate_equipment_qr_code
@@ -110,7 +111,7 @@ BEGIN
     'qr_code_value', v_qr_value
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- ---------------------------------------------------------------------------
 -- 1 + 2. process_equipment_qr_scan
@@ -257,7 +258,14 @@ BEGIN
     'message', format('Successfully logged %s for %s', p_scan_type, v_equipment.name)
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Supabase's default privileges grant EXECUTE on public functions to anon.
+-- Both need a signed-in caller (or the service role).
+REVOKE ALL ON FUNCTION generate_equipment_qr_code(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION generate_equipment_qr_code(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION process_equipment_qr_scan(text, text, double precision, double precision, double precision, text, uuid, text, double precision, double precision, text, text[], timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION process_equipment_qr_scan(text, text, double precision, double precision, double precision, text, uuid, text, double precision, double precision, text, text[], timestamptz) TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 3. equipment_qr_codes.site_id from the company
@@ -266,7 +274,7 @@ CREATE OR REPLACE FUNCTION public.set_equipment_qr_site_id_from_company()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   IF NEW.site_id IS NULL AND NEW.company_id IS NOT NULL THEN
@@ -345,7 +353,14 @@ SELECT
   -- User info
   up.id as scanned_by_id,
   CONCAT(up.first_name, ' ', up.last_name) as scanned_by_name,
-  up.email as scanned_by_email,
+  -- Contact details only for the scanner themselves and managers:
+  -- user_profiles hides them from other roles, and this view runs as its
+  -- owner, so it has to mask them itself.
+  CASE
+    WHEN up.id = auth.uid()
+      OR get_user_role(auth.uid()) IN ('root_admin'::user_role, 'admin'::user_role, 'project_manager'::user_role)
+    THEN up.email
+  END as scanned_by_email,
 
   -- Project info
   p.id as project_id,
