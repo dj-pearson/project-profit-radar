@@ -32,6 +32,9 @@ final class TimeClockViewModel {
     var breakStartedAt: Date?
     var recentEntries: [TimeEntry] = []
     var isLoading = false
+    /// True while `load` restores state; the view skips its own cost-code
+    /// reload for project changes made here.
+    private(set) var isRestoring = false
     var isWorking = false
     var errorMessage: String?
     var notice: String?
@@ -78,8 +81,12 @@ final class TimeClockViewModel {
 
     func load(userId: String, companyId: String) async {
         isLoading = projects.isEmpty
+        isRestoring = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            isRestoring = false
+        }
 
         breakStartedAt = defaults.object(forKey: Self.breakStartedKey) as? Date
 
@@ -153,7 +160,10 @@ final class TimeClockViewModel {
 
     // MARK: - Clock in
 
-    func clockIn(userId: String) async {
+    /// `fallbackSiteId` is the user's site, sent when the project row has
+    /// none: some environments still require `time_entries.site_id` with no
+    /// trigger to fill it (US-275).
+    func clockIn(userId: String, fallbackSiteId: String?) async {
         guard let project = selectedProject else {
             errorMessage = "Pick a project first."
             return
@@ -188,7 +198,7 @@ final class TimeClockViewModel {
             userId: userId,
             projectId: project.id,
             costCodeId: selectedCostCodeId,
-            siteId: project.siteId,
+            siteId: project.siteId ?? fallbackSiteId,
             startTime: ISO8601DateFormatter().string(from: now),
             endTime: nil,
             totalHours: nil,
@@ -208,8 +218,13 @@ final class TimeClockViewModel {
                 shift = Shift(serverId: created.id, projectId: created.projectId,
                               costCodeId: created.costCodeId, start: created.startTime, breakMinutes: 0)
                 return
-            } catch {
+            } catch let error where isConnectivityError(error) {
                 CrashReporter.breadcrumb("clockIn network failure -> hold on device", category: "sync")
+            } catch {
+                // The server answered (or may have written the row): holding a
+                // copy here would insert a second entry at clock-out.
+                errorMessage = "Couldn't clock in: \(error.localizedDescription)"
+                return
             }
         }
 
@@ -243,7 +258,19 @@ final class TimeClockViewModel {
             return
         }
         let update = TimeEntryUpdate(endTime: nil, totalHours: nil, breakDuration: current.breakMinutes)
-        if NetworkMonitor.shared.isOnline, (try? await service.update(id: id, update)) != nil { return }
+        if NetworkMonitor.shared.isOnline {
+            do {
+                _ = try await service.update(id: id, update)
+                return
+            } catch let error where isConnectivityError(error) {
+                // Fall through to the queue.
+            } catch {
+                // Clock-out writes the full break total again, so a lost
+                // break update is recovered there.
+                errorMessage = "Couldn't save the break: \(error.localizedDescription)"
+                return
+            }
+        }
         store.enqueue(entityType: "time_entry", operation: "update", entityId: id, body: update)
     }
 
@@ -268,25 +295,34 @@ final class TimeClockViewModel {
 
         if let id = current.serverId {
             let update = TimeEntryUpdate(endTime: endString, totalHours: rounded, breakDuration: current.breakMinutes)
-            var saved = false
-            if NetworkMonitor.shared.isOnline {
-                saved = (try? await service.update(id: id, update)) != nil
-            }
-            if !saved {
+            switch await attempt({ _ = try await self.service.update(id: id, update) }) {
+            case .saved:
+                break
+            case .queued:
                 store.enqueue(entityType: "time_entry", operation: "update", entityId: id, body: update)
                 notice = "Clocked out. It syncs when you're back online."
+            case .failed:
+                shift = current   // Still clocked in, with the break folded in.
+                return
             }
         } else if var pending = pendingClockIn() {
             pending.endTime = endString
             pending.totalHours = rounded
             pending.breakDuration = current.breakMinutes
-            var saved = false
-            if NetworkMonitor.shared.isOnline {
-                saved = (try? await service.create(pending)) != nil
-            }
-            if !saved {
-                store.enqueue(entityType: "time_entry", operation: "create", body: pending)
+            let completed = pending
+            switch await attempt({ _ = try await self.service.create(completed) }) {
+            case .saved:
+                break
+            case .queued:
+                store.enqueue(entityType: "time_entry", operation: "create", body: completed)
                 notice = "Clocked out. It syncs when you're back online."
+            case .failed:
+                // Keep the held shift, break included, so nothing is lost.
+                pending.endTime = nil
+                pending.totalHours = nil
+                savePendingClockIn(pending)
+                shift = current
+                return
             }
             clearPendingClockIn()
         }
@@ -295,11 +331,33 @@ final class TimeClockViewModel {
         await loadRecent(userId: userId)
     }
 
+    /// Run a write when online. `.queued` means it should go to the offline
+    /// queue (no connection, or no answer); `.failed` means the server
+    /// refused it, with `errorMessage` set.
+    private func attempt(_ write: () async throws -> Void) async -> SaveOutcome {
+        guard NetworkMonitor.shared.isOnline else { return .queued }
+        do {
+            try await write()
+            return .saved
+        } catch let error where isConnectivityError(error) {
+            return .queued
+        } catch {
+            errorMessage = "Couldn't clock out: \(error.localizedDescription)"
+            return .failed
+        }
+    }
+
     // MARK: - Device-held state
 
-    private func pendingClockIn() -> NewTimeEntry? {
-        guard let data = defaults.data(forKey: Self.pendingClockInKey) else { return nil }
+    /// A clock-in held on this device, for screens other than the clock
+    /// (Home) that show clock state.
+    static func deviceHeldClockIn() -> NewTimeEntry? {
+        guard let data = UserDefaults.standard.data(forKey: pendingClockInKey) else { return nil }
         return try? JSONDecoder().decode(NewTimeEntry.self, from: data)
+    }
+
+    private func pendingClockIn() -> NewTimeEntry? {
+        Self.deviceHeldClockIn()
     }
 
     private func savePendingClockIn(_ entry: NewTimeEntry) {

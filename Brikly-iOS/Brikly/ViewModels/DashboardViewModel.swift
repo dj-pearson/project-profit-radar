@@ -12,6 +12,8 @@ final class DashboardViewModel {
     var activeProjects: [Project] = []
     var weekHours: Double = 0
     var openEntry: TimeEntry?
+    /// A clock-in made offline and still held on this device.
+    var heldClockIn: NewTimeEntry?
     var isLoading = false
     var errorMessage: String?
 
@@ -51,9 +53,10 @@ final class DashboardViewModel {
         }
         let freshTasks = try? await tasks
         if let freshTasks { myTasks = freshTasks }
+        heldClockIn = TimeClockViewModel.deviceHeldClockIn()
         let freshEntries = try? await entries
         if let freshEntries {
-            weekHours = freshEntries.reduce(0) { $0 + $1.workedHours() }
+            weekHours = freshEntries.reduce(0) { $0 + $1.workedHours() } + heldHours()
         }
         do {
             openEntry = try await openRow
@@ -61,6 +64,16 @@ final class DashboardViewModel {
             // Offline: keep the last known clock state.
         }
     }
+
+    /// Hours on a device-held shift, which the server doesn't know about yet.
+    private func heldHours(now: Date = .now) -> Double {
+        guard let held = heldClockIn,
+              let start = ISO8601DateFormatter().date(from: held.startTime) else { return 0 }
+        return max(0, now.timeIntervalSince(start) / 3600 - held.breakDuration / 60)
+    }
+
+    /// Project of the shift in progress, server-side or device-held.
+    var clockedInProjectId: String? { openEntry?.projectId ?? heldClockIn?.projectId }
 
     /// Open tasks assigned to the user, soonest due first, undated last.
     private static func fetchMyTasks(userId: String) async throws -> [ProjectTask] {

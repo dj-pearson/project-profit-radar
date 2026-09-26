@@ -1,6 +1,23 @@
 import Foundation
 import Observation
 
+/// True when a write failed because the request never got an answer, so
+/// queuing it for replay is safe. A 4xx, an RLS denial or a decode failure
+/// after the row was written must not be queued: replaying it would fail
+/// forever (stalling `SyncEngine`, which stops at the first failure) or
+/// insert a duplicate.
+func isConnectivityError(_ error: Error) -> Bool {
+    guard let urlError = error as? URLError else { return false }
+    switch urlError.code {
+    case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost,
+         .cannotFindHost, .dnsLookupFailed, .timedOut, .internationalRoamingOff,
+         .dataNotAllowed, .callIsActive:
+        return true
+    default:
+        return false
+    }
+}
+
 enum SaveOutcome {
     case saved
     /// Written to the offline queue; `SyncEngine` replays it on reconnect.
@@ -54,7 +71,7 @@ final class RecordListViewModel<Record: Decodable & Sendable & Identifiable> whe
                 records.insert(created, at: 0)
                 return .saved
             } catch {
-                if offlineEntity == nil {
+                if offlineEntity == nil || !isConnectivityError(error) {
                     errorMessage = error.localizedDescription
                     return .failed
                 }
@@ -81,7 +98,7 @@ final class RecordListViewModel<Record: Decodable & Sendable & Identifiable> whe
                 }
                 return .saved
             } catch {
-                if offlineEntity == nil {
+                if offlineEntity == nil || !isConnectivityError(error) {
                     errorMessage = error.localizedDescription
                     return .failed
                 }

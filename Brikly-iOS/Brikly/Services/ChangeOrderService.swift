@@ -80,17 +80,19 @@ actor ChangeOrderService {
         do {
             return try await call()
         } catch EdgeFunctionsService.EdgeFunctionError.httpError(_, let body) {
-            struct Envelope: Decodable { let error: String? }
-            let message = (try? JSONDecoder().decode(Envelope.self, from: Data(body.utf8)))?.error
+            let message = (try? JSONDecoder().decode(ErrorEnvelope.self, from: Data(body.utf8)))?.error
             throw ChangeOrderError.server(message ?? body)
         }
     }
 
+    private struct ErrorEnvelope: Decodable { let error: String? }
+
     enum ChangeOrderError: LocalizedError {
         case server(String)
         var errorDescription: String? {
-            if case .server(let message) = self { return message }
-            return nil
+            switch self {
+            case .server(let message): message
+            }
         }
     }
 }

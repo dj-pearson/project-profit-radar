@@ -35,9 +35,9 @@ struct HomeView: View {
             Section {
                 Button(action: openTimeClock) {
                     HStack {
-                        Image(systemName: viewModel.openEntry == nil ? "clock" : "clock.badge.checkmark.fill")
+                        Image(systemName: viewModel.clockedInProjectId == nil ? "clock" : "clock.badge.checkmark.fill")
                             .font(.title2)
-                            .foregroundStyle(viewModel.openEntry == nil ? .secondary : Color.brandSuccess)
+                            .foregroundStyle(viewModel.clockedInProjectId == nil ? .secondary : Color.brandSuccess)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(clockTitle).font(.body.weight(.semibold))
@@ -99,8 +99,8 @@ struct HomeView: View {
     }
 
     private var clockTitle: String {
-        guard let entry = viewModel.openEntry else { return "Not clocked in" }
-        let name = viewModel.project(for: entry.projectId)?.name ?? "a project"
+        guard let projectId = viewModel.clockedInProjectId else { return "Not clocked in" }
+        let name = viewModel.project(for: projectId)?.name ?? "a project"
         return "On the clock at \(name)"
     }
 

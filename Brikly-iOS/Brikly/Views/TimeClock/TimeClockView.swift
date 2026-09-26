@@ -66,6 +66,7 @@ struct TimeClockView: View {
             .navigationTitle("Time Clock")
             .task { await reload() }
             .onChange(of: viewModel.selectedProjectId) {
+                guard !viewModel.isRestoring else { return }
                 Task { await viewModel.loadCostCodes(companyId: auth.companyId ?? "") }
             }
         }
@@ -122,7 +123,7 @@ struct TimeClockView: View {
                 .disabled(viewModel.isWorking)
             } else {
                 Button {
-                    Task { await viewModel.clockIn(userId: auth.userProfile?.id ?? "") }
+                    Task { await viewModel.clockIn(userId: auth.userProfile?.id ?? "", fallbackSiteId: auth.siteId) }
                 } label: {
                     actionLabel("Clock In", icon: "play.circle.fill")
                 }

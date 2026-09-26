@@ -31,6 +31,9 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func currentLocation() async -> CLLocation? {
         if authorization == .notDetermined {
             await withCheckedContinuation { continuation in
+                // A second caller mid-prompt releases the first rather than
+                // stranding it; both then read the same status.
+                authContinuation?.resume()
                 authContinuation = continuation
                 manager.requestWhenInUseAuthorization()
             }

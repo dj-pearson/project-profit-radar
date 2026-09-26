@@ -34,7 +34,7 @@ struct ChipFilterBar: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
                 .clipShape(Capsule())
         }
         .accessibilityAddTraits(isSelected ? .isSelected : [])
