@@ -5,6 +5,7 @@ struct TimeClockView: View {
     @Environment(\.openURL) private var openURL
     @State private var viewModel = TimeClockViewModel()
     @State private var crew = CrewCheckInViewModel()
+    @State private var showingApprovals = false
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -77,6 +78,16 @@ struct TimeClockView: View {
                 }
             }
             .navigationTitle("Time Clock")
+            .toolbar {
+                if TimesheetPermissions.approverRoles.contains(auth.userRole) {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { showingApprovals = true } label: {
+                            Label("Approve Time", systemImage: "checkmark.seal")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingApprovals) { TimesheetApprovalView() }
             .task { await reload() }
             .onChange(of: viewModel.selectedProjectId) {
                 guard !viewModel.isRestoring else { return }

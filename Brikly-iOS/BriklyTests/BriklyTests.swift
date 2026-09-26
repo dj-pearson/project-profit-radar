@@ -303,12 +303,12 @@ final class BriklyTests: XCTestCase {
 
     func testEquipmentLabelParsesServerQRValue() {
         // Shape built by generate_equipment_qr_code.
-        let raw = #"{"equipmentId" : "e1", "companyId" : "c1", "name" : "Lift", "serialNumber" : null, "type" : "equipment_checkout", "version" : "1.0", "generatedAt" : "2026-09-26T10:00:00+00:00"}"#
+        let raw = "{\"equipmentId\" : \"e1\", \"companyId\" : \"c1\", \"name\" : \"Lift\", \"serialNumber\" : null, \"type\" : \"equipment_checkout\", \"version\" : \"1.0\", \"generatedAt\" : \"2026-09-26T10:00:00+00:00\"}"
         let label = EquipmentLabel.parse(raw)
         XCTAssertEqual(label?.equipmentId, "e1")
         XCTAssertEqual(label?.companyId, "c1")
         XCTAssertNil(EquipmentLabel.parse("https://example.com/not-ours"))
-        XCTAssertNil(EquipmentLabel.parse(#"{"equipmentId":"e1","companyId":"c1","type":"something_else"}"#))
+        XCTAssertNil(EquipmentLabel.parse("{\"equipmentId\":\"e1\",\"companyId\":\"c1\",\"type\":\"something_else\"}"))
     }
 
     func testEquipmentStatusFoldsWebVariants() throws {
@@ -340,6 +340,57 @@ final class BriklyTests: XCTestCase {
             JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) as? [String: Any]
         )
         XCTAssertEqual(Set(object.keys), ["p_qr_code_value", "p_scan_type", "p_project_id"])
+    }
+
+    // MARK: - Materials, invoices, chat, timesheets
+
+    func testRPCParamsUseServerArgumentNames() throws {
+        func keys(_ value: some Encodable) throws -> Set<String> {
+            let object = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as? [String: Any]
+            )
+            return Set(object.keys)
+        }
+        XCTAssertEqual(
+            try keys(LogMaterialUsageParams(pMaterialId: "m", pProjectId: "p", pQuantity: 2, pNotes: "x")),
+            ["p_material_id", "p_project_id", "p_quantity", "p_notes"]
+        )
+        XCTAssertEqual(
+            try keys(NewChatMessage(channelId: "c", companyId: "co", userId: "u", content: "hi")),
+            ["channel_id", "company_id", "user_id", "content", "message_type"]
+        )
+    }
+
+    func testInvoicePastDueIgnoresPaidAndDraft() throws {
+        func invoice(status: String, due: String, paid: Double) throws -> Invoice {
+            let json = """
+            {"id":"i1","invoice_number":"INV-1","status":"\(status)","issue_date":"2020-01-01",
+             "due_date":"\(due)","total_amount":100,"amount_paid":\(paid),"amount_due":\(100 - paid)}
+            """
+            return try decode(Invoice.self, from: json)
+        }
+        XCTAssertTrue(try invoice(status: "sent", due: "2020-02-01", paid: 0).isPastDue)
+        XCTAssertEqual(try invoice(status: "sent", due: "2020-02-01", paid: 0).displayStatus, "overdue")
+        XCTAssertFalse(try invoice(status: "paid", due: "2020-02-01", paid: 100).isPastDue)
+        XCTAssertFalse(try invoice(status: "draft", due: "2020-02-01", paid: 0).isPastDue)
+        XCTAssertFalse(try invoice(status: "sent", due: "2999-01-01", paid: 0).isPastDue)
+    }
+
+    func testPendingTimesheetDecodesView() throws {
+        let json = """
+        {"id":"t1","user_id":"u1","project_id":"p1","start_time":"2026-09-25T13:00:00+00:00",
+         "end_time":"2026-09-25T21:30:00+00:00","total_hours":8,"break_duration":30,
+         "approval_status":"pending","worker_name":" ","project_name":"Main St","cost_code":"03-300"}
+        """
+        let entry = try decode(PendingTimesheet.self, from: json)
+        XCTAssertEqual(entry.totalHours, 8)
+        XCTAssertEqual(entry.displayWorker, "Crew member")
+    }
+
+    func testBulkTimesheetResultDecodesRPCRow() throws {
+        let rows = try decode([BulkTimesheetResult].self, from: "[{\"success_count\":3,\"failed_count\":1}]")
+        XCTAssertEqual(rows.first?.successCount, 3)
+        XCTAssertEqual(rows.first?.failedCount, 1)
     }
 
     // MARK: - Helpers

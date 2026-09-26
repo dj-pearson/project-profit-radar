@@ -61,6 +61,9 @@ struct ProjectDetailView: View {
                 link("Daily Reports", icon: "doc.text") {
                     DailyReportListView(projectId: project.id, companyId: companyId, siteId: siteId)
                 }
+                link("Materials", icon: "shippingbox") {
+                    MaterialListView(projectId: project.id, companyId: companyId)
+                }
                 link("Punch List", icon: "checklist.checked") {
                     PunchListView(projectId: project.id, companyId: companyId)
                 }
@@ -78,6 +81,17 @@ struct ProjectDetailView: View {
                 }
                 link("Expenses", icon: "creditcard") {
                     ExpenseListView(projectId: project.id, companyId: companyId, siteId: siteId.isEmpty ? nil : siteId)
+                }
+                if InvoicePermissions.financeRoles.contains(auth.userRole) {
+                    link("Invoices", icon: "doc.text.magnifyingglass") {
+                        InvoiceListView(projectId: project.id)
+                    }
+                }
+            }
+
+            Section("Team") {
+                link("Team Chat", icon: "bubble.left.and.bubble.right") {
+                    ProjectChatView(project: project, companyId: companyId)
                 }
             }
 

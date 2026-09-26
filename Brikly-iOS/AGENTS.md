@@ -115,6 +115,30 @@ iOS is the first writer of `equipment_maintenance_records`
 scoped both QR functions and both equipment views to the caller's company,
 fixed the `location_update` scan, and fills `equipment_qr_codes.site_id`.
 
+### Materials, invoices, team chat, timesheet approval
+
+- **Materials** (project hub): company stock with this project's first;
+  logging usage calls `log_material_usage`, which inserts `material_usage`
+  and decrements stock in one locked transaction. Don't write the two
+  tables separately from the app.
+- **Invoices** (project hub, finance roles): read-only list and detail.
+  Recording a manual payment goes through the `process-invoice-payment`
+  edge function (`payment_method: manual`), never a direct `invoices`
+  update; the payment trigger owns `amount_paid`, `amount_due` and `status`.
+  Sending uses `send-invoice`. Invoices are created on web.
+- **Team chat** (project hub): the web chat tables. Opening a project's chat
+  finds its open channel, or creates it with the caller as channel admin,
+  and joins it. Names come from `company_member_names()`, because
+  `user_profiles` hides coworkers from non-managers. New messages arrive by
+  Realtime insert on `chat_messages`.
+- **Timesheet approval** (Time Clock tab, approver roles): reads
+  `pending_timesheet_approvals`, approves/rejects through
+  `bulk_approve_timesheets` / `bulk_reject_timesheets`. The server takes the
+  approver from the session and refuses self-approval (admin excepted);
+  approving posts labor cost via `trg_post_labor_cost`.
+
+All four rely on migration `20260926030000`.
+
 ## Offline sync
 
 `OfflineStore` / `SyncEngine` cover daily reports, tasks and job costs with

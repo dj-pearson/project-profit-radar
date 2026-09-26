@@ -108,6 +108,15 @@
 		AA000142 /* EquipmentForms.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000142; };
 		AA000143 /* EquipmentScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000143; };
 		AA000144 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000144; };
+		AA000145 /* Material.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000145; };
+		AA000146 /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000146; };
+		AA000147 /* Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000147; };
+		AA000148 /* Timesheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000148; };
+		AA000149 /* FieldOfficeServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000149; };
+		AA000150 /* MaterialListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000150; };
+		AA000151 /* InvoiceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000151; };
+		AA000152 /* ProjectChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000152; };
+		AA000153 /* TimesheetApprovalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000153; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -216,6 +225,15 @@
 		AB000142 /* EquipmentForms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentForms.swift; sourceTree = "<group>"; };
 		AB000143 /* EquipmentScanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentScanSheet.swift; sourceTree = "<group>"; };
 		AB000144 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		AB000145 /* Material.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Material.swift; sourceTree = "<group>"; };
+		AB000146 /* Invoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
+		AB000147 /* Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chat.swift; sourceTree = "<group>"; };
+		AB000148 /* Timesheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timesheet.swift; sourceTree = "<group>"; };
+		AB000149 /* FieldOfficeServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldOfficeServices.swift; sourceTree = "<group>"; };
+		AB000150 /* MaterialListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialListView.swift; sourceTree = "<group>"; };
+		AB000151 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
+		AB000152 /* ProjectChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectChatView.swift; sourceTree = "<group>"; };
+		AB000153 /* TimesheetApprovalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimesheetApprovalView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -294,6 +312,10 @@
 				AB000128 /* CrewAssignment.swift */,
 				AB000129 /* ProjectPhoto.swift */,
 				AB000137 /* Equipment.swift */,
+				AB000145 /* Material.swift */,
+				AB000146 /* Invoice.swift */,
+				AB000147 /* Chat.swift */,
+				AB000148 /* Timesheet.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -318,6 +340,7 @@
 				AB000130 /* CrewService.swift */,
 				AB000131 /* PhotoService.swift */,
 				AB000138 /* EquipmentService.swift */,
+				AB000149 /* FieldOfficeServices.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -367,6 +390,10 @@
 				AD000108 /* Crew */,
 				AD000109 /* Photos */,
 				AD000110 /* Equipment */,
+				AD000111 /* Materials */,
+				AD000112 /* Invoices */,
+				AD000113 /* Chat */,
+				AD000114 /* Timesheets */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -580,6 +607,38 @@
 			path = Equipment;
 			sourceTree = "<group>";
 		};
+		AD000111 /* Materials */ = {
+			isa = PBXGroup;
+			children = (
+				AB000150 /* MaterialListView.swift */,
+			);
+			path = Materials;
+			sourceTree = "<group>";
+		};
+		AD000112 /* Invoices */ = {
+			isa = PBXGroup;
+			children = (
+				AB000151 /* InvoiceListView.swift */,
+			);
+			path = Invoices;
+			sourceTree = "<group>";
+		};
+		AD000113 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				AB000152 /* ProjectChatView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		AD000114 /* Timesheets */ = {
+			isa = PBXGroup;
+			children = (
+				AB000153 /* TimesheetApprovalView.swift */,
+			);
+			path = Timesheets;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -659,6 +718,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* BriklyApp.swift in Sources */,
+				AA000153 /* TimesheetApprovalView.swift in Sources */,
+				AA000152 /* ProjectChatView.swift in Sources */,
+				AA000151 /* InvoiceListView.swift in Sources */,
+				AA000150 /* MaterialListView.swift in Sources */,
+				AA000149 /* FieldOfficeServices.swift in Sources */,
+				AA000148 /* Timesheet.swift in Sources */,
+				AA000147 /* Chat.swift in Sources */,
+				AA000146 /* Invoice.swift in Sources */,
+				AA000145 /* Material.swift in Sources */,
 				AA000144 /* QRScannerView.swift in Sources */,
 				AA000143 /* EquipmentScanSheet.swift in Sources */,
 				AA000142 /* EquipmentForms.swift in Sources */,
