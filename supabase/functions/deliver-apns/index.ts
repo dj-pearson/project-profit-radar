@@ -7,6 +7,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { requireInternalCaller } from "../_shared/internal-only.ts";
 import { createServiceClient } from "../_shared/service-client.ts";
 import { apnsConfigFromEnv, sendApns } from "../_shared/apns.ts";
+import { errorResponse, successResponse } from "../_shared/auth-helpers.ts";
 
 // Either the Database Webhook envelope or a direct call.
 const WebhookSchema = z.object({
@@ -29,12 +30,6 @@ const DirectSchema = z.object({
   data: z.record(z.unknown()).optional(),
 });
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify({ ...(body as object), timestamp: new Date().toISOString() }), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
 export default async (req: Request): Promise<Response> => {
   const rejected = requireInternalCaller(req);
   if (rejected) return rejected;
@@ -43,7 +38,7 @@ export default async (req: Request): Promise<Response> => {
   try {
     raw = await req.json();
   } catch {
-    return json({ success: false, error: "Body must be JSON" }, 400);
+    return errorResponse("Body must be JSON", 400, req);
   }
 
   let userId: string;
@@ -61,7 +56,7 @@ export default async (req: Request): Promise<Response> => {
   } else {
     const direct = DirectSchema.safeParse(raw);
     if (!direct.success) {
-      return json({ success: false, error: "Unrecognised payload" }, 400);
+      return errorResponse("Unrecognised payload", 400, req);
     }
     userId = direct.data.user_id;
     title = direct.data.title;
@@ -72,7 +67,7 @@ export default async (req: Request): Promise<Response> => {
   const config = apnsConfigFromEnv();
   if (!config) {
     // Not an error for the webhook: the notification is still in the app.
-    return json({ success: true, data: { sent: 0, reason: "APNs not configured" } });
+    return successResponse({ sent: 0, reason: "APNs not configured" }, req);
   }
 
   const service = createServiceClient();
@@ -83,7 +78,7 @@ export default async (req: Request): Promise<Response> => {
 
   if (error) {
     console.error("[deliver-apns] token lookup failed", { error: error.message });
-    return json({ success: false, error: "Token lookup failed" }, 500);
+    return errorResponse("Token lookup failed", 500, req);
   }
 
   let sent = 0;
@@ -109,5 +104,5 @@ export default async (req: Request): Promise<Response> => {
     }
   }
 
-  return json({ success: true, data: { sent, pruned: dead.length } });
+  return successResponse({ sent, pruned: dead.length }, req);
 };

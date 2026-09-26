@@ -10,16 +10,49 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, Truck, Clock, Plus, Settings, Search, Wrench, TrendingUp, AlertTriangle, CheckCircle, MapPin, Edit, Package } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EquipmentGanttChart from '@/components/equipment/EquipmentGanttChart';
 import EquipmentEditForm from '@/components/equipment/EquipmentEditForm';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useEquipmentWithMaintenance, useUpdateEquipment } from '@/hooks/useEquipment';
 
 export default function EquipmentManagement() {
   const { user, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { data: equipment = [], isLoading: equipmentLoading, refetch } = useEquipmentWithMaintenance();
+
+  // equipment has no assignment or hour-meter columns. Where each item is
+  // booked comes from equipment_assignments; hours from the latest
+  // maintenance reading.
+  const companyId = userProfile?.company_id;
+  const { data: bookedProject = {} } = useQuery({
+    queryKey: ['equipment-active-bookings', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('equipment_assignments')
+        .select('equipment_id, assignment_status, start_date, projects(name)')
+        .eq('company_id', companyId as string)
+        .in('assignment_status', ['active', 'planned'])
+        .order('start_date', { ascending: true });
+      if (error) throw error;
+      const byEquipment: Record<string, string> = {};
+      for (const row of (data ?? []) as Array<{ equipment_id: string; assignment_status: string; projects: { name: string } | null }>) {
+        // An active booking wins over a planned one.
+        if (!byEquipment[row.equipment_id] || row.assignment_status === 'active') {
+          byEquipment[row.equipment_id] = row.projects?.name ?? 'A project';
+        }
+      }
+      return byEquipment;
+    },
+  });
+
+  const latestHourReading = (item: { maintenance_records?: Array<{ hour_meter_reading?: number | null }> }) =>
+    (item.maintenance_records ?? []).reduce<number | null>(
+      (max, record) => (record.hour_meter_reading != null && (max == null || record.hour_meter_reading > max) ? record.hour_meter_reading : max),
+      null,
+    );
   const updateEquipment = useUpdateEquipment();
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -57,12 +90,6 @@ export default function EquipmentManagement() {
         {config?.label || status}
       </Badge>
     );
-  };
-
-  const getUtilizationColor = (rate: number) => {
-    if (rate >= 80) return "text-green-600";
-    if (rate >= 60) return "text-yellow-600";
-    return "text-red-600";
   };
 
   const formatDate = (dateString: string) => {
@@ -207,10 +234,10 @@ export default function EquipmentManagement() {
                           <label className="text-sm font-medium">Location</label>
                           <p>{eq.location || 'Not specified'}</p>
                         </div>
-                        {eq.assigned_project && (
+                        {bookedProject[eq.id] && (
                           <div className="col-span-2">
                             <label className="text-sm font-medium">Currently Assigned To</label>
-                            <p>{eq.assigned_project}</p>
+                            <p>{bookedProject[eq.id]}</p>
                           </div>
                         )}
                       </div>
@@ -242,9 +269,7 @@ export default function EquipmentManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEquipment.map((item) => {
-                const utilizationRate = item.hours_meter && item.hours_meter > 0
-                  ? Math.min(100, Math.round((item.hours_meter / 3000) * 100))
-                  : 0;
+                const hourReading = latestHourReading(item);
                 return (
                   <Card
                     key={item.id}
@@ -277,12 +302,6 @@ export default function EquipmentManagement() {
                           >
                             <Edit className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <div className="text-right">
-                            <div className={`text-xl font-bold ${getUtilizationColor(utilizationRate)}`}>
-                              {utilizationRate}%
-                            </div>
-                            <div className="text-xs text-muted-foreground">Utilization</div>
-                          </div>
                         </div>
                       </div>
                     </CardHeader>
@@ -293,22 +312,17 @@ export default function EquipmentManagement() {
                           <span>{item.location || 'Location not set'}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <span>{(item.hours_meter || 0).toLocaleString()} hours</span>
-                        </div>
-
-                        {item.assigned_operator && (
-                          <div className="text-sm">
-                            <span className="font-medium">Operator:</span>
-                            <p className="text-muted-foreground">{item.assigned_operator}</p>
+                        {hourReading != null && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                            <span>{hourReading.toLocaleString()} hours (last service reading)</span>
                           </div>
                         )}
 
-                        {item.assigned_project && (
+                        {bookedProject[item.id] && (
                           <div className="text-sm">
                             <span className="font-medium">Assigned to:</span>
-                            <p className="text-muted-foreground">{item.assigned_project}</p>
+                            <p className="text-muted-foreground">{bookedProject[item.id]}</p>
                           </div>
                         )}
 
@@ -318,11 +332,6 @@ export default function EquipmentManagement() {
                             <span>Next Maintenance: {formatDate(item.next_maintenance_date)}</span>
                           </div>
                         )}
-
-                        <div className="space-y-1">
-                          <div className="text-sm text-muted-foreground">Utilization Rate</div>
-                          <Progress value={utilizationRate} className="w-full" />
-                        </div>
 
                         <Button
                           variant="outline"

@@ -27,6 +27,13 @@ jobs:
 
       - name: Build
         run: npx vite build
+        env:
+          # vite.config.ts refuses to build without these (the deploy guard).
+          # Placeholders are enough to measure bundle size; same values the
+          # Lighthouse workflow uses.
+          VITE_SUPABASE_URL: https://api.brikly.net
+          VITE_SUPABASE_PUBLISHABLE_KEY: bundle-budget-placeholder
+          VITE_EDGE_FUNCTIONS_URL: https://functions.brikly.net
 
       - name: Check bundle size
         run: node scripts/check-bundle-budget.mjs
