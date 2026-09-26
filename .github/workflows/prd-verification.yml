@@ -65,6 +65,11 @@ jobs:
       - run: npm run build
         env:
           VITE_APP_VERSION: ${{ github.sha }}
+          # vite.config.ts refuses to build without these (the deploy guard).
+          # This gate checks that the build completes, not that it can reach
+          # a backend; same placeholders ci.yml's Build job uses.
+          VITE_SUPABASE_URL: https://ci.placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-real-key
       - uses: actions/upload-artifact@v4
         with:
           name: prd-verification-build
