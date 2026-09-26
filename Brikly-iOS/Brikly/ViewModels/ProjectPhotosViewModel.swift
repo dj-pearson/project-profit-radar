@@ -44,8 +44,9 @@ final class ProjectPhotosViewModel {
         if let reports { recentReports = Array(reports.prefix(14)) }
     }
 
-    /// Upload the images one at a time so a dropped connection loses one, not
-    /// all. Returns true when every image was saved.
+    /// Upload the images one at a time, stopping at the first failure (the
+    /// next would most likely fail the same way). Returns the indices of the
+    /// images that were not saved, so a retry sends only those.
     func upload(
         _ images: [UIImage],
         projectId: String,
@@ -54,18 +55,27 @@ final class ProjectPhotosViewModel {
         source: PhotoSource,
         caption: String?,
         dailyReportId: String?
-    ) async -> Bool {
+    ) async -> [Int] {
         guard NetworkMonitor.shared.isOnline else {
             errorMessage = "Photos need a connection to upload."
-            return false
+            return Array(images.indices)
         }
         errorMessage = nil
         uploadProgress = (0, images.count)
         defer { uploadProgress = nil }
 
         var saved: [ProjectPhoto] = []
-        for image in images {
-            guard let jpeg = PhotoProcessing.jpeg(from: image) else { continue }
+        var notSaved: [Int] = []
+        for (index, image) in images.enumerated() {
+            guard notSaved.isEmpty else {
+                notSaved.append(index)
+                continue
+            }
+            guard let jpeg = PhotoProcessing.jpeg(from: image) else {
+                errorMessage = "Couldn't prepare a photo for upload."
+                notSaved.append(index)
+                continue
+            }
             do {
                 let photo = try await service.upload(
                     jpeg: jpeg,
@@ -81,7 +91,7 @@ final class ProjectPhotosViewModel {
                 uploadProgress = (saved.count, images.count)
             } catch {
                 errorMessage = Self.describe(error)
-                break
+                notSaved.append(index)
             }
         }
 
@@ -98,13 +108,13 @@ final class ProjectPhotosViewModel {
         photos.insert(contentsOf: saved, at: 0)
         let newURLs = await service.signedURLs(for: saved)
         urls.merge(newURLs) { _, new in new }
-        return saved.count == images.count
+        return notSaved
     }
 
     private static func describe(_ error: Error) -> String {
         let text = error.localizedDescription
         // Storage answers an RLS refusal with a 403 / "row-level security".
-        if text.localizedCaseInsensitiveContains("row-level security") || text.contains("403") {
+        if text.localizedCaseInsensitiveContains("row-level security") {
             return "Your role can't upload photos to this project. Ask an admin."
         }
         return "Upload stopped: \(text)"

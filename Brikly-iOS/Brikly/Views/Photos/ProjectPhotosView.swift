@@ -110,8 +110,8 @@ struct ProjectPhotosView: View {
             Task {
                 var images: [UIImage] = []
                 for item in items {
-                    if let data = try? await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
+                    let data = try? await item.loadTransferable(type: Data.self)
+                    if let data, let image = PhotoProcessing.downscaled(data: data) {
                         images.append(image)
                     }
                 }
@@ -124,16 +124,17 @@ struct ProjectPhotosView: View {
                 pending = PendingUpload(images: [image])
             }
         }) {
-            CameraPicker { image in captured = image }
+            CameraPicker(onCapture: { image in captured = image }, onFinish: { showingCamera = false })
                 .ignoresSafeArea()
         }
         .sheet(item: $pending) { upload in
-            PhotoUploadSheet(images: upload.images, reports: viewModel.recentReports) { source, caption, reportId in
-                await viewModel.upload(
-                    upload.images,
+            PhotoUploadSheet(images: upload.images, reports: viewModel.recentReports) { images, source, caption, reportId in
+                guard let userId = auth.userProfile?.id else { return images.indices.map { $0 } }
+                return await viewModel.upload(
+                    images,
                     projectId: project.id,
                     companyId: companyId,
-                    userId: auth.userProfile?.id ?? "",
+                    userId: userId,
                     source: source,
                     caption: caption,
                     dailyReportId: reportId
@@ -171,17 +172,25 @@ struct ProjectPhotosView: View {
 }
 
 private struct PhotoUploadSheet: View {
-    let images: [UIImage]
     let reports: [DailyReport]
-    /// Returns true when every image uploaded, which closes the sheet.
-    let onUpload: (PhotoSource, String?, String?) async -> Bool
+    /// Uploads the given images; returns the indices that did not upload.
+    /// An empty result closes the sheet.
+    let onUpload: ([UIImage], PhotoSource, String?, String?) async -> [Int]
 
     @Environment(\.dismiss) private var dismiss
+    /// Only what hasn't uploaded yet, so a retry never duplicates a photo.
+    @State private var images: [UIImage]
     @State private var source = PhotoSource.progress
     @State private var caption = ""
     @State private var reportId = ""
     @State private var isUploading = false
     @State private var failed = false
+
+    init(images: [UIImage], reports: [DailyReport], onUpload: @escaping ([UIImage], PhotoSource, String?, String?) async -> [Int]) {
+        self.reports = reports
+        self.onUpload = onUpload
+        _images = State(initialValue: images)
+    }
 
     var body: some View {
         NavigationStack {
@@ -218,7 +227,7 @@ private struct PhotoUploadSheet: View {
                 }
                 if failed {
                     Section {
-                        Text("Not every photo uploaded. The ones that did are on the project; try the rest again.")
+                        Text("\(images.count) photo\(images.count == 1 ? "" : "s") didn't upload. The rest are on the project; Upload retries only these.")
                             .foregroundStyle(Color.brandDanger)
                     }
                 }
@@ -245,12 +254,18 @@ private struct PhotoUploadSheet: View {
     private func upload() async {
         isUploading = true
         defer { isUploading = false }
-        let ok = await onUpload(
+        let notUploaded = await onUpload(
+            images,
             source,
             caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : caption,
             reportId.isEmpty ? nil : reportId
         )
-        if ok { dismiss() } else { failed = true }
+        if notUploaded.isEmpty {
+            dismiss()
+        } else {
+            images = notUploaded.map { images[$0] }
+            failed = true
+        }
     }
 }
 

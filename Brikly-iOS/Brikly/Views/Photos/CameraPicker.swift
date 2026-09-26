@@ -1,3 +1,4 @@
+import ImageIO
 import SwiftUI
 import UIKit
 
@@ -5,7 +6,8 @@ import UIKit
 /// camera, so this wraps UIImagePickerController.
 struct CameraPicker: UIViewControllerRepresentable {
     let onCapture: (UIImage) -> Void
-    @Environment(\.dismiss) private var dismiss
+    /// Called on capture or cancel; the presenter closes the cover.
+    let onFinish: () -> Void
 
     static var isAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
@@ -29,13 +31,13 @@ struct CameraPicker: UIViewControllerRepresentable {
             didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
         ) {
             if let image = info[.originalImage] as? UIImage {
-                parent.onCapture(image)
+                parent.onCapture(PhotoProcessing.downscaled(image))
             }
-            parent.dismiss()
+            parent.onFinish()
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+            parent.onFinish()
         }
     }
 }
@@ -46,17 +48,37 @@ enum PhotoProcessing {
     /// which is plenty to read a label or a crack.
     static let maxDimension: CGFloat = 2048
 
-    /// Downscale and JPEG-encode. Drawing through the renderer also bakes in
-    /// the orientation, so the stored file isn't sideways on web.
-    static func jpeg(from image: UIImage, quality: CGFloat = 0.8) -> Data? {
+    /// Downscale a captured image. Drawing through the renderer also bakes
+    /// in the orientation, so the stored file isn't sideways on web. Done at
+    /// capture time so full-resolution bitmaps (~48 MB each for 12 MP) are
+    /// never held while the user writes a caption.
+    static func downscaled(_ image: UIImage) -> UIImage {
         let size = image.size
         let scale = min(1, maxDimension / max(size.width, size.height))
+        guard scale < 1 || image.imageOrientation != .up else { return image }
         let target = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
-        let resized = UIGraphicsImageRenderer(size: target, format: format).image { _ in
+        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
             image.draw(in: CGRect(origin: .zero, size: target))
         }
-        return resized.jpegData(compressionQuality: quality)
+    }
+
+    /// Downscale straight from encoded library data with ImageIO, which
+    /// never decodes the full-size bitmap. Applies the EXIF orientation.
+    static func downscaled(data: Data) -> UIImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: cgImage)
+    }
+
+    /// Downscale (a no-op for images already downscaled) and JPEG-encode.
+    static func jpeg(from image: UIImage, quality: CGFloat = 0.8) -> Data? {
+        downscaled(image).jpegData(compressionQuality: quality)
     }
 }

@@ -11,6 +11,7 @@ actor CrewService {
             .select()
             .eq("crew_member_id", value: userId)
             .eq("assigned_date", value: date)
+            .neq("status", value: "cancelled")
             .order("start_time", ascending: true)
             .execute()
             .value

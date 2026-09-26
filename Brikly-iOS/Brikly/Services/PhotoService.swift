@@ -17,16 +17,18 @@ actor PhotoService {
     }
 
     /// Signed URLs, one batch per bucket. The bucket is private (US-289).
-    /// Photos whose URL can't be signed are left out rather than failing
-    /// the whole screen.
+    /// The batch answers per path, in order; a photo whose object is missing
+    /// just gets no thumbnail.
     func signedURLs(for photos: [ProjectPhoto], expiresIn: Int = 3600) async -> [String: URL] {
         var result: [String: URL] = [:]
         for (bucket, rows) in Dictionary(grouping: photos, by: \.bucket) {
-            guard let urls = try? await client.storage
+            let signed = try? await client.storage
                 .from(bucket)
-                .createSignedURLs(paths: rows.map(\.filePath), expiresIn: expiresIn),
-                  urls.count == rows.count else { continue }
-            for (row, url) in zip(rows, urls) { result[row.id] = url }
+                .createSignedURLs(paths: rows.map(\.filePath), expiresIn: expiresIn)
+            guard let signed else { continue }
+            for (row, entry) in zip(rows, signed) {
+                if case let .success(_, url) = entry { result[row.id] = url }
+            }
         }
         return result
     }
@@ -50,7 +52,7 @@ actor PhotoService {
 
         _ = try await client.storage
             .from(PhotoSource.bucket)
-            .upload(path: path, file: jpeg, options: FileOptions(contentType: "image/jpeg", upsert: false))
+            .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg", upsert: false))
 
         let row = NewProjectPhoto(
             projectId: projectId,
@@ -65,14 +67,21 @@ actor PhotoService {
             caption: caption,
             takenAt: ISO8601DateFormatter().string(from: takenAt)
         )
-        let inserted: [ProjectPhoto] = try await client
-            .from("photo_attachments")
-            .insert(row)
-            .select("id, file_name, file_path, storage_bucket, caption, taken_at, created_at, daily_report_id, ai_tags")
-            .execute()
-            .value
-        guard let photo = inserted.first else { throw ServiceError.notFound("Photo") }
-        return photo
+        do {
+            let inserted: [ProjectPhoto] = try await client
+                .from("photo_attachments")
+                .insert(row)
+                .select("id, file_name, file_path, storage_bucket, caption, taken_at, created_at, daily_report_id, ai_tags")
+                .execute()
+                .value
+            guard let photo = inserted.first else { throw ServiceError.notFound("Photo") }
+            return photo
+        } catch {
+            // Don't leave a file nobody can find. Best effort: field roles may
+            // not have delete rights on the bucket.
+            _ = try? await client.storage.from(PhotoSource.bucket).remove(paths: [path])
+            throw error
+        }
     }
 
     /// Add paths to a report's legacy `photos` array (dual write, see
